@@ -257,12 +257,14 @@
 		// 	"style": {
 		// 		"navigationBarTitleText": "开关"
 		// 	}
-		// }, {
-		// 	"path": "collapse/collapse",
-		// 	"style": {
-		// 		"navigationBarTitleText": "折叠面板"
-		// 	}
-		// }, {
+		// }
+		, {
+			"path": "collapse/collapse",
+			"style": {
+				"navigationBarTitleText": "折叠面板"
+			}
+		}
+		// , {
 		// 	"path": "code/code",
 		// 	"style": {
 		// 		"navigationBarTitleText": "验证码"

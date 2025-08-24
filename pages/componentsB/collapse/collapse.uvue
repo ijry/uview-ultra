@@ -1,4 +1,7 @@
 <template>
+	<!-- #ifdef APP -->
+	<scroll-view style="flex:1">
+	<!-- #endif -->
 	<view class="u-page">
 		<view class="u-page__item">
 			<text class="u-page__item__title">基础功能</text>
@@ -91,6 +94,9 @@
 		</view>
 		<up-gap height="50"></up-gap>
 	</view>
+	<!-- #ifdef APP -->
+	</scroll-view>
+	<!-- #endif -->
 </template>
 
 <script>
@@ -99,13 +105,13 @@
 			return {}
 		},
 		methods: {
-			open(e) {
+			open(e: any) {
 				// console.log('open', e)
 			},
-			close(e) {
+			close(e: any) {
 				// console.log('close', e)
 			},
-			change(e) {
+			change(e: any) {
 				// console.log('change', e)
 			}
 		}

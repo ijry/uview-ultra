@@ -14,6 +14,12 @@
 	}, {
 		"root": "pages/componentsB",
 		"pages": [
+			{
+				"path": "collapse/collapse",
+				"style": {
+					"navigationBarTitleText": "折叠面板"
+				}
+			}
 		]
 	}, {
 		"root": "pages/componentsC",

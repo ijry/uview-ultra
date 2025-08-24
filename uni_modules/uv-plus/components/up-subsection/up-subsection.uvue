@@ -232,7 +232,6 @@ export default {
 			} else if (typeof item === 'object') {
 				let temp = JSON.parse(JSON.stringify(item)) as UTSJSONObject;
 				return temp.getString(this.keyName);
-				return null;
 			} else {
 				return "error";
 			}
