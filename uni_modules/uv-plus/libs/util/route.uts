@@ -94,9 +94,9 @@ class Router {
     openPage(config: UTSJSONObject) {
 		let url: string = config.getString('url').toString()
 		let type: string = config.getString('type').toString()
-		let delta: Number = config.getString('delta') as Number
+		let delta: number = config.getNumber('delta') ?? 1
 		let animationType: string = config.getString('animationType').toString()
-		let animationDuration: Number = config.getString('animationDuration') as Number
+		let animationDuration: Number = config.getNumber('animationDuration') ?? 0
         if (config['type'] == 'navigateTo' || config['type'] == 'to') {
             uni.navigateTo({
                 url,

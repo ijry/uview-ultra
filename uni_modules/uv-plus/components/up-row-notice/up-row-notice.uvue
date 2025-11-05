@@ -56,7 +56,7 @@
 	import { mpMixin } from '../../libs/mixin/mpMixin';
 	import { mixin } from '../../libs/mixin/mixin';
 	import { addUnit, error, sleep, getPx } from '../../libs/function/index';
-	import test from '../../libs/function/test';
+	import { string as testString } from '../../libs/function/test';
 	/**
 	 * RowNotice 滚动通知中的水平滚动模式
 	 * @description 水平滚动
@@ -78,23 +78,26 @@
 		mixins: [mpMixin, mixin, propsRowNotice],
 		data() {
 			return {
-				animationDuration: '0', // 动画执行时间
+				transform: '',
+				animationDelay: '0s',
+				animationDuration: '2s', // 动画执行时间
 				animationPlayState: 'paused', // 动画的开始和结束执行
 				// nvue下，内容发生变化，导致滚动宽度也变化，需要标志为是否需要重新计算宽度
 				// 不能在内容变化时直接重新计算，因为nvue的animation模块上一次的滚动不是刚好结束，会有影响
 				nvueInit: true,
+				stopAnimation: true,
 				show: true
 			};
 		},
 		watch: {
 			text: {
 				immediate: true,
-				handler(newValue, oldValue) {
+				handler(newValue: string, oldValue: string) {
 					// #ifndef APP-NVUE
 					this.vue()
 					// #endif
 					
-					if(!test.string(newValue)) {
+					if(!testString(newValue)) {
 						error('noticebar组件direction为row时，要求text参数为字符串形式')
 					}
 				}
@@ -121,14 +124,17 @@
 			},
 			animationStyle() {
 				let style = {}
-				style['animationDuration'] = this.animationDuration
-				style['animationPlayState'] = this.animationPlayState
+				style['transform'] = this.transform
+				style['transitionDelay'] = this.animationDelay
+				style['transitionDuration'] = this.animationDuration
+				// style['animationDuration'] = this.animationDuration
+				// style['animationPlayState'] = this.animationPlayState
 				return style
 			},
 			// 内部对用户传入的数据进一步分割，放到多个text标签循环，否则如果用户传入的字符串很长（100个字符以上）
 			// 放在一个text标签中进行滚动，在低端安卓机上，动画可能会出现抖动现象，需要分割到多个text中可解决此问题
 			innerText() {
-				let result = [],
+				let result: string[] = [],
 					// 每组text标签的字符长度
 					len = 20
 				const textArr = this.text.split('')
@@ -162,33 +168,59 @@
 				// #ifndef APP-NVUE
 				this.vue()
 				// #endif
-				
-				if(!test.string(this.text)) {
+
+				if(!testString(this.text)) {
 					error('noticebar组件direction为row时，要求text参数为字符串形式')
 				}
 			},
 			// vue版处理
 			async vue() {
-				// #ifndef APP-NVUE
+				this.nvueInit = false
 				let boxWidth = 0,
 					textWidth = 0
 				// 进行一定的延时
 				await sleep()
 				// 查询盒子和文字的宽度
-				textWidth = (await this.$uGetRect('.up-notice__content__text')).width
-				boxWidth = (await this.$uGetRect('.up-notice__content')).width
-				// 根据t=s/v(时间=路程/速度)，这里为何不需要加上#up-notice-box的宽度，因为中设置了.up-notice-content样式中设置了padding-left: 100%
-				// 恰巧计算出来的结果中已经包含了#up-notice-box的宽度
-				this.animationDuration = `${textWidth / getPx(this.speed)}s`
-				// 这里必须这样开始动画，否则在APP上动画速度不会改变
-				this.animationPlayState = 'paused'
-				setTimeout(() => {
-					this.animationPlayState = 'running'
-				}, 10)
-				// #endif
+				textWidth = ((await this.upGetRect('.up-notice__content__text')) as NodeInfo).width ?? 0
+				boxWidth = ((await this.upGetRect('.up-notice__content')) as NodeInfo).width ?? 0
+				this.transform = `translateX(${boxWidth}px)`
+				await sleep(30)
+				// 如果非禁止动画，则开始滚动
+				this.stopAnimation = false
+				if (!this.stopAnimation) 
+				this.loopAnimation(textWidth, boxWidth)
+			},
+			async loopAnimation(textWidth: number, boxWidth: number) {
+				this.transform = `translateX(-${textWidth}px)`
+				let animationDuration = ((boxWidth + textWidth) / parseInt(getPx(this.speed)))
+				this.animationDuration = animationDuration.toString() + 's'
+				this.animationDelay = '10ms'
+				await sleep(animationDuration * 1000)
+
+				// console.log(this.animationStyle)
+				// 一轮后将文字位置重置
+				this.stopAnimation = true
+				this.animationDuration = '10s'
+				this.transform = `translateX(${this.stopAnimation ? 0 : boxWidth}px)`
+				console.log(textWidth)
+				
+				// 进行下一轮
+				await sleep(300)
+				this.animationDuration = animationDuration.toString() + 's'
+				this.stopAnimation = false
+				// 如果非禁止动画，则继续下一轮滚动
+				if (!this.stopAnimation) {
+					
+					// 判断是否需要初始化计算尺寸
+					if (this.nvueInit) {
+						this.vue()
+					} else {console.log('******&&&&***************')
+						this.loopAnimation(textWidth, boxWidth)
+					}
+				}
 			},
 			// 点击通告栏
-			clickHandler(index) {
+			clickHandler(index: number) {
 				this.$emit('click')
 			},
 			// 点击右侧按钮，需要判断点击的是关闭图标还是箭头图标
@@ -197,7 +229,7 @@
 			}
 		},
 		beforeUnmount() {
-			// this.stopAnimation = true
+			this.stopAnimation = true
 		}
 	};
 </script>

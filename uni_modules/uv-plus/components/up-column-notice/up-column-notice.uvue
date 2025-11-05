@@ -106,12 +106,12 @@
 		},
 		data() {
 			return {
-				index:0
+				index: 0
 			}
 		},
 		emits: ["click", "close"],
 		methods: {
-			noticeChange(e: any){
+			noticeChange(e: UniSwiperChangeEvent){
 				this.index = e.detail.current
 			},
 			// 点击通告栏

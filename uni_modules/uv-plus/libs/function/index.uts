@@ -105,10 +105,8 @@ export function guid(len = 32, firstU = true, radix = 0): string {
         uuid[14] = '4'
 
         for (let i = 0; i < 36; i++) {
-            if (uuid[i] != null) {
-                r = 0 | Math.random() * 16
-                uuid[i] = chars[(i == 19) ? (r & 0x3) | 0x8 : r]
-            }
+			r = 0 | Math.random() * 16
+			uuid[i] = chars[(i == 19) ? (r & 0x3) | 0x8 : r]
         }
     }
     // 移除第一个字符,并用u替代,因为第一个字符为数值时,该guuid不能用作id或者class
