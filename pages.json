@@ -19,6 +19,12 @@
 				"style": {
 					"navigationBarTitleText": "折叠面板"
 				}
+			},
+			{
+				"path": "noticeBar/noticeBar",
+				"style": {
+					"navigationBarTitleText": "滚动通知"
+				}
 			}
 		]
 	}, {

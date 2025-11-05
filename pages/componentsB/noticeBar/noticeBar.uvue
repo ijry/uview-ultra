@@ -90,7 +90,7 @@
 			
 		},
 		methods: {
-			click(e) {
+			click(e: any) {
 				console.log(e)
 			}
 		},
