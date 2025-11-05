@@ -53,7 +53,6 @@
 			// 重新初始化一次内部的所有子元素
 			init() {
 				this!.children!.map((child: ComponentPublicInstance) => {
-					// child.iit()
 					child.$callMethod('init')
 				})
 			},
@@ -64,6 +63,7 @@
 			onChange(target: ComponentPublicInstance) {
 				let changeArr:Array<any> = []
 				this!.children!.map((child:ComponentPublicInstance, index: number) => {
+					// console.log('**accordion**', this.accordion)
 					// 如果是手风琴模式，将其他的折叠面板收起来
 					if (this.accordion) {
 						if (child === target) {
@@ -87,7 +87,9 @@
 				})
 
 				this.$emit('change', changeArr)
-				this.$emit(target.$data['expanded'] as Boolean ? 'open' : 'close', target.$data['name'])
+				// console.log('expanded', target.$data['expanded'])
+				let expand = target.$data['expanded'] as Boolean
+				this.$emit(expand ? 'open' : 'close', target.$data['name'] != null ? target.$data['name'] : '')
 			}
 		}
 	}

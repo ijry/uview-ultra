@@ -4,7 +4,9 @@
 	<!-- #endif -->
 	<view class="u-page">
 		<view class="u-page__item">
-			<text class="u-page__item__title">基础功能</text>
+			<view class="u-page__item__title">
+				<text class="title">基础功能</text>
+			</view>
 			<up-collapse @change="change" @close="close" @open="open">
 				<up-collapse-item title="文档指南" name="Docs guide">
 					<text class="u-collapse-content">涵盖uniapp各个方面，给开发者方向指导和设计理念，让您茅塞顿开，一马平川</text>
@@ -18,7 +20,9 @@
 			</up-collapse>
 		</view>
 		<view class="u-page__item">
-			<text class="u-page__item__title">展开和禁用</text>
+			<view class="u-page__item__title">
+				<text class="title">展开和禁用</text>
+			</view>
 			<up-collapse :value="['2']">
 				<up-collapse-item title="文档指南">
 					<text class="u-collapse-content">涵盖uniapp各个方面，给开发者方向指导和设计理念，让您茅塞顿开，一马平川</text>
@@ -32,7 +36,9 @@
 			</up-collapse>
 		</view>
 		<view class="u-page__item">
-			<text class="u-page__item__title">手风琴模式</text>
+			<view class="u-page__item__title">
+				<text class="title">手风琴模式</text>
+			</view>
 			<up-collapse accordion>
 				<up-collapse-item title="文档指南">
 					<text class="u-collapse-content">涵盖uniapp各个方面，给开发者方向指导和设计理念，让您茅塞顿开，一马平川</text>
@@ -46,7 +52,9 @@
 			</up-collapse>
 		</view>
 		<view class="u-page__item">
-			<text class="u-page__item__title">移除下划线</text>
+			<view class="u-page__item__title">
+				<text class="title">移除下划线</text>
+			</view>
 			<up-collapse accordion :border="false">
 				<up-collapse-item title="文档指南">
 					<text class="u-collapse-content">涵盖uniapp各个方面，给开发者方向指导和设计理念，让您茅塞顿开，一马平川</text>
@@ -61,7 +69,9 @@
 		</view>
 		<!-- 微信小程序不支持，因为微信中不支持 <slot #title" />的写法 -->
 		<view class="u-page__item">
-			<text class="u-page__item__title">自定义标题和内容</text>
+			<view class="u-page__item__title">
+				<text class="title">自定义标题和内容</text>
+			</view>
 			<up-collapse accordion>
 				<up-collapse-item>
 					<template #title>
@@ -125,10 +135,12 @@
 		&__item {
 
 			&__title {
-				color: $u-tips-color;
 				background-color: $u-bg-color;
 				padding: 15px;
-				font-size: 15px;
+				.title {
+					color: $u-tips-color;
+					font-size: 15px;
+				}
 
 				&__slot-title {
 					color: $u-primary;

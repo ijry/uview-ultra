@@ -78,17 +78,6 @@
 		emits: ['update:modelValue', 'change'],
     	// #endif
 		methods: {
-			addChild(ins: ComponentPublicInstance): void {
-				let exist = false
-				this.children.map(child => {
-					if (ins == child) {
-						exist = true
-					}
-				})
-				if (exist == false) {
-					this.children.push(ins)
-				}
-			},
 			// 将其他的radio设置为未选中的状态
 			unCheckedOther(childInstance: ComponentPublicInstance) {
 				this.children.map(child => {
