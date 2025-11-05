@@ -79,13 +79,12 @@
 		data() {
 			return {
 				transform: '',
-				animationDelay: '0s',
-				animationDuration: '2s', // 动画执行时间
-				animationPlayState: 'paused', // 动画的开始和结束执行
-				// nvue下，内容发生变化，导致滚动宽度也变化，需要标志为是否需要重新计算宽度
-				// 不能在内容变化时直接重新计算，因为nvue的animation模块上一次的滚动不是刚好结束，会有影响
-				nvueInit: true,
-				stopAnimation: true,
+				animationFrameId: 0,       // requestAnimationFrame 的 ID
+				startTime: 0,              // 动画开始时间
+				currentPosition: 0,        // 当前滚动位置
+				scrollWidth: 0,            // 文本宽度
+				containerWidth: 0,         // 容器宽度
+				isAnimating: false,         // 是否正在动画中
 				show: true
 			};
 		},
@@ -94,7 +93,7 @@
 				immediate: true,
 				handler(newValue: string, oldValue: string) {
 					// #ifndef APP-NVUE
-					this.vue()
+					this.startScroll();
 					// #endif
 					
 					if(!testString(newValue)) {
@@ -104,12 +103,12 @@
 			},
 			fontSize() {
 				// #ifndef APP-NVUE
-				this.vue()
+				this.startScroll();
 				// #endif
 			},
 			speed() {
 				// #ifndef APP-NVUE
-				this.vue()
+				this.startScroll();
 				// #endif
 			}
 		},
@@ -125,10 +124,7 @@
 			animationStyle() {
 				let style = {}
 				style['transform'] = this.transform
-				style['transitionDelay'] = this.animationDelay
-				style['transitionDuration'] = this.animationDuration
-				// style['animationDuration'] = this.animationDuration
-				// style['animationPlayState'] = this.animationPlayState
+				// 使用 requestAnimationFrame 进行动画，不需要 transition 或 animation 相关样式
 				return style
 			},
 			// 内部对用户传入的数据进一步分割，放到多个text标签循环，否则如果用户传入的字符串很长（100个字符以上）
@@ -154,9 +150,11 @@
 			var currentWebview = page.$getAppWebview()
 			currentWebview.addEventListener('hide', () => {
 				this.webviewHide = true
+				this.stopScroll(); // 页面隐藏时停止动画
 			})
 			currentWebview.addEventListener('show', () => {
 				this.webviewHide = false
+				this.startScroll(); // 页面显示时恢复动画
 			})
 			// #endif
 
@@ -166,59 +164,77 @@
 		methods: {
 			init() {
 				// #ifndef APP-NVUE
-				this.vue()
+				this.startScroll();
 				// #endif
 
 				if(!testString(this.text)) {
 					error('noticebar组件direction为row时，要求text参数为字符串形式')
 				}
 			},
-			// vue版处理
-			async vue() {
-				this.nvueInit = false
-				let boxWidth = 0,
-					textWidth = 0
-				// 进行一定的延时
-				await sleep()
-				// 查询盒子和文字的宽度
-				textWidth = ((await this.upGetRect('.up-notice__content__text')) as NodeInfo).width ?? 0
-				boxWidth = ((await this.upGetRect('.up-notice__content')) as NodeInfo).width ?? 0
-				this.transform = `translateX(${boxWidth}px)`
-				await sleep(30)
-				// 如果非禁止动画，则开始滚动
-				this.stopAnimation = false
-				if (!this.stopAnimation) 
-				this.loopAnimation(textWidth, boxWidth)
-			},
-			async loopAnimation(textWidth: number, boxWidth: number) {
-				this.transform = `translateX(-${textWidth}px)`
-				let animationDuration = ((boxWidth + textWidth) / parseInt(getPx(this.speed)))
-				this.animationDuration = animationDuration.toString() + 's'
-				this.animationDelay = '10ms'
-				await sleep(animationDuration * 1000)
-
-				// console.log(this.animationStyle)
-				// 一轮后将文字位置重置
-				this.stopAnimation = true
-				this.animationDuration = '10s'
-				this.transform = `translateX(${this.stopAnimation ? 0 : boxWidth}px)`
-				console.log(textWidth)
+			
+			// 初始化并开始滚动
+			async startScroll() {
+				// 如果已在动画中，先停止
+				if (this.animationFrameId > 0) {
+					cancelAnimationFrame(this.animationFrameId);
+					this.animationFrameId = 0;
+				}
 				
-				// 进行下一轮
-				await sleep(300)
-				this.animationDuration = animationDuration.toString() + 's'
-				this.stopAnimation = false
-				// 如果非禁止动画，则继续下一轮滚动
-				if (!this.stopAnimation) {
-					
-					// 判断是否需要初始化计算尺寸
-					if (this.nvueInit) {
-						this.vue()
-					} else {console.log('******&&&&***************')
-						this.loopAnimation(textWidth, boxWidth)
-					}
+				// 获取容器和文字的宽度
+				await sleep(10); // 短暂延迟确保DOM渲染完成
+				const textRect = await this.upGetRect('.up-notice__content__text') as NodeInfo;
+				const containerRect = await this.upGetRect('.up-notice__content') as NodeInfo;
+				
+				this.scrollWidth = textRect.width ?? 0;
+				this.containerWidth = containerRect.width ?? 0;
+				
+				// 设置初始位置在容器右侧外
+				this.currentPosition = this.containerWidth;
+				this.startTime = 0;
+				this.isAnimating = true;
+				
+				// 开始动画循环
+				this.animate(0);
+			},
+			
+			// 动画循环函数
+			animate(timestamp: number) {
+				if (!this.isAnimating) return;
+				
+				if (this.startTime === 0) this.startTime = timestamp;
+				
+				// 计算经过的时间
+				const elapsed = timestamp - this.startTime;
+				
+				// 根据速度计算移动距离（speed 是每秒移动的像素数）
+				const speedNum = parseInt(getPx(this.speed))
+				const distance = (speedNum * elapsed) / 1000;
+				
+				// 更新当前位置
+				this.currentPosition = this.containerWidth - distance;
+				
+				// 当文本完全滚出左侧时，重置到右侧
+				if (this.currentPosition <= -this.scrollWidth) {
+					this.startTime = timestamp;  // 重置起始时间
+					this.currentPosition = this.containerWidth;
+				}
+				
+				// 应用变换
+				this.transform = `translateX(${this.currentPosition}px)`;
+				
+				// 继续下一帧动画
+				this.animationFrameId = requestAnimationFrame((ts) => this.animate(ts));
+			},
+			
+			// 停止滚动动画
+			stopScroll() {
+				this.isAnimating = false;
+				if (this.animationFrameId > 0) {
+					cancelAnimationFrame(this.animationFrameId);
+					this.animationFrameId = 0;
 				}
 			},
+
 			// 点击通告栏
 			clickHandler(index: number) {
 				this.$emit('click')
@@ -229,7 +245,7 @@
 			}
 		},
 		beforeUnmount() {
-			this.stopAnimation = true
+			this.stopScroll(); // 组件销毁前清理动画
 		}
 	};
 </script>
@@ -263,10 +279,8 @@
 				color: $up-warning;
 				/* #ifndef APP-NVUE */
 				// 这一句很重要，为了能让滚动左右连接起来
-				padding-left: 100%;
 				word-break: keep-all;
 				white-space: nowrap;
-				animation: up-loop-animation 10s linear infinite both;
 				/* #endif */
 				@include flex(row);
 				line-height: 100%;
@@ -274,16 +288,4 @@
 		}
 
 	}
-
-	/* #ifndef APP-NVUE */
-	@keyframes up-loop-animation {
-		0% {
-			transform: translate3d(0, 0, 0);
-		}
-	
-		100% {
-			transform: translate3d(-100%, 0, 0);
-		}
-	}
-	/* #endif */
 </style>

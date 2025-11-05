@@ -11,7 +11,7 @@
 				></up-notice-bar>
 			</view>
 		</view>
-		<!-- <view class="u-demo-block">
+		<view class="u-demo-block">
 			<text class="u-demo-block__title">可关闭</text>
 			<view class="u-demo-block__content">
 				<up-notice-bar
@@ -69,7 +69,7 @@
 					bgColor="#f56c6c"
 				></up-notice-bar>
 			</view>
-		</view> -->
+		</view>
 	</view>
 	<!-- #ifdef APP -->
 	</scroll-view>
