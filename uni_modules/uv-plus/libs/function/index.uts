@@ -423,85 +423,84 @@ export function error(err: string): void {
 //     return tips
 // }
 
-// /**
-//  * @description 去除空格
-//  * @param String str 需要去除空格的字符串
-//  * @param String pos both(左右)|left|right|all 默认both
-//  */
-// export function trim(str, pos = 'both'): string {
-//     str = String(str)
-//     if (pos == 'both') {
-//         return str.replace(/^\s+|\s+$/g, '')
-//     }
-//     if (pos == 'left') {
-//         return str.replace(/^\s*/, '')
-//     }
-//     if (pos == 'right') {
-//         return str.replace(/(\s*$)/g, '')
-//     }
-//     if (pos == 'all') {
-//         return str.replace(/\s+/g, '')
-//     }
-//     return str
-// }
+/**
+ * @description 去除空格
+ * @param String str 需要去除空格的字符串
+ * @param String pos both(左右)|left|right|all 默认both
+ */
+export function trim(str: string, pos = 'both'): string {
+	return ''
+    // if (pos == 'both') {
+    //     return str.replace(/^\s+|\s+$/g, '')
+    // }
+    // if (pos == 'left') {
+    //     return str.replace(/^\s*/, '')
+    // }
+    // if (pos == 'right') {
+    //     return str.replace(/(\s*$)/g, '')
+    // }
+    // if (pos == 'all') {
+    //     return str.replace(/\s+/g, '')
+    // }
+    // return str
+}
 
-// /**
-//  * @description 对象转url参数
-//  * @param {object} data,对象
-//  * @param {Boolean} isPrefix,是否自动加上"?"
-//  * @param {string} arrayFormat 规则 indices|brackets|repeat|comma
-//  */
-// export function queryParams(data: object = {}, isPrefix: boolean = true, arrayFormat: string = 'brackets'): any {
-//     const prefix = isPrefix ? '?' : ''
-//     const _result: any = []
-//     if (['indices', 'brackets', 'repeat', 'comma'].indexOf(arrayFormat) == -1) arrayFormat = 'brackets'
-//     for (const key in data) {
-//         const value = data[key]
-//         // 去掉为空的参数
-//         if (['', undefined, null].indexOf(value) >= 0) {
-//             continue
-//         }
-//         // 如果值为数组，另行处理
-//         if (value.constructor === Array) {
-//             // e.g. {ids: [1, 2, 3]}
-//             switch (arrayFormat) {
-//                 case 'indices':
-//                     // 结果: ids[0]=1&ids[1]=2&ids[2]=3
-//                     for (let i = 0; i < value.length; i++) {
-//                         _result.push(`${key}[${i}]=${value[i]}`)
-//                     }
-//                     break
-//                 case 'brackets':
-//                     // 结果: ids[]=1&ids[]=2&ids[]=3
-//                     value.forEach((_value) => {
-//                         _result.push(`${key}[]=${_value}`)
-//                     })
-//                     break
-//                 case 'repeat':
-//                     // 结果: ids=1&ids=2&ids=3
-//                     value.forEach((_value) => {
-//                         _result.push(`${key}=${_value}`)
-//                     })
-//                     break
-//                 case 'comma':
-//                     // 结果: ids=1,2,3
-//                     let commaStr = ''
-//                     value.forEach((_value) => {
-//                         commaStr += (commaStr ? ',' : '') + _value
-//                     })
-//                     _result.push(`${key}=${commaStr}`)
-//                     break
-//                 default:
-//                     value.forEach((_value) => {
-//                         _result.push(`${key}[]=${_value}`)
-//                     })
-//             }
-//         } else {
-//             _result.push(`${key}=${value}`)
-//         }
-//     }
-//     return _result.length ? prefix + _result.join('&') : ''
-// }
+/**
+ * @description 对象转url参数
+ * @param {object} data,对象
+ * @param {Boolean} isPrefix,是否自动加上"?"
+ * @param {string} arrayFormat 规则 indices|brackets|repeat|comma
+ */
+export function queryParams(data: UTSJSONObject = {}, isPrefix: boolean = true, arrayFormat: string = 'brackets'): string {
+	return ''
+ //    const prefix = isPrefix ? '?' : ''
+ //    const _result: string[] = []
+ //    if (['indices', 'brackets', 'repeat', 'comma'].indexOf(arrayFormat) == -1) arrayFormat = 'brackets'
+	// data.toMap().forEach((value: any | null, key: string) => {
+ //        // 去掉为空的参数
+ //        if (['', null].indexOf(value) < 0) {
+ //            // 如果值为数组，另行处理
+ //            if (Array.isArray(value)) {
+ //                // e.g. {ids: [1, 2, 3]}
+ //                switch (arrayFormat) {
+ //                    case 'indices':
+ //                        // 结果: ids[0]=1&ids[1]=2&ids[2]=3
+ //                        for (let i = 0; i < value.length; i++) {
+ //                            _result.push(`${key}[${i}]=${value[i]}`)
+ //                        }
+ //                        break
+ //                    case 'brackets':
+ //                        // 结果: ids[]=1&ids[]=2&ids[]=3
+ //                        value.forEach((_value) => {
+ //                            _result.push(`${key}[]=${_value}`)
+ //                        })
+ //                        break
+ //                    case 'repeat':
+ //                        // 结果: ids=1&ids=2&ids=3
+ //                        value.forEach((_value) => {
+ //                            _result.push(`${key}=${_value}`)
+ //                        })
+ //                        break
+ //                    case 'comma':
+ //                        // 结果: ids=1,2,3
+ //                        let commaStr = ''
+ //                        value.forEach((_value) => {
+ //                            commaStr += (commaStr != '' ? ',' : '') + _value
+ //                        })
+ //                        _result.push(`${key}=${commaStr}`)
+ //                        break
+ //                    default:
+ //                        value.forEach((_value) => {
+ //                            _result.push(`${key}[]=${_value}`)
+ //                        })
+ //                }
+ //            } else {
+ //                _result.push(`${key}=${value}`)
+ //            }
+ //        }
+ //    })
+ //    return _result.length > 0 ? prefix + _result.join('&') : ''
+}
 
 /**
  * 显示消息提示框
@@ -516,39 +515,40 @@ export function toast(title: string, duration = 2000) {
     })
 }
 
-// /**
-//  * @description 根据主题type值,获取对应的图标
-//  * @param {String} type 主题名称,primary|info|error|warning|success
-//  * @param {boolean} fill 是否使用fill填充实体的图标
-//  */
-// export function type2icon(type = 'success', fill = false): any {
-//     // 如果非预置值,默认为success
-//     if (['primary', 'info', 'error', 'warning', 'success'].indexOf(type) == -1) type = 'success'
-//     let iconName = ''
-//     // 目前(2019-12-12),info和primary使用同一个图标
-//     switch (type) {
-//         case 'primary':
-//             iconName = 'info-circle'
-//             break
-//         case 'info':
-//             iconName = 'info-circle'
-//             break
-//         case 'error':
-//             iconName = 'close-circle'
-//             break
-//         case 'warning':
-//             iconName = 'error-circle'
-//             break
-//         case 'success':
-//             iconName = 'checkmark-circle'
-//             break
-//         default:
-//             iconName = 'checkmark-circle'
-//     }
-//     // 是否是实体类型,加上-fill,在icon组件库中,实体的类名是后面加-fill的
-//     if (fill) iconName += '-fill'
-//     return iconName
-// }
+/**
+ * @description 根据主题type值,获取对应的图标
+ * @param {String} type 主题名称,primary|info|error|warning|success
+ * @param {boolean} fill 是否使用fill填充实体的图标
+ */
+export function type2icon(type: string = 'success', fill: boolean = false): string {
+	return ''
+    // // 如果非预置值,默认为success
+    // if (['primary', 'info', 'error', 'warning', 'success'].indexOf(type) == -1) type = 'success'
+    // let iconName = ''
+    // // 目前(2019-12-12),info和primary使用同一个图标
+    // switch (type) {
+    //     case 'primary':
+    //         iconName = 'info-circle'
+    //         break
+    //     case 'info':
+    //         iconName = 'info-circle'
+    //         break
+    //     case 'error':
+    //         iconName = 'close-circle'
+    //         break
+    //     case 'warning':
+    //         iconName = 'error-circle'
+    //         break
+    //     case 'success':
+    //         iconName = 'checkmark-circle'
+    //         break
+    //     default:
+    //         iconName = 'checkmark-circle'
+    // }
+    // // 是否是实体类型,加上-fill,在icon组件库中,实体的类名是后面加-fill的
+    // if (fill) iconName += '-fill'
+    // return iconName
+}
 
 /**
  * @description 数字格式化
@@ -599,7 +599,7 @@ export function getDuration(value: any, unit = true): string {
 	let valueString = value.toString()
     if (unit) {
         if (/s$/.test(valueString)) {
-			return value
+			return value.toString()
 		}
         return parseInt(valueString) > 30 ? `${valueString}ms` : `${valueString}s`
     }
@@ -707,48 +707,30 @@ export function formValidate(instance: any, event: any): void {
 //     }
 // }
 
-// /**
-//  * @description 获取当前页面路径
-//  */
-// export function page(): any {
-//     const pages = getCurrentPages()
-//     // 某些特殊情况下(比如页面进行redirectTo时的一些时机)，pages可能为空数组
-//     return `/${pages[pages.length - 1].route || ''}`
-// }
+/**
+ * @description 获取当前页面路径
+ */
+export function page(): string {
+	return ''
+ //    const pages: Array<UniNormalPage> = getCurrentPages()
+ //    // 某些特殊情况下(比如页面进行redirectTo时的一些时机)，pages可能为空数组
+	// let url = ''
+	// if (pages[pages.length - 1].route != null) {
+	// 	url = pages[pages.length - 1].route
+	// }
+ //    return `/${url}`
+}
 
-// /**
-//  * @description 获取当前路由栈实例数组
-//  */
-// export function pages(): any {
-//     const pages = getCurrentPages()
+/**
+ * @description 获取当前路由栈实例数组
+ */
+// export function pages(): Array<UniNormalPage> {
+//     const pages: Array<UniNormalPage> = getCurrentPages()
 //     return pages
 // }
 
-// /**
-//  * @description 修改uView内置属性值
-//  * @param {object} props 修改内置props属性
-//  * @param {object} config 修改内置config属性
-//  * @param {object} color 修改内置color属性
-//  * @param {object} zIndex 修改内置zIndex属性
-//  */
-// export function setConfig({
-//     props = {},
-//     config = {},
-//     color = {},
-//     zIndex = {}
-// }): object {
-// 	return {}
-//     // const {
-//     // 	deepMerge,
-//     // } = uni.$u
-//     // uni.$u.config = deepMerge(uni.$u.config, config)
-//     // uni.$u.props = deepMerge(uni.$u.props, props)
-//     // uni.$u.color = deepMerge(uni.$u.color, color)
-//     // uni.$u.zIndex = deepMerge(uni.$u.zIndex, zIndex)
-// }
-
 export function getParent(that: any, name = ''): any {
-    console.log('that', that)
+    // console.log('that', that)
     let parent = that.$parent
     // 通过while历遍，这里主要是为了H5需要多层解析的问题
     while (parent) {
@@ -813,7 +795,6 @@ export default {
 //     // formValidate,
 //     // getProperty,
 //     // setProperty,
-//     // page,
-//     // pages,
-//     // setConfig
+    // page,
+    // pages
 }
