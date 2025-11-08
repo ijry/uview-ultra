@@ -24,10 +24,10 @@
 				    @change="onChange"
 				>
 					<view class="time">
-						<text class="time__item">{{ timeData.days }}&nbsp;天</text>
-						<text class="time__item">{{ timeData.hours>10?timeData.hours:'0'+timeData.hours}}&nbsp;时</text>
-						<text class="time__item">{{ timeData.minutes }}&nbsp;分</text>
-						<text class="time__item">{{ timeData.seconds }}&nbsp;秒</text>
+						<text class="time__item">{{ timeData['days'] }}&nbsp;天</text>
+						<text class="time__item">{{ timeData['hours'] }}&nbsp;时</text>
+						<text class="time__item">{{ timeData['minutes'] }}&nbsp;分</text>
+						<text class="time__item">{{ timeData['seconds'] }}&nbsp;秒</text>
 					</view>
 				</up-count-down>
 			</view>
@@ -56,15 +56,15 @@
 				>
 					<view class="time">
 						<view class="time__custom">
-							<text class="time__custom__item">{{ timeData.hours>10?timeData.hours:'0'+timeData.hours}}</text>
+							<text class="time__custom__item">{{ timeData['hours'] }}</text>
 						</view>
 						<text class="time__doc">:</text>
 						<view class="time__custom">
-							<text class="time__custom__item">{{ timeData.minutes }}</text>
+							<text class="time__custom__item">{{ timeData['minutes'] }}</text>
 						</view>
 						<text class="time__doc">:</text>
 						<view class="time__custom">
-							<text class="time__custom__item">{{ timeData.seconds }}</text>
+							<text class="time__custom__item">{{ timeData['seconds'] }}</text>
 						</view>
 					</view>
 				</up-count-down>
@@ -74,7 +74,7 @@
 			<text class="u-demo-block__title">手动控制</text>
 			<view class="u-demo-block__content">
 				<up-count-down
-				    ref="countDown"
+				    ref="countDownRef"
 				    :time="3* 1000"
 				    format="ss:SSS"
 				    :autoStart="false"
@@ -134,17 +134,17 @@
 		methods: {
 			//开始
 			start() {
-				this.$refs.countDown.start();
+				//this.$refs.countDownRef.start();
 			},
 			// 暂停
 			pause() {
-				this.$refs.countDown.pause();
+				//this.$refs.countDownRef.pause();
 			},
 			// 重置
 			reset() {
-				this.$refs.countDown.reset();
+				//this.$refs.countDownRef.reset();
 			},
-			onChange(e) {
+			onChange(e: UTSJSONObject) {
 				this.timeData = e
 			},
 			finish() {

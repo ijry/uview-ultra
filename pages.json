@@ -25,6 +25,12 @@
 				"style": {
 					"navigationBarTitleText": "滚动通知"
 				}
+			},
+			{
+				"path": "countDown/countDown",
+				"style": {
+					"navigationBarTitleText": "倒计时"
+				}
 			}
 		]
 	}, {

@@ -83,7 +83,7 @@
 			init() {
 				// 用于在父组件up-grid的children中被添加入子组件时，
 				// 重新计算item的边框
-				uni.$on('$uGridItem', () => {
+				uni.$on('$upGridItem', () => {
 					this.gridItemClasses()
 				})
 				// 父组件的实例
@@ -95,7 +95,7 @@
 				})
 				// #endif
 				// 发出事件，通知所有的grid-item都重新计算自己的边框
-				uni.$emit('$uGridItem')
+				uni.$emit('$upGridItem')
 				this.gridItemClasses()
 			},
 			// 获取父组件的参数
@@ -166,7 +166,7 @@
 		},
 		beforeUnmount() {
 			// 移除事件监听，释放性能
-			uni.$off('$uGridItem')
+			uni.$off('$upGridItem')
 		}
 	};
 </script>
