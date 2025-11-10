@@ -35,7 +35,9 @@
 				parentData: {
 					col: 0, // 父组件划分的宫格数
 					border: true, // 是否显示边框，根据父组件决定
+					width: 0,
 				} as UTSJSONObject,
+				width: '' as string,
 				classes: [] as String[] // 类名集合，用于判断是否显示右边和下边框
 			};
 		},
@@ -60,7 +62,7 @@
 				const style = {
 					background: this.bgColor
 				}
-				style['width'] = '100%'
+				style['width'] = this.width
 				return deepMerge(style, addStyle(this.customStyle))
 			}
 		},
@@ -73,6 +75,10 @@
 				})
 				// 父组件的实例
 				this.updateParentData()
+				// 获取元素该有的长度，nvue下要延时才准确
+				this.$nextTick(function(){
+					this.getItemWidth()
+				})
 				// 发出事件，通知所有的grid-item都重新计算自己的边框
 				uni.$emit('$upGridItem')
 				this.gridItemClasses()
@@ -94,14 +100,29 @@
 				// this.$parent && this.$parent.childClick(name)
 				this.$emit('click', name)
 			},
+			getItemWidth(): void {
+				// 如果是nvue，不能使用百分比，只能使用固定宽度
+				let width = ''
+				if(this.$parent != null) {
+					// 获取父组件宽度后，除以栅格数，得出每个item的宽度
+					// const parentWidth = await this.getParentWidth()
+					const parentWidth = parseFloat(this.$parent.$data['width'].toString())
+					width = (parentWidth / parseInt(this.parentData['col'].toString())).toString() + 'px'
+				}
+				this.width = width
+			},
+			// 获取父元素的尺寸
+			// getParentWidth() {
+			// 	return this.$parent.$callMethod('getWidth2')
+			// },
 			gridItemClasses() {
 				if(this.parentData?.['border'] as Boolean) {
 					let classes = [] as String[]
-					
-					// let parentCol = 3
+
 					(this.$parent?.$data?.['children'] as ComponentPublicInstance[]).map((
 						child: ComponentPublicInstance, index: number) =>{
-						let parentCol = parseInt(this.parentData['col'].toString())
+						// let parentCol = parseInt(this.parentData['col'].toString())
+						let parentCol = 3
 						if(this === child && parentCol > 0) {
 							const len = (this.$parent?.$data?.['children'] as ComponentPublicInstance[]).length
 							// 贴近右边屏幕边沿的child，并且最后一个（比如只有横向2个的时候），无需右边框

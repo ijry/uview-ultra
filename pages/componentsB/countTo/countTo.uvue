@@ -130,7 +130,7 @@
 		},
 		methods: {
 			start() {
-				// this.$refs['uCountToRef'].$callMethod('start');
+				// this.$refs['uCountToRef'].start();
 			},
 			paused() {
 				// this.$refs['uCountToRef'].$callMethod('stop');

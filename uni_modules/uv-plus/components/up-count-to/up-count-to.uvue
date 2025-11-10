@@ -86,16 +86,9 @@ export default {
 		requestAnimationFrame(): number {
 			const currTime = new Date().getTime();
 			// 为了使setTimteout的尽可能的接近每秒60帧的效果
-			let a = 0
-			if (this.lastTime == null) {
-				a = currTime
-			} else {
-				a = currTime - this.lastTime
-			}
-			console.log('***************start***************', a);
-			const timeToCall: number = Math.max(0, 16 - a);
+			const timeToCall: number = Math.max(0, 16 - (currTime - this.lastTime));
 			const id = setTimeout(() => {
-				this.count(currTime + timeToCall);
+				this.count(new Date().getTime());
 			}, timeToCall);
 			this.lastTime = currTime + timeToCall;
 			return id;
@@ -169,9 +162,12 @@ export default {
 				this.printVal = this.printVal > (this.endVal as number) ? (this.endVal as number) : this.printVal;
 			}
 			
+			this.displayValue = this.formatNumber(this.printVal.toString());
+			
 			if (progress < this.localDuration) {
 				this.rAF = this.requestAnimationFrame();
 			} else {
+				this.displayValue = this.formatNumber(this.endVal);
 				this.$emit('end');
 			}
 		},
