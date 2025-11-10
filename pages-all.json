@@ -206,11 +206,7 @@
 		// 	"style": {
 		// 		"navigationBarTitleText": "消息提示"
 		// 	}
-		// }, {
-		// 	"path": "countDown/countDown",
-		// 	"style": {
-		// 		"navigationBarTitleText": "倒计时"
-		// 	}
+		// }
 		// }, 
 		{
 			"path": "color/color",
@@ -222,11 +218,6 @@
 		// 	"path": "numberBox/numberBox",
 		// 	"style": {
 		// 		"navigationBarTitleText": "步进器"
-		// 	}
-		// }, {
-		// 	"path": "countTo/countTo",
-		// 	"style": {
-		// 		"navigationBarTitleText": "数字滚动"
 		// 	}
 		// }, {
 		// 	"path": "search/search",

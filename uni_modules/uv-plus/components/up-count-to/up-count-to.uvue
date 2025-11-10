@@ -1,0 +1,215 @@
+<template>
+	<text
+		class="up-count-num"
+		:style="{
+			fontSize: addUnit(fontSize),
+			fontWeight: bold ? 'bold' : 'normal',
+			color: color
+		}"
+	>{{ displayValue }}</text>
+</template>
+
+<script lang="uts">
+import { propsCountTo } from './props.uts';
+import { mpMixin } from '../../libs/mixin/mpMixin.uts';
+import { mixin } from '../../libs/mixin/mixin.uts';
+import { addUnit } from '../../libs/function/index.uts';
+
+/**
+ * countTo 数字滚动
+ * @description 该组件一般用于需要滚动数字到某一个值的场景，目标要求是一个递增的值。
+ * @tutorial https://ijry.github.io/uview-plus/components/countTo.html
+ * @property {String | Number}	startVal	开始的数值，默认从0增长到某一个数（默认 0 ）
+ * @property {String | Number}	endVal		要滚动的目标数值，必须 （默认 0 ）
+ * @property {String | Number}	duration	滚动到目标数值的动画持续时间，单位为毫秒（ms） （默认 2000 ）
+ * @property {Boolean}			autoplay	设置数值后是否自动开始滚动 （默认 true ）
+ * @property {String | Number}	decimals	要显示的小数位数，见官网说明（默认 0 ）
+ * @property {Boolean}			useEasing	滚动结束时，是否缓动结尾，见官网说明（默认 true ）
+ * @property {String}			decimal		十进制分割 （ 默认 "." ）
+ * @property {String}			color		字体颜色（ 默认 '#606266' )
+ * @property {String | Number}	fontSize	字体大小，单位px（ 默认 22 ）
+ * @property {Boolean}			bold		字体是否加粗（默认 false ）
+ * @property {String}			separator	千位分隔符，见官网说明
+ * @event {Function} end 数值滚动到目标值时触发
+ * @example <up-count-to ref="uCountTo" :end-val="endVal" :autoplay="autoplay"></up-count-to>
+ */
+export default {
+	name: 'up-count-to',
+	mixins: [mpMixin, mixin, propsCountTo],
+	data() {
+		return {
+			localStartVal: 0,
+			displayValue: '',
+			printVal: null as number | null,
+			paused: false, // 是否暂停
+			localDuration: 0,
+			startTime: null as number | null, // 开始的时间
+			timestamp: null as number | null, // 时间戳
+			remaining: null as number | null, // 停留的时间
+			rAF: null as number | null,
+			lastTime: 0 as number // 上一次的时间
+		};
+	},
+	computed: {
+		countDown() {
+			return (this.startVal as number) > (this.endVal as number);
+		}
+	},
+	watch: {
+		startVal() {
+			if (this.autoplay) {
+				this.start();
+			}
+		},
+		endVal() {
+			if (this.autoplay) {
+				this.start();
+			}
+		}
+	},
+	mounted() {
+		this.localStartVal = parseInt(this.startVal.toString())
+		this.displayValue = this.formatNumber(this.startVal)
+		this.localDuration = parseInt(this.duration.toString())
+		if (this.autoplay) {
+			this.start();
+		}
+	},
+	emits: ["end"],
+	methods: {
+		addUnit(e: any) {
+			return addUnit(e)
+		},
+		easingFn(t: number, b: number, c: number, d: number): number {
+			return (c * (-Math.pow(2, (-10 * t) / d) + 1) * 1024) / 1023 + b;
+		},
+		requestAnimationFrame(): number {
+			const currTime = new Date().getTime();
+			// 为了使setTimteout的尽可能的接近每秒60帧的效果
+			let a = 0
+			if (this.lastTime == null) {
+				a = currTime
+			} else {
+				a = currTime - this.lastTime
+			}
+			console.log('***************start***************', a);
+			const timeToCall: number = Math.max(0, 16 - a);
+			const id = setTimeout(() => {
+				this.count(currTime + timeToCall);
+			}, timeToCall);
+			this.lastTime = currTime + timeToCall;
+			return id;
+		},
+		cancelAnimationFrame(id: number) {
+			clearTimeout(id);
+		},
+		// 开始滚动数字
+		start() {
+			this.localStartVal = this.startVal as number;
+			this.startTime = null;
+			this.localDuration = this.duration as number;
+			this.paused = false;
+			this.rAF = this.requestAnimationFrame();
+		},
+		// 暂定状态，重新再开始滚动；或者滚动状态下，暂停
+		reStart() {
+			if (this.paused) {
+				this.resume();
+				this.paused = false;
+			} else {
+				this.stop();
+				this.paused = true;
+			}
+		},
+		// 暂停
+		stop() {
+			if (this.rAF != null) {
+				this.cancelAnimationFrame(this.rAF);
+			}
+		},
+		// 重新开始(暂停的情况下)
+		resume() {
+			if (this.remaining == null) return
+			this.startTime = 0;
+			this.localDuration = this.remaining;
+			this.localStartVal = this.printVal as number;
+			this.rAF = this.requestAnimationFrame();
+		},
+		// 重置
+		reset() {
+			this.startTime = null;
+			if (this.rAF != null) {
+				this.cancelAnimationFrame(this.rAF);
+			}
+			this.displayValue = this.formatNumber(this.startVal);
+		},
+		count(timestamp: number) {
+			if (this.startTime == null || this.startTime === 0) this.startTime = timestamp;
+			this.timestamp = timestamp;
+			const progress = timestamp - this.startTime;
+			this.remaining = this.localDuration - progress;
+			
+			if (this.useEasing) {
+				if (this.countDown) {
+					this.printVal = this.localStartVal - this.easingFn(progress, 0, this.localStartVal - (this.endVal as number), this.localDuration);
+				} else {
+					this.printVal = this.easingFn(progress, this.localStartVal, (this.endVal as number) - this.localStartVal, this.localDuration);
+				}
+			} else {
+				if (this.countDown) {
+					this.printVal = this.localStartVal - (this.localStartVal - (this.endVal as number)) * (progress / this.localDuration);
+				} else {
+					this.printVal = this.localStartVal + ((this.endVal as number) - this.localStartVal) * (progress / this.localDuration);
+				}
+			}
+			
+			if (this.countDown) {
+				this.printVal = this.printVal < (this.endVal as number) ? (this.endVal as number) : this.printVal;
+			} else {
+				this.printVal = this.printVal > (this.endVal as number) ? (this.endVal as number) : this.printVal;
+			}
+			
+			if (progress < this.localDuration) {
+				this.rAF = this.requestAnimationFrame();
+			} else {
+				this.$emit('end');
+			}
+		},
+		// 判断是否数字
+		isNumber(val: string): boolean {
+			return !isNaN(parseFloat(val));
+		},
+		formatNumber(num: any): string {
+			// 将num转为Number类型，因为其值可能为字符串数值，调用toFixed会报错
+			num = parseInt(num.toString());
+			let numStr: string = num.toFixed(parseInt(this.decimals.toString())).toString();
+			const x: string[] = numStr.split('.');
+			let x1 = x[0];
+			const x2 = x.length > 1 ? this.decimal.toString() + x[1] : '';
+			const rgx = /(\d+)(\d{3})/;
+			if (this.separator != '' && !this.isNumber(this.separator)) {
+				while (rgx.test(x1)) {
+					x1 = x1.replace(rgx, '$1' + this.separator + '$2');
+				}
+			}
+			return x1 + x2;
+		},
+		destroyed() {
+			if (this.rAF != null) {
+				this.cancelAnimationFrame(this.rAF);
+			}
+		}
+	}
+};
+</script>
+
+<style lang="scss" scoped>
+@import "../../libs/css/components.scss";
+
+.up-count-num {
+	/* #ifndef APP-NVUE */
+	display: inline-flex;
+	/* #endif */
+	text-align: center;
+}
+</style>

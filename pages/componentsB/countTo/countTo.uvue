@@ -49,7 +49,7 @@
 			<view class="u-demo-block__content">
 				<view class="u-page__tag-item">
 					<up-count-to
-						ref="uCountTo"
+						ref="uCountToRef"
 						:endVal="endVal3"
 						:autoplay="autoplay"
 					></up-count-to>
@@ -130,13 +130,13 @@
 		},
 		methods: {
 			start() {
-				this.$refs.uCountTo.start();
+				// this.$refs['uCountToRef'].$callMethod('start');
 			},
 			paused() {
-				this.$refs.uCountTo.stop()
+				// this.$refs['uCountToRef'].$callMethod('stop');
 			},
 			resume() {
-				this.$refs.uCountTo.resume()
+				// this.$refs['uCountToRef'].$callMethod('resume');
 			},
 			end() {
 				console.log('end');

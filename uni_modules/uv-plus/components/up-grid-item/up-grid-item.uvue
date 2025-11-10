@@ -35,7 +35,7 @@
 				parentData: {
 					col: 0, // 父组件划分的宫格数
 					border: true, // 是否显示边框，根据父组件决定
-				},
+				} as UTSJSONObject,
 				classes: [] as String[] // 类名集合，用于判断是否显示右边和下边框
 			};
 		},
@@ -90,7 +90,7 @@
 					name = children.findIndex((child: ComponentPublicInstance) => child === this)
 				}
 				// 调用父组件方法，发出事件
-				this.$parent!.$callMethod('childClick', name)
+				this.$parent!.$callMethod('childClick', name.toString())
 				// this.$parent && this.$parent.childClick(name)
 				this.$emit('click', name)
 			},
@@ -102,7 +102,7 @@
 					(this.$parent?.$data?.['children'] as ComponentPublicInstance[]).map((
 						child: ComponentPublicInstance, index: number) =>{
 						let parentCol = parseInt(this.parentData['col'].toString())
-						if(this === child) {
+						if(this === child && parentCol > 0) {
 							const len = (this.$parent?.$data?.['children'] as ComponentPublicInstance[]).length
 							// 贴近右边屏幕边沿的child，并且最后一个（比如只有横向2个的时候），无需右边框
 							if((index + 1) % parentCol !== 0 && index + 1 !== len) {
@@ -115,6 +115,8 @@
 							if(index < len - lessNum) {
 								classes.push('up-border-bottom')
 							}
+						} else {
+							console.log('parentCol is 0')
 						}
 					})
 					// 支付宝，头条小程序无法动态绑定一个数组类名，否则解析出来的结果会带有","，而导致失效

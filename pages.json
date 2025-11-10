@@ -31,6 +31,12 @@
 				"style": {
 					"navigationBarTitleText": "倒计时"
 				}
+			},
+			{
+				"path": "countTo/countTo",
+				"style": {
+					"navigationBarTitleText": "数字滚动"
+				}
 			}
 		]
 	}, {

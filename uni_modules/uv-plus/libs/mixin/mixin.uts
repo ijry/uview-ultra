@@ -158,7 +158,7 @@ export const mixin = defineMixin({
             if (this?.$parent?.$data?.['children'] != null) {
                 // todo如果父组件的children不存在本组件的实例，才将本实例添加到父组件的children中
                 // if (this.parent?.$data?.['children'].indexOf(this) === -1) {
-					console.log('#################### not exist')
+					// console.log('#################### not exist')
 					console.log(JSON.stringify(this.$parent?.$data?.['children']))
 					this.$parent!.$callMethod('addChild', this)
     //             } else {
@@ -170,12 +170,12 @@ export const mixin = defineMixin({
                 UTSJSONObject.keys(this.parentData).map((key: string) => {
                     if (this.$parent?.$props?.[key] != null) {
 						if (this.parentData?.[key] != null) {
-							// this.parentData!!.[key] = this.$parent?.$props?.[key]
+							this.parentData[key] = this.$parent?.$props?.[key]
 						}
                     }
 					if (this.$parent?.$data?.[key] != null) {
 						if (this.parentData?.[key] != null) {
-							// this.parentData!!.[key] = this.$parent?.$data?.[key]
+							this.parentData[key] = this.$parent?.$data?.[key]
 						}
 					}
                 })
