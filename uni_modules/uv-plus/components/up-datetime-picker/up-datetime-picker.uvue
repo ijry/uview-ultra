@@ -106,11 +106,11 @@
 		data() {
 			return {
                 // 原来的日期选择器不方便，这里增加一个hasInput选项支持类似element的自带输入框的功能。
-                inputValue: '', // 表单显示值
+                inputValue: '' as string, // 表单显示值
                 showByClickInput: false, // 是否在hasInput模式下显示日期选择弹唱
 				columns: [] as Array<Array<string>>,
 				innerDefaultIndex: [] as number[],
-				innerFormatter: () => { },
+				innerFormatter: (type: string, value: string) => { return value},
 				innerValue: '' as any
 			}
 		},
@@ -131,7 +131,7 @@
 		computed: {
 			// 如果以下这些变量发生了变化，意味着需要重新初始化各列的值
 			propsChange() {
-				return [this.mode, this.maxDate, this.minDate, this.minHour, this.maxHour, this.minMinute, this.maxMinute, this.filter, ]
+				return [this.mode, this.maxDate, this.minDate, this.minHour, this.maxHour, this.minMinute, this.maxMinute ]
 			}
 		},
 		mounted() {
@@ -186,9 +186,9 @@
 				this.getInputValue(this.innerValue.toString())
 			},
 			// 在微信小程序中，不支持将函数当做props参数，故只能通过ref形式调用
-			// setFormatter(e: Function) {
-			// 	this.innerFormatter = e
-			// },
+			setFormatter(e: (type: string, value: string) => string) {
+				this.innerFormatter = e
+			},
 			// 关闭选择器
 			close() {
 				if (this.closeOnClickOverlay) {
@@ -295,11 +295,16 @@
 				}, 0);
 			},
 			getFormatFunc():(type: string, value: string) => string {
-				let formatter: Function = function() {}
+				let formatter = function(type: string, value: string) {return value}
 				if (this.formatter != null) {
-					formatter = this.formatter as Function
+					formatter = this.formatter as (type: string, value: string) => string
 				} else {
-					// formatter = this.innerFormatter
+					let that = this
+					// formatter = function(type: string, value: string) {
+						
+					// 	return that.$callMethod('innerFormatter', type, value).toString()
+					// }
+					formatter = this.$data['innerFormatter'] as (type: string, value: string) => string
 				}
 				return formatter
 			},
@@ -346,7 +351,7 @@
 				const formatter = this.getFormatFunc()
 				// 获取各列的值，并且map后，对各列的具体值进行补0操作
 				// const results = this.getOriginColumns().map((column: UTSJSONObject) => (column['values'] as Array<string>).map((value: string) => formatter(column['type'].toString(), value)))
-								const originColumns = this.getOriginColumns();
+				const originColumns = this.getOriginColumns();
 				const results: Array<Array<string>> = [];
 				originColumns.forEach((column: UTSJSONObject) => {
 					const formattedValues: string[] = (column['values'] as Array<string>).map((value: string) => formatter(column['type'].toString(), value));
@@ -364,7 +369,11 @@
 			        let values: string[] = times(ranges[1] - ranges[0] + 1, type, ranges)
 					// 进行过滤
 			        if (this.filter != null) {
-			            values = this.filter(type, values)
+						let filterFunc = this.filter as (type: string, value: string[]) => string[]
+						let tmp = filterFunc(type, values)
+						if (tmp != null) {
+							values = tmp as string[]
+						}
 						if (values == null || (values.length == 0)) {
 							uni.showToast({
 								title: '日期filter结果不能为空',
@@ -394,7 +403,7 @@
 				if (isDateMode && !testDate(value)) {
 					// 如果是日期类型，但是又没有设置合法的当前时间的话，使用最小时间为当前时间
 					value = this.minDate
-				} else if (!isDateMode && !value) {
+				} else if (!isDateMode && value == null) {
 					// 如果是时间类型，而又没有默认值的话，就用最小时间
 					value = `${padZero(this.minHour)}:${padZero(this.minMinute)}`
 				}
@@ -473,7 +482,11 @@
 			// 根据minDate、maxDate、minHour、maxHour等边界值，判断各列的开始和结束边界值
 			getBoundary(type: string, innerValue: any) {
 			    const value = new Date(innerValue.toString())
-			    const boundary = new Date(this.$data[`${type}Date`].toString())
+				let typeDate = '0'
+				if (this.$data != null && this.$data?.[`${type}Date`] != null) {
+					typeDate = typeDate.toString()
+				}
+				const boundary = new Date(typeDate)
 			    const year = dayuts(boundary).year()
 			    let month = 1
 			    let date = 1

@@ -619,7 +619,7 @@ export function getDuration(value: any, unit = true): string {
  * @param {String} value 需要补零的值
  */
 export function padZero(value: any): string {
-	let str = value as string
+	let str = value.toString()
     return `00${str}`.slice(-2)
 }
 

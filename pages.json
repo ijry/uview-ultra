@@ -62,6 +62,19 @@
 			}
 		},
 		{
+			"path": "input/input",
+			"style": {
+				"navigationBarTitleText": "输入框"
+			}
+		},
+		{
+			"path": "picker/picker",
+			"style": {
+				"navigationBarTitleText": "选择器",
+				"navigationStyle": "custom"
+			}
+		},
+		{
 			"path": "datetimePicker/datetimePicker",
 			"style": {
 				"navigationBarTitleText": "时间选择",

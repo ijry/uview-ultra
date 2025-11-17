@@ -333,12 +333,6 @@
 		// 	}
 		// }
 		,{
-			"path": "input/input",
-			"style": {
-				"navigationBarTitleText": "输入框"
-			}
-		}
-		,{
 			"path": "album/album",
 			"style": {
 				"navigationBarTitleText": "相册"
@@ -407,13 +401,7 @@
 		// 		"navigationStyle": "custom"
 		// 	}
 		// }
-		, {
-			"path": "picker/picker",
-			"style": {
-				"navigationBarTitleText": "选择器",
-				"navigationStyle": "custom"
-			}
-		}
+		
 		, {
 			"path": "calendar/calendar",
 			"style": {

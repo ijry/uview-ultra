@@ -169,7 +169,7 @@
 			navigateBack() {
 				uni.navigateBack()
 			},
-			filter(mode: string, options: string[]) {
+			filter: function(mode: string, options: string[]) {
 				if (mode === 'year') {
 					return options.filter((option: string) => parseInt(option) % 2 === 0);
 				}
