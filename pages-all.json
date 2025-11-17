@@ -421,13 +421,6 @@
 				"navigationStyle": "custom"
 			}
 		},
-		// {
-		// 	"path": "datetimePicker/datetimePicker",
-		// 	"style": {
-		// 		"navigationBarTitleText": "时间选择",
-		// 		"navigationStyle": "custom"
-		// 	}
-		// },
 		{
 			"path": "subsection/subsection",
 			"style": {

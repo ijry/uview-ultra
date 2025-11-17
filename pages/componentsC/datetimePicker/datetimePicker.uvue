@@ -10,7 +10,7 @@
 		<up-cell-group>
 			<up-cell
 				@click="showDatetimePicker(index)"
-				:title="item.title"
+				:title="item['title']"
 				v-for="(item, index) in list"
 				:key="index"
 				isLink
@@ -18,7 +18,7 @@
 				<template #icon>
 					<image
 						class="u-cell-icon"
-						:src="item.iconUrl"
+						:src="item['iconUrl']"
 						mode="widthFix"
 					></image>
 				</template>
@@ -101,21 +101,22 @@
 	</view>
 </template>
 <script>
+	import { padZero, timeFormat, toast } from '@/uni_modules/uv-plus/libs/function/index.uts'
 	export default {
 		data() {
 			const d = new Date()
 			const year = d.getFullYear()
-			let month = uni.$u.padZero(d.getMonth() + 1)
+			let month = padZero(d.getMonth() + 1)
 			const date = d.getDate()
 			return {
 				current: 0,
-				value1: Number(new Date()),
-				value2: Number(new Date()),
-				value3: Number(new Date()),
+				value1: (new Date().getTime()),
+				value2: (new Date().getTime()),
+				value3: (new Date().getTime()),
 				value4: '05:28',
-				value5: Number(new Date()),
-				value6: Number(new Date()),
-				value7: Number(new Date()),
+				value5: (new Date().getTime()),
+				value6: (new Date().getTime()),
+				value7: (new Date().getTime()),
 				show1: false,
 				show2: false,
 				show3: false,
@@ -153,49 +154,46 @@
 		},
 		methods: {
 			close() {
-				this[`show${this.current}`] = false
+				this.$data[`show${this.current}`] = false
 			},
 			cancel() {
-				this[`show${this.current}`] = false
+				this.$data[`show${this.current}`] = false
 			},
-			confirm(e) {
-				this[`show${this.current}`] = false
-				this.result(e.value, e.mode)
+			confirm(e: UTSJSONObject) {
+				this.$data[`show${this.current}`] = false
+				this.result(e['value'].toString(), e['mode'].toString())
 			},
-			change(e) {
+			change(e: UTSJSONObject) {
 				// console.log('change', e)
 			},
 			navigateBack() {
 				uni.navigateBack()
 			},
-			filter(mode, options) {
+			filter(mode: string, options: string[]) {
 				if (mode === 'year') {
-					return options.filter((option) => option % 2 === 0);
+					return options.filter((option: string) => parseInt(option) % 2 === 0);
 				}
 
 				return options;
 			},
-			showDatetimePicker(index) {
+			showDatetimePicker(index: number) {
 				this.current = index + 1
-				this[`show${index + 1}`] = true
+				this.$data[`show${index + 1}`] = true
 			},
-			result(time, mode) {
-				const timeFormat = uni.$u.timeFormat,
-					toast = uni.$u.toast
+			result(time: string, mode: string): void {
 				switch (mode) {
 					case 'datetime':
-						return toast(timeFormat(time, 'yyyy-mm-dd hh:MM'))
+						toast(timeFormat(time, 'yyyy-mm-dd hh:MM'))
 					case 'date':
-						return toast(timeFormat(time, 'yyyy-mm-dd'))
+						toast(timeFormat(time, 'yyyy-mm-dd'))
 					case 'year-month':
-						return toast(timeFormat(time, 'yyyy-mm'))
+						toast(timeFormat(time, 'yyyy-mm'))
 					case 'time':
-						return toast(time)
+						toast(time)
 					default:
-						return ''
 				}
 			},
-			formatter(type, value) {
+			formatter(type: string, value: string) {
 				if (type === 'year') {
 					return `${value}年`
 				}
