@@ -10,6 +10,12 @@
 	"subPackages": [{
 		"root": "pages/componentsA",
 		"pages": [
+			{
+				"path": "divider/divider",
+				"style": {
+					"navigationBarTitleText": "分割线"
+				}
+			}
 		]
 	}, {
 		"root": "pages/componentsB",

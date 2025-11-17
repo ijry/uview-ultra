@@ -129,12 +129,6 @@
 					"navigationBarTitleText": "返回顶部"
 				}
 			}
-			//, {
-			// 	"path": "divider/divider",
-			// 	"style": {
-			// 		"navigationBarTitleText": "分割线"
-			// 	}
-			// },
 			// {
 			// 	"path": "rate/rate",
 			// 	"style": {

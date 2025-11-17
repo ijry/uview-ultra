@@ -24,7 +24,7 @@
 			></up-divider>
 			</view>
 		</view>
- <view class="u-demo-block">
+		<view class="u-demo-block">
 			<text class="u-demo-block__title">是否以点代替文字</text>
 			<view>
 			<up-divider
@@ -33,7 +33,7 @@
 			></up-divider>
 			</view>
 		</view>
- <view class="u-demo-block">
+		<view class="u-demo-block">
 			<text class="u-demo-block__title">文本内容靠左</text>
 			<view>
 		<up-divider
@@ -42,7 +42,7 @@
 		></up-divider>
 			</view>
 		</view>
- <view class="u-demo-block">
+		<view class="u-demo-block">
 			<text class="u-demo-block__title">文本内容靠右</text>
 			<view>
 		<up-divider
@@ -51,7 +51,7 @@
 		></up-divider>
 			</view>
 		</view>
- <view class="u-demo-block">
+		<view class="u-demo-block">
 			<text class="u-demo-block__title">自定义文本颜色</text>
 			<view>
 		<up-divider
