@@ -59,8 +59,12 @@ export function os(): string {
  * @description 获取系统信息同步接口
  * @link 获取系统信息同步接口 https://uniapp.dcloud.io/api/system/info?id=getsysteminfosync 
  */
-export function sys(): any {
+export function sys(): GetSystemInfoResult  {
     return uni.getSystemInfoSync()
+}
+
+export function getWindowInfo(): GetWindowInfoResult {
+	return uni.getWindowInfo()
 }
 
 /**
@@ -124,20 +128,21 @@ export function guid(len = 32, firstU = true, radix = 0): string {
    值(默认为undefined)，就是查找最顶层的$parent
 *  @param {string|undefined} name 父组件的参数名
 */
-// export function $parent(name = ''): any {
-//     let parent = this.$parent
-//     // 通过while历遍，这里主要是为了H5需要多层解析的问题
-//     while (parent) {
-//         // 父组件
-//         if (parent.$options && parent.$options.name !== name) {
-//             // 如果组件的name不相等，继续上一级寻找
-//             parent = parent.$parent
-//         } else {
-//             return parent
-//         }
-//     }
-//     return false
-// }
+export function $parent(name: string = '', source: ComponentPublicInstance): ComponentPublicInstance | null {
+    let parent = source.$parent
+	// todo
+    // 通过while历遍，这里主要是为了H5需要多层解析的问题
+    // while (parent) {
+    //     // 父组件
+    //     if (parent.$options && parent.$options.name !== name) {
+    //         // 如果组件的name不相等，继续上一级寻找
+    //         parent = parent.$parent
+    //     } else {
+    //         return parent
+    //     }
+    // }
+    return parent
+}
 
 /**
  * @description 样式转换

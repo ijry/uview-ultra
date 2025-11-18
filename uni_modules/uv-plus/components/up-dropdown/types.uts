@@ -1,0 +1,5 @@
+export type MenuItemType = {
+	title: string;
+	disabled: boolean;
+}
+export {}

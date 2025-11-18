@@ -11,8 +11,7 @@ export const subsectionProps = defineMixin({
         },
         // 当前活动的tab的index
         current: {
-            // type: [String, Number],
-            type: [Number],
+            type: [String, Number],
             default: crtProp['current']
         },
         // 激活的颜色
@@ -32,8 +31,7 @@ export const subsectionProps = defineMixin({
         },
         // 字体大小
         fontSize: {
-            // type: [String, Number],
-			type: [String],
+            type: [String, Number],
             default: crtProp['fontSize']
         },
         // 激活tab的字体是否加粗

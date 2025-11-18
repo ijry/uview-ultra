@@ -1,47 +1,56 @@
-import { defineMixin } from '../../libs/vue'
-import defProps from '../../libs/config/props.js'
-export const props = defineMixin({
+/*
+ * @Author       : jry
+ * @Description  :
+ * @version      : 4.0
+ * @Date         : 2025-11-18 09:30:08
+ * @LastAuthor   : jry
+ * @lastTime     : 2025-11-18 09:30:08
+ * @FilePath     : /uview-plus/uni_modules/uv-plus/components/up-dropdown-item/props.uts
+ */
+import { defineMixin } from '../../libs/vue.uts'
+import defProps from './dropdown-item.uts'
+let crtProp = defProps['dropdownItem'] as UTSJSONObject
+
+export const propsDropdownItem = defineMixin({
     props: {
         // #ifdef VUE3
         // 当前选中项的value值
         modelValue: {
             type: [Number, String, Array],
-            default: ''
+            default: crtProp['modelValue']
         },
 		// #endif
 		// #ifdef VUE2
 		// 当前选中项的value值
         value: {
             type: [Number, String, Array],
-            default: ''
+            default: crtProp['value']
         },
 		// #endif
         // 菜单项标题
         title: {
             type: [String, Number],
-            default: ''
+            default: crtProp['title']
         },
         // 选项数据，如果传入了默认slot，此参数无效
         options: {
-            type: Array,
-            default: () => {
-                return []
-            }
+            type: Array<UTSJSONObject>,
+            default: crtProp['options']
         },
         // 是否禁用此菜单项
         disabled: {
             type: Boolean,
-            default: false
+            default: crtProp['disabled']
         },
         // 下拉弹窗的高度
         height: {
             type: [Number, String],
-            default: 'auto'
+            default: crtProp['height']
         },
         // 点击遮罩是否可以收起弹窗
         closeOnClickOverlay: {
             type: Boolean,
-            default: true
+            default: crtProp['closeOnClickOverlay']
         }
     }
 })

@@ -1,30 +1,36 @@
 <template>
+	<view>{{active}}</view>
 	<view class="up-dropdown-item" v-if="active" @touchmove.stop.prevent="() => {}" @tap.stop.prevent="() => {}">
-		<block v-if="!$slots['default'] && !$slots['$default']">
+		<template v-if="$slots['default'] != null && $slots['$default'] != null">
 			<scroll-view class="up-dropdown-item__scroll" scroll-y="true" :style="{
 				height: addUnit(height)
 			}">
 				<view class="up-dropdown-item__options">
 					<up-cell-group>
-						<up-cell @click="cellClick(item['value'])" :arrow="false" :title="item['label']" v-for="(item, index) in options"
+						<up-cell @click="cellClick(item['value'])"
+							:arrow="false" :title="item['label'].toString()"
+							v-for="(item, index) in options"
 						 :key="index" :title-style="{
-							color: modelValue == item['value'] ? activeColor : inactiveColor
+							color: modelValue.toString() == item['value'].toString() ? activeColor : inactiveColor
 						}">
-							<up-icon v-if="modelValue == item['value']" name="checkbox-mark" :color="activeColor" size="32"></up-icon>
+							<up-icon v-if="modelValue.toString() == item['value'].toString()" name="checkbox-mark" :color="activeColor" size="32"></up-icon>
 						</up-cell>
 					</up-cell-group>
 				</view>
 			</scroll-view>
-		</block>
-		<slot v-else />
+		</template>
+		<template v-else>
+			<slot />
+		</template>
 	</view>
 </template>
 
-<script>
-    import { props } from './props';
-    import { mpMixin } from '../../libs/mixin/mpMixin';
-	import { mixin } from '../../libs/mixin/mixin';
-	import { addUnit, $parent } from '../../libs/function/index';
+<script lang="uts">
+    import { propsDropdownItem } from './props.uts';
+    import { mpMixin } from '../../libs/mixin/mpMixin.uts';
+	import { mixin } from '../../libs/mixin/mixin.uts';
+	import { addUnit, $parent } from '../../libs/function/index.uts';
+	import { MenuItemType} from '../up-dropdown/types.uts';
 	/**
 	 * dropdown-item 下拉菜单
 	 * @description 该组件一般用于向下展开菜单，同时可切换多个选项卡的场景
@@ -39,7 +45,7 @@
 	 */
 	export default {
 		name: 'up-dropdown-item',
-		mixins: [mpMixin, mixin, props],
+		mixins: [mpMixin, mixin, propsDropdownItem],
         options: {
             styleIsolation: 'shared',
         },
@@ -57,43 +63,53 @@
 			}
 		},
 		watch: {
-			propsChange(n) {
+			active(val: boolean) {
+				console.log('changed', val)
+			},
+			propsChange(n: string) {
 				// 当值变化时，通知父组件重新初始化，让父组件执行每个子组件的init()方法
 				// 将所有子组件数据重新整理一遍
-				if (this.parent) this.parent.init();
+				if (this.$parent != null) this.$parent!.$callMethod('init');
 			}
 		},
 		created() {
 			// 父组件的实例
-			this.parent = false;
+		// 	this.parent = false;
 		},
         emits: ['update:modelValue', 'change'],
 		methods: {
-			addUnit,
+			addUnit(e: any) {
+				return addUnit(e);
+			},
+			// getParent(name: string, source: ComponentPublicInstance = this) {
+			// 	return $parent(name, source);
+			// },
 			init() {
-				// 获取父组件u-dropdown
-				let parent = $parent.call(this, 'up-dropdown');
-				if (parent) {
+				// 获取父组件up-dropdown
+				// let parent = this.getParent('up-dropdown', this);
+				let parent = this.$parent;
+				if (parent != null) {
 					this.parent = parent;
 					// 将子组件的激活颜色配置为父组件设置的激活和未激活时的颜色
-					this.activeColor = parent.activeColor;
-					this.inactiveColor = parent.inactiveColor;
+					this.activeColor = (parent).$data['activeColor'].toString();
+					this.inactiveColor = (parent).$data['inactiveColor'].toString();
 					// 将本组件的this，放入到父组件的children数组中，让父组件可以操作本(子)组件的方法和属性
 					// push进去前，显判断是否已经存在了本实例，因为在子组件内部数据变化时，会通过父组件重新初始化子组件
-					let exist = parent.children.find(val => {
-						return this === val;
-					})
-					if (!exist) parent.children.push(this);
-					if (parent.children.length == 1) this.active = true;
+					// let exist = (parent.$data['children'] as ComponentPublicInstance[]).find((val: ComponentPublicInstance) => {
+					// 	return this === val;
+					// })
+					// if (exist == null) (parent.$data['children'] as ComponentPublicInstance[]).push(this);
+					this.getParentData('up-dropdown')
+					if ((parent.$data['children']as ComponentPublicInstance[]).length == 1) this.active = true;
 					// 父组件无法监听children的变化，故将子组件的title，传入父组件的menuList数组中
-					parent.menuList.push({
-						title: this.title,
+					(parent.$data['menuList'] as MenuItemType[]).push({
+						title: this.title.toString(),
 						disabled: this.disabled
 					});
 				}
 			},
 			// cell被点击
-			cellClick(value) {
+			cellClick(value?: any) {
 				// 修改通过v-model绑定的值
                 // #ifdef VUE2
 				this.$emit('input', value);
@@ -102,7 +118,7 @@
                 this.$emit('update:modelValue', value);
                 // #endif
 				// 通知父组件(u-dropdown)收起菜单
-				this.parent.close();
+				this.$parent!.$callMethod('close')
 				// 发出事件，抛出当前勾选项的value
 				this.$emit('change', value);
 			}

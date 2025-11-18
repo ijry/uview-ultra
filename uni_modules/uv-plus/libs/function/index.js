@@ -60,6 +60,17 @@ export function sys() {
 	return uni.getSystemInfoSync()
 }
 
+export function getWindowInfo() {
+	let ret = {}
+	// #ifdef APP || H5 || MP-WEIXIN
+	ret = uni.getWindowInfo()
+	// #endif
+	// #ifndef APP || H5 || MP-WEIXIN
+	ret = sys()
+	// #endif
+	return ret
+}
+
 /**
  * @description 取一个区间数
  * @param {Number} min 最小值

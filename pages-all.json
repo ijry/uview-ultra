@@ -151,12 +151,6 @@
 	}, {
 		"root": "pages/componentsB",
 		"pages": [
-		// {
-		// 	"path": "dropdown/dropdown",
-		// 	"style": {
-		// 		"navigationBarTitleText": "下拉菜单"
-		// 	}
-		// }, 
 		{
 			"path": "actionSheet/actionSheet",
 			"style": {

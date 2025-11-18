@@ -21,6 +21,12 @@
 		"root": "pages/componentsB",
 		"pages": [
 			{
+				"path": "dropdown/dropdown",
+				"style": {
+					"navigationBarTitleText": "下拉菜单"
+				}
+			}, 
+			{
 				"path": "collapse/collapse",
 				"style": {
 					"navigationBarTitleText": "折叠面板"
