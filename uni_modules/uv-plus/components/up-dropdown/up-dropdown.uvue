@@ -1,5 +1,7 @@
 <template>
-	<view class="up-dropdown">
+	<view class="up-dropdown" :style="{
+		height: active ? addUnit((contentHeight + parseInt(height.toString()))) : addUnit(height)
+	}">
 		<view class="up-dropdown__menu" :style="{
 			height: addUnit(height)
 		}" :class="{
@@ -20,8 +22,8 @@
 			</view>
 		</view>
 		<view class="up-dropdown__content" :style="[contentStyle, {
+			top: addUnit(height),
 			transition: `opacity ${parseInt(this.duration.toString()) / 1000}s, z-index ${parseInt(this.duration.toString()) / 1000}s linear`,
-			top: addUnit(height)
 		}]"
 		 @tap="maskClick" @touchmove.stop.prevent>
 			<view @tap.stop.prevent class="up-dropdown__content__popup" :style="[popupStyle, {
@@ -145,11 +147,12 @@
 				// 之所以不是因display: none，是因为nvue没有display这个属性
 				this!.children!.map((val: ComponentPublicInstance, idx: number) => {
 					if (index == idx) {
+						// console.log('开启', index)
 						val.$data['active'] = true
 					} else {
+						// console.log('关闭' + val.$props['title'], idx)
 						val.$data['active'] = false
 					}
-					// val.$data['active'] = index == idx ? true : false;
 				})
 				this.$emit('open', this.current);
 			},
@@ -187,10 +190,6 @@
 				// 才能让遮罩占满菜单一下，直到屏幕底部的高度
 				// getWindowInfo()为uview-plus封装的获取设备信息的方法
 				let windowHeight = this.getWindowInfo().windowHeight;
-				// this.upGetRect('.up-calendar-month-wrapper', false).then((res) => {
-				// 	let size = res as NodeInfo;
-				// 	this.width = size.width ?? 0
-				// })
 				this.$uGetRect('.up-dropdown__menu', false).then((node) => {
 					// 这里获取的是dropdown的尺寸，在H5上，uniapp获取尺寸是有bug的(以前提出修复过，后来又出现了此bug，目前hx2.8.11版本)
 					// H5端bug表现为元素尺寸的top值为导航栏底部到到元素的上边沿的距离，但是元素的bottom值确是导航栏顶部到元素底部的距离
@@ -250,13 +249,15 @@
 		}
 
 		&__content {
+			// background-color: red;
+			border: 0px solid blue;
 			position: absolute;
 			z-index: 8;
 			width: 100%;
 			left: 0px;
 			bottom: 0;
+			top: 80rpx;
 			overflow: hidden;
-			
 
 			&__mask {
 				position: absolute;

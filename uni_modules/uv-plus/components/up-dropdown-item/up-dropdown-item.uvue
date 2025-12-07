@@ -1,8 +1,8 @@
 <template>
-	<view>{{active}}</view>
-	<view class="up-dropdown-item" v-if="active" @touchmove.stop.prevent="() => {}" @tap.stop.prevent="() => {}">
-		<template v-if="$slots['default'] != null && $slots['$default'] != null">
-			<scroll-view class="up-dropdown-item__scroll" scroll-y="true" :style="{
+	<view class="up-dropdown-item" v-if="active"
+		@touchmove.stop.prevent="() => {}"@tap.stop.prevent="() => {}">
+		<template v-if="$slots['default'] == null && $slots['$default'] == null">
+			<view class="up-dropdown-item__scroll" scroll-y="false" :style="{
 				height: addUnit(height)
 			}">
 				<view class="up-dropdown-item__options">
@@ -17,7 +17,7 @@
 						</up-cell>
 					</up-cell-group>
 				</view>
-			</scroll-view>
+			</view>
 		</template>
 		<template v-else>
 			<slot />
@@ -57,14 +57,14 @@
 			}
 		},
 		computed: {
-			// 监听props是否发生了变化，有些值需要传递给父组件u-dropdown，无法双向绑定
+			// 监听props是否发生了变化，有些值需要传递给父组件up-dropdown，无法双向绑定
 			propsChange() {
 				return `${this.title}-${this.disabled}`;
 			}
 		},
 		watch: {
 			active(val: boolean) {
-				console.log('changed', val)
+				// console.log('changed', val)
 			},
 			propsChange(n: string) {
 				// 当值变化时，通知父组件重新初始化，让父组件执行每个子组件的init()方法
@@ -91,8 +91,12 @@
 				if (parent != null) {
 					this.parent = parent;
 					// 将子组件的激活颜色配置为父组件设置的激活和未激活时的颜色
-					this.activeColor = (parent).$data['activeColor'].toString();
-					this.inactiveColor = (parent).$data['inactiveColor'].toString();
+					if (parent.$data['activeColor'] != null) {
+						this.activeColor = parent.$data['activeColor'].toString();
+					}
+					if (parent.$data['inactiveColor'] != null) {
+						this.inactiveColor = parent.$data['inactiveColor'].toString();
+					}
 					// 将本组件的this，放入到父组件的children数组中，让父组件可以操作本(子)组件的方法和属性
 					// push进去前，显判断是否已经存在了本实例，因为在子组件内部数据变化时，会通过父组件重新初始化子组件
 					// let exist = (parent.$data['children'] as ComponentPublicInstance[]).find((val: ComponentPublicInstance) => {
@@ -117,7 +121,7 @@
 		        // #ifdef VUE3
                 this.$emit('update:modelValue', value);
                 // #endif
-				// 通知父组件(u-dropdown)收起菜单
+				// 通知父组件(up-dropdown)收起菜单
 				this.$parent!.$callMethod('close')
 				// 发出事件，抛出当前勾选项的value
 				this.$emit('change', value);

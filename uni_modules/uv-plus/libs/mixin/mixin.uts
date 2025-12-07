@@ -50,7 +50,6 @@ export const mixin = defineMixin({
 		   * @returns {Array|string}
 		   */
 		bem: function (name: String, fixed: Array<String>, change: Array<Array<any>>): String  {
-			console.log(this.$props)
 			  // 类名前缀
 			  const prefix = `up-${name}--`
 			  const classes = {}
@@ -162,7 +161,7 @@ export const mixin = defineMixin({
                 // todo如果父组件的children不存在本组件的实例，才将本实例添加到父组件的children中
                 // if (this.parent?.$data?.['children'].indexOf(this) === -1) {
 					// console.log('#################### not exist')
-					console.log(JSON.stringify(this.$parent?.$data?.['children']))
+					// console.log(JSON.stringify(this.$parent?.$data?.['children']))
 					this.$parent!.$callMethod('addChild', this)
     //             } else {
 				// 	console.log('#################### exist')
