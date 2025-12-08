@@ -117,12 +117,6 @@
 					"navigationBarTitleText": "复选框"
 				}
 			}
-			//, {
-			// 	"path": "empty/empty",
-			// 	"style": {
-			// 		"navigationBarTitleText": "内容为空"
-			// 	}
-			// },
 			,{
 				"path": "backtop/backtop",
 				"style": {

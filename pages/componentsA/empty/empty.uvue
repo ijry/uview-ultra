@@ -1,4 +1,7 @@
 <template>
+	<!-- #ifdef APP -->
+	<scroll-view style="flex:1">
+	<!-- #endif -->
 	<view class="u-page">
 		<view class="u-page__top-box">
 			<text class="u-demo-block__title">演示效果</text>
@@ -19,8 +22,8 @@
 		<div class="empty-select">
 			<up-cell
 				:titleStyle="{fontWeight: 500}"
-				@click="openImg(item.imgName)"
-				:title="item.title"
+				@click="openImg(item['imgName'].toString())"
+				:title="item['title']"
 				v-for="(item, index) in list"
 				:key="index"
 				isLink
@@ -28,13 +31,16 @@
 				<template #icon>
 					<image
 						class="u-cell-icon"
-						:src="item.iconUrl"
+						:src="item['iconUrl']"
 						mode="widthFix"
 					></image>
 				</template>
 			</up-cell>
 		</div>
 	</view>
+	<!-- #ifdef APP -->
+	</scroll-view>
+	<!-- #endif -->
 </template>
 
 <script>
@@ -121,7 +127,7 @@
 		},
 		methods: {
 			//点击改变图片
-			openImg(imgName) {
+			openImg(imgName: string) {
 				// this.mode = this.imgList[imgName]
 				this.mode = imgName;
 			}

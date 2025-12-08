@@ -15,6 +15,12 @@
 				"style": {
 					"navigationBarTitleText": "分割线"
 				}
+			},
+			{
+				"path": "empty/empty",
+				"style": {
+					"navigationBarTitleText": "内容为空"
+				}
 			}
 		]
 	}, {
