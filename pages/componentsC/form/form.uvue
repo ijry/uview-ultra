@@ -193,7 +193,7 @@
 					:formatter="formatter"
 				></up-calendar>
 				<up-code
-					ref="uCode"
+					ref="upCodeRef"
 					@change="codeChange"
 					seconds="20"
 					@start="disabled1 = true"
@@ -214,6 +214,7 @@
 </template>
 
 <script>
+	import { toast, timeFormat } from '@/uni_modules/uv-plus/libs/function/index'
 	export default {
 		data() {
 			return {
@@ -235,7 +236,7 @@
 					code: ''
 				},
 				showSex: false,
-				birthday: Number(new Date()),
+				birthday: new Date().getTime(),
 				actions: [{
 						name: '男',
 					},
@@ -255,8 +256,8 @@
 					}, {
 						// 此为同步验证，可以直接返回true或者false，如果是异步验证，稍微不同，见下方说明
 						validator: (rule, value, callback) => {
-							// 调用uView自带的js验证规则，详见：https://www.uviewui.com/js/test.html
-							return uni.$u.test.chinese(value);
+							// 调用uiew-plus自带的js验证规则
+							// return testChinese(value);
 						},
 						message: "姓名必须为中文",
 						// 触发器可以同时用blur和change，二者之间用英文逗号隔开
@@ -341,7 +342,7 @@
 		},
 		onReady() {
 			// 如果需要兼容微信小程序，并且校验规则中含有方法等，只能通过setRules方法设置规则
-			this.$refs.form1.setRules(this.rules)
+			this.$refs['.getTime()'].setRules(this.rules)
 		},
 		methods: {
 			afterRead(event) {
@@ -386,7 +387,7 @@
 				this.tips = text;
 			},
 			getCode() {
-				if (this.$refs.uCode.canGetCode) {
+				if (this.$refs['upCodeRef'].canGetCode) {
 					// 模拟向后端请求验证码
 					uni.showLoading({
 						title: '正在获取验证码'
@@ -394,26 +395,26 @@
 					setTimeout(() => {
 						uni.hideLoading();
 						// 这里此提示会被this.start()方法中的提示覆盖
-						uni.$u.toast('验证码已发送');
+						toast('验证码已发送');
 						// 通知验证码组件内部开始倒计时
-						this.$refs.uCode.start();
+						this.$refs['upCodeRef'].start();
 					}, 2000);
 				} else {
-					uni.$u.toast('倒计时结束后再发送');
+					toast('倒计时结束后再发送');
 				}
 			},
 			calendarClose() {
 				this.showCalendar = false
-				this.$refs.form1.validateField('hotel')
+				this.$refs['form1'].validateField('hotel')
 			},
 			birthdayClose() {
 				this.showBirthday = false
-				this.$refs.form1.validateField('userInfo.birthday')
+				this.$refs['form1'].validateField('userInfo.birthday')
 			},
 			birthdayConfirm(e) {
 				this.showBirthday = false
-				this.model1.userInfo.birthday = uni.$u.timeFormat(e.value, 'yyyy-mm-dd')
-				this.$refs.form1.validateField('userInfo.birthday')
+				this.model1['userInfo']['birthday'] = timeFormat(e.value, 'yyyy-mm-dd')
+				this.$refs['form1'].validateField('userInfo.birthday')
 			},
 			submit() {
 				// 如果有错误，会在catch中返回报错信息数组，校验通过则在then中返回true
@@ -426,11 +427,11 @@
 			reset() {
 				const validateList = ['userInfo.name', 'userInfo.sex', 'radiovalue1', 'checkboxValue1', 'intro',
 				'hotel', 'code', 'userInfo.birthday']
-				this.$refs.form1.resetFields()
-				this.$refs.form1.clearValidate()
+				this.$refs['form1'].resetFields()
+				this.$refs['form1'].clearValidate()
 				setTimeout(()=>{
-					this.$refs.form1.clearValidate(validateList)
-					// 或者使用 this.$refs.form1.clearValidate()
+					this.$refs['form1'].clearValidate(validateList)
+					// 或者使用 this.$refs['form1'].clearValidate()
 				},10)
 			},
 			hideKeyboard() {

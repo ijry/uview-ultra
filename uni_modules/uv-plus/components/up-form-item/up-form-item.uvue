@@ -74,17 +74,17 @@
 	</view>
 </template>
 
-<script>
-	import { props } from './props';
-	import { mpMixin } from '../../libs/mixin/mpMixin';
-	import { mixin } from '../../libs/mixin/mixin';
-	import defProps from '../../libs/config/props.js'
-	import color from '../../libs/config/color';
-	import { addStyle, addUnit, getProperty, setProperty, error } from '../../libs/function/index';
+<script lang="uts">
+	import { propsFormItem } from "./props.uts";
+	import { mpMixin } from '../../libs/mixin/mpMixin.uts';
+	import { mixin } from '../../libs/mixin/mixin.uts';
+	import defProps from '../up-line/line.uts'
+	import color from '../../libs/config/color.uts';
+	import { addStyle, addUnit, getProperty, setProperty, error } from '../../libs/function/index.uts';
 	/**
 	 * Form 表单
 	 * @description 此组件一般用于表单场景，可以配置Input输入框，Select弹出框，进行表单验证等。
-	 * @tutorial https://uview-plus.jiangruyi.com/components/form.html
+	 * @tutorial https://ijry.github.io/uview-plus/components/form.html
 	 * @property {String}			label			input的label提示语
 	 * @property {String}			prop			绑定的值
 	 * @property {Array}			rules			绑定的规则
@@ -99,7 +99,7 @@
 	 */
 	export default {
 		name: 'up-form-item',
-		mixins: [mpMixin, mixin, props],
+		mixins: [mpMixin, mixin, propsFormItem],
 		data() {
 			return {
 				// 错误提示语
@@ -120,11 +120,11 @@
 				itemRules: []
 			}
 		},
-		// 组件创建完成时，将当前实例保存到u-form中
+		// 组件创建完成时，将当前实例保存到up-form中
 		computed: {
-			propsLine() {
-				return defProps.line
-			}
+			// propsLine() {
+			// 	return defProps['line'] as UTSJSONObject
+			// }
 		},
 		mounted() {
 			this.init()
@@ -134,14 +134,18 @@
 			// 监听规则的变化
 			rules: {
 				immediate: true,
-				handler(n) {
+				handler(n: any) {
 					this.setRules(n);
 				},
 			},
 		},
 		methods: {
-			addStyle,
-			addUnit,
+			addStyle(val: any): string {
+				return addStyle(val)
+			},
+			addUnit(val: any): string {
+				return addUnit(val)
+			},
 			init() {
 				// 父组件的实例
 				this.updateParentData()
@@ -150,7 +154,7 @@
 				}
 			},
 			// 手动设置校验的规则，如果规则中有函数的话，微信小程序中会过滤掉，所以只能手动调用设置规则
-			setRules(rules) {
+			setRules(rules: Array<any>) {
 				// 判断是否有规则
 				if (rules.length === 0) {
 					this.itemRules = [];
@@ -185,7 +189,6 @@
 </script>
 
 <style lang="scss" scoped>
-
 	.up-form-item {
 		@include flex(column);
 		font-size: 14px;

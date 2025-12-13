@@ -267,13 +267,7 @@
 		// 	"style": {
 		// 		"navigationBarTitleText": "表格"
 		// 	}
-		// }, {
-		// 	"path": "form/form",
-		// 	"style": {
-		// 		"navigationBarTitleText": "表单",
-		// 		"navigationStyle": "custom"
-		// 	}
-		// }
+		// },
 		{
 			"path": "textarea/textarea",
 			"style": {

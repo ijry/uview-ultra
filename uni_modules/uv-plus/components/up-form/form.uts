@@ -1,11 +1,11 @@
 /*
- * @Author       : LQ
+ * @Author       : jry
  * @Description  :
- * @version      : 1.0
- * @Date         : 2021-08-20 16:44:21
+ * @version      : 4.0
+ * @Date         : 2024-04-22 16:44:21
  * @LastAuthor   : jry
- * @lastTime     : 2025-12-08 12:49:49
- * @FilePath     : /uview-plus/libs/config/props/form.js
+ * @lastTime     : 2024-08-28 12:27:20
+ * @FilePath     : /uview-plus/libs/config/props/form.uts
  */
 export default {
     // form 组件
@@ -19,4 +19,4 @@ export default {
         labelAlign: 'left',
         labelStyle: {}
     }
-}
+} as UTSJSONObject
