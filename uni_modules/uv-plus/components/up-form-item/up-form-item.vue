@@ -189,7 +189,7 @@
 	.up-form-item {
 		@include flex(column);
 		font-size: 14px;
-		color: $u-main-color;
+		color: $up-main-color;
 
 		&__body {
 			@include flex;
@@ -213,7 +213,7 @@
 					&__required {
 						position: absolute;
 						left: -9px;
-						color: $u-error;
+						color: $up-error;
 						line-height: 20px;
 						font-size: 20px;
 						top: 3px;
@@ -223,7 +223,7 @@
 						@include flex;
 						align-items: center;
 						flex: 1;
-						color: $u-main-color;
+						color: $up-main-color;
 						font-size: 15px;
 					}
 				}
@@ -245,7 +245,7 @@
 
 					&__icon {
 						margin-left: 10rpx;
-						color: $u-light-color;
+						color: $up-light-color;
 						font-size: 30rpx;
 					}
 				}
@@ -253,7 +253,7 @@
 				&__message {
 					font-size: 12px;
 					line-height: 12px;
-					color: $u-error;
+					color: $up-error;
 				}
 			}
 		}

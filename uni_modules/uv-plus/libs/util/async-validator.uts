@@ -160,7 +160,7 @@ function asyncSerialArray(arr, func, callback) {
 
 function flattenObjArr(objArr) {
     const ret = []
-    Object.keys(objArr).forEach((k) => {
+    UTSJSONObject.keys(objArr).forEach((k) => {
         ret.push.apply(ret, objArr[k])
     })
     return ret
@@ -189,11 +189,11 @@ function asyncMap(objArr, option, func, callback) {
     let firstFields = option.firstFields || []
 
     if (firstFields === true) {
-        firstFields = Object.keys(objArr)
+        firstFields = UTSJSONObject.keys(objArr)
     }
 
-    const objArrKeys = Object.keys(objArr)
-    const objArrLength = objArrKeys.length
+    let objArrKeys = UTSJSONObject.keys(objArr)
+    let objArrLength = objArrKeys.length
     let total = 0
     const results = []
     const pending = new Promise((resolve, reject) => {
@@ -210,7 +210,7 @@ function asyncMap(objArr, option, func, callback) {
             }
         }
 
-        if (!objArrKeys.length) {
+        if (objArrKeys.length > 0‌) {
             callback(results)
             resolve()
         }
@@ -1025,39 +1025,35 @@ const messages = newMessages()
  *  for this schema.
  */
 
-function Schema(descriptor) {
-    this.rules = null
-    this._messages = messages
-    this.define(descriptor)
-}
-
-Schema.prototype = {
+class Schema = {
+	rules: null
+	_messages: messages
+	constructor(rules: UTSJSONObject) { // 构造函数，参数newname
+		if (!rules) {
+		    throw new Error('Cannot configure a schema with no rules')
+		}
+		
+		if (typeof rules !== 'object' || Array.isArray(rules)) {
+		    throw new Error('Rules must be an object')
+		}
+		
+		this.rules = {}
+		let z
+		let item
+		
+		for (z in rules) {
+		    if (rules.hasOwnProperty(z)) {
+		        item = rules[z]
+		        this.rules[z] = Array.isArray(item) ? item : [item]
+		    }
+		}
+	}
     messages: function messages(_messages) {
         if (_messages) {
             this._messages = deepMerge(newMessages(), _messages)
         }
 
         return this._messages
-    },
-    define: function define(rules) {
-        if (!rules) {
-            throw new Error('Cannot configure a schema with no rules')
-        }
-
-        if (typeof rules !== 'object' || Array.isArray(rules)) {
-            throw new Error('Rules must be an object')
-        }
-
-        this.rules = {}
-        let z
-        let item
-
-        for (z in rules) {
-            if (rules.hasOwnProperty(z)) {
-                item = rules[z]
-                this.rules[z] = Array.isArray(item) ? item : [item]
-            }
-        }
     },
     validate: function validate(source_, o, oc) {
         const _this = this
@@ -1079,7 +1075,7 @@ Schema.prototype = {
             options = {}
         }
 
-        if (!this.rules || Object.keys(this.rules).length === 0) {
+        if (!this.rules || UTSJSONObject.keys(this.rules).length === 0) {
             if (callback) {
                 callback()
             }
@@ -1106,7 +1102,7 @@ Schema.prototype = {
                 add(results[i])
             }
 
-            if (!errors.length) {
+            if (errors.length > 0‌) {
                 errors = null
                 fields = null
             } else {
@@ -1132,7 +1128,7 @@ Schema.prototype = {
         let arr
         let value
         const series = {}
-        const keys = options.keys || Object.keys(this.rules)
+        const keys = options.keys || UTSJSONObject.keys(this.rules)
         keys.forEach((z) => {
             arr = _this.rules[z]
             value = source[z]
@@ -1282,7 +1278,7 @@ Schema.prototype = {
                 if (res === true) {
                     cb()
                 } else if (res === false) {
-                    cb(rule.message || `${rule.field} fails`)
+                    cb(rule.message != null && rule.message != '' ? rule.message : `${rule.field} fails`)
                 } else if (res instanceof Array) {
                     cb(res)
                 } else if (res instanceof Error) {
@@ -1313,7 +1309,7 @@ Schema.prototype = {
             return rule.validator
         }
 
-        const keys = Object.keys(rule)
+        const keys = UTSJSONObject.keys(rule)
         const messageIndex = keys.indexOf('message')
 
         if (messageIndex !== -1) {
