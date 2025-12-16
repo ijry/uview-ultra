@@ -64,9 +64,10 @@
 				}
 				// 设置up-index-item的id为anchor的text标识符，因为非nvue下滚动列表需要依赖scroll-view滚动到元素的特性
 				// if (typeof this.text == 'string') {
-					indexListItem.$data['id'] = this.text.toString().charCodeAt(0)
+					// 元素id不能包含特殊字符会导致H5下点击索引滚动失效
+					indexListItem.$data['id'] = this.text.toString().charCodeAt(0).toString()
 				// } else {
-				// 	indexListItem.$data['id'] = this.text.name.charCodeAt(0)
+				// 	indexListItem.$data['id'] = this.text.name.charCodeAt(0).toString()
 				// }
 				// #endif
 			}

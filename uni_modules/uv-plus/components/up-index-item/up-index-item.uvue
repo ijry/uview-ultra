@@ -1,8 +1,8 @@
 <template>
     <view
         class="up-index-item"
-        :id="`up-index-item-` + id.toString()"
-        :class="[`up-index-item-` + id.toString()]"
+		:id="'up-index-item-' + id"
+		:class="['up-index-item-' + id]"
     >
         <slot />
     </view>

@@ -1,5 +1,5 @@
 <template>
-	<up-index-list :indexList="indexList" style="height: 500px;">
+	<up-index-list :indexList="indexList" style="height: 100%">
 		<template #header>
 			<view class="list">
 				<view class="list__item" @click="goNext">
@@ -25,13 +25,8 @@
 			</view>
 		</template>
 		<template :key="index" v-for="(item, index) in itemArr">
-			<!-- #ifdef APP-NVUE -->
-			<up-index-anchor :text="indexList[index]"></up-index-anchor>
-			<!-- #endif -->
 			<up-index-item>
-				<!-- #ifndef APP-NVUE -->
 				<up-index-anchor :text="indexList[index]"></up-index-anchor>
-				<!-- #endif -->
 				<view class="list" v-for="(item1, index1) in item" :key="index1">
 					<view class="list__item">
 						<image class="list__item__avatar" :src="item1['url']"></image>

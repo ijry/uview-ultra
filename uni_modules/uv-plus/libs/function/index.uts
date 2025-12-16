@@ -737,7 +737,7 @@ export function getParent(that: ComponentPublicInstance, name = ''): ComponentPu
     let parent = that.$parent
     // 通过while历遍，这里主要是为了H5需要多层解析的问题
     while (parent != null) {
-		console.log(parent.$options)
+		// console.log(parent.$options)
         // 父组件
         if (parent != null && parent.$options != null && parent.$options['name'] != name) {
             // 如果组件的name不相等，继续上一级寻找
