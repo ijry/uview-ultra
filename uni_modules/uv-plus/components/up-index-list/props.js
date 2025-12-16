@@ -1,4 +1,4 @@
-import { defineMixin } from '../../libs/vue.js'
+import { defineMixin } from '../../libs/vue'
 import defProps from '../../libs/config/props.js'
 export const props = defineMixin({
     props: {
@@ -31,6 +31,11 @@ export const props = defineMixin({
         safeBottomFix: {
             type: Boolean,
             default: () => defProps.indexList.safeBottomFix
+        },
+        //自定义下边距
+        itemMargin: {
+            type: String,
+            default: () => defProps.indexList.itemMargin
         },
     }
 })

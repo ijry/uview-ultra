@@ -332,13 +332,7 @@
 			"style": {
 				"navigationBarTitleText": "布局"
 			}
-		}
-		// , {
-		// 	"path": "indexList/indexList",
-		// 	"style": {
-		// 		"navigationBarTitleText": "索引列表"
-		// 	}
-		// }, {
+		}, {
 		// 	"path": "tooltip/tooltip",
 		// 	"style": {
 		// 		"navigationBarTitleText": "长按提示"

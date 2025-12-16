@@ -1,5 +1,5 @@
 <template>
-	<up-index-list :indexList="indexList">
+	<up-index-list :indexList="indexList" style="height: 500px;">
 		<template #header>
 			<view class="list">
 				<view class="list__item" @click="goNext">
@@ -34,8 +34,8 @@
 				<!-- #endif -->
 				<view class="list" v-for="(item1, index1) in item" :key="index1">
 					<view class="list__item">
-						<image class="list__item__avatar" :src="item1.url"></image>
-						<text class="list__item__user-name">{{item1.name}}</text>
+						<image class="list__item__avatar" :src="item1['url']"></image>
+						<text class="list__item__user-name">{{item1['name']}}</text>
 					</view>
 					<up-line></up-line>
 				</view>
@@ -50,13 +50,14 @@
 </template>
 
 <script>
+	import { random } from '@/uni_modules/uv-plus/libs/function/index';
 	const indexList = () => {
-		const indexList = []
-		const charCodeOfA = 'A'.charCodeAt(0)
+		const indexList: string[] = []
+		const charCodeOfA : number | null = 'A'.charCodeAt(0)
 		indexList.push("↑")
 		indexList.push("☆")
 		for (let i = 0; i < 16; i++) {
-			indexList.push(String.fromCharCode(charCodeOfA + i))
+			indexList.push(String.fromCharCode(charCodeOfA! + i))
 		}
 		indexList.push('#')
 		return indexList
@@ -64,7 +65,7 @@
 	export default {
 		data() {
 			return {
-				indexList: indexList(),
+				indexList: indexList() as string[],
 				urls: [
 					'./static/uview/album/1.jpg',
 					'./static/uview/album/2.jpg',
@@ -83,13 +84,13 @@
 			}
 		},
 		computed: {
-			itemArr() {
-				return this.indexList.map(item => {
-					const arr = []
+			itemArr(): UTSJSONObject[][] {
+				return this.indexList.map((item: string) => {
+					const arr: UTSJSONObject[] = []
 					for (let i = 0; i < 10; i++) {
 						arr.push({
-							name: this.names[uni.$u.random(0, this.names.length - 1)],
-							url: this.urls[uni.$u.random(0, this.urls.length - 1)]
+							name: this.names[random(0, this.names.length - 1)],
+							url: this.urls[random(0, this.urls.length - 1)]
 						})
 					}
 					return arr

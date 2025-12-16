@@ -90,13 +90,13 @@ export const mixin = defineMixin({
             //     })
             // }
         },
-        $uGetRect(selector: string, all: boolean = false): Promise<any> {
+        $uGetRect(selector: string, all: boolean = false): Promise<NodeInfo> {
             return this.upGetRect(selector, all)
         },
         // 查询节点信息
         // 目前此方法在支付宝小程序中无法获取组件跟接点的尺寸，为支付宝的bug(2020-07-21)
         // 解决办法为在组件根部再套一个没有任何作用的view元素
-        upGetRect(selector: string, all: boolean = false): Promise<any> {
+        upGetRect(selector: string, all: boolean = false): Promise<NodeInfo> {
             return new Promise((resolve) => {
 				if (all == true) {
 					uni.createSelectorQuery()
@@ -135,7 +135,7 @@ export const mixin = defineMixin({
         },
 		addChild(ins: ComponentPublicInstance): void {
 			let exist = false
-			this.children!.map(child => {
+			this.children!.map((child: ComponentPublicInstance) => {
 				if (ins == child) {
 					exist = true
 				}

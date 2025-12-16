@@ -98,11 +98,18 @@
 				"navigationBarTitleText": "时间选择",
 				"navigationStyle": "custom"
 			}
-		},{
-			"path": "form/form",
+		}
+		// ,{
+		// 	"path": "form/form",
+		// 	"style": {
+		// 		"navigationBarTitleText": "表单",
+		// 		"navigationStyle": "custom"
+		// 	}
+		// }
+		, {
+			"path": "indexList/indexList",
 			"style": {
-				"navigationBarTitleText": "表单",
-				"navigationStyle": "custom"
+				"navigationBarTitleText": "索引列表"
 			}
 		}
 		]

@@ -330,7 +330,7 @@
 			},
 			getMonthRect() {
 				// 获取每个月份数据的尺寸，用于父组件在scroll-view滚动事件中，监听当前滚动到了第几个月份
-				const promiseAllArr: Array<Promise<any>> = this.months.map((item: monthsItem, index):Promise<any> => {
+				const promiseAllArr: Array<Promise<NodeInfo>> = this.months.map((item: monthsItem, index):Promise<NodeInfo> => {
 					return this.getMonthRectByPromise(`up-calendar-month-${index}`)
 				})
 				// 一次性返回
@@ -349,7 +349,7 @@
 					})
 			},
 			// 获取每个月份区域的尺寸
-			getMonthRectByPromise(el: any): Promise<any> {
+			getMonthRectByPromise(el: any): Promise<NodeInfo> {
 				// upGetRect为uview-plus自带的节点查询简化方法，详见文档介绍：https://ijry.github.io/uview-plus/js/getRect.html
 				// 组件内部一般用this.upGetRect
 				// return new Promise(resolve => {
