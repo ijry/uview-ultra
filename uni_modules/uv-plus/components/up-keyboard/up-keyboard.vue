@@ -26,7 +26,7 @@
 					    class="up-keyboard__tooltip__item up-keyboard__tooltip__cancel"
 					    v-if="showCancel"
 					    @tap="onCancel"
-					>{{showCancel && cancelText}}</text>
+					>{{showCancel ? cancelText : ''}}</text>
 				</view>
 				<view>
 					<text

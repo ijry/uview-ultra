@@ -12,7 +12,7 @@
 			<up-cell
 			    :titleStyle="{fontWeight: 500}"
 			    @click="openKeyboard(index)"
-			    :title="item.title"
+			    :title="item['title']"
 			    v-for="(item, index) in list"
 			    :key="index"
 			    isLink
@@ -20,7 +20,7 @@
 				<template #icon>
 					<image
 						class="u-cell-icon"
-						:src="item.iconUrl"
+						:src="item['iconUrl']"
 						mode="widthFix"
 					></image>
 				</template>
@@ -29,7 +29,7 @@
 		<up-keyboard
 		    :mode="keyData.mode"
 		    :dotDisabled="keyData.dotDisabled"
-		    :random='keyData.random'
+		    :random="keyData.random"
 		    :show="show"
 		    @close="close"
 			@cancel="cancel"
@@ -41,6 +41,11 @@
 </template>
 
 <script>
+	type keyDataType = {
+		mode: string;
+		dotDisabled: boolean;
+		random: boolean;
+	}
 	export default {
 		data() {
 			return {
@@ -49,7 +54,7 @@
 					mode: '',
 					dotDisabled: false,
 					random: false,
-				},
+				} as keyDataType,
 				list: [{
 						title: '车牌号键盘',
 						iconUrl: 'https://cdn.uviewui.com/uview/demo/keyboard/car.png'
@@ -79,12 +84,12 @@
 				uni.navigateBack();
 			},
 			// 点击展示不同的键盘
-			openKeyboard(indexNum) {
+			openKeyboard(indexNum: number) {
 				this.keyData = {
 					mode: '',
 					dotDisabled: false,
 					random: false,
-				}
+				} as keyDataType
 				if (indexNum == 0) {
 					this.keyData.mode = ''
 				} else if (indexNum == 1) {
@@ -101,7 +106,7 @@
 				this.input = ''
 				this.show = true
 			},
-			change(e) {
+			change(e: any) {
 				// console.log('change');
 				this.input += e
 			},

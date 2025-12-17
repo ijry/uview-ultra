@@ -55,6 +55,13 @@
 				"style": {
 					"navigationBarTitleText": "数字滚动"
 				}
+			},
+			{
+				"path": "keyboard/keyboard",
+				"style": {
+					"navigationBarTitleText": "键盘",
+					"navigationStyle": "custom"
+				}
 			}
 		]
 	}, {

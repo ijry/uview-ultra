@@ -168,12 +168,6 @@
 		// 		"navigationBarTitleText": "提示消息"
 		// 	}
 		// }, {
-		// 	"path": "keyboard/keyboard",
-		// 	"style": {
-		// 		"navigationBarTitleText": "键盘",
-		// 		"navigationStyle": "custom"
-		// 	}
-		// }, {
 		// 	"path": "slider/slider",
 		// 	"style": {
 		// 		"navigationBarTitleText": "滑动选择器"
