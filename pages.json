@@ -118,6 +118,11 @@
 			"style": {
 				"navigationBarTitleText": "索引列表"
 			}
+		}, {
+			"path": "list/list",
+			"style": {
+				"navigationBarTitleText": "列表"
+			}
 		}
 		]
 	},

@@ -1,29 +1,13 @@
 <template>
-	<!-- #ifdef APP-NVUE -->
-	<list
-		class="up-list"
-		:enableBackToTop="enableBackToTop"
-		:loadmoreoffset="lowerThreshold"
-		:showScrollbar="showScrollbar"
-		:style="[listStyle]"
-		:offset-accuracy="Number(offsetAccuracy)"
-		@scroll="onScroll"
-		@loadmore="scrolltolower"
-	>
-		<slot />
-	</list>
-	<!-- #endif -->
-	<!-- #ifndef APP-NVUE -->
 	<scroll-view
 		class="up-list"
 		:scroll-into-view="scrollIntoView"
 		:style="[listStyle]"
 		:scroll-y="scrollable"
-		:scroll-top="Number(scrollTop)"
-		:lower-threshold="Number(lowerThreshold)"
-		:upper-threshold="Number(upperThreshold)"
+		:scroll-top="parseFloat(scrollTop.toString())"
+		:lower-threshold="parseFloat(lowerThreshold.toString())"
+		:upper-threshold="parseFloat(upperThreshold.toString())"
 		:show-scrollbar="showScrollbar"
-		:enable-back-to-top="enableBackToTop"
 		:scroll-with-animation="scrollWithAnimation"
 		@scroll="onScroll"
 		@scrolltolower="scrolltolower"
@@ -37,23 +21,18 @@
 		@refresherrefresh="refresherrefresh"
 		@refresherrestore="refresherrestore"
 		@refresherabort="refresherabort"
-		:scroll-anchoring="true"
 	>
 		<view>
 			<slot />
 		</view>
 	</scroll-view>
-	<!-- #endif -->
 </template>
 
 <script>
-	import { props } from './props';
-	import { mpMixin } from '../../libs/mixin/mpMixin';
-	import { mixin } from '../../libs/mixin/mixin';
-	import { addUnit, addStyle, deepMerge, sleep, getWindowInfo } from '../../libs/function/index';
-	// #ifdef APP-NVUE
-	const dom = uni.requireNativePlugin('dom')
-	// #endif
+	import { propsList } from './props.uts';
+	import { mpMixin } from '../../libs/mixin/mpMixin.uts';
+	import { mixin } from '../../libs/mixin/mixin.uts';
+	import { addUnit, addStyle, deepMerge, sleep, getWindowInfo } from '../../libs/function/index.uts';
 	/**
 	 * List 列表
 	 * @description 该组件为高性能列表组件
@@ -78,7 +57,7 @@
 	 */
 	export default {
 		name: 'up-list',
-		mixins: [mpMixin, mixin, props],
+		mixins: [mpMixin, mixin, propsList],
 		watch: {
 			scrollIntoView(n) {
 				this.scrollIntoViewById(n)
@@ -90,82 +69,65 @@
 				innerScrollTop: 0,
 				// vue下，scroll-view在上拉加载时的偏移值
 				offset: 0,
-				sys: getWindowInfo()
+				sys: getWindowInfo() as GetWindowInfoResult,
+				parent: null as ComponentPublicInstance|null,
+				children: [] as ComponentPublicInstance[]
 			}
 		},
 		computed: {
 			listStyle() {
 				const style = {};
-				if (this.width != 0) style.width = addUnit(this.width)
-				if (this.height != 0) style.height = addUnit(this.height)
+				if (this.width != 0) style['width'] = addUnit(this.width)
+				if (this.height != 0) style['height'] = addUnit(this.height)
 				// 如果没有定义列表高度，则默认使用屏幕高度
-				if (!style.height) style.height = addUnit(this.sys.windowHeight, 'px')
+				if (style['height'] == null) style['height'] = addUnit(this.sys.windowHeight, 'px')
 				return deepMerge(style, addStyle(this.customStyle))
 			}
 		},
-		provide() {
-			return {
-				uList: this
-			}
-		},
 		created() {
-			this.refs = []
-			this.children = []
-			this.anchors = []
+			// this.refs = []
+		// 	this.children = []
 		},
 		mounted() {},
 		emits: ["scroll", "scrolltolower", "scrolltoupper",
 			"refresherpulling", "refresherrefresh", "refresherrestore", "refresherabort"],
 		methods: {
-			updateOffsetFromChild(top) {
+			updateOffsetFromChild(top: number) {
 				this.offset = top
 			},
-			onScroll(e) {
+			onScroll(e: UniScrollEvent) {
 				let scrollTop = 0
-				// #ifdef APP-NVUE
-				scrollTop = e.contentOffset.y
-				// #endif
-				// #ifndef APP-NVUE
 				scrollTop = e.detail.scrollTop
-				// #endif
 				this.innerScrollTop = scrollTop
 				this.$emit('scroll', scrollTop)
 			},
-			scrollIntoViewById(id) {
-				// #ifdef APP-NVUE
-				// 根据id参数，找到所有up-list-item中匹配的节点，再通过dom模块滚动到对应的位置
-				const item = this.refs.find(item => item.$refs[id] ? true : false)
-				dom.scrollToElement(item.$refs[id], {
-					// 是否需要滚动动画
-					animated: this.scrollWithAnimation
-				})
-				// #endif
+			scrollIntoViewById(id: string) {
 			},
 			// 滚动到底部触发事件
-			scrolltolower(e) {
+			scrolltolower(e: UniScrollToLowerEvent) {
 				sleep(30).then(() => {
 					this.$emit('scrolltolower')
 				})
 			},
 			// #ifndef APP-NVUE
 			// 滚动到底部时触发，非nvue有效
-			scrolltoupper(e) {
+			scrolltoupper(e: UniScrollToUpperEvent) {
 				sleep(30).then(() => {
 					this.$emit('scrolltoupper')
 					// 这一句很重要，能绝对保证在性功能障碍的webview，滚动条到顶时，取消偏移值，让页面置顶
 					this.offset = 0
 				})
 			},
-			refresherpulling(e) {
+			refresherpulling(e: UniRefresherEvent) {
 				this.$emit('refresherpulling', e)
 			},
-			refresherrefresh(e) {
+			refresherrefresh(e: UniRefresherEvent) {
 				this.$emit('refresherrefresh', e)
 			},
-			refresherrestore(e) {
+			refresherrestore(e: UniRefresherEvent) {
 				this.$emit('refresherrestore', e)
 			},
-			refresherabort(e) {
+			refresherabort(e: UniRefresherEvent) {
 				this.$emit('refresherabort', e)
 			}
 			// #endif
@@ -174,9 +136,10 @@
 </script>
 
 <style lang="scss" scoped>
-
 	.up-list {
-		@include flex(column);
-
+		/* #ifndef APP-NVUE */
+		display: flex;
+		/* #endif */
+		flex-direction: column;
 	}
 </style>

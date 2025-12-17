@@ -337,11 +337,6 @@
 		// 		"navigationBarTitleText": "标签"
 		// 	}
 		// }, {
-		// 	"path": "list/list",
-		// 	"style": {
-		// 		"navigationBarTitleText": "列表"
-		// 	}
-		// }, {
 		// 	"path": "swiper/swiper",
 		// 	"style": {
 		// 		"navigationBarTitleText": "轮播"

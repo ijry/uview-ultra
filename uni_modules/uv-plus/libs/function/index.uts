@@ -749,7 +749,7 @@ export function getParent(that: ComponentPublicInstance, name = ''): ComponentPu
             return parent
         }
     }
-    return null
+    return parent
 }
 export function getParentData(that: any, parentName: string): any {
 	console.log('that', JSON.stringify(that))

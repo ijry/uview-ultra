@@ -8,7 +8,7 @@ export const mixin = defineMixin({
     props: {
         // 每个组件都有的父组件传递的样式，可以为字符串或者对象形式
         customStyle: {
-            type: [Object, String],
+            type: [UTSJSONObject, String],
             default: {}
         },
         customClass: {
@@ -120,11 +120,12 @@ export const mixin = defineMixin({
             })
         },
         getParent(name: string): ComponentPublicInstance|null {
-            let parent = this?.$parent
+            let parent = this.$parent
             // 通过while历遍，这里主要是为了H5需要多层解析的问题
-            // while (parent) {
+            // while (parent != null) {
+            // 	// console.log(parent.$options)
             //     // 父组件
-            //     if (parent.$options && parent.$options.name !== name) {
+            //     if (parent != null && parent.$options != null && parent.$options['name'] != name) {
             //         // 如果组件的name不相等，继续上一级寻找
             //         parent = parent.$parent
             //     } else {
@@ -135,13 +136,17 @@ export const mixin = defineMixin({
         },
 		addChild(ins: ComponentPublicInstance): void {
 			let exist = false
-			this.children!.map((child: ComponentPublicInstance) => {
+			let childs: ComponentPublicInstance[] = this.children
+			childs.map((child: ComponentPublicInstance) => {
+				// console.log('&&&&&', child)
 				if (ins == child) {
 					exist = true
 				}
 			})
 			if (exist == false) {
-				this.children!.push(ins)
+				console.log('ins&&&&&&&&&', ins)
+				// childs.push(ins)
+				this.children.push(ins)
 			}
 		},
         /**
@@ -157,27 +162,27 @@ export const mixin = defineMixin({
             // 之所以需要这么做，是因为所有端中，头条小程序不支持通过this.parent.xxx去监听父组件参数的变化
             // 此处并不会自动更新子组件的数据，而是依赖父组件up-radio-group去监听data的变化，手动调用更新子组件的方法去重新获取
             this.parent = this.getParent(parentName)
-            if (this?.$parent?.$data?.['children'] != null) {
-                // todo如果父组件的children不存在本组件的实例，才将本实例添加到父组件的children中
-                // if (this.parent?.$data?.['children'].indexOf(this) === -1) {
-					// console.log('#################### not exist')
-					// console.log(JSON.stringify(this.$parent?.$data?.['children']))
-					this.$parent!.$callMethod('addChild', this)
-    //             } else {
-				// 	console.log('#################### exist')
-				// }
-            }
-            if (this?.$parent != null) {
+            if (this.parent != null) {
+				if (this.parent?.$data != null && this.parent?.$data?.['children'] != null) {
+						// todo如果父组件的children不存在本组件的实例，才将本实例添加到父组件的children中
+						// if (this.parent?.$data?.['children'].indexOf(this) === -1) {
+							// console.log('#################### not exist')
+							// console.log(JSON.stringify(this.$parent?.$data?.['children']))
+							this.$parent?.$callMethod('addChild', this)
+			//             } else {
+						// 	console.log('#################### exist')
+						// }
+					}
                 // 历遍parentData中的属性，将parent中的同名属性赋值给parentData
                 UTSJSONObject.keys(this.parentData).map((key: string) => {
-                    if (this.$parent?.$props?.[key] != null) {
+                    if (this.parent?.$props != null && this.parent?.$props?.[key] != null) {
 						if (this.parentData?.[key] != null) {
-							this.parentData[key] = this.$parent?.$props?.[key]
+							this.parentData[key] = this.parent?.$props?.[key]
 						}
                     }
-					if (this.$parent?.$data?.[key] != null) {
+					if (this.parent?.$data != null && this.parent?.$data?.[key] != null) {
 						if (this.parentData?.[key] != null) {
-							this.parentData[key] = this.$parent?.$data?.[key]
+							this.parentData[key] = this.parent?.$data?.[key]
 						}
 					}
                 })
@@ -199,9 +204,9 @@ export const mixin = defineMixin({
     beforeDestroy() {
         // 判断当前页面是否存在parent和chldren，一般在checkbox和checkbox-group父子联动的场景会有此情况
         // 组件销毁时，移除子组件在父组件children数组中的实例，释放资源，避免数据混乱
-        if (this.$parent && testArray(this.$parent.children)) {
+        if (this.$parent && testArray(this.parent.children)) {
             // 组件销毁时，移除父组件中的children数组中对应的实例
-            const childrenList = this.$parent.children
+            const childrenList = this.parent.children
             childrenList.map((child, index) => {
                 // 如果相等，则移除
                 if (child === this) {

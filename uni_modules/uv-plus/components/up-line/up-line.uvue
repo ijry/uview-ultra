@@ -28,7 +28,7 @@
 		name: 'up-line',
 		mixins: [mpMixin, mixin, propsLine],
 		computed: {
-			lineStyle() : any {
+			lineStyle(): any {
 				const style = {}
 				style['margin'] = this.margin
 				// 如果是水平线条，边框高度为1px，再通过transform缩小一半，就是0.5px了

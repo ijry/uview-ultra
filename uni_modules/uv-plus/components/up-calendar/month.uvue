@@ -193,7 +193,7 @@
 						// }
 					}
 					if (this.mode === 'range') {
-						style.padding = 0
+						style['padding'] = 0
 					}
 					return style
 				}

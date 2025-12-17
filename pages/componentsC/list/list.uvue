@@ -25,10 +25,11 @@
 </template>
 
 <script>
+	import { random } from '@/uni_modules/uv-plus/libs/function/index';
 	export default {
 		data() {
 			return {
-				indexList: [],
+				indexList: [] as UTSJSONObject[],
 				urls: [
 					'https://cdn.uviewui.com/uview/album/1.jpg',
 					'https://cdn.uviewui.com/uview/album/2.jpg',
@@ -53,7 +54,7 @@
 			loadmore() {
 				for (let i = 0; i < 30; i++) {
 					this.indexList.push({
-						url: this.urls[uni.$u.random(0, this.urls.length - 1)]
+						url: this.urls[random(0, this.urls.length - 1)]
 					})
 				}
 			}
