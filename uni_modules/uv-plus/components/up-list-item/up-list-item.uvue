@@ -1,8 +1,9 @@
 <template>
 	<view
 		class="up-list-item"
-		:ref="`up-list-item-${anchor}`"
-		:class="[`up-list-item-${anchor}`]"
+		:ref="refstr"
+		fref="`up-list-item-${anchor}`"
+		:class="[`up-list-item-${refstr}`]"
 	>
 		<slot />
 	</view>
@@ -12,7 +13,7 @@
 	import { propsListItem } from './props.uts';
 	import { mpMixin } from '../../libs/mixin/mpMixin.uts';
 	import { mixin } from '../../libs/mixin/mixin.uts';
-	import { getWindowInfo } from '../../libs/function/index.uts';
+	import { getWindowInfo, guid } from '../../libs/function/index.uts';
 	/**
 	 * List 列表
 	 * @description 该组件为高性能列表组件
@@ -28,6 +29,7 @@
 				// 节点信息
 				rect: {} as NodeInfo,
 				index: 0,
+				refstr: guid(),
 				show: true,
 				sys: getWindowInfo() as GetWindowInfoResult
 			}
@@ -57,24 +59,26 @@
 			init() {
 				// 初始化数据
 				this.updateParentData()
-				console.log('**************', this.parent)
-				// todo 2026
 				if (this.parent != null) {
-					let childs: ComponentPublicInstance[] = this.parent.$data['children'] as ComponentPublicInstance[]
-					childs.forEach(function(child: ComponentPublicInstance, index: number) {
-						if(child == this) {
-							this.index = index
-						}
-					});
+					this.index = (this.parent!!.$data['childrenRefs'] as string[]).indexOf(this.refstr)
+					// console.log('*****', this.index, '*****')
+					// let childs: ComponentPublicInstance[] = this.parent.$data['children'] as ComponentPublicInstance[]
+					// childs.forEach(function(child: ComponentPublicInstance, index: number) {
+					// 	if(child == this) {
+					// 		this.index = index
+					// 	}
+					// });
+					this.resize()
 				}
-				this.resize()
 			},
 			updateParentData(): void {
 				// 此方法在mixin中
-				this.getParentData('up-list')
+				this.getParentData('up-list', true)
+				this.getParentData('up-list', false)
 			},
 			resize() {
-				this.queryRect(`up-list-item-${this.anchor}`).then((size: NodeInfo) => {
+				// console.log("*******", `up-list-item-${this.anchor}`)
+				this.queryRect(`up-list-item-${this.refstr}`).then((size: NodeInfo) => {
 					if (this.index > 0) {
 						const lastChild = (this.parent!!.$data['children'] as ComponentPublicInstance[])[this.index - 1]
 						if (lastChild == null) {
@@ -92,6 +96,8 @@
 							this.show = false
 						}
 						// #endif
+					} else {
+						console.log('index == 0')
 					}
 				})
 			},

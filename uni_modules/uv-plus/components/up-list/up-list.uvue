@@ -69,9 +69,7 @@
 				innerScrollTop: 0,
 				// vue下，scroll-view在上拉加载时的偏移值
 				offset: 0,
-				sys: getWindowInfo() as GetWindowInfoResult,
-				parent: null as ComponentPublicInstance|null,
-				children: [] as ComponentPublicInstance[]
+				sys: getWindowInfo() as GetWindowInfoResult
 			}
 		},
 		computed: {

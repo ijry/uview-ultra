@@ -30,7 +30,8 @@ export const mixin = defineMixin({
         return {
             parent: null as ComponentPublicInstance|null,
             parentData: {} as UTSJSONObject,
-			children: [] as ComponentPublicInstance[]
+			children: [] as ComponentPublicInstance[],
+			childrenRefs: [] as Array<string>
         }
     },
     onLoad() {
@@ -122,16 +123,17 @@ export const mixin = defineMixin({
         getParent(name: string): ComponentPublicInstance|null {
             let parent = this.$parent
             // 通过while历遍，这里主要是为了H5需要多层解析的问题
-            // while (parent != null) {
-            // 	// console.log(parent.$options)
-            //     // 父组件
-            //     if (parent != null && parent.$options != null && parent.$options['name'] != name) {
-            //         // 如果组件的name不相等，继续上一级寻找
-            //         parent = parent.$parent
-            //     } else {
-            //         return parent
-            //     }
-            // }
+            while (parent != null) {
+            	// console.log(parent.$options)
+                // 父组件
+                if (parent.$options != null && parent.$options['name'] != name) {
+                    // 如果组件的name不相等，继续上一级寻找
+                    parent = parent.$parent
+                } else {
+					// 一定要break,return会导致死循环CPU飙升。
+					break;
+                }
+            }
             return parent
         },
 		addChild(ins: ComponentPublicInstance): void {
@@ -144,45 +146,50 @@ export const mixin = defineMixin({
 				}
 			})
 			if (exist == false) {
-				console.log('ins&&&&&&&&&', ins)
-				// childs.push(ins)
+				// console.log('ins&&&&&&&&&', ins)
 				this.children.push(ins)
 			}
 		},
+		addChildRef(str: string): void {
+			let index = this.childrenRefs.indexOf('str')
+			if (index <= -1) {
+				this.childrenRefs.push(str)
+			}
+		}
         /**
          * 获取父组件数据
          * @author jry ijry@qq.com
          * @param parentName 父组件名称如up-row
          * @returns 
          */
-        getParentData: function(parentName: string): any {
+        getParentData: function(parentName: string, refMode: boolean = false): any {
             // 避免在created中去定义parent变量
             // 这里的本质原理是，通过获取父组件实例(也即类似up-radio的父组件up-radio-group的this)
             // 将父组件this中对应的参数，赋值给本组件(up-radio的this)的parentData对象中对应的属性
             // 之所以需要这么做，是因为所有端中，头条小程序不支持通过this.parent.xxx去监听父组件参数的变化
             // 此处并不会自动更新子组件的数据，而是依赖父组件up-radio-group去监听data的变化，手动调用更新子组件的方法去重新获取
-            this.parent = this.getParent(parentName)
-            if (this.parent != null) {
-				if (this.parent?.$data != null && this.parent?.$data?.['children'] != null) {
-						// todo如果父组件的children不存在本组件的实例，才将本实例添加到父组件的children中
-						// if (this.parent?.$data?.['children'].indexOf(this) === -1) {
-							// console.log('#################### not exist')
-							// console.log(JSON.stringify(this.$parent?.$data?.['children']))
-							this.$parent?.$callMethod('addChild', this)
-			//             } else {
-						// 	console.log('#################### exist')
-						// }
+			// 注意不能赋值给parent,会导致与addChild中push冲突
+            let parent = this.getParent(parentName)
+			this.parent = parent
+            if (parent != null) {
+				if (parent?.$data != null && parent?.$data?.['children'] != null) {
+					// 如果父组件的children不存在本组件的实例，才将本实例添加到父组件的children中
+					if (refMode) {
+						parent?.$callMethod('addChildRef', this.$data['refstr'])
+					} else {
+						parent?.$callMethod('addChild', this)
 					}
+				}
                 // 历遍parentData中的属性，将parent中的同名属性赋值给parentData
                 UTSJSONObject.keys(this.parentData).map((key: string) => {
-                    if (this.parent?.$props != null && this.parent?.$props?.[key] != null) {
+                    if (parent?.$props != null && parent?.$props?.[key] != null) {
 						if (this.parentData?.[key] != null) {
-							this.parentData[key] = this.parent?.$props?.[key]
+							this.parentData[key] = parent?.$props?.[key]
 						}
                     }
-					if (this.parent?.$data != null && this.parent?.$data?.[key] != null) {
+					if (parent?.$data != null && parent?.$data?.[key] != null) {
 						if (this.parentData?.[key] != null) {
-							this.parentData[key] = this.parent?.$data?.[key]
+							this.parentData[key] = parent?.$data?.[key]
 						}
 					}
                 })
