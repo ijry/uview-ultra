@@ -135,6 +135,11 @@
 				"navigationBarTitleText": "模态框",
 				"navigationStyle": "custom"
 			}
+		}, {
+			"path": "noNetwork/noNetwork",
+			"style": {
+				"navigationBarTitleText": "无网络提示"
+			}
 		}
 		]
 	},

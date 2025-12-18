@@ -268,12 +268,6 @@
 				"navigationBarTitleText": "文本域"
 			}
 		},
-		// , {
-		// 	"path": "noNetwork/noNetwork",
-		// 	"style": {
-		// 		"navigationBarTitleText": "无网络提示"
-		// 	}
-		// },
 		{
 			"path": "text/text",
 			"style": {

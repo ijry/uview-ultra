@@ -67,6 +67,10 @@ export function getWindowInfo(): GetWindowInfoResult {
 	return uni.getWindowInfo()
 }
 
+export function getDeviceInfo(): GetDeviceInfoResult {
+	return uni.getDeviceInfo()
+}
+
 /**
  * @description 取一个区间数
  * @param {Number} min 最小值

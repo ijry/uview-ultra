@@ -140,5 +140,6 @@ const install = (Vue) => {
 }
 
 export default {
-    install
+    install,
+    UpNoNetwork,
 }

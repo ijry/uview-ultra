@@ -42,8 +42,8 @@
 	</up-overlay>
 </template>
 
-<script>
-	import { props } from './props';
+<script lang="uts">
+	import { propsNoNetwork } from './props';
 	import { mpMixin } from '../../libs/mixin/mpMixin';
 	import { mixin } from '../../libs/mixin/mixin';
 	import { toast, getDeviceInfo } from '../../libs/function/index';
@@ -60,22 +60,23 @@
 	 */
 	export default {
 		name: "up-no-network",
-		mixins: [mpMixin, mixin,props],
+		mixins: [mpMixin, mixin, propsNoNetwork],
 		data() {
 			return {
 				isConnected: true, // 是否有网络连接
 				networkType: "none", // 网络类型
+				isIOS: false
 			}
 		},
 		mounted() {
 			this.isIOS = (getDeviceInfo().platform === 'ios')
-			uni.onNetworkStatusChange((res) => {
+			uni.onNetworkStatusChange((res: OnNetworkStatusChangeCallbackResult) => {
 				this.isConnected = res.isConnected
 				this.networkType = res.networkType
 				this.emitEvent(this.networkType)
 			})
 			uni.getNetworkType({
-				success: (res) => {
+				success: (res: GetNetworkTypeSuccess) => {
 					this.networkType = res.networkType
 					this.emitEvent(this.networkType)
 					if (res.networkType == 'none') {
@@ -88,11 +89,13 @@
 		},
 		emits: ["disconnected", "connected"],
 		methods: {
-			t,
+			t(s: string){
+				return t(s)
+			},
 			retry() {
 				// 重新检查网络
 				uni.getNetworkType({
-					success: (res) => {
+					success: (res: GetNetworkTypeSuccess) => {
 						this.networkType = res.networkType
 						this.emitEvent(this.networkType)
 						if (res.networkType == 'none') {
@@ -107,7 +110,7 @@
 				this.$emit('retry')
 			},
 			// 发出事件给父组件
-			emitEvent(networkType) {
+			emitEvent(networkType: string) {
 				this.$emit(networkType === 'none' ? 'disconnected' : 'connected')
 			},
 			async openSettings() {
@@ -129,63 +132,64 @@
 				}
 			},
 			network() {
-				var result = null
-				var cellularData = plus.ios.newObject("CTCellularData")
-				var state = cellularData.plusGetAttribute("restrictedState")
-				if (state == 0) {
-					result = null
-				} else if (state == 2) {
-					result = 1
-				} else if (state == 1) {
-					result = 2
-				}
-				plus.ios.deleteObject(cellularData)
-				return result
+				// var result = null
+				// var cellularData = plus.ios.newObject("CTCellularData")
+				// var state = cellularData.plusGetAttribute("restrictedState")
+				// if (state == 0) {
+				// 	result = null
+				// } else if (state == 2) {
+				// 	result = 1
+				// } else if (state == 1) {
+				// 	result = 2
+				// }
+				// plus.ios.deleteObject(cellularData)
+				// return result
 			},
 			gotoAppSetting() {
-				if (this.isIOS) {
-					var UIApplication = plus.ios.import("UIApplication")
-					var application2 = UIApplication.sharedApplication()
-					var NSURL2 = plus.ios.import("NSURL")
-					var setting2 = NSURL2.URLWithString("app-settings:")
-					application2.openURL(setting2)
-					plus.ios.deleteObject(setting2)
-					plus.ios.deleteObject(NSURL2)
-					plus.ios.deleteObject(application2)
-				} else {
-					var Intent = plus.android.importClass("android.content.Intent")
-					var Settings = plus.android.importClass("android.provider.Settings")
-					var Uri = plus.android.importClass("android.net.Uri")
-					var mainActivity = plus.android.runtimeMainActivity()
-					var intent = new Intent()
-					intent.setAction(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
-					var uri = Uri.fromParts("package", mainActivity.getPackageName(), null)
-					intent.setData(uri)
-					mainActivity.startActivity(intent)
-				}
+				// if (this.isIOS) {
+				// 	var UIApplication = plus.ios.import("UIApplication")
+				// 	var application2 = UIApplication.sharedApplication()
+				// 	var NSURL2 = plus.ios.import("NSURL")
+				// 	var setting2 = NSURL2.URLWithString("app-settings:")
+				// 	application2.openURL(setting2)
+				// 	plus.ios.deleteObject(setting2)
+				// 	plus.ios.deleteObject(NSURL2)
+				// 	plus.ios.deleteObject(application2)
+				// } else {
+				// 	var Intent = plus.android.importClass("android.content.Intent")
+				// 	var Settings = plus.android.importClass("android.provider.Settings")
+				// 	var Uri = plus.android.importClass("android.net.Uri")
+				// 	var mainActivity = plus.android.runtimeMainActivity()
+				// 	var intent = new Intent()
+				// 	intent.setAction(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+				// 	var uri = Uri.fromParts("package", mainActivity.getPackageName(), null)
+				// 	intent.setData(uri)
+				// 	mainActivity.startActivity(intent)
+				// }
 			},
 			gotoiOSSetting() {
-				var UIApplication = plus.ios.import("UIApplication")
-				var application2 = UIApplication.sharedApplication()
-				var NSURL2 = plus.ios.import("NSURL")
-				var setting2 = NSURL2.URLWithString("App-prefs:root=General")
-				application2.openURL(setting2)
-				plus.ios.deleteObject(setting2)
-				plus.ios.deleteObject(NSURL2)
-				plus.ios.deleteObject(application2)
+				// var UIApplication = plus.ios.import("UIApplication")
+				// var application2 = UIApplication.sharedApplication()
+				// var NSURL2 = plus.ios.import("NSURL")
+				// var setting2 = NSURL2.URLWithString("App-prefs:root=General")
+				// application2.openURL(setting2)
+				// plus.ios.deleteObject(setting2)
+				// plus.ios.deleteObject(NSURL2)
+				// plus.ios.deleteObject(application2)
 			},
 			gotoAndroidSetting() {
-				var Intent = plus.android.importClass("android.content.Intent")
-				var Settings = plus.android.importClass("android.provider.Settings")
-				var mainActivity = plus.android.runtimeMainActivity()
-				var intent = new Intent(Settings.ACTION_SETTINGS)
-				mainActivity.startActivity(intent)
+				// var Intent = plus.android.importClass("android.content.Intent")
+				// var Settings = plus.android.importClass("android.provider.Settings")
+				// var mainActivity = plus.android.runtimeMainActivity()
+				// var intent = new Intent(Settings.ACTION_SETTINGS)
+				// mainActivity.startActivity(intent)
 			}
 		}
 	}
 </script>
 
 <style lang="scss" scoped>
+	@import "../../libs/css/components.scss";
 
 	.up-no-network {
 		@include flex(column);
