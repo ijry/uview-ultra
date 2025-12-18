@@ -108,7 +108,7 @@
 		},
 		computed: {
 			// 根据长度，循环输入框的个数，因为头条小程序数值不能用于v-for
-			codeLength() {
+			codeLength(): Array<string> {
 				let list: Array<string> = [];
 				for (var index = 0; index < (this.maxlength as Number); index++) {
 					list.push('');
@@ -116,7 +116,7 @@
 				return list;
 			},
 			// 循环item的样式
-			itemStyle() {
+			itemStyle(): any {
 				return index => {
 					const style = {
 						width: addUnit(this.size),
@@ -125,30 +125,30 @@
 					// 盒子模式下，需要额外进行处理
 					if (this.mode === 'box') {
 						// 设置盒子的边框，如果是细边框，则设置为0.5px宽度
-						style.border = `${this.hairline ? 0.5 : 1}px solid ${this.borderColor}`
+						style['border'] = `${this.hairline ? 0.5 : 1}px solid ${this.borderColor}`
 						// 如果盒子间距为0的话
 						if (getPx(this.space) === '0') {
 							// 给第一和最后一个盒子设置圆角
 							if (index === 0) {
-								style.borderTopLeftRadius = '3px'
-								style.borderBottomLeftRadius = '3px'
+								style['borderTopLeftRadius'] = '3px'
+								style['borderBottomLeftRadius'] = '3px'
 							}
 							if (index === this.codeLength.length - 1) {
-								style.borderTopRightRadius = '3px'
-								style.borderBottomRightRadius = '3px'
+								style['borderTopRightRadius'] = '3px'
+								style['borderBottomRightRadius'] = '3px'
 							}
 							// 最后一个盒子的右边框需要保留
 							if (index !== this.codeLength.length - 1) {
-								style.borderRight = 'none'
+								style['borderRight'] = 'none'
 							}
 						}
 					}
 					if (index !== this.codeLength.length - 1) {
 						// 设置验证码字符之间的距离，通过margin-right设置，最后一个字符，无需右边框
-						style.marginRight = addUnit(this.space)
+						style['marginRight'] = addUnit(this.space)
 					} else {
 						// 最后一个盒子的有边框需要保留
-						style.marginRight = 0
+						style['marginRight'] = 0
 					}
 
 					return style
@@ -165,10 +165,10 @@
 			// 下划线模式下，横线的样式
 			lineStyle() {
 				const style = {}
-				style.height = this.hairline ? '2px' : '4px'
-				style.width = addUnit(this.size)
+				style['height'] = this.hairline ? '2px' : '4px'
+				style['width'] = addUnit(this.size)
 				// 线条模式下，背景色即为边框颜色
-				style.backgroundColor = this.borderColor
+				style['backgroundColor'] = this.borderColor
 				return style
 			}
 		},
