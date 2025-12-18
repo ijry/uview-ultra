@@ -24,7 +24,7 @@
 		name: "up-gap",
 		mixins: [mpMixin, mixin, propsGap],
 		computed: {
-			gapStyle(): any {
+			gapStyle(): UTSJSONObject {
 				let style = {
 					backgroundColor: this.bgColor,
 					height: addUnit(this.height),

@@ -55,7 +55,6 @@
 	 * @property {String}			tips 	没有网络时的提示语 （默认：'哎呀，网络信号丢失' ）
 	 * @property {String | Number}	zIndex	组件的z-index值 
 	 * @property {String}			image	无网络的图片提示，可用的src地址或base64图片 
-	 * @event {Function}			retry	用户点击页面的"重试"按钮时触发
 	 * @example <up-no-network></up-no-network>
 	 */
 	export default {
@@ -87,7 +86,7 @@
 				}
 			})
 		},
-		emits: ["disconnected", "connected"],
+		emits: ["disconnected", "connected", "retry"],
 		methods: {
 			t(s: string){
 				return t(s)

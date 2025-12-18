@@ -207,7 +207,7 @@ export function deepClone(obj: object): any|null {
  */
 export function deepMerge(
 	targetOrigin: any = {},
-	source: any = {}): any {
+	source: any = {}): UTSJSONObject {
 	let targetJson = JSON.parse(JSON.stringify(targetOrigin)) as UTSJSONObject
 	let sourceJson = JSON.parse(JSON.stringify(source)) as UTSJSONObject
     let target:UTSJSONObject = {}

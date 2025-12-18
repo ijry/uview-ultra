@@ -62,6 +62,12 @@
 					"navigationBarTitleText": "键盘",
 					"navigationStyle": "custom"
 				}
+			}, 
+			{
+				"path": "notify/notify",
+				"style": {
+					"navigationBarTitleText": "消息提示"
+				}
 			}
 		]
 	}, {
