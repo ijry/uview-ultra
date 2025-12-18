@@ -141,6 +141,13 @@
 	{
 		"root": "pages/componentsD",
 		"pages": [
+			{
+				"path": "navbarMini/navbarMini",
+				"style": {
+					"navigationBarTitleText": "迷你导航",
+					"navigationStyle": "custom"
+				}
+			}
 		]
 	},
 	{
