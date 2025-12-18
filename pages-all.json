@@ -273,11 +273,6 @@
 		// 	"style": {
 		// 		"navigationBarTitleText": "无网络提示"
 		// 	}
-		// }, {
-		// 	"path": "loadmore/loadmore",
-		// 	"style": {
-		// 		"navigationBarTitleText": "加载更多"
-		// 	}
 		// },
 		{
 			"path": "text/text",

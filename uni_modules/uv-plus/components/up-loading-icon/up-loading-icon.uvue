@@ -32,7 +32,7 @@
 			</template>
 		</view>
 		<text
-			v-if="text"
+			v-if="text != ''"
 			class="up-loading-icon__text"
 			:style="{
 				fontSize: addUnit(textSize),
@@ -58,11 +58,11 @@
 	 * @property {String}			textColor		提示文本的颜色（默认color['up-tips-color']）
 	 * @property {Boolean}			vertical		文字和图标是否垂直排列 (默认 false )
 	 * @property {String}			mode			模式选择，见官网说明（默认 'circle' ）
-	 * @property {String}			size			加载图标的大小，单位px （默认 24 ）
-	 * @property {String}			textSize		文字大小（默认 15 ）
-	 * @property {String}			text			文字内容 
+	 * @property {String, Number}	size			加载图标的大小，单位px （默认 24 ）
+	 * @property {String, Number}	textSize		文字大小（默认 15 ）
+	 * @property {String, Number}	text			文字内容 
 	 * @property {String}			timingFunction	动画模式 （默认 'ease-in-out' ）
-	 * @property {Number}			duration		动画执行周期时间（默认 1200）
+	 * @property {String, Number}	duration		动画执行周期时间（默认 1200）
 	 * @property {String}			inactiveColor	mode=circle时的暗边颜色 
 	 * @property {Object}			customStyle		定义需要用到的外部样式
 	 * @example <up-loading mode="circle"></up-loading>
@@ -137,7 +137,7 @@
 			},
 			// 因为uni-app-x不支持:before所以实现Spinner得用JS计算坐标
 			calcSpinnerTopAndLeft(){
-				this.array12.forEach((ele, index) => {
+				this.array12.forEach((ele: number, index: number) => {
 					const angle = index * (360 / 12); // 计算角度  
 					const angleRad = angle * (Math.PI / 180); // 转换为弧度  
 					const banjing = this.calculateSquareRadius(parseInt(getPx(parseInt(this.size!!.toString()) * 2)));  // 半径

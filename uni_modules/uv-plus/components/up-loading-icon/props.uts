@@ -40,17 +40,17 @@ export const propsLoadicon = defineMixin({
         },
         // 图标大小，单位默认px
         size: {
-            type: [String],
+            type: [String, Number],
             default: crtProp['size']
         },
         // 文字大小
         textSize: {
-            type: [String],
+            type: [String, Number],
             default: crtProp['textSize']
         },
         // 文字内容
         text: {
-            type: [String],
+            type: [String, Number],
             default: crtProp['text']
         },
         // 动画模式
@@ -60,7 +60,7 @@ export const propsLoadicon = defineMixin({
         },
         // 动画执行周期时间
         duration: {
-            type: [Number],
+            type: [String, Number],
             default: crtProp['duration']
         },
         // mode=circle时的暗边颜色
