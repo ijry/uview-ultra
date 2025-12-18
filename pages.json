@@ -68,6 +68,12 @@
 				"style": {
 					"navigationBarTitleText": "消息提示"
 				}
+			},
+			{
+				"path": "numberBox/numberBox",
+				"style": {
+					"navigationBarTitleText": "步进器"
+				}
 			}
 		]
 	}, {

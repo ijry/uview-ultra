@@ -1,10 +1,10 @@
 /*
- * @Author       : LQ
+ * @Author       : jry
  * @Description  :
- * @version      : 3.0
- * @Date         : 2021-08-20 16:44:21
+ * @version      : 4.0
+ * @Date         : 2024-04-22 16:44:21
  * @LastAuthor   : jry
- * @lastTime     : 2021-08-20 17:11:46
+ * @lastTime     : 2024-08-28 12:27:20
  * @FilePath     : /uview-plus/libs/config/props/numberBox.js
  */
 export default {
@@ -13,7 +13,7 @@ export default {
         name: '',
         value: 0,
         min: 1,
-        max: Number.MAX_SAFE_INTEGER,
+        max: 9999,
         step: 1,
         integer: false,
         disabled: false,
@@ -22,7 +22,7 @@ export default {
         inputWidth: 35,
         showMinus: true,
         showPlus: true,
-        decimalLength: null,
+        decimalLength: 0,
         longPress: true,
         color: '#323233',
         buttonWidth: 30,
@@ -37,4 +37,4 @@ export default {
         iconStyle: '',
         miniMode: false
     }
-}
+} as UTSJSONObject

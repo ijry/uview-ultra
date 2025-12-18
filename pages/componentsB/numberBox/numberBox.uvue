@@ -213,17 +213,17 @@
 			}
 		},
 		methods: {
-			change(e) {
+			change(e: UTSJSONObject) {
 				console.log('change', e);
 			},
-			myAsyncChange(e) {
+			myAsyncChange(e: UTSJSONObject) {
 				this.asyncChange = false
 				uni.showLoading({
 					title: '正在加载'
 				})
 				setTimeout(() => {
 					uni.hideLoading()
-					this.value9 = e
+					this.value9 = e['value'] as number
 					this.asyncChange = true
 				}, 3000)
 			}
