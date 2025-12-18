@@ -36,7 +36,7 @@
 			</view>
 			<view
 				class="up-modal__button-group--confirm-button"
-				v-if="$slots.confirmButton"
+				v-if="$slots['confirmButton']"
 			>
 				<slot name="confirmButton"></slot>
 			</view>
@@ -52,7 +52,7 @@
 						class="up-modal__button-group__wrapper up-modal__button-group__wrapper--cancel"
 						:hover-stay-time="150"
 						hover-class="up-modal__button-group__wrapper--hover"
-						:class="[showCancelButton && !showConfirmButton && 'up-modal__button-group__wrapper--only-cancel']"
+						:class="[(showCancelButton && !showConfirmButton) ? 'up-modal__button-group__wrapper--only-cancel' : '']"
 						v-if="showCancelButton"
 						@tap="cancelHandler"
 					>
@@ -71,7 +71,7 @@
 						class="up-modal__button-group__wrapper up-modal__button-group__wrapper--confirm"
 						:hover-stay-time="150"
 						hover-class="up-modal__button-group__wrapper--hover"
-						:class="[!showCancelButton && showConfirmButton && 'up-modal__button-group__wrapper--only-confirm']"
+						:class="[(!showCancelButton && showConfirmButton) ? 'up-modal__button-group__wrapper--only-confirm' : '']"
 						v-if="showConfirmButton"
 						@tap="confirmHandler"
 					>
@@ -93,11 +93,12 @@
 	</up-popup>
 </template>
 
-<script>
-	import { props } from './props';
+<script lang="uts">
+	import { propsModal } from './props';
 	import { mpMixin } from '../../libs/mixin/mpMixin';
 	import { mixin } from '../../libs/mixin/mixin';
 	import { addUnit } from '../../libs/function/index';
+	
 	/**
 	 * Modal 模态框
 	 * @description 弹出模态框，常用于消息提示、消息确认、在当前页面内完成特定的交互操作。
@@ -126,14 +127,14 @@
 	 */
 	export default {
 		name: 'up-modal',
-		mixins: [mpMixin, mixin, props],
+		mixins: [mpMixin, mixin, propsModal],
 		data() {
 			return {
 				loading: false
 			}
 		},
 		watch: {
-			show(n) {
+			show(n: Boolean) {
 				// 为了避免第一次打开modal，又使用了异步关闭的loading
 				// 第二次打开modal时，loading依然存在的情况
 				if (n && this.loading) this.loading = false
@@ -141,14 +142,16 @@
 		},
 		emits: ["confirm", "cancel", "close", "update:show", 'cancelOnAsync'],
 		computed: {
-			contentStyleCpu() {
-				let style = this.contentStyle;
-				style.paddingTop = `${this.title ? 12 : 25}px`
+			contentStyleCpu(): UTSJSONObject {
+				let style = this.contentStyle as UTSJSONObject;
+				style['paddingTop'] = `${this.title != '' ? 12 : 25}px`
 				return style;
 			}
 		},
 		methods: {
-			addUnit,
+			addUnit(val: any): any {
+				return addUnit(val)
+			},
 			// 点击确定按钮
 			confirmHandler() {
 				// 如果配置了异步关闭，将按钮值为loading状态
@@ -163,7 +166,7 @@
 			cancelHandler() {
 				// 如果点击了确定按钮，确定按钮正在请求接口执行异步操作，那么限制不能取消。
 				if (this.asyncClose && this.loading) {
-					if (this.asyncCloseTip) {
+					if (this.asyncCloseTip != '') {
 						uni.showToast({
 							title: this.asyncCloseTip,
 							icon: 'none'
@@ -198,6 +201,7 @@
 
 	.up-modal {
 		width: 650rpx;
+		border-radius: $up-modal-border-radius;
 		border-radius: $up-modal-border-radius;
 		overflow: hidden;
 

@@ -342,13 +342,6 @@
 		// 		"navigationBarTitleText": "横向滚动列表"
 		// 	}
 		// }
-		// , {
-		// 	"path": "modal/modal",
-		// 	"style": {
-		// 		"navigationBarTitleText": "模态框",
-		// 		"navigationStyle": "custom"
-		// 	}
-		// }
 		
 		, {
 			"path": "calendar/calendar",

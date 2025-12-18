@@ -128,6 +128,13 @@
 			"style": {
 				"navigationBarTitleText": "加载更多"
 			}
+		},
+		{
+			"path": "modal/modal",
+			"style": {
+				"navigationBarTitleText": "模态框",
+				"navigationStyle": "custom"
+			}
 		}
 		]
 	},

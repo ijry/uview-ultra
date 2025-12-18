@@ -1,11 +1,11 @@
 /*
- * @Author       : LQ
+ * @Author       : jry
  * @Description  :
- * @version      : 3.0
+ * @version      : 4.0
  * @Date         : 2021-08-20 16:44:21
  * @LastAuthor   : jry
  * @lastTime     : 2021-08-20 17:15:59
- * @FilePath     : /uview-pluis/libs/config/props/modal.js
+ * @FilePath     : /uview-pluis/libs/config/props/modal.uts
  */
 import { t } from '../../libs/i18n'
 export default {
@@ -33,4 +33,4 @@ export default {
         asyncCancelClose: false,
         contentStyle: {}
     }
-}
+} as UTSJSONObject

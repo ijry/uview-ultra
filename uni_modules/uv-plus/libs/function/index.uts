@@ -154,7 +154,8 @@ export function addStyle(customStyle: any, target = 'object'): any {
     }
     // 这里为对象转字符串形式
     let string = ''
-	UTSJSONObject.keys(customStyle).forEach((key: string) => {
+	// let customStyleObj
+	UTSJSONObject.keys(customStyle as UTSJSONObject).forEach((key: string) => {
 		// 驼峰命名转换为中划线
 		key = key.replace(/([A-Z])/g, '-$1').toLowerCase()
 		let val = customStyle[key]

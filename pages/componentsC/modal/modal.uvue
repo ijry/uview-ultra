@@ -1,4 +1,7 @@
 <template>
+	<!-- #ifdef APP -->
+	<scroll-view style="flex:1">
+	<!-- #endif -->
 	<view class="u-page">
 		<up-navbar
 			title="模态框"
@@ -14,7 +17,7 @@
 		<up-cell-group>
 			<up-cell
 				@click="showModal(index)"
-				:title="item.title"
+				:title="item['title']"
 				v-for="(item, index) in list"
 				:key="index"
 				isLink
@@ -22,7 +25,7 @@
 				<template #icon>
 					<image
 						class="u-cell-icon"
-						:src="item.iconUrl"
+						:src="item['iconUrl']"
 						mode="widthFix"
 					></image>
 				</template>
@@ -32,12 +35,12 @@
 			:content="content"
 			title="标题"
 			:show="show1"
-			@confirm="() => show1 = false"
+			@confirm="() => {show1 = false}"
 		></up-modal>
 		<up-modal
 			:content="content"
 			:show="show2"
-			@confirm="() => show2 = false"
+			@confirm="() => {show2 = false}"
 		></up-modal>
 		<up-modal
 			:content="content"
@@ -54,29 +57,29 @@
 			showCancelButton
 			asyncClose
 			@confirm="confirm4"
-			@cancel="() => show4 = false"
+			@cancel="() => {show4 = false}"
 		></up-modal>
 		<up-modal
 			:content="content"
 			:show="show5"
 			showCancelButton
 			buttonReverse
-			@confirm="() => show5 = false"
-			@cancel="() => show5 = false"
+			@confirm="() => {show5 = false}"
+			@cancel="() => {show5 = false}"
 		></up-modal>
 		<up-modal
 			:content="content"
 			title="标题"
 			:show="show6"
 			closeOnClickOverlay
-			@confirm="() => show6 = false"
-			@close="() => show6 = false"
+			@confirm="() => {show6 = false}"
+			@close="() => {show6 = false}"
 		></up-modal>
 		<up-modal
 			title="利剑出鞘,一统江湖"
 			:show="show7"
 			closeOnClickOverlay
-			@confirm="() => show7 = false"
+			@confirm="() => {show7 = false}"
 		>
 			<image
 				style="width: 80px;height: 80px;"
@@ -104,9 +107,11 @@
 			title="标题"
 			:show="show9"
 			:zoom="false"
-			@confirm="() => show9 = false"
+			@confirm="() => {show9 = false}"
 		></up-modal>
-	</view>
+	</view><!-- #ifdef APP -->
+	</scroll-view>
+	<!-- #endif -->
 </template>
 
 <script>
@@ -163,8 +168,8 @@
 			}
 		},
 		methods: {
-			showModal(index) {
-				this[`show${index + 1}`] = true
+			showModal(index: number) {
+				this.$data[`show${index + 1}`] = true
 			},
 			navigateBack() {
 				uni.navigateBack()
