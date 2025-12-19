@@ -16,14 +16,14 @@
 						class="scroll-list__goods-item"
 						v-for="(item, index) in goodsArr"
 						:key="index"
-						:class="[(index === 9) && 'scroll-list__goods-item--no-margin-right']"
+						:class="[(index === 9) ? 'scroll-list__goods-item--no-margin-right': '']"
 					>
 						<image
 							class="scroll-list__goods-item__image"
-							:src="goodsBaseUrl + item.thumbnail"
+							:src="goodsBaseUrl + item['thumbnail']"
 							mode=""
 						></image>
-						<text class="scroll-list__goods-item__text">￥{{ item.price }}</text>
+						<text class="scroll-list__goods-item__text">￥{{ item['price'] }}</text>
 					</view>
 					<view
 						class="scroll-list__show-more"
@@ -52,14 +52,14 @@
 							class="scroll-list__line__item"
 							v-for="(item1, index1) in item"
 							:key="index1"
-							:class="[(index1 === item.length - 1) && 'scroll-list__line__item--no-margin-right']"
+							:class="[(index1 === item.length - 1) ? 'scroll-list__line__item--no-margin-right' : '']"
 						>
 							<image
 								class="scroll-list__line__item__image"
-								:src="menuBaseUrl + item1.icon"
+								:src="menuBaseUrl + item1['icon']"
 								mode=""
 							></image>
-							<text class="scroll-list__line__item__text">{{ item1.name }}</text>
+							<text class="scroll-list__line__item__text">{{ item1['name'] }}</text>
 						</view>
 					</view>
 				</view>
@@ -173,7 +173,9 @@ export default {
 	},
 	methods: {
 		showMore() {
-			uni.$u.toast('查看更多')
+			uni.showToast({
+				title: '查看更多'
+			})
 		},
 		left() {
 			console.log('left');

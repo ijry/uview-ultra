@@ -163,6 +163,11 @@
 			"style": {
 				"navigationBarTitleText": "阅读更多"
 			}
+		}, {
+			"path": "scrollList/scrollList",
+			"style": {
+				"navigationBarTitleText": "横向滚动列表"
+			}
 		}
 		]
 	},

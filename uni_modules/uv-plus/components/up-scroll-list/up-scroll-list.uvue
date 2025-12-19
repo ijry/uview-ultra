@@ -3,23 +3,7 @@
 		class="up-scroll-list"
 		ref="up-scroll-list"
 	>
-		<!-- #ifdef APP-NVUE -->
-		<!-- nvue使用bindingX实现，以得到更好的性能 -->
-		<scroller
-			class="up-scroll-list__scroll-view"
-			ref="up-scroll-list__scroll-view"
-			scroll-direction="horizontal"
-			:show-scrollbar="false"
-			:offset-accuracy="1"
-			@scroll="nvueScrollHandler"
-		>
-			<view class="up-scroll-list__scroll-view__content">
-				<slot />
-			</view>
-		</scroller>
-		<!-- #endif -->
-		<!-- #ifndef APP-NVUE -->
-		<!-- #ifdef MP-WEIXIN || APP-VUE || H5 || MP-QQ -->
+		<!-- #ifdef MP-WEIXIN || MP-QQ -->
 		<!-- 以上平台，支持wxs -->
 		<scroll-view
 			class="up-scroll-list__scroll-view scroll-view-native"
@@ -36,11 +20,11 @@
 			:lower-threshold="0"
 		>
 			<!-- #endif -->
-			<!-- #ifndef APP-NVUE || MP-WEIXIN || H5 || APP-VUE || MP-QQ -->
+			<!-- #ifndef MP-WEIXIN || MP-QQ -->
 			<!-- 非以上平台，只能使用普通js实现 -->
 			<scroll-view
 				class="up-scroll-list__scroll-view scroll-view-js"
-				scroll-x
+				direction="horizontal"
 				@scroll="scrollHandler"
 				@scrolltoupper="scrolltoupperHandler"
 				@scrolltolower="scrolltolowerHandler"
@@ -53,7 +37,6 @@
 					<slot />
 				</view>
 			</scroll-view>
-			<!-- #endif -->
 			<view
 				class="up-scroll-list__indicator"
 				v-if="indicator"
@@ -73,11 +56,13 @@
 	</view>
 </template>
 
+<!-- #ifdef MP-WEIXIN || MP-QQ -->
 <script
 	src="./scrollWxs.wxs"
 	module="wxs"
 	lang="wxs"
 ></script>
+<!-- #endif -->
 
 <script>
 /**
@@ -94,22 +79,13 @@
  * @event {Function} right	滑动到右边时触发
  * @example
  */
-// #ifdef APP-NVUE
-const dom = uni.requireNativePlugin('dom')
-import nvueMixin from "./nvue.js"
-// #endif
-import { props } from './props';
+import { propsScrollList } from './props';
 import { mpMixin } from '../../libs/mixin/mpMixin';
 import { mixin } from '../../libs/mixin/mixin';
 import { addStyle, addUnit, getPx, sleep } from '../../libs/function/index';
 export default {
 	name: 'up-scroll-list',
-	// #ifndef APP-NVUE
-	mixins: [mpMixin, mixin, props],
-	// #endif
-	// #ifdef APP-NVUE
-	mixins: [mpMixin, mixin, nvueMixin, props],
-	// #endif
+	mixins: [mpMixin, mixin, propsScrollList],
 	data() {
 		return {
 			scrollInfo: {
@@ -123,19 +99,19 @@ export default {
 		// 指示器为线型的样式
 		barStyle() {
 			const style = {}
-			// #ifndef APP-NVUE || MP-WEIXIN || H5 || APP-VUE || MP-QQ
+			// #ifndef MP-WEIXIN || MP-QQ
 			// 此为普通js方案，只有在非nvue和不支持wxs方案的端才使用、
 			// 此处的计算理由为：scroll-view的滚动距离与目标滚动距离(scroll-view的实际宽度减去包裹元素的宽度)之比，等于滑块当前移动距离与总需
 			// 滑动距离(指示器的总宽度减去滑块宽度)的比值
-			const scrollLeft = this.scrollInfo.scrollLeft,
-				scrollWidth = this.scrollInfo.scrollWidth,
-				barAllMoveWidth = this.indicatorWidth - this.indicatorBarWidth
+			const scrollLeft = parseFloat(this.scrollInfo['scrollLeft'].toString()),
+				scrollWidth = parseFloat(this.scrollInfo['scrollWidth'].toString()),
+				barAllMoveWidth = parseFloat(this.indicatorWidth.toString()) - parseFloat(this.indicatorBarWidth.toString())
 			const x = scrollLeft / (scrollWidth - this.scrollWidth) * barAllMoveWidth
-			style.transform = `translateX(${ x }px)`
+			style['transform'] = `translateX(${ x }px)`
 			// #endif
 			// 设置滑块的宽度和背景色，是每个平台都需要的
-			style.width = addUnit(this.indicatorBarWidth)
-			style.backgroundColor = this.indicatorActiveColor
+			style['width'] = addUnit(this.indicatorBarWidth)
+			style['backgroundColor'] = this.indicatorActiveColor
 			return style
 		},
 		lineStyle() {
@@ -151,47 +127,47 @@ export default {
 	},
 	emits: ["left", "right"],
 	methods: {
-		addStyle,
-		getPx,
+		addUnit(e: any) {
+			return addUnit(e)
+		},
+		addStyle(e: any) {
+			return addStyle(e)
+		},
+		getPx(e: any): string {
+			return getPx(e)
+		},
 		init() {
 			this.getComponentWidth()
 		},
 		// #ifndef APP-NVUE || MP-WEIXIN || H5 || APP-VUE || MP-QQ
 		// scroll-view触发滚动事件
-		scrollHandler(e) {
-			this.scrollInfo = e.detail
+		scrollHandler(e: UniScrollEvent) {
+			this.scrollInfo['scrollLeft'] = e.detail.scrollLeft
+			this.scrollInfo['scrollWidth'] = e.detail.scrollWidth
 		},
 		scrolltoupperHandler() {
 			this.scrollEvent('left')
-			this.scrollInfo.scrollLeft = 0
+			this.scrollInfo['scrollLeft'] = 0
 		},
 		scrolltolowerHandler() {
 			this.scrollEvent('right')
 			// 在普通js方案中，滚动到右边时，通过设置this.scrollInfo，模拟出滚动到右边的情况
 			// 因为上方是用过computed计算的，设置后，会自动调整滑块的位置
-			this.scrollInfo.scrollLeft = getPx(this.indicatorWidth) - getPx(this.indicatorBarWidth)
+			this.scrollInfo['scrollLeft'] = parseFloat(getPx(this.indicatorWidth.toString()))
+				- parseFloat(getPx(this.indicatorBarWidth))
 		},
 		// #endif
 		//
-		scrollEvent(status) {
+		scrollEvent(status: string) {
 			this.$emit(status)
 		},
 		// 获取组件的宽度
 		async getComponentWidth() {
 			// 延时一定时间，以获取dom尺寸
 			await sleep(30)
-			// #ifndef APP-NVUE
-			this.$uGetRect('.up-scroll-list').then(size => {
-				this.scrollWidth = size.width
+			this.upGetRect('.up-scroll-list').then((size: NodeInfo) => {
+				this.scrollWidth = size.width ?? 0
 			})
-			// #endif
-
-			// #ifdef APP-NVUE
-			const ref = this.$refs['up-scroll-list']
-			ref && dom.getComponentRect(ref, (res) => {
-				this.scrollWidth = res.size.width
-			})
-			// #endif
 		},
 	}
 }
