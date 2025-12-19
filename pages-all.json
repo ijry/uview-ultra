@@ -162,11 +162,6 @@
 		// 		"navigationBarTitleText": "提示消息"
 		// 	}
 		// }, {
-		// 	"path": "slider/slider",
-		// 	"style": {
-		// 		"navigationBarTitleText": "滑动选择器"
-		// 	}
-		// }, {
 		// 	"path": "upload/upload",
 		// 	"style": {
 		// 		"navigationBarTitleText": "上传"

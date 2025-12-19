@@ -85,6 +85,11 @@
 				"style": {
 					"navigationBarTitleText": "搜索"
 				}
+			}, {
+				"path": "slider/slider",
+				"style": {
+					"navigationBarTitleText": "滑动选择器"
+				}
 			}
 		]
 	}, {

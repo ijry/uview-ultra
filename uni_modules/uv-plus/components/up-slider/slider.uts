@@ -1,14 +1,11 @@
 /*
- * @Author       : LQ
- * @Description  :
- * @version      : 3.0
- * @Date         : 2021-08-20 16:44:21
- * @LastAuthor   : jry
- * @lastTime     : 2025-12-19 08:55:21
- * @FilePath     : /uview-plus/libs/config/props/slider.js
+ * @Author: jry 
+ * @Date: 2025-12-19 23:00:00 
+ * @Last Modified by: jry
+ * @Last Modified time: 2025-12-19 23:00:00
  */
+
 export default {
-    // slider组件
     slider: {
         value: 0,
         blockSize: 18,
@@ -23,6 +20,6 @@ export default {
         blockStyle: {},
         useNative: false,
         height: '2px',
-        innerStyle: {}
+        innerStyle: {} as UTSJSONObject
     }
-}
+} as UTSJSONObject

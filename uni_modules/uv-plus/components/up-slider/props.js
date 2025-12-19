@@ -1,4 +1,4 @@
-import { defineMixin } from '../../libs/vue.js'
+import { defineMixin } from '../../libs/vue'
 import defProps from '../../libs/config/props.js'
 
 export const props = defineMixin({
@@ -86,6 +86,10 @@ export const props = defineMixin({
         height: {
             type: String,
             default: () => defProps.slider.height
-        }
+        },
+        innerStyle: {
+            type: Object,
+            default: () => defProps.slider.innerStyle
+        },
     }
 })
