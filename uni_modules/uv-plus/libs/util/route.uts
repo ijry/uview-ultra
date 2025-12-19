@@ -96,11 +96,11 @@ class Router {
 		let type: string = config.getString('type').toString()
 		let delta: number = config.getNumber('delta') ?? 1
 		let animationType: string = config.getString('animationType').toString()
-		let animationDuration: Number = config.getNumber('animationDuration') ?? 0
+		let animationDuration: number = config.getNumber('animationDuration') ?? 0
         if (config['type'] == 'navigateTo' || config['type'] == 'to') {
             uni.navigateTo({
                 url,
-                animationType,
+                animationType: animationType ?? '',
                 animationDuration
             })
         }

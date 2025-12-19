@@ -7,11 +7,12 @@
 			@open="open"
 			@close="close"
 		>
-			<up-parse
+			<rich-text :nodes="content"></rich-text>
+			<!-- <up-parse
 			    :content="content"
 			    @load="load"
 				:tag-style="tagStyle"
-			></up-parse>
+			></up-parse> -->
 		</up-read-more>
 	</view>
 </template>
@@ -32,12 +33,12 @@
 		},
 		methods: {
 			load() {
-				this.$refs.uReadMore.init()
+				(this.$refs['uReadMore'] as ComponentPublicInstance)?.$callMethod('init')
 			},
-			open(name) {
+			open(name: string) {
 				console.log('open', name);
 			},
-			close(name) {
+			close(name: string) {
 				console.log('close', name);
 			}
 		},

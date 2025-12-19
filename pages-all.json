@@ -287,13 +287,6 @@
 				"navigationBarTitleText": "头像"
 			}
 		}
-		// , {
-		// 	"path": "readMore/readMore",
-		// 	"style": {
-		// 		"navigationBarTitleText": "阅读更多"
-		// 	}
-		// }, 
-		//
 		,{
 			"path": "layout/layout",
 			"style": {

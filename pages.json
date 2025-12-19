@@ -158,6 +158,11 @@
 			"style": {
 				"navigationBarTitleText": "无网络提示"
 			}
+		}, {
+			"path": "readMore/readMore",
+			"style": {
+				"navigationBarTitleText": "阅读更多"
+			}
 		}
 		]
 	},
