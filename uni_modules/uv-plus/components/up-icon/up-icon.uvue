@@ -147,10 +147,12 @@
 			addUnit(val: any): string {
 				return addUnit(val)
 			},
-			clickHandler(e: any) {
+			clickHandler(e: UniPointerEvent) {
 				this.$emit('click', this.index)
 				// 是否阻止事件冒泡
-			// 	this.stop && this.preventEvent(e)
+			 	if (this.stop) {
+					this.preventEvent(e)
+				}
 			}
 		}
 	}

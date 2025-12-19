@@ -171,6 +171,7 @@
 </template>
 
 <script>
+	import { toast } from '@/uni_modules/uv-plus/libs/function/index';
 	export default {
 		data() {
 			return {
@@ -192,16 +193,16 @@
 			}
 		},
 		watch: {
-			value1(newValue, oldValue) {
+			value1(newValue: string, oldValue: string) {
 				// console.log('value1', newValue);
 			}
 		},
 		methods: {
-			change(e) {
+			change(e: string) {
 				console.log(e);
 			},
 			clickIcon() {
-				uni.$u.toast('点击了左侧图标')
+				toast('点击了左侧图标')
 			}
 		}
 	}

@@ -179,12 +179,6 @@
 				"navigationBarTitleText": "色彩"
 			}
 		}
-		// , {
-		// 	"path": "search/search",
-		// 	"style": {
-		// 		"navigationBarTitleText": "搜索"
-		// 	}
-		// }
 		, {
 			"path": "badge/badge",
 			"style": {

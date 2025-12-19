@@ -1,7 +1,7 @@
 <template>
 	<view
 	    class="up-search"
-		:class="[iconPosition === 'right' && 'up-search__reverse']"
+		:class="[iconPosition === 'right' ? 'up-search__reverse' : '']"
 	    @tap="clickHandler"
 	    :style="[{
 			margin: margin,
@@ -15,7 +15,7 @@
 				borderColor: borderColor,
 			}"
 		>
-			<template v-if="$slots.label || label !== null">
+			<template v-if="$slots['label'] != null || label !== null">
 				<slot name="label">
 					<text class="up-search__content__label">{{ label }}</text>
 				</slot>
@@ -25,7 +25,7 @@
 					@tap="clickIcon"
 				    :size="searchIconSize"
 				    :name="searchIcon"
-				    :color="searchIconColor ? searchIconColor : color"
+				    :color="searchIconColor != '' ? searchIconColor : color"
 				></up-icon>
 			</view>
 			<input
@@ -70,14 +70,14 @@
 		<text
 		    :style="[actionStyle]"
 		    class="up-search__action"
-		    :class="[(showActionBtn || show) && 'up-search__action--active']"
+		    :class="[(showActionBtn || show) ? 'up-search__action--active' : '']"
 		    @tap.stop.prevent="custom"
 		>{{ actionText }}</text>
 	</view>
 </template>
 
 <script>
-	import { props } from './props';
+	import { propsSearch } from './props';
 	import { mpMixin } from '../../libs/mixin/mpMixin';
 	import { mixin } from '../../libs/mixin/mixin';
 	import { addUnit, addStyle } from '../../libs/function/index';
@@ -122,19 +122,22 @@
 	 */
 	export default {
 		name: "up-search",
-		mixins: [mpMixin, mixin, props],
+		mixins: [mpMixin, mixin, propsSearch],
 		data() {
 			return {
 				keyword: '',
 				show: false,
 				// 标记input当前状态是否处于聚焦中，如果是，才会显示右侧的清除控件
-				focused: this.focus
+				focused: false
 				// 绑定输入框的值
 				// inputValue: this.value
 			};
 		},
+		mounted() {
+			this.focused = this.focus
+		},
 		watch: {
-			keyword(nVal) {
+			keyword(nVal: string) {
 				// 双向绑定值，让v-model绑定的值双向变化
 				// #ifdef VUE3
 				this.$emit("update:modelValue", nVal);
@@ -148,27 +151,30 @@
 			// #ifdef VUE3
 			modelValue: {
 				immediate: true,
-				handler(nVal) {
-					this.keyword = nVal;
+				handler(nVal: string|number) {
+					//this.keyword = nVal.toString();
 				}
 			},
 			// #endif
 			// #ifdef VUE2
 			value: {
 				immediate: true,
-				handler(nVal) {
-					this.keyword = nVal;
+				handler(nVal: : string|number) {
+					this.keyword = nVal.toString();
 				}
 			},
 			// #endif
 		},
 		computed: {
-			showActionBtn() {
+			showActionBtn(): boolean {
 				return !this.animation && this.showAction
 			},
 			// 是否显示清除控件
-			isShowClear() {
-				const { clearabled, focused, keyword, onlyClearableOnFocused } = this;
+			isShowClear(): boolean {
+				let clearabled = this.$props['clearabled'] as boolean;
+				let focused = this.$data['focused'] as boolean;
+				let keyword = this.$data['keyword'] as string;
+				let onlyClearableOnFocused = this.$props['onlyClearableOnFocused'] as boolean;
 				if (!clearabled) {
 					return false;
 				}
@@ -181,10 +187,14 @@
 		},
 		emits: ['clear', 'search', 'custom', 'focus', 'blur', 'click', 'clickIcon', 'update:modelValue', 'change'],
 		methods: {
-			addStyle,
-			addUnit,
+			addUnit(e: any): string {
+				return addUnit(e)
+			},
+			addStyle(e: any): any {
+				return addStyle(e)
+			},
 			// 目前HX2.6.9 v-model双向绑定无效，故监听input事件获取输入框内容的变化
-			inputChange(e) {
+			inputChange(e: UniInputEvent) {
 				this.keyword = e.detail.value;
 			},
 			// 清空输入
@@ -197,7 +207,7 @@
 				})
 			},
 			// 确定搜索
-			search(e) {
+			search(e: UniInputConfirmEvent) {
 				this.$emit('search', e.detail.value);
 				try {
 					// 收起键盘
@@ -234,7 +244,7 @@
 				if (this.disabled) this.$emit('click');
 			},
 			// 点击左边图标
-			clickIcon(e) {
+			clickIcon(e: UniPointerEvent) {
 				this.$emit('clickIcon', this.keyword);
 				try {
 					// 收起键盘

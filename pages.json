@@ -80,6 +80,11 @@
 				"style": {
 					"navigationBarTitleText": "步进器"
 				}
+			}, {
+				"path": "search/search",
+				"style": {
+					"navigationBarTitleText": "搜索"
+				}
 			}
 		]
 	}, {
