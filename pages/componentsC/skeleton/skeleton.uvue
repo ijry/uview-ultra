@@ -1,4 +1,7 @@
 <template>
+	<!-- #ifdef APP -->
+	<scroll-view style="flex:1">
+	<!-- #endif -->
 	<view class="u-page">
 		<view class="u-demo-block">
 			<text class="u-demo-block__title">基础使用</text>
@@ -45,11 +48,11 @@
 		</view>
 		<view class="u-demo-block">
 			<text class="u-demo-block__title">是否开启动画</text>
-			<up-switch
+			<!-- <up-switch
 				v-model="switch1"
 				space="2"
 				inactiveColor="#e6e6e6"
-			></up-switch>
+			></up-switch> -->
 			<up-gap
 				height="15"
 				bgColor="#fff"
@@ -81,11 +84,11 @@
 		</view>
 		<view class="u-demo-block">
 			<text class="u-demo-block__title">切换状态</text>
-			<up-switch
+			<!-- <up-switch
 				v-model="switch2"
 				space="2"
 				inactiveColor="#e6e6e6"
-			></up-switch>
+			></up-switch> -->
 			<up-gap
 				height="15"
 				bgColor="#fff"
@@ -125,6 +128,9 @@
 			<up-gap height="50" bgColor="transparent"></up-gap>
 		</view>
 	</view>
+	<!-- #ifdef APP -->
+	</scroll-view>
+	<!-- #endif -->
 </template>
 
 <script>

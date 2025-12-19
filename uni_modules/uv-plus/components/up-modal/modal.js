@@ -7,7 +7,7 @@
  * @lastTime     : 2021-08-20 17:15:59
  * @FilePath     : /uview-pluis/libs/config/props/modal.js
  */
-import { t } from '../../libs/i18n'
+import { t } from '../../libs/i18n/index.js'
 export default {
     // modal 组件
     modal: {

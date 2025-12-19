@@ -69,7 +69,7 @@ import Row from '../../components/up-row/row.js'
 import RowNotice from '../../components/up-row-notice/rowNotice.js'
 import ScrollList from '../../components/up-scroll-list/scrollList.js'
 import Search from '../../components/up-search/search.js'
-import Section from '../../components/up-section/section.js'
+// import Section from '../../components/up-section/section.js'
 import Skeleton from '../../components/up-skeleton/skeleton.js'
 import Slider from '../../components/up-slider/slider.js'
 import StatusBar from '../../components/up-status-bar/statusBar.js'
@@ -163,7 +163,7 @@ export default {
     ...RowNotice,
     ...ScrollList,
     ...Search,
-    ...Section,
+    // ...Section,
     ...Skeleton,
     ...Slider,
     ...StatusBar,

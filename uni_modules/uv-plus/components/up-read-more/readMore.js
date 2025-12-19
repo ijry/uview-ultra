@@ -7,7 +7,7 @@
  * @lastTime     : 2025-08-20 17:18:41
  * @FilePath     : /uview-plus/libs/config/props/rate.js
  */
-import { t } from '../../libs/i18n'
+import { t } from '../../libs/i18n/index.js'
 export default {
     // readMore
     readMore: {

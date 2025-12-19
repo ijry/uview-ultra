@@ -173,6 +173,11 @@
 			"style": {
 				"navigationBarTitleText": "横向滚动列表"
 			}
+		}, {
+			"path": "skeleton/skeleton",
+			"style": {
+				"navigationBarTitleText": "骨架屏"
+			}
 		}
 		]
 	},

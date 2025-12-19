@@ -7,7 +7,7 @@
  * @lastTime     : 2024-08-20 14:20:58
  * @FilePath     : /uview-plus/libs/config/props/noNetwork.js
  */
-import { t } from '../../libs/i18n'
+import { t } from '../../libs/i18n/index.js'
 export default {
     // noNetwork
     noNetwork: {

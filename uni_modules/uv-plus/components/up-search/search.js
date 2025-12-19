@@ -7,7 +7,7 @@
  * @lastTime     : 2025-12-19 20:17:21
  * @FilePath     : /uview-plus/libs/config/props/search.js
  */
-import { t } from '../../libs/i18n'
+import { t } from '../../libs/i18n/index.js'
 export default {
     // search
     search: {
