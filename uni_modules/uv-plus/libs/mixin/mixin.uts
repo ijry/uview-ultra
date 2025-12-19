@@ -197,12 +197,13 @@ export const mixin = defineMixin({
 			return {}
         },
         // 阻止事件冒泡
-        preventEvent(e: object) {
+        preventEvent(e: UniEvent ) {
+			e.stopPropagation()
         //     e && typeof (e.stopPropagation) === 'function' && e.stopPropagation()
         },
         // 空操作
-        noop(e: object) {
-        //     this.preventEvent(e)
+        noop(e: UniEvent) {
+             this.preventEvent(e)
         }
     },
     onReachBottom() {
@@ -214,7 +215,7 @@ export const mixin = defineMixin({
         if (this.$parent && testArray(this.parent.children)) {
             // 组件销毁时，移除父组件中的children数组中对应的实例
             const childrenList = this.parent.children
-            childrenList.map((child, index) => {
+            childrenList.map((child: ComponentPublicInstance, index: number) => {
                 // 如果相等，则移除
                 if (child === this) {
                     childrenList.splice(index, 1)

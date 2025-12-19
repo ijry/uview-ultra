@@ -21,6 +21,12 @@
 				"style": {
 					"navigationBarTitleText": "内容为空"
 				}
+			},
+			{
+				"path": "rate/rate",
+				"style": {
+					"navigationBarTitleText": "评分"
+				}
 			}
 		]
 	}, {

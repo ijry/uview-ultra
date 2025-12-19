@@ -129,12 +129,12 @@
 			}
 		},
 		watch: {
-			value(newValue, oldValue) {
+			value(newValue: number, oldValue: number) {
 				// console.log(newValue);
 			}
 		},
 		methods: {
-			change(e) {
+			change(e: number) {
 				// console.log('change', e);
 			}
 		},

@@ -12,14 +12,14 @@
         >
             <view
                 class="up-rate__content__item cursor-pointer"
-                v-for="(item, index) in Number(count)"
+                v-for="(item, index) in parseInt(count.toString())"
                 :key="index"
                 :class="[elClass]"
             >
                 <view
                     class="up-rate__content__item__icon-wrap"
                     ref="up-rate__content__item__icon-wrap"
-                    @tap.stop="clickHandler($event, index + 1)"
+                    @click.stop="clickHandler($event, index + 1)"
                 >
                     <up-icon
                         :name="
@@ -35,14 +35,14 @@
                                 : inactiveColor
                         "
                         :custom-style="{
-                            padding: `0 ${addUnit(gutter / 2)}`,
+                            padding: `0 ${addUnit(parseInt(gutter.toString()) / 2)}`,
                         }"
                         :size="size"
                     ></up-icon>
                 </view>
                 <view
                     v-if="allowHalf"
-                    @tap.stop="clickHandler($event, index + 1)"
+                    @click.stop="clickHandler($event, index + 1)"
                     class="up-rate__content__item__icon-wrap up-rate__content__item__icon-wrap--half"
                     :style="[{
                         width: addUnit(rateWidth / 2),
@@ -51,7 +51,7 @@
                 >
                     <up-icon
                         :name="
-                            Math.ceil(activeIndex) > index
+							Math.floor(activeIndex) > index
                                 ? activeIcon
                                 : inactiveIcon
                         "
@@ -63,7 +63,7 @@
                                 : inactiveColor
                         "
                         :custom-style="{
-                            padding: `0 ${addUnit(gutter / 2)}`
+                            padding: `0 ${addUnit(parseInt(gutter.toString()) / 2)}`
                         }"
                         :size="size"
                     ></up-icon>
@@ -74,13 +74,10 @@
 </template>
 
 <script>
-	import { props } from './props';
+	import { propsRate } from './props';
 	import { mpMixin } from '../../libs/mixin/mpMixin';
 	import { mixin } from '../../libs/mixin/mixin';
 	import { addUnit, addStyle, guid, sleep, range, os } from '../../libs/function/index';
-	// #ifdef APP-NVUE
-	const dom = weex.requireModule("dom");
-	// #endif
 	/**
 	 * rate 评分
 	 * @description 该组件一般用于满意度调查，星型评分的场景
@@ -104,7 +101,7 @@
 	 */
 	export default {
 		name: "up-rate",
-		mixins: [mpMixin, mixin, props],
+		mixins: [mpMixin, mixin, propsRate],
 		data() {
 			return {
 				// 生成一个唯一id，否则一个页面多个评分组件，会造成冲突
@@ -112,10 +109,10 @@
 				elClass: guid(),
 				rateBoxLeft: 0, // 评分盒子左边到屏幕左边的距离，用于滑动选择时计算距离
 				// #ifdef VUE3
-				activeIndex: this.modelValue,
+				activeIndex: 0,
 				// #endif
 				// #ifdef VUE2
-				activeIndex: this.value,
+				activeIndex: parseFloat(this.value.toString()),
 				// #endif
 				rateWidth: 0, // 每个星星的宽度
 				// 标识是否正在滑动，由于iOS事件上touch比click先触发，导致快速滑动结束后，接着触发click，导致事件混乱而出错
@@ -124,24 +121,31 @@
 		},
 		watch: {
 			// #ifdef VUE3
-			modelValue(val) {
+			modelValue(val: number) {
 				this.activeIndex = val;
 			},
 			// #endif
         	// #ifdef VUE2
-			value(val) {
+			value(val: number) {
 				this.activeIndex = val;
 			},
 			// #endif
-			activeIndex: 'emitEvent'
+			// activeIndex: 'emitEvent'
 		},
 		// #ifdef VUE3
 		emits: ['update:modelValue', 'change'],
     	// #endif
 		methods: {
-			addStyle,
-			addUnit,
-			init() {
+			addStyle(e: any) {
+				return addStyle(e)
+			},
+			addUnit(e: any) {
+				return addUnit(e)
+			},
+            init() {
+				if (this.modelValue != null) {
+					this.activeIndex = parseFloat(this.modelValue.toString())
+				}
 				sleep().then(() => {
 					this.getRateItemRect();
 					this.getRateIconWrapRect();
@@ -150,37 +154,18 @@
 			// 获取评分组件盒子的布局信息
 			async getRateItemRect() {
 				await sleep();
-				// uView封装的获取节点的方法，详见文档
-				// #ifndef APP-NVUE
-				this.$uGetRect("#" + this.elId).then((res) => {
-					this.rateBoxLeft = res.left;
+				this.upGetRect("#" + this.elId).then((res: NodeInfo) => {
+					this.rateBoxLeft = res.left ?? 0;
 				});
-				// #endif
-				// #ifdef APP-NVUE
-				dom.getComponentRect(this.$refs["up-rate"], (res) => {
-					this.rateBoxLeft = res.size.left;
-				});
-				// #endif
 			},
 			// 获取单个星星的尺寸
 			getRateIconWrapRect() {
-				// uView封装的获取节点的方法，详见文档
-				// #ifndef APP-NVUE
-				this.$uGetRect("." + this.elClass).then((res) => {
-					this.rateWidth = res.width;
+				this.$uGetRect("." + this.elClass).then((res: NodeInfo) => {
+					this.rateWidth = res.width ?? 0;
 				});
-				// #endif
-				// #ifdef APP-NVUE
-				dom.getComponentRect(
-					this.$refs["up-rate__content__item__icon-wrap"][0],
-					(res) => {
-						this.rateWidth = res.size.width;
-					}
-				);
-				// #endif
 			},
 			// 手指滑动
-			touchMove(e) {
+			touchMove(e: UniTouchEvent) {
 				// 如果禁止通过手动滑动选择，返回
 				if (!this.touchable) {
 					return;
@@ -190,7 +175,7 @@
 				this.getActiveIndex(x);
 			},
 			// 停止滑动
-			touchEnd(e) {
+			touchEnd(e: UniTouchEvent) {
 				// 如果禁止通过手动滑动选择，返回
 				if (!this.touchable) {
 					return;
@@ -200,22 +185,17 @@
 				this.getActiveIndex(x);
 			},
 			// 通过点击，直接选中
-			clickHandler(e, index) {
+			clickHandler(e: any, index: number) {
+				let ee = e as UniPointerEvent
 				// ios上，moving状态取消事件触发
 				if (os() === "ios" && this.moving) {
 					return;
 				}
-				this.preventEvent(e);
+				this.preventEvent(ee);
 				let x = 0;
-				// 点击时，在nvue上，无法获得点击的坐标，所以无法实现点击半星选择
-				// #ifndef APP-NVUE
-				x = e.changedTouches[0].pageX;
-				// #endif
-				// #ifdef APP-NVUE
-				// nvue下，无法通过点击获得坐标信息，这里通过元素的位置尺寸值模拟坐标
-				x = index * this.rateWidth + this.rateBoxLeft;
-				// #endif
-				this.getActiveIndex(x,true);
+				// x = e.changedTouches[0].pageX;
+				x = ee.pageX;
+				this.getActiveIndex(x, true);
 			},
 			// 发出事件
 			emitEvent() {
@@ -230,18 +210,18 @@
 				// #endif
 			},
 			// 获取当前激活的评分图标
-			getActiveIndex(x,isClick = false) {
+			getActiveIndex(x: number, isClick = false) {
 				if (this.disabled || this.readonly) {
 					return;
 				}
 				// 判断当前操作的点的x坐标值，是否在允许的边界范围内
-				const allRateWidth = this.rateWidth * this.count + this.rateBoxLeft;
+				const allRateWidth = this.rateWidth * parseFloat(this.count.toString()) + this.rateBoxLeft;
 				// 如果小于第一个图标的左边界，设置为最小值，如果大于所有图标的宽度，则设置为最大值
 				x = range(this.rateBoxLeft, allRateWidth, x) - this.rateBoxLeft
 				// 滑动点相对于评分盒子左边的距离
 				const distance = x;
 				// 滑动的距离，相当于多少颗星星
-				let index;
+				let index = 0;
 				// 判断是否允许半星
 				if (this.allowHalf) {
 					index = Math.floor(distance / this.rateWidth);
@@ -264,10 +244,10 @@
 					}
 
 				}
-				this.activeIndex = Math.min(index, this.count);
+				this.activeIndex = Math.min(index, parseFloat(this.count.toString()));
 				// 对最少颗星星的限制
-				if (this.activeIndex < this.minCount) {
-					this.activeIndex = this.minCount;
+				if (this.activeIndex < parseInt(this.minCount.toString())) {
+					this.activeIndex = parseInt(this.minCount.toString());
 				}
 
 				// 设置延时为了让click事件在touchmove之前触发
