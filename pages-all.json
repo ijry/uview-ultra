@@ -98,12 +98,6 @@
 			// 	"style": {
 			// 		"navigationBarTitleText": "滑动单元格"
 			// 	}
-			// },
-			// {
-			// 	"path": "sticky/sticky",
-			// 	"style": {
-			// 		"navigationBarTitleText": "吸顶"
-			// 	}
 			// }
 			,{
 				"path": "radio/radio",

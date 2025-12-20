@@ -27,6 +27,12 @@
 				"style": {
 					"navigationBarTitleText": "评分"
 				}
+			},
+			{
+				"path": "sticky/sticky",
+				"style": {
+					"navigationBarTitleText": "吸顶"
+				}
 			}
 		]
 	}, {
