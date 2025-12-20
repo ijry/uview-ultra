@@ -246,13 +246,7 @@
 			"style": {
 				"navigationBarTitleText": "文本"
 			}
-		}
-		// {
-		// 	"path": "steps/steps",
-		// 	"style": {
-		// 		"navigationBarTitleText": "步骤条"
-		// 	}
-		// }, {
+		}, {
 		// 	"path": "navbar/navbar",
 		// 	"style": {
 		// 		"navigationBarTitleText": "导航栏",

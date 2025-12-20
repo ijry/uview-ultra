@@ -1,4 +1,7 @@
 <template>
+	<!-- #ifdef APP -->
+	<scroll-view style="flex:1">
+	<!-- #endif -->
 	<view class="u-page">
 		<view class="u-demo-block">
 			<text class="u-demo-block__title">基础演示</text>
@@ -190,6 +193,9 @@
 			</view>
 		</view>
 	</view>
+	<!-- #ifdef APP -->
+	</scroll-view>
+	<!-- #endif -->
 </template>
 
 <script>
@@ -208,7 +214,7 @@
 	.slot-icon {
 		width: 21px;
 		height: 21px;
-		background-color: $u-warning;
+		background-color: $up-warning;
 		border-radius: 100px;
 		font-size: 12px;
 		color: #fff;

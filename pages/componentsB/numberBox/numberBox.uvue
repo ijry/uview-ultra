@@ -260,7 +260,7 @@
 		width: 22px;
 		height: 22px;
 		background-color: #FF0000;
-		border-radius: 50%;
+		border-radius: 999px;
 		/* #ifndef APP-NVUE */
 		display: flex;
 		/* #endif */

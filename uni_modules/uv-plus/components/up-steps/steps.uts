@@ -1,11 +1,11 @@
 /*
- * @Author       : LQ
+ * @Author       : jry
  * @Description  :
- * @version      : 3.0
- * @Date         : 2021-08-20 16:44:21
+ * @version      : 4.0
+ * @Date         : 2025-12-20 10:58:21
  * @LastAuthor   : jry
- * @lastTime     : 2025-12-19 08:55:21
- * @FilePath     : /uview-plus/libs/config/props/steps.js
+ * @lastTime     : 2025-12-20 10:58:21
+ * @FilePath     : /uview-plus/libs/config/props/steps.uts
  */
 export default {
     // steps组件
@@ -18,4 +18,5 @@ export default {
         inactiveIcon: '',
         dot: false
     }
-}
+} as UTSJSONObject
+

@@ -1,7 +1,4 @@
-<template>	
-	<!-- #ifdef MP-ALIPAY -->
-	<!-- <import-sjs from="./alipay.sjs" name="mysjs" /> -->
-	<!-- #endif -->
+<template>
 	<view class="up-swipe-action-item" ref="up-swipe-action-item">
 		<view class="up-swipe-action-item__right">
 			<slot name="button">

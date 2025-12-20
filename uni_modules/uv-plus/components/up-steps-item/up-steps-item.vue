@@ -30,13 +30,25 @@
 				</view>
 			</slot>
 		</view>
-		<view class="up-steps-item__content" :class="[`up-steps-item__content--${parentData.direction}`]"
+		<view class="up-steps-item__content" :class="[`up-steps-item__content--${parentData.direction}`,
+			parentData.current == index ? 'up-steps-item__content--current' : '']"
 			:style="[contentStyle]">
-			<up-text :text="title" :type="parentData.current == index ? 'main' : 'content'" lineHeight="20px"
-				:size="parentData.current == index ? 14 : 13"></up-text>
-			<slot name="desc">
-				<up-text :text="desc" type="tips" size="12"></up-text>
+			<slot name="content" :index="index">
 			</slot>
+			<template v-if="!$slots['content']">
+				<view class="up-steps-item__content__title">
+					<slot name="title">
+					</slot>
+					<up-text v-if="!$slots['title']" :text="title" lineHeight="20px"
+						:type="parentData.current == index ? 'main' : 'content'"
+						:size="parentData.current == index ? 14 : 13"></up-text>
+				</view>
+				<view class="up-steps-item__content__desc">
+					<slot name="desc">
+					</slot>
+					<up-text v-if="!$slots['desc']" :text="desc" type="tips" size="12"></up-text>
+				</view>
+			</template>
 		</view>
 		<!-- <view
 		    class="up-steps-item__line"
@@ -48,11 +60,11 @@
 </template>
 
 <script>
-	import { props } from './props.js';
-	import { mpMixin } from '../../libs/mixin/mpMixin.js';
-	import { mixin } from '../../libs/mixin/mixin.js';
-	import { sleep, error } from '../../libs/function/index.js';
-	import color from '../../libs/config/color.js';
+	import { props } from './props';
+	import { mpMixin } from '../../libs/mixin/mpMixin';
+	import { mixin } from '../../libs/mixin/mixin';
+	import { sleep, error } from '../../libs/function/index';
+	import color from '../../libs/config/color';
 	// #ifdef APP-NVUE
 	const dom = uni.requireNativePlugin('dom')
 	// #endif
@@ -217,7 +229,6 @@
 </script>
 
 <style lang="scss" scoped>
-	@import "../../libs/css/components.scss";
 
 	.up-steps-item {
 		flex: 1;
@@ -302,6 +313,12 @@
 		&__content {
 			@include flex;
 			flex: 1;
+
+			&__title {
+				// #ifdef H5
+				cursor: pointer;
+				// #endif
+			}
 
 			&--row {
 				flex-direction: column;

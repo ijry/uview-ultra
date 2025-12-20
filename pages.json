@@ -183,6 +183,12 @@
 			"style": {
 				"navigationBarTitleText": "骨架屏"
 			}
+		},
+		{
+			"path": "steps/steps",
+			"style": {
+				"navigationBarTitleText": "步骤条"
+			}
 		}
 		]
 	},
