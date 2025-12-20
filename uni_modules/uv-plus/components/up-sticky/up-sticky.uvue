@@ -47,7 +47,10 @@
 				width: 'auto',
 				height: 'auto',
 				fixed: false, // js模式时，是否处于吸顶模式
-				contentObserver: null as (IntersectionObserver|null) // 观察者实例
+				// #ifdef H5 || MP
+				contentObserver: null as (IntersectionObserver|null), // 观察者实例
+				// #endif
+				rafId: 0 // requestAnimationFrame ID
 			}
 		},
 		computed: {
@@ -106,7 +109,11 @@
 					nextTick(() => {
 						// todo等待uni-app-x官方实现createIntersectionObserver对APP的支持
 						// #ifdef H5 || MP
-						this.observeContent()
+						//this.observeContent()
+						// #endif
+						
+						// #ifdef APP
+						// todo
 						// #endif
 					})
 				})
@@ -131,15 +138,14 @@
 				// #endif
 			},
 			setFixed(top: number) {
-				console.log(top)
 				// 判断是否出于吸顶条件范围
-				const fixed = top <= this.stickyTop
+				const fixed = top > this.stickyTop
 				this.fixed = fixed
 			},
 			disconnectObserver(observerName: string) {
 				// 断掉观察，释放资源
 				// #ifdef H5 || MP
-				const observer: IntersectionObserver = this.$data[observerName]
+				const observer: IntersectionObserver = this.$data[observerName] as IntersectionObserver
 				if (observer != null) {
 					observer.disconnect()
 				}
@@ -151,6 +157,11 @@
 		},
 		beforeUnmount() {
 			this.disconnectObserver('contentObserver')
+			// #ifdef APP
+			if (this.rafId != 0) {
+				cancelAnimationFrame(this.rafId)
+			}
+			// #endif
 		}
 	}
 </script>

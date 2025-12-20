@@ -1,7 +1,5 @@
 <template>
-	<!-- #ifdef APP -->
-	<scroll-view style="flex:1">
-	<!-- #endif -->
+	<scroll-view style="flex:1" @scroll="onScroll">
 	<view class="u-page">
 		<!-- <up-navbar
 			title="吸顶"
@@ -17,7 +15,7 @@
 				text="滚动页面,即可看到下方的按钮会吸顶。"
 			></up-text>
 		</view>
-		<up-sticky :offsetTop="0">
+		<up-sticky ref="stickyRef" :offsetTop="0">
 			<up-button
 				text="吸顶按钮"
 				type="success"
@@ -29,9 +27,7 @@
 		></up-gap>
 		<up-divider text="已到底部"></up-divider>
 	</view>
-	<!-- #ifdef APP -->
 	</scroll-view>
-	<!-- #endif -->
 </template>
 
 <script>
@@ -41,15 +37,10 @@
 
 			}
 		},
-		// onPageScroll(e: OnPageScrollOptions) {
-		// 	let asd = new UniScrollEvent(1,2)
-		// 	asd.detail.scrollTop = e.scrollTop
-		// 	this.onScroll(e.scrollTop)
-		// },
 		// mixins: [mixin],
 		methods: {
-			onScroll(e: number) {
-				console.log(e)
+			onScroll(e :UniScrollEvent) {
+				(this.$refs['stickyRef'] as ComponentPublicInstance)?.$callMethod('setFixed', e.detail.scrollTop)
 			},
 			navigateBack() {
 				uni.navigateBack()
