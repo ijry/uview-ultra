@@ -1,7 +1,7 @@
 {
   "id": "lime-dayuts",
   "displayName": "lime-dayuts dayjs 日期库",
-  "version": "0.0.8",
+  "version": "0.1.6",
   "description": "lime-dayuts 是dayjs的uts版，一个轻量的处理时间和日期的 UTS 库，几乎和dayjs保持一样的API",
   "keywords": [
     "lime-dayuts",
@@ -11,7 +11,9 @@
 ],
   "repository": "",
   "engines": {
-    "HBuilderX": "^4.14"
+    "HBuilderX": "^4.14",
+    "uni-app": "^4.72",
+    "uni-app-x": "^4.74"
   },
   "dcloudext": {
     "type": "uts",
@@ -31,54 +33,72 @@
       "data": "无",
       "permissions": "无"
     },
-    "npmurl": ""
+    "npmurl": "",
+    "darkmode": "x",
+    "i18n": "x",
+    "widescreen": "x"
   },
   "uni_modules": {
     "dependencies": [],
     "encrypt": [],
     "platforms": {
       "cloud": {
-        "tcb": "y",
-        "aliyun": "y",
-        "alipay": "n"
+        "tcb": "√",
+        "aliyun": "√",
+        "alipay": "x"
       },
       "client": {
-        "Vue": {
-          "vue2": "u",
-          "vue3": "y"
+        "uni-app": {
+          "vue": {
+            "vue2": "√",
+            "vue3": "√"
+          },
+          "web": {
+            "safari": "√",
+            "chrome": "√"
+          },
+          "app": {
+            "vue": "√",
+            "nvue": "-",
+            "android": {
+                "extVersion": "",
+                "minVersion": "21"
+            },
+            "ios": "√",
+            "harmony": "√"
+          },
+          "mp": {
+            "weixin": "√",
+            "alipay": "√",
+            "toutiao": "√",
+            "baidu": "√",
+            "kuaishou": "√",
+            "jd": "√",
+            "harmony": "√",
+            "qq": "√",
+            "lark": "√"
+          },
+          "quickapp": {
+            "huawei": "√",
+            "union": "√"
+          }
         },
-        "App": {
-            "app-android": "y",
-            "app-ios": "y",
-            "app-harmony": "u"
-        },
-        "H5-mobile": {
-          "Safari": "y",
-          "Android Browser": "y",
-          "微信浏览器(Android)": "y",
-          "QQ浏览器(Android)": "y"
-        },
-        "H5-pc": {
-          "Chrome": "y",
-          "IE": "u",
-          "Edge": "u",
-          "Firefox": "u",
-          "Safari": "u"
-        },
-        "小程序": {
-          "微信": "u",
-          "阿里": "u",
-          "百度": "u",
-          "字节跳动": "u",
-          "QQ": "u",
-          "钉钉": "u",
-          "快手": "u",
-          "飞书": "u",
-          "京东": "u"
-        },
-        "快应用": {
-          "华为": "u",
-          "联盟": "u"
+        "uni-app-x": {
+          "web": {
+            "safari": "√",
+            "chrome": "√"
+          },
+          "app": {
+            "android": {
+                "extVersion": "",
+                "minVersion": "21"
+            },
+            "ios": "√",
+            "harmony": "√"
+          },
+          "mp": {
+            "weixin": "√"
+          }
         }
       }
     }
