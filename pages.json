@@ -102,6 +102,11 @@
 				"style": {
 					"navigationBarTitleText": "滑动选择器"
 				}
+			}, {
+				"path": "switch/switch",
+				"style": {
+					"navigationBarTitleText": "开关"
+				}
 			}
 		]
 	}, {

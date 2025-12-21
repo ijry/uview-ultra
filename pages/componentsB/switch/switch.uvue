@@ -142,15 +142,15 @@
 			}
 		},
 		watch: {
-			value1(newValue, oldValue) {
+			value1(newValue: boolean, oldValue: boolean) {
 				console.log('v-model', newValue);
 			}
 		},
 		methods: {
-			change(e) {
+			change(e: any) {
 				console.log('change', e);
 			},
-			asyncChange(e) {
+			asyncChange(e: boolean) {
 				uni.showModal({
 					content: e ? '确定要打开吗' : '确定要关闭吗',
 					success: (res) => {

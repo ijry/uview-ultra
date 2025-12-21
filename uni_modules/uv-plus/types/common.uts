@@ -7,6 +7,8 @@ export type UPCommonStyle = {
 	height ?: string,
 	margin ?: string,
 	padding ?: string,
+	transform ?: string,
+	borderColor ?: string,
 }
 
 export {}

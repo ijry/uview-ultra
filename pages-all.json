@@ -180,12 +180,6 @@
 				"navigationBarTitleText": "警告"
 			}
 		}
-		// , {
-		// 	"path": "switch/switch",
-		// 	"style": {
-		// 		"navigationBarTitleText": "开关"
-		// 	}
-		// }
 		, {
 			"path": "collapse/collapse",
 			"style": {
