@@ -206,6 +206,11 @@
 			"style": {
 				"navigationBarTitleText": "步骤条"
 			}
+		}, {
+			"path": "swiper/swiper",
+			"style": {
+				"navigationBarTitleText": "轮播"
+			}
 		}
 		]
 	},

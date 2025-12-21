@@ -5,7 +5,7 @@
 			v-if="indicatorMode === 'line'"
 			:class="[`up-swiper-indicator__wrapper--${indicatorMode}`]"
 			:style="{
-				width: addUnit(lineWidth * length),
+				width: addUnit(lineWidth * (length as number)),
 				backgroundColor: indicatorInactiveColor
 			}"
 		>
@@ -20,9 +20,9 @@
 		>
 			<view
 				class="up-swiper-indicator__wrapper__dot"
-				v-for="(item, index) in length"
+				v-for="(item, index) in lengthArray"
 				:key="index"
-				:class="[index === current && 'up-swiper-indicator__wrapper__dot--active']"
+				:class="[index === (current as number) ? 'up-swiper-indicator__wrapper__dot--active' : '']"
 				:style="[dotStyle(index)]"
 			>
 			</view>
@@ -30,11 +30,11 @@
 	</view>
 </template>
 
-<script>
-	import { props } from './props';
-	import { mpMixin } from '../../libs/mixin/mpMixin';
-	import { mixin } from '../../libs/mixin/mixin';
-	import { addUnit } from '../../libs/function/index';
+<script lang="uts">
+	import { propsSwiperIndicator } from './props.uts';
+	import { mpMixin } from '../../libs/mixin/mpMixin.uts';
+	import { mixin } from '../../libs/mixin/mixin.uts';
+	import { addUnit } from '../../libs/function/index.uts';
 	/**
 	 * SwiperIndicator 轮播图指示器
 	 * @description 该组件一般用于导航轮播，广告展示等场景,可开箱即用，
@@ -48,37 +48,45 @@
 	 */
 	export default {
 		name: 'up-swiper-indicator',
-		mixins: [mpMixin, mixin, props],
+		mixins: [mpMixin, mixin, propsSwiperIndicator],
 		data() {
 			return {
 				lineWidth: 22
 			}
 		},
 		computed: {
-			// 指示器为线型的样式
-			lineStyle() {
-				let style = {}
-				style.width = addUnit(this.lineWidth)
-				style.transform = `translateX(${ addUnit(this.current * this.lineWidth) })`
-				style.backgroundColor = this.indicatorActiveColor
-				return style
-			},
-			// 指示器为点型的样式
-			dotStyle() {
-				return index => {
-					let style = {}
-					style.backgroundColor = index === this.current ? this.indicatorActiveColor : this.indicatorInactiveColor
-					return style
+			lengthArray(): Array<string> {
+				let list: Array<string> = []
+				for (var index = 0; index < this.length as number; index++) {
+					list.push(index.toString())
 				}
+				return list
+			},
+			// 指示器为线型的样式
+			lineStyle(): any {
+				let style = {}
+				style['width'] = addUnit(this.lineWidth)
+				style['transform'] = `translateX(${ addUnit(this.current as number * this.lineWidth) })`
+				style['backgroundColor'] = this.indicatorActiveColor
+				return style
 			}
 		},
 		methods: {
-			addUnit
+			addUnit(val: any): string {
+				return addUnit(val)
+			},
+			// 指示器为点型的样式
+			dotStyle(index: number): any {
+				let style = {}
+				style['backgroundColor'] = index === this.current ? this.indicatorActiveColor : this.indicatorInactiveColor
+				return style
+			}
 		}
 	}
 </script>
 
 <style lang="scss" scoped>
+	@import '../../libs/css/components.scss';
 
 	.up-swiper-indicator {
 

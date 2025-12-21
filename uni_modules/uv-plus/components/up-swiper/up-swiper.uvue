@@ -26,12 +26,6 @@
 			:duration="duration"
 			:autoplay="autoplay"
 			:current="current"
-			:currentItemId="currentItemId"
-			:previousMargin="addUnit(previousMargin)"
-			:nextMargin="addUnit(nextMargin)"
-			:acceleration="acceleration"
-			:displayMultipleItems="list.length > 0 ? displayMultipleItems : 0"
-			:easingFunction="easingFunction"
 		>
 			<swiper-item
 				class="up-swiper__wrapper__item"
@@ -62,16 +56,16 @@
 							:enable-progress-gesture="false"
 							:src="getSource(item)"
 							:poster="getPoster(item)"
-							:title="showTitle && testObject(item) && item.title ? item.title : ''"
+							:title="showTitle && testObject(item) && getItemTitle(item) != '' ? getItemTitle(item) : ''"
 							:style="{
 								height: addUnit(height)
 							}"
 							controls
 							@tap="clickHandler(index)"
 						></video>
-						<view v-if="showTitle && testObject(item) && item.title && testImage(getSource(item))"
+						<view v-if="showTitle && getItemTitle(item) != '' && testImage(getSource(item))"
 							class="up-swiper__wrapper__item__wrapper__title">
-							<text class="up-line-1">{{ item.title }}</text>
+							<text class="up-line-1">{{ getItemTitle(item) }}</text>
 						</view>
 					</view>
 				</slot>
@@ -91,12 +85,14 @@
 		</view>
 	</view>
 </template>
-<script>
-	import { props } from './props.js';
-	import { mpMixin } from '../../libs/mixin/mpMixin';
-	import { mixin } from '../../libs/mixin/mixin';
-	import { addUnit, addStyle, error } from '../../libs/function/index';
-	import test from '../../libs/function/test';
+
+<script lang="uts">
+	import { propsSwiper } from './props.uts';
+	import { mpMixin } from '../../libs/mixin/mpMixin.uts';
+	import { mixin } from '../../libs/mixin/mixin.uts';
+	import { addUnit, addStyle, error } from '../../libs/function/index.uts';
+	import { object as testObject, image as testImage, video as testVideo} from '../../libs/function/test.uts';
+	import { nextTick } from 'vue';
 	/**
 	 * Swiper 轮播图
 	 * @description 该组件一般用于导航轮播，广告展示等场景,可开箱即用，
@@ -131,82 +127,105 @@
 	 */
 	export default {
 		name: 'up-swiper',
-		mixins: [mpMixin, mixin, props],
+		mixins: [mpMixin, mixin, propsSwiper],
 		data() {
 			return {
 				currentIndex: 0
 			}
 		},
 		watch: {
-			current(val, preVal) {
+			current(val: string | number, preVal: string | number) {
 				if(val === preVal) return;
-				this.currentIndex = val; // 和上游数据关联上
+				this.currentIndex = val as number; // 和上游数据关联上
 			}
 		},
 		emits: ["click", "change", "update:current"],
 		computed: {
-			itemStyle() {
-				return index => {
-					const style = {}
-					// #ifndef APP-NVUE || MP-TOUTIAO
-					// 左右流出空间的写法不支持nvue和头条
-					// 只有配置了此二值，才加上对应的圆角，以及缩放
-					if (this.nextMargin && this.previousMargin) {
-						style.borderRadius = addUnit(this.radius)
-						if (index !== this.currentIndex) style.transform = 'scale(0.92)'
-					}
-					// #endif
-					return style
-				}
-			}
 		},
 		methods: {
-			addStyle,
-			addUnit,
-			testObject: test.object,
-			testImage: test.image,
-			getItemType(item) {
-				if (typeof item === 'string') return test.video(this.getSource(item)) ? 'video' : 'image'
-				if (typeof item === 'object' && this.keyName) {
-				if (!item.type) return test.video(this.getSource(item)) ? 'video' : 'image'
-				if (item.type === 'image') return 'image'
-				if (item.type === 'video') return 'video'
-				return 'image'
+			addStyle(val: any): any {
+				return addStyle(val)
+			},
+			addUnit(val: any): string {
+				return addUnit(val)
+			},
+			itemStyle(index: number): any {
+				const style = {}
+				// #ifndef APP-NVUE || MP-TOUTIAO
+				// 左右流出空间的写法不支持nvue和头条
+				// 只有配置了此二值，才加上对应的圆角，以及缩放
+				if (this.nextMargin != '' && this.previousMargin != '') {
+					style['borderRadius'] = addUnit(this.radius)
+					if (index !== this.currentIndex) style['transform'] = 'scale(0.92)'
 				}
+				// #endif
+				return style
+			},
+			testObject(e: any|null): boolean {
+				return testObject(e)
+			},
+			testImage(e: string): boolean {
+				return testImage(e)
+			},
+			getItemType(item: any | null): string {
+				if (item == null) return ''
+				if (typeof item === 'string') return testVideo(this.getSource(item)) ? 'video' : 'image'
+				if (typeof item === 'object' && this.keyName != '') {
+					item = item as UTSJSONObject
+					if (item['type'] == null) return testVideo(this.getSource(item)) ? 'video' : 'image'
+					if (item['type'] === 'image') return 'image'
+					if (item['type'] === 'video') return 'video'
+					return 'image'
+				}
+				return 'image'
 			},
 			// 获取目标路径，可能数组中为字符串，对象的形式，额外可指定对象的目标属性名keyName
-			getSource(item) {
+			getSource(item: any|null): string {
 				if (typeof item === 'string') return item
-				if (typeof item === 'object' && this.keyName) return item[this.keyName]
+				if (typeof item === 'object' && this.keyName != '') {
+					item = item as UTSJSONObject
+					return item[this.keyName].toString()
+				}
+				else error('请按格式传递列表参数')
+				return ''
+			},
+			getItemTitle(item: any|null): string {
+				if (typeof item === 'string') return item
+				if (typeof item === 'object') {
+					item = item as UTSJSONObject
+					return item['title'].toString()
+				}
 				else error('请按格式传递列表参数')
 				return ''
 			},
 			// 轮播切换事件
-			change(e) {
+			change(e: UniSwiperChangeEvent) {
 				// 当前的激活索引
-				const {
-					current
-				} = e.detail
+				const { current } = e.detail
 				this.pauseVideo(this.currentIndex)
 				this.currentIndex = current
 				this.$emit('update:current', this.currentIndex)
 				this.$emit('change', e.detail)
 			},
 			// 切换轮播时，暂停视频播放
-			pauseVideo(index) {
+			pauseVideo(index: number) {
 				const lastItem = this.getSource(this.list[index])
-				if (test.video(lastItem)) {
+				if (testVideo(lastItem)) {
 					// 当视频隐藏时，暂停播放
 					const video = uni.createVideoContext(`video-${index}`, this)
-					video.pause()
+					video!!.pause()
 				}
 			},
 			// 当一个轮播item为视频时，获取它的视频海报
-			getPoster(item) {
-				return typeof item === 'object' && item.poster ? item.poster : ''
+			getPoster(item: any|null): string {
+				if (typeof item === 'object') {
+					item = item as UTSJSONObject
+					return item['poster'].toString() != '' ? item['poster'].toString() : '' 
+				}
+				return ''
 			},
 			// 点击某个item
-			clickHandler(index) {
+			clickHandler(index: number) {
 				this.$emit('click', index)
 			}
 		},
@@ -214,6 +233,7 @@
 </script>
 
 <style lang="scss" scoped>
+	@import '../../libs/css/components.scss';
 	
 	.up-swiper__wrapper {
 		flex: 1;
