@@ -120,6 +120,15 @@ export const mixin = defineMixin({
 				}
             })
         },
+		getChildIndex(ins: ComponentPublicInstance ) {
+			let index = -1
+			this.parent.children.forEach((child: ComponentPublicInstance, idx: number) =>  {
+				if (child == ins) {
+					index =idx
+				}
+			})
+			return index
+		}
         getParent(name: string): ComponentPublicInstance|null {
             let parent = this.$parent
             // 通过while历遍，这里主要是为了H5需要多层解析的问题

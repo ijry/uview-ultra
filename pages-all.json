@@ -201,12 +201,7 @@
 		// 	"style": {
 		// 		"navigationBarTitleText": "进度条"
 		// 	}
-		// }, {
-		// 	"path": "tabbar/tabbar",
-		// 	"style": {
-		// 		"navigationBarTitleText": "Tabbar"
-		// 	}
-		// },
+		// }
 		]
 	}, {
 		"root": "pages/componentsC",

@@ -4,7 +4,7 @@
 		    class="up-tabbar__content"
 		    ref="up-tabbar__content"
 		    @touchmove.stop.prevent="noop"
-		    :class="[border && 'up-border-top', fixed && 'up-tabbar--fixed']"
+		    :class="[border ? 'up-border-top' : '', fixed ? 'up-tabbar--fixed' : '']"
 		    :style="[tabbarStyle]"
 		>
 			<view class="up-tabbar__content__item-wrapper">
@@ -22,14 +22,13 @@
 	</view>
 </template>
 
-<script>
-	import { props } from './props';
-	import { mpMixin } from '../../libs/mixin/mpMixin';
-	import { mixin } from '../../libs/mixin/mixin';
-	import { addStyle, deepMerge, sleep } from '../../libs/function/index';
-	// #ifdef APP-NVUE
-	const dom = uni.requireNativePlugin('dom')
-	// #endif
+<script lang="uts">
+	import { propsTabbar } from './props.uts';
+	import { mpMixin } from '../../libs/mixin/mpMixin.uts';
+	import { mixin } from '../../libs/mixin/mixin.uts';
+	import { addStyle, deepMerge, sleep } from '../../libs/function/index.uts';
+	import { nextTick } from 'vue';
+	
 	/**
 	 * Tabbar 底部导航栏
 	 * @description 此组件提供了自定义tabbar的能力。
@@ -49,31 +48,32 @@
 	 */
 	export default {
 		name: 'up-tabbar',
-		mixins: [mpMixin, mixin, props],
+		mixins: [mpMixin, mixin, propsTabbar],
 		data() {
 			return {
 				placeholderHeight: 0
 			}
 		},
+		emits: ['change'],
 		computed: {
-			tabbarStyle() {
+			tabbarStyle(): any {
 				const style = {
 					zIndex: this.zIndex
 				}
-				if (this.borderColor) {
-					style.borderColor = this.borderColor + ' !important'
+				if (this.borderColor != '') {
+					style['borderColor'] = this.borderColor + ' !important'
 				}
-				if (this.backgroundColor) {
-					style.backgroundColor = this.backgroundColor
+				if (this.backgroundColor != '') {
+					style['backgroundColor'] = this.backgroundColor
 				}
 				// 合并来自父组件的customStyle样式
 				return deepMerge(style, addStyle(this.customStyle))
 			},
 			// 监听多个参数的变化，通过在computed执行对应的操作
-			updateChild() {
+			updateChild(): any[] {
 				return [this.value, this.activeColor, this.inactiveColor]
 			},
-			updatePlaceholder() {
+			updatePlaceholder(): any[] {
 				return [this.fixed, this.placeholder]
 			}
 		},
@@ -88,7 +88,7 @@
 			}
 		},
 		created() {
-			this.children = []
+			// this.children = []
 		},
 		mounted() {
 			this.setPlaceholderHeight()
@@ -96,34 +96,27 @@
 		methods: {
 			updateChildren() {
 				// 如果存在子元素，则执行子元素的updateFromParent进行更新数据
-				this.children.length && this.children.map(child => child.updateFromParent())
+				this.children.length > 0 && this.children.map((child: ComponentPublicInstance) => {
+					child?.$callMethod('updateFromParent')
+				})
 			},
 			// 设置用于防止塌陷元素的高度
 			async setPlaceholderHeight() {
 				if (!this.fixed || !this.placeholder) return
 				// 延时一定时间
 				await sleep(20)
-				// #ifndef APP-NVUE
-				this.$uGetRect('.up-tabbar__content').then(({height = 50}) => {
+				this.upGetRect('.up-tabbar__content').then((size: NodeInfo) => {
 					// 修复IOS safearea bottom 未填充高度
-					this.placeholderHeight = height
+					this.placeholderHeight = size.height ?? 50
 				})
-				// #endif
-
-				// #ifdef APP-NVUE
-				dom.getComponentRect(this.$refs['up-tabbar__content'], (res) => {
-					const {
-						size
-					} = res
-					this.placeholderHeight = size.height
-				})
-				// #endif
-			}
+			},
+			noop() {}
 		}
 	}
 </script>
 
 <style lang="scss" scoped>
+	@import '../../libs/css/components.scss';
 
 	.up-tabbar {
 		@include flex(column);

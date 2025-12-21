@@ -107,6 +107,11 @@
 				"style": {
 					"navigationBarTitleText": "开关"
 				}
+			}, {
+				"path": "tabbar/tabbar",
+				"style": {
+					"navigationBarTitleText": "Tabbar"
+				}
 			}
 		]
 	}, {

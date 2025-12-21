@@ -36,7 +36,7 @@
 			<up-tabbar
 			    :value="value2"
 			    :placeholder="false"
-			    @change="name => value2 = name"
+			    @change="(name: string | number | null) => {value2 = name}"
 			    :fixed="false"
 			    :safeAreaInsetBottom="false"
 			>
@@ -65,7 +65,7 @@
 			<up-tabbar
 			    :placeholder="false"
 			    :value="value3"
-			    @change="name => value3 = name"
+			    @change="(name: string | number | null) => {value3 = name}"
 			    :fixed="false"
 			    :safeAreaInsetBottom="false"
 			>
@@ -95,7 +95,7 @@
 			<text class="u-page__item__title">自定义图标/颜色</text>
 			<up-tabbar
 			    :value="value4"
-			    @change="name => value4 = name"
+			    @change="(name: string | number | null) => {value4 = name}"
 			    :fixed="false"
 			    :placeholder="false"
 			    activeColor="#d81e06"
@@ -163,7 +163,7 @@
 			    :value="value7"
 			    :placeholder="false"
 				:border="false"
-			    @change="name => value7 = name"
+			    @change="(name: string | number | null) => {value7 = name}"
 			    :fixed="false"
 			    :safeAreaInsetBottom="false"
 			>
@@ -190,7 +190,7 @@
 			<up-gap height="150"></up-gap>
 			<up-tabbar
 			    :value="value6"
-			    @change="name => value6 = name"
+			    @change="(name: string | number | null) => {value6 = name}"
 			    :fixed="true"
 				:placeholder="true"
 			    :safeAreaInsetBottom="true"
@@ -218,34 +218,38 @@
 </template>
 
 <script>
+	import { toast } from '@/uni_modules/uv-plus/index.uts'
 	export default {
 		data() {
 			return {
-				value1: 0,
-				value2: 1,
-				value3: 'play-right',
-				value4: 0,
-				value5: 0,
-				value6: 0,
-				value7: 3
+				value1: 0 as (string | number | null),
+				value2: 1 as (string | number | null),
+				value3: 'play-right' as (string | number | null),
+				value4: 0 as (string | number | null),
+				value5: 0 as (string | number | null),
+				value6: 0 as (string | number | null),
+				value7: 3 as (string | number | null)
 			}
 		},
 		onLoad() {
 
 		},
 		methods: {
-			change5(name) {
-				if (name === 1) return uni.$u.toast('请您先登录')
-				else this.value5 = name
-			},
-			change1(e) {
+			change1(e: string | number | null) {
 				this.value1 = e
 				console.log('change1', e);
 			},
-			click1(e) {
+			click1(e: string | number | null) {
 				console.log('click1', e);
+			},
+			change5(name: string | number | null) {
+				if (name == 1) {
+					toast('请您先登录') 
+				} else {
+					this.value5 = name
+				}
 			}
-		},
+		}
 	}
 </script>
 
