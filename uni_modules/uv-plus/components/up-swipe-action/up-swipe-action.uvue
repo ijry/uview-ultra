@@ -31,16 +31,20 @@
 			// 这里computed的变量，都是子组件up-swipe-action-item需要用到的，由于头条小程序的兼容性差异，子组件无法实时监听父组件参数的变化
 			// 所以需要手动通知子组件，这里返回一个parentData变量，供watch监听，在其中去通知每一个子组件重新从父组件(up-swipe-action-item)
 			// 拉取父组件新的变化后的参数
-			parentData() {
-				return [this.autoClose]
+			parentDataCpu() {
+				// if (this.autoClose != null) {
+				// 	return [this.autoClose || true]
+				// } else {
+				// 	return false
+				// }
 			}
 		},
 		emits: ['opendItem:update'],
 		watch: {
 			// 当父组件需要子组件需要共享的参数发生了变化，手动通知子组件
-			parentData() {
+			parentDataCpu() {
 				if (this.children.length > 0) {
-					this.children.map(child => {
+					this.children.map((child: ComponentPublicInstance) => {
 						// 判断子组件(up-swipe-action-item)如果有updateParentData方法的话，就就执行(执行的结果是子组件重新从父组件拉取了最新的值)
 						child?.$callMethod('updateParentData')
 					})
@@ -56,23 +60,23 @@
 			this.children = []
 		},
 		methods: {
-			closeOther(child) {
-				if (this.autoClose) {
+			closeOther(child: ComponentPublicInstance) {
+				if (this.$props['autoClose'] != null  && this.$props['autoClose'] as boolean) {
 					// 历遍所有的单元格，找出非当前操作中的单元格，进行关闭
-					this.children.map((item, index) => {
+					this.children.map((item: ComponentPublicInstance, index: number) => {
 						if (child !== item) {
-							item.closeHandler()
+							item?.$callMethod('closeHandler')
 						}
 					})
 				}
 			},
 			closeAll() {
 				// 关闭所有单元格
-				this.children.map((item, index) => {
-					item.closeHandler()
+				this.children.map((item: ComponentPublicInstance, index: number) => {
+					item?.$callMethod('closeHandler')
 				})
 			},
-			setOpendItem(ins) {
+			setOpendItem(ins: any) {
 				this.$emit('opendItem:update', true)
 			}
 		}

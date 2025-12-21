@@ -13,27 +13,38 @@ function getDirection(x: number, y: number): string {
 }
 
 export const touchMixin = defineMixin({
+	data() {
+		return {
+			direction: '',
+			deltaX: 0,
+			deltaY: 0,
+			offsetX: 0,
+			offsetY: 0,
+			startX: 0,
+			startY: 0
+		}
+	}
     methods: {
         getTouchPoint(e: UniTouchEvent) {
-            if (!e) {
+            if (e == null) {
                 return {
                     x: 0,
                     y: 0
                 }
-            } if (e.touches && e.touches[0]) {
+            } if (e.touches.length > 0 && e.touches[0] != null) {
                 return {
                     x: e.touches[0].pageX,
                     y: e.touches[0].pageY
                 }
-            } if (e.changedTouches && e.changedTouches[0]) {
+            } if (e.changedTouches.length > 0 && e.changedTouches[0] != null) {
                 return {
                     x: e.changedTouches[0].pageX,
                     y: e.changedTouches[0].pageY
                 }
             }
             return {
-                x: e.clientX || 0,
-                y: e.clientY || 0
+                x: 0,
+                y: 0
             }
         },
         resetTouchStatus() {
@@ -46,16 +57,16 @@ export const touchMixin = defineMixin({
         touchStart(event: UniTouchEvent) {
             this.resetTouchStatus()
             const touch = this.getTouchPoint(event)
-            this.startX = touch.x
-            this.startY = touch.y
+            this.startX = touch['x'] as number
+            this.startY = touch['y'] as number
         },
         touchMove(event: UniTouchEvent) {
             const touch = this.getTouchPoint(event)
-            this.deltaX = touch.x - this.startX
-            this.deltaY = touch.y - this.startY
+            this.deltaX = touch['x'] as number - this.startX
+            this.deltaY = touch['y'] as number - this.startY
             this.offsetX = Math.abs(this.deltaX)
             this.offsetY = Math.abs(this.deltaY)
-            this.direction = this.direction ? this.direction : getDirection(this.offsetX, this.offsetY)
-        }
+            this.direction = this.direction != '' ? this.direction : getDirection(this.offsetX, this.offsetY)
+        },
     }
 })
