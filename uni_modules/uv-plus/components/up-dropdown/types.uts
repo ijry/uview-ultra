@@ -1,4 +1,4 @@
-export type MenuItemType = {
+export type UPDropdownMenu = {
 	title: string;
 	disabled: boolean;
 }

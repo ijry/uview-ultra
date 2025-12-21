@@ -218,14 +218,9 @@ function sizeChange(newValue, oldValue, ownerInstance, instance) {
 		}
 	}
 	state.buttonsWidth = buttonsWidth
-
-	// 支持默认打开
-	if (state.show) {
-		openSwipeAction(instance, ownerInstance)
-	}
 }
 
-module.exports = {
+export default {
 	touchstart: touchstart,
 	touchmove: touchmove,
 	touchend: touchend,

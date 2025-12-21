@@ -93,12 +93,6 @@
 					"navigationStyle": "custom"
 				}
 			}
-			// ,{
-			// 	"path": "swipeAction/swipeAction",
-			// 	"style": {
-			// 		"navigationBarTitleText": "滑动单元格"
-			// 	}
-			// }
 			,{
 				"path": "radio/radio",
 				"style": {

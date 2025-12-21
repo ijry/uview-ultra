@@ -1,4 +1,7 @@
 <template>
+	<!-- #ifdef APP -->
+	<scroll-view style="flex:1">
+	<!-- #endif -->
 	<view class="u-page">
 		<view class="u-demo-block">
 			<text class="u-demo-block__title">演示案例</text>
@@ -52,17 +55,17 @@
 			<view class="u-page__swipe-action-item">
 				<up-swipe-action>
 					<up-swipe-action-item
-						:options="item.options"
+						:options="item['options']"
 						v-for="(item, index) in options4"
-						:disabled="item.disabled"
+						:disabled="item['disabled']"
 						:key="index"
 					>
 						<view
 							class="swipe-action u-border-top"
-							:class="[index === options4.length - 1 && 'u-border-bottom']"
+							:class="[index === options4.length - 1 ? 'u-border-bottom' : '']"
 						>
 							<view class="swipe-action__content">
-								<text class="swipe-action__content__text">{{ item.text }}</text>
+								<text class="swipe-action__content__text">{{ item['text'] }}</text>
 							</view>
 						</view>
 					</up-swipe-action-item>
@@ -84,9 +87,13 @@
 			</view>
 		</view>
 	</view>
+	<!-- #ifdef APP -->
+	</scroll-view>
+	<!-- #endif -->
 </template>
 
 <script>
+	import { UPSwipeActionItemOption } from '@/uni_modules/uv-plus/types/index.uts'
 	export default {
 		data() {
 			return {
@@ -99,7 +106,7 @@
 					style: {
 						backgroundColor: '#f56c6c'
 					}
-				}],
+				}] as UPSwipeActionItemOption[],
 				options2: [{
 					text: '收藏',
 					style: {
@@ -110,7 +117,7 @@
 					style: {
 						backgroundColor: '#f56c6c'
 					}
-				}],
+				}] as UPSwipeActionItemOption[],
 				options3: [{
 					text: '收藏',
 					icon: 'star-fill',
@@ -118,7 +125,7 @@
 					style: {
 						backgroundColor: '#f9ae3d'
 					}
-				}],
+				}] as UPSwipeActionItemOption[],
 				options4: [{
 					text: '禁用状态',
 					disabled: true,
@@ -134,7 +141,7 @@
 								backgroundColor: '#f9ae3d',
 							}
 						},
-					],
+					]as UPSwipeActionItemOption[],
 				}, {
 					text: '正常状态',
 					disabled: false,
@@ -150,7 +157,7 @@
 								backgroundColor: '#f9ae3d',
 							}
 						},
-					],
+					]as UPSwipeActionItemOption[],
 				}, {
 					text: '自动关闭',
 					disabled: false,
@@ -166,7 +173,7 @@
 								backgroundColor: '#f9ae3d',
 							}
 						},
-					],
+					]as UPSwipeActionItemOption[],
 				}],
 				options5: [{
 					icon: 'trash-fill',
@@ -186,11 +193,11 @@
 						borderRadius: '100px',
 						margin: '0 6px'
 					}
-				}]
+				}] as UPSwipeActionItemOption[]
 			}
 		},
 		methods: {
-			click(index) {
+			click(index: number) {
 				console.log('click', index);
 				uni.showModal({
 					title: '温馨提示',

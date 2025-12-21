@@ -1,12 +1,15 @@
-<template>
-	<view class="up-swipe-action-item" ref="up-swipe-action-item">
-		<view class="up-swipe-action-item__right">
+<template>	
+	<!-- #ifdef MP-ALIPAY -->
+	<!-- <import-sjs from="./alipay.sjs" name="mysjs" /> -->
+	<!-- #endif -->
+	<view class="u-swipe-action-item" ref="u-swipe-action-item">
+		<view class="u-swipe-action-item__right">
 			<slot name="button">
-				<view v-for="(item,index) in options" :key="index" class="up-swipe-action-item__right__button"
-					:ref="`up-swipe-action-item__right__button-${index}`" :style="[{
+				<view v-for="(item,index) in options" :key="index" class="u-swipe-action-item__right__button"
+					:ref="`u-swipe-action-item__right__button-${index}`" :style="[{
 						alignItems: item.style && item.style.borderRadius ? 'center' : 'stretch'
 					}]" @tap="buttonClickHandler(item, index)">
-					<view class="up-swipe-action-item__right__button__wrapper" :style="[{
+					<view class="u-swipe-action-item__right__button__wrapper" :style="[{
 							backgroundColor: item.style && item.style.backgroundColor ? item.style.backgroundColor : '#C7C6CD',
 							borderRadius: item.style && item.style.borderRadius ? item.style.borderRadius : '0',
 							padding: item.style && item.style.borderRadius ? '0' : '0 15px',
@@ -17,7 +20,7 @@
 							:customStyle="{
 								marginRight: item.text ? '2px' : 0
 							}"></up-icon>
-						<text v-if="item.text" class="up-swipe-action-item__right__button__wrapper__text up-line-1"
+						<text v-if="item.text" class="u-swipe-action-item__right__button__wrapper__text u-line-1"
 							:style="[{
 								color: item.style && item.style.color ? item.style.color : '#ffffff',
 								fontSize: item.style && item.style.fontSize ? item.style.fontSize : '16px',
@@ -28,24 +31,24 @@
 			</slot>
 		</view>
 		<!-- #ifdef APP-VUE || MP-WEIXIN || MP-QQ || H5  -->
-		<view class="up-swipe-action-item__content" @touchstart="wxs.touchstart" @touchmove="wxs.touchmove"
+		<view class="u-swipe-action-item__content" @touchstart="wxs.touchstart" @touchmove="wxs.touchmove"
 			@touchend="wxs.touchend" :status="status" :change:status="wxs.statusChange" :size="size"
 			:change:size="wxs.sizeChange">
 			<slot></slot>
 		</view>
 		<!-- #endif -->
 		<!-- #ifdef MP-ALIPAY || MP-BAIDU || MP-TOUTIAO-->
-		<view class="up-swipe-action-item__content" @click="clickHandler" @touchstart="touchstart" @touchmove="touchmove"
+		<view class="u-swipe-action-item__content" @click="clickHandler" @touchstart="touchstart" @touchmove="touchmove"
 			@touchend="touchend" :style="sliderStyle">
 			<slot></slot>
 		</view>
-		<!-- <view class="up-swipe-action-item__content" @touchstart="mysjs.touchstart" @touchmove="mysjs.touchmove"
+		<!-- <view class="u-swipe-action-item__content" @touchstart="mysjs.touchstart" @touchmove="mysjs.touchmove"
 			@touchend="mysjs.touchend">
 			<slot></slot>
 		</view> -->
 		<!-- #endif -->
 		<!-- #ifdef APP-NVUE -->
-		<view class="up-swipe-action-item__content" ref="up-swipe-action-item__content" @panstart="onTouchstart"
+		<view class="u-swipe-action-item__content" ref="u-swipe-action-item__content" @panstart="onTouchstart"
 			@tap="clickHandler">
 			<slot></slot>
 		</view>
@@ -57,10 +60,10 @@
 <!-- #endif -->
 <script>
 	import { touchMixin } from '../../libs/mixin/touch'
-	import { props } from './props.js';
-	import { mpMixin } from '../../libs/mixin/mpMixin.js';
-	import { mixin } from '../../libs/mixin/mixin.js';
-	import { addUnit, getPx, sleep } from '../../libs/function/index.js';
+	import { props } from './props';
+	import { mpMixin } from '../../libs/mixin/mpMixin';
+	import { mixin } from '../../libs/mixin/mixin';
+	import { addUnit, getPx, sleep } from '../../libs/function/index';
 	// #ifdef APP-NVUE
 	import nvue from './nvue.js';
 	// #endif
@@ -73,7 +76,7 @@
 	/**
 	 * SwipeActionItem 滑动单元格子组件
 	 * @description 该组件一般用于左滑唤出操作菜单的场景，用的最多的是左滑删除操作
-	 * @tutorial https://ijry.github.io/uview-plus/components/swipeAction.html
+	 * @tutorial https://uview-plus.jiangruyi.com/components/swipeAction.html
 	 * @property {Boolean}			show			控制打开或者关闭（默认 false ）
 	 * @property {String | Number}	index			标识符，如果是v-for，可用index索引
 	 * @property {Boolean}			disabled		是否禁用（默认 false ）
@@ -83,12 +86,11 @@
 	 * @property {String | Number}	duration		动画过渡时间，单位ms（默认 350 ）
 	 * @event {Function(index)}	open	组件打开时触发
 	 * @event {Function(index)}	close	组件关闭时触发
-	 * @example	<up-swipe-action><up-swipe-action-item :options="options1" ></up-swipe-action-item></up-swipe-action>
+	 * @example	<u-swipe-action><u-swipe-action-item :options="options1" ></u-swipe-action-item></u-swipe-action>
 	 */
 	export default {
-		name: 'up-swipe-action-item',
-		emits: ['click'],
-		
+		name: 'u-swipe-action-item',
+		emits: ['click', 'update:show'],
 		mixins: [
 			mpMixin,
 			mixin,
@@ -110,12 +112,12 @@
 			return {
 				// 按钮的尺寸信息
 				size: {},
-				// 父组件up-swipe-action的参数
+				// 父组件u-swipe-action的参数
 				parentData: {
 					autoClose: true,
 				},
 				// 当前状态，open-打开，close-关闭
-				status: 'close',
+				status: '',
 				sliderStyle: {}
 			}
 		},
@@ -128,7 +130,17 @@
 			// #endif
 			status(newValue) {
 				if (newValue === 'open') {
+					this.$emit('update:show', true)
 					this.parent && this.parent.setOpendItem(this)
+				} else {
+					this.$emit('update:show', false)
+				}
+			},
+			show(newValue) {
+				if (newValue) {
+					this.status = 'open'
+				} else {
+					this.status = 'close'
 				}
 			}
 		},
@@ -157,12 +169,12 @@
 			},
 			updateParentData() {
 				// 此方法在mixin中
-				this.getParentData('up-swipe-action')
+				this.getParentData('u-swipe-action')
 			},
 			// #ifndef APP-NVUE
 			// 查询节点
 			queryRect() {
-				this.$uGetRect('.up-swipe-action-item__right__button', true).then(buttons => {
+				this.$uGetRect('.u-swipe-action-item__right__button', true).then(buttons => {
 					this.size = {
 						buttons,
 						show: this.show,
@@ -175,19 +187,22 @@
 			// #endif
 			// 按钮被点击
 			buttonClickHandler(item, index) {
-				this.$emit('click', {
+				let ret = this.$emit('click', {
 					index,
 					name: this.name
+				}, () => {
 				})
+				if (this.closeOnClick) {
+					this.closeHandler()
+				}
 			}
 		},
 	}
 </script>
 
 <style lang="scss" scoped>
-	@import "../../libs/css/components.scss";
 
-	.up-swipe-action-item {
+	.u-swipe-action-item {
 		position: relative;
 		overflow: hidden;
 		/* #ifndef APP-NVUE || MP-WEIXIN */
