@@ -70,7 +70,7 @@
 				return deepMerge(style, addStyle(this.customStyle))
 			},
 			// 监听多个参数的变化，通过在computed执行对应的操作
-			updateChild(): any[] {
+			updateChild(): Array<any | null> {
 				return [this.value, this.activeColor, this.inactiveColor]
 			},
 			updatePlaceholder(): any[] {
@@ -96,9 +96,11 @@
 		methods: {
 			updateChildren() {
 				// 如果存在子元素，则执行子元素的updateFromParent进行更新数据
-				this.children.length > 0 && this.children.map((child: ComponentPublicInstance) => {
-					child?.$callMethod('updateFromParent')
-				})
+				if(this.children.length > 0) {
+					this.children.map((child: ComponentPublicInstance) => {
+						child?.$callMethod('updateFromParent')
+					})
+				}
 			},
 			// 设置用于防止塌陷元素的高度
 			async setPlaceholderHeight() {

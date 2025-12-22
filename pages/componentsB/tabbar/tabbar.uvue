@@ -4,7 +4,7 @@
 			<text class="u-page__item__title">基础功能</text>
 			<up-tabbar
 			    :value="value1"
-			    @change="change1"
+			    @change="change11"
 			    :fixed="false"
 			    :placeholder="false"
 			    :safeAreaInsetBottom="false"
@@ -235,14 +235,14 @@
 
 		},
 		methods: {
-			change1(e: string | number | null) {
+			change11(e: any) {
 				this.value1 = e
 				console.log('change1', e);
 			},
-			click1(e: string | number | null) {
+			click1(e: any) {
 				console.log('click1', e);
 			},
-			change5(name: string | number | null) {
+			change5(name: any) {
 				if (name == 1) {
 					toast('请您先登录') 
 				} else {

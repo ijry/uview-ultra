@@ -122,11 +122,13 @@ export const mixin = defineMixin({
         },
 		getChildIndex(ins: ComponentPublicInstance ) {
 			let index = -1
-			this.parent.children.forEach((child: ComponentPublicInstance, idx: number) =>  {
-				if (child == ins) {
-					index =idx
-				}
-			})
+			if (this.parent  != null) {
+				(this.parent!!.$data['children'] as ComponentPublicInstance[]).forEach((child: ComponentPublicInstance, idx: number) =>  {
+					if (child == ins) {
+						index = idx
+					}
+				})
+			}
 			return index
 		}
         getParent(name: string): ComponentPublicInstance|null {

@@ -151,7 +151,9 @@ export function addStyle(customStyle: any, target = 'object'): any {
             // 'font-size:20px;color:red;'，如此最后字符串有";"的话，会导致styleArray最后一个元素为空字符串，这里需要过滤
             if (styleArray[i] != '') {
                 const item = styleArray[i].split(':')
-                style[(item[0]).trim()] = item[1].trim()
+				if (item.length > 1) {
+					style[(item[0]).trim()] = item[1].trim()
+				}
             }
         }
         return style
@@ -775,7 +777,7 @@ export default {
 //     // timeFrom,
 //     // trim,
 //     // queryParams,
-//     // toast,
+    toast,
 //     // type2icon,
 //     // priceFormat,
 //     // getDuration,

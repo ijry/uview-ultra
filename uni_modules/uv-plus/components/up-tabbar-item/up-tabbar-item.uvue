@@ -29,11 +29,11 @@
 			</template>
 			<up-badge
 				absolute
-				:offset="[0, dot ? '34rpx' : badge > 9 ? '14rpx' : '20rpx']"
+				:offset="[0, dot ? '34rpx' : parseInt(badge.toString()) > 9 ? '14rpx' : '20rpx']"
 			    :customStyle="badgeStyle"
 			    :isDot="dot"
-			    :value="badge ?? (dot ? 1 : null)"
-			    :show="dot ? dot : badge > 0"
+			    :value="badge != null  ? (dot ? 1 : badge) : 0"
+			    :show="dot ? dot : parseInt(badge.toString()) > 0"
 			></up-badge>
 		</view>
 		
@@ -102,13 +102,13 @@
 			init() {
 				// 支付宝小程序不支持provide/inject，所以使用这个方法获取整个父组件，在created定义，避免循环引用
 				this.updateParentData()
-				if (!this.parent) {
+				if (this.parent == null) {
 					error('up-tabbar-item必须搭配up-tabbar组件使用')
 				}
 				// 本子组件在up-tabbar的children数组中的索引
 				const index = this.getChildIndex(this)
 				// 判断本组件的name(如果没有定义name，就用index索引)是否等于父组件的value参数
-				this.isActive = (this.name != null ? this.name : index) === this.parentData.value
+				this.isActive = (this.name != null ? this.name : index) === this.parentData['value']
 			},
 			updateParentData() {
 				// 此方法在mixin中
@@ -124,7 +124,7 @@
 					const index = this.getChildIndex(this)
 					const name = this.name != null ? this.name : index
 					// 点击的item为非激活的item才发出change事件
-					if (name !== this.parent.$props['value']) {
+					if (this.parent != null && name !== this.parent.$props['value']) {
 						this.parent.$emit('change', name)
 					}
 					this.$emit('click', name)
