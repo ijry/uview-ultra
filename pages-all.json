@@ -145,11 +145,6 @@
 		// 		"navigationBarTitleText": "内部链接"
 		// 	}
 		// }, {
-		// 	"path": "toast/toast",
-		// 	"style": {
-		// 		"navigationBarTitleText": "提示消息"
-		// 	}
-		// }, {
 		// 	"path": "upload/upload",
 		// 	"style": {
 		// 		"navigationBarTitleText": "上传"

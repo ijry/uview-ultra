@@ -4,21 +4,21 @@
 			height="30"
 			bgColor="#fff"
 		></up-gap>
-		<up-toast ref="uToast"></up-toast>
+		<up-toast ref="upToastRef"></up-toast>
 		<up-cell-group title-bg-color="rgb(243, 244, 246)">
 			<up-cell
 				:titleStyle="{fontWeight: 500}"
-				:title="item.title"
+				:title="item['title']"
 				v-for="(item, index) in list"
 				:key="index"
 				isLink
-				:icon="item.iconUrl"
+				:icon="item['icon']"
 				@click="showToast(item)"
 			>
 				<!-- <template #icon>
 					<image
 						class="u-cell-icon"
-						:src="getIcon(item.icon)"
+						:src="getIcon(item['icon'])"
 						mode="widthFix"
 					></image>
 				</template> -->
@@ -36,59 +36,59 @@
 						type: 'default',
 						title: '默认主题',
 						message: "锦瑟无端五十弦",
-						iconUrl: 'https://cdn.uviewui.com/uview/demo/toast/default.png'
+						icon: 'https://cdn.uviewui.com/uview/demo/toast/default.png'
 					},
 					{
 						type: 'error',
 						icon: false,
 						title: '失败主题',
-						message: "一弦一柱思华年",
-						iconUrl: 'https://cdn.uviewui.com/uview/demo/toast/error.png'
+						message: "一弦一柱思华年"
 					},
 					{
 						type: 'success',
 						title: '成功主题(带图标)',
 						message: "庄生晓梦迷蝴蝶",
-						iconUrl: 'https://cdn.uviewui.com/uview/demo/toast/success.png'
+						icon: 'https://cdn.uviewui.com/uview/demo/toast/success.png'
 					},
 					{
 						type: 'warning',
 						position: "top",
 						title: '位置偏移上方',
 						message: "望帝春心托杜鹃",
-						iconUrl: 'https://cdn.uviewui.com/uview/demo/toast/top.png'
+						icon: 'https://cdn.uviewui.com/uview/demo/toast/top.png'
 					},
 					{
 						type: 'loading',
 						title: '正在加载',
 						message: "正在加载",
-						iconUrl: 'https://cdn.uviewui.com/uview/demo/toast/loading.png'
+						icon: 'https://cdn.uviewui.com/uview/demo/toast/loading.png'
 					},
 					{
 						type: 'default',
 						title: '结束后跳转标签页',
 						message: "此情可待成追忆",
 						url: '/pages/componentsB/tag/tag',
-						iconUrl: 'https://cdn.uviewui.com/uview/demo/toast/jump.png'
+						icon: 'https://cdn.uviewui.com/uview/demo/toast/jump.png'
 					}
 				],
 			}
 		},
 		computed: {
-			getIcon() {
-				return path => {
-					return 'https://cdn.uviewui.com/uview/example/' + path + '.png';
-				}
-			}, 
+			
 		},
 		methods: {
-			showToast(params) {
-				this.$refs.uToast.show({
+			getIcon(path: string) {
+				return 'https://cdn.uviewui.com/uview/example/' + path + '.png';
+			}, 
+			showToast(params: UTSJSONObject) {
+				(this.$refs['upToastRef'] as ComponentPublicInstance)?.$callMethod('show', {
 					...params,
 					complete() {
-						params.url && uni.navigateTo({
-							url: params.url
-						})
+						if (params['url'] != null) {
+							uni.navigateTo({
+								url: params['url'] as string
+							})
+						}
 					}
 				})
 			}

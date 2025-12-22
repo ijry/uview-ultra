@@ -117,6 +117,11 @@
 				"style": {
 					"navigationBarTitleText": "表格"
 				}
+			}, {
+				"path": "toast/toast",
+				"style": {
+					"navigationBarTitleText": "提示消息"
+				}
 			}
 		]
 	}, {
