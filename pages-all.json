@@ -206,12 +206,6 @@
 	}, {
 		"root": "pages/componentsC",
 		"pages": [
-		// {
-		// 	"path": "table/table",
-		// 	"style": {
-		// 		"navigationBarTitleText": "表格"
-		// 	}
-		// },
 		{
 			"path": "textarea/textarea",
 			"style": {

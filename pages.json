@@ -112,6 +112,11 @@
 				"style": {
 					"navigationBarTitleText": "Tabbar"
 				}
+			}, {
+				"path": "table/table",
+				"style": {
+					"navigationBarTitleText": "表格"
+				}
 			}
 		]
 	}, {

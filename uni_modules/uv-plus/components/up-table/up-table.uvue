@@ -7,7 +7,7 @@
 </template>
 
 <script>
-	import { props } from './props';
+	import { propsTable } from './props';
 	import { mpMixin } from '../../libs/mixin/mpMixin';
 	import { mixin } from '../../libs/mixin/mixin';
 	/**
@@ -27,44 +27,7 @@
 	 */
 	export default {
 		name: 'up-table',
-		mixins: [mpMixin, mixin, props],
-		props: {
-			borderColor: {
-				type: String,
-				default: '#e4e7ed'
-			},
-			align: {
-				type: String,
-				default: 'center'
-			},
-			// td的内边距
-			padding: {
-				type: String,
-				default: '5px 3px'
-			},
-			// 字体大小
-			fontSize: {
-				type: [String],
-				default: '14px'
-			},
-			// 字体颜色
-			color: {
-				type: String,
-				default: '#606266'
-			},
-			// th的自定义样式
-			thStyle: {
-				type: Object,
-				default () {
-					return {}
-				}
-			},
-			// table的背景颜色
-			bgColor: {
-				type: String,
-				default: '#ffffff'
-			}
-		},
+		mixins: [mpMixin, mixin, propsTable],
 		data() {
 			return {
 				show: true
@@ -79,11 +42,11 @@
 			}
 		},
 		computed: {
-			tableStyle() {
+			tableStyle(): any {
 				let style = {};
-				style.borderLeft = `solid 1px ${this.borderColor}`;
-				style.borderTop = `solid 1px ${this.borderColor}`;
-				style.backgroundColor = this.bgColor;;
+				style['borderLeft'] = `solid 1px ${this.borderColor}`;
+				style['borderTop'] = `solid 1px ${this.borderColor}`;
+				style['backgroundColor'] = this.bgColor;;
 				return style;
 			}
 		},
