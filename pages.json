@@ -226,6 +226,11 @@
 			"style": {
 				"navigationBarTitleText": "轮播"
 			}
+		}, {
+			"path": "tabs/tabs",
+			"style": {
+				"navigationBarTitleText": "标签"
+			}
 		}
 		]
 	},

@@ -94,7 +94,7 @@ import Line from '../../components/up-line/line'
 import Transition from '../../components/up-transition/transition'
 // import Upload from './props/upload'
 
-let obj: UTSJSONObject = Object.assign({},
+let obj: UTSJSONObject = UTSJSONObject.assign({},
 	Button,
 	Cell,
 	CellGroup,

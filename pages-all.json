@@ -241,11 +241,6 @@
 		// 	"style": {
 		// 		"navigationBarTitleText": "长按提示"
 		// 	}
-		// }, {
-		// 	"path": "tabs/tabs",
-		// 	"style": {
-		// 		"navigationBarTitleText": "标签"
-		// 	}
 		// }
 		
 		, {
