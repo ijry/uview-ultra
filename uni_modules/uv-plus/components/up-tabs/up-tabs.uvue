@@ -4,7 +4,7 @@
 			<slot name="left" />
 			<view class="up-tabs__wrapper__scroll-view-wrapper">
 				<scroll-view
-					:scroll-x="scrollable"
+					direction="horizontal"
 					:scroll-left="scrollLeft"
 					scroll-with-animation
 					class="up-tabs__wrapper__scroll-view"
@@ -66,10 +66,10 @@
 							ref="up-tabs__wrapper__nav__line"
 							:style="[{
 								width: addUnit(lineWidth),
-								transform: `translate(${lineOffsetLeft}px)`,
+								transform: 'translateX('+ (lineOffsetLeft)+'px)',
 								transitionDuration: `${firstTime ? 0 : duration}ms`,
 								height: addUnit(lineHeight),
-								background: lineColor,
+								backgroundColor: lineColor,
 								backgroundSize: lineBgSize,
 							}]"
 						>
@@ -214,7 +214,9 @@
 				// 获取滑块该移动的位置
 				let lineOffsetLeft = this.list
 					.slice(0, this.innerCurrent)
-					.reduce((total: number, curr: UTSJSONObject) => {return total + ((curr['rect'] as NodeInfo).width ?? 0)}, 0);
+					.reduce((total: number, curr: UTSJSONObject) => {
+						return total + ((curr['rect'] as NodeInfo).width ?? 0)
+					}, 0);
                 // 获取下划线的数值px表示法
 				const lineWidth = parseFloat(getPx(this.lineWidth));
 				this.lineOffsetLeft = lineOffsetLeft + (((tabItem['rect'] as NodeInfo).width ?? 0) - lineWidth) / 2
@@ -224,7 +226,7 @@
 				if (this.firstTime) {
 					setTimeout(() => {
 						this.firstTime = false
-					}, 10);
+					}, 30);
 				}
 			},
 			// 点击某一个标签
@@ -291,6 +293,7 @@
 					// [tabsRect, itemRect = []]
 					let tabsRect = (res[0] as Array<NodeInfo>)[0]
 					let itemRect = res[1] as Array<NodeInfo>
+					// console.log('******itemRect******', itemRect)
 					// 兼容在swiper组件中使用
 					if ((tabsRect.left ?? 0) > (tabsRect.width ?? 0)) {
 						tabsRect.right = (tabsRect.right ?? 0) - Math.floor((tabsRect?.left ?? 0) / (tabsRect?.width ?? 0)) * (tabsRect?.width ?? 0)
@@ -307,6 +310,7 @@
 							this.list[index]['rect'] = item
 						}
 					})
+					// console.log('******tabsRect******', this.tabsRect, this.scrollViewWidth)
 					// 获取了tabs的尺寸之后，设置滑块的位置
 					this.setLineLeft()
 					this.setScrollLeft()
@@ -395,7 +399,7 @@
 
 				&__line {
 					height: 3px;
-					background: $up-primary;
+					backgroundColor: $up-primary;
 					width: 30px;
 					position: absolute;
 					bottom: 2px;
