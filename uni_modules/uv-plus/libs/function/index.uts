@@ -417,20 +417,19 @@ export function randomArray(array: any[] = []): any[] {
  * @param String pos both(左右)|left|right|all 默认both
  */
 export function trim(str: string, pos = 'both'): string {
-	return ''
-    // if (pos == 'both') {
-    //     return str.replace(/^\s+|\s+$/g, '')
-    // }
-    // if (pos == 'left') {
-    //     return str.replace(/^\s*/, '')
-    // }
-    // if (pos == 'right') {
-    //     return str.replace(/(\s*$)/g, '')
-    // }
-    // if (pos == 'all') {
-    //     return str.replace(/\s+/g, '')
-    // }
-    // return str
+    if (pos == 'both') {
+        return str.replace(/^\s+|\s+$/g, '')
+    }
+    if (pos == 'left') {
+        return str.replace(/^\s*/, '')
+    }
+    if (pos == 'right') {
+        return str.replace(/(\s*$)/g, '')
+    }
+    if (pos == 'all') {
+        return str.replace(/\s+/g, '')
+    }
+    return str
 }
 
 /**
@@ -509,33 +508,34 @@ export function toast(title: string, duration = 2000) {
  * @param {boolean} fill 是否使用fill填充实体的图标
  */
 export function type2icon(type: string = 'success', fill: boolean = false): string {
-	return ''
-    // // 如果非预置值,默认为success
-    // if (['primary', 'info', 'error', 'warning', 'success'].indexOf(type) == -1) type = 'success'
-    // let iconName = ''
-    // // 目前(2019-12-12),info和primary使用同一个图标
-    // switch (type) {
-    //     case 'primary':
-    //         iconName = 'info-circle'
-    //         break
-    //     case 'info':
-    //         iconName = 'info-circle'
-    //         break
-    //     case 'error':
-    //         iconName = 'close-circle'
-    //         break
-    //     case 'warning':
-    //         iconName = 'error-circle'
-    //         break
-    //     case 'success':
-    //         iconName = 'checkmark-circle'
-    //         break
-    //     default:
-    //         iconName = 'checkmark-circle'
-    // }
-    // // 是否是实体类型,加上-fill,在icon组件库中,实体的类名是后面加-fill的
-    // if (fill) iconName += '-fill'
-    // return iconName
+    // 如果非预置值,默认为success
+    if (['primary', 'info', 'error', 'warning', 'success'].indexOf(type) == -1) {
+		type = 'success'
+	}
+    let iconName = ''
+    // 目前(2019-12-12),info和primary使用同一个图标
+    switch (type) {
+        case 'primary':
+            iconName = 'info-circle'
+            break
+        case 'info':
+            iconName = 'info-circle'
+            break
+        case 'error':
+            iconName = 'close-circle'
+            break
+        case 'warning':
+            iconName = 'error-circle'
+            break
+        case 'success':
+            iconName = 'checkmark-circle'
+            break
+        default:
+            iconName = 'checkmark-circle'
+    }
+    // 是否是实体类型,加上-fill,在icon组件库中,实体的类名是后面加-fill的
+    if (fill) iconName = iconName + '-fill'
+    return iconName
 }
 
 /**
@@ -699,23 +699,22 @@ export function setProperty(obj: UTSJSONObject, key: string, value: string): voi
  * @description 获取当前页面路径
  */
 export function page(): string {
-	return ''
- //    const pages: Array<UniNormalPage> = getCurrentPages()
- //    // 某些特殊情况下(比如页面进行redirectTo时的一些时机)，pages可能为空数组
-	// let url = ''
-	// if (pages[pages.length - 1].route != null) {
-	// 	url = pages[pages.length - 1].route
-	// }
- //    return `/${url}`
+    const pages: Array<UniNormalPage> = getCurrentPages()
+    // 某些特殊情况下(比如页面进行redirectTo时的一些时机)，pages可能为空数组
+	let url = ''
+	if (pages[pages.length - 1].route != null) {
+		url = pages[pages.length - 1].route
+	}
+    return `/${url}`
 }
 
 /**
  * @description 获取当前路由栈实例数组
  */
-// export function pages(): Array<UniNormalPage> {
-//     const pages: Array<UniNormalPage> = getCurrentPages()
-//     return pages
-// }
+export function pages(): Array<UniNormalPage> {
+    const pages: Array<UniNormalPage> = getCurrentPages()
+    return pages
+}
 
 export function getParent(that: ComponentPublicInstance, name = ''): ComponentPublicInstance | null {
     // console.log('that', that)
@@ -760,31 +759,31 @@ export function getParentData(that: any, parentName: string): any {
 
 export default {
     range,
-//     // getPx,
-//     // sleep,
-//     // os,
-//     // sys,
+    getPx,
+    sleep,
+    os,
+    sys,
     random,
     guid,
-//     // $parent,
+	getParent,
     addStyle,
     addUnit,
-//     // deepClone,
+    deepClone,
     deepMerge,
-//     // error,
-//     // randomArray,
-//     timeFormat,
+    error,
+    randomArray,
+    timeFormat,
 //     // timeFrom,
-//     // trim,
+    trim,
 //     // queryParams,
     toast,
-//     // type2icon,
-//     // priceFormat,
-//     // getDuration,
+    type2icon,
+    priceFormat,
+    getDuration,
     padZero,
-//     // formValidate,
-//     // getProperty,
-//     // setProperty,
-    // page,
-    // pages
+	formValidate,
+	getProperty,
+	setProperty,
+    page,
+    pages
 }

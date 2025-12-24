@@ -51,10 +51,9 @@ function float2Fixed(num: number): any {
  */
 function checkBoundary(num: number): void {
   if (_boundaryCheckingState) {
-	// todo
-    // if (num > Number.MAX_SAFE_INTEGER || num < Number.MIN_SAFE_INTEGER) {
-    //   console.warn(`${num} 超出了精度限制，结果可能不正确`);
-    // }
+    if (num > Number.MAX_VALUE || num < Number.MIN_VALUE) {
+      console.warn(`${num} 超出了精度限制，结果可能不正确`);
+    }
   }
 }
 
@@ -79,7 +78,7 @@ function iteratorOperation(arr: number[], operation: any): any {
  * 高精度乘法
  * @export
  */
-export function times(...nums: number[]): any {
+export function times(...nums: number[]): number {
   // todo
   // if (nums.length > 2) {
   //   return iteratorOperation(nums, times);
@@ -94,14 +93,14 @@ export function times(...nums: number[]): any {
   // checkBoundary(leftValue);
 
   // return leftValue / Math.pow(10, baseNum);
-  return ''
+  return 0
 }
 
 /**
  * 高精度加法
  * @export
  */
-export function plus(...nums): any {
+export function plus(...nums): number {
   if (nums.length > 2) {
     return iteratorOperation(nums, plus);
   }
@@ -117,7 +116,7 @@ export function plus(...nums): any {
  * 高精度减法
  * @export
  */
-export function minus(...nums): any {
+export function minus(...nums): nunber {
   if (nums.length > 2) {
     return iteratorOperation(nums, minus);
   }
@@ -131,7 +130,7 @@ export function minus(...nums): any {
  * 高精度除法
  * @export
  */
-export function divide(...nums: number[]): any {
+export function divide(...nums: number[]): number {
  // todo
  //  if (nums.length > 2) {
  //    return iteratorOperation(nums, divide);
@@ -151,16 +150,16 @@ export function divide(...nums: number[]): any {
  * 四舍五入
  * @export
  */
-export function round(num: number, ratio: number): any {
+export function round(num: number, ratio: number): number {
   // todo
-  // const base = Math.pow(10, ratio);
-  // let result = divide(Math.round(Math.abs(times(num, base))), base);
-  // if (num < 0 && result !== 0) {
-  //   result = times(result, -1);
-  // }
-  // // 位数不足则补0
-  // return result;
-  return ''
+  const base = Math.pow(10, ratio);
+  let result = divide(Math.round(Math.abs(times(num, base))), base);
+  if (num < 0 && result !== 0) {
+    result = times(result, -1);
+  }
+  // 位数不足则补0
+  return result;
+  // return ''
 }
 
 /**
@@ -168,7 +167,7 @@ export function round(num: number, ratio: number): any {
  * @param flag 标记开关，true 为开启，false 为关闭，默认为 true
  * @export
  */
-export function enableBoundaryChecking(flag = true): any {
+export function enableBoundaryChecking(flag = true): void {
   _boundaryCheckingState = flag;
 }
 
@@ -180,5 +179,4 @@ export default {
   divide,
   round,
   enableBoundaryChecking,
-};
-
+}
