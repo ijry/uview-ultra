@@ -1,4 +1,4 @@
-export * from '../components/up-swipe-action-item/types.uts'
+export * from '../components/up-action-sheet/types.uts'
 
 export * from '../components/up-swipe-action-item/types.uts'
 

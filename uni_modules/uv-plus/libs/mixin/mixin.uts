@@ -130,7 +130,7 @@ export const mixin = defineMixin({
 				})
 			}
 			return index
-		}
+		},
         getParent(name: string): ComponentPublicInstance|null {
             let parent = this.$parent
             // 通过while历遍，这里主要是为了H5需要多层解析的问题

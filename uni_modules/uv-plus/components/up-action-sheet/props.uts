@@ -2,7 +2,7 @@ import { defineMixin } from '../../libs/vue'
 import defProps from './actionSheet.uts'
 let crtProp = defProps['actionSheet'] as UTSJSONObject
 
-import { actionSheetItem } from './actionSheet.uts'
+import { UPActionSheetItem } from './types.uts'
 export const propsActionSheet = defineMixin({
     props: {
         // 操作菜单是否展示 （默认false）
@@ -22,7 +22,8 @@ export const propsActionSheet = defineMixin({
         },
         // 数据
         actions: {
-            type: Array<actionSheetItem>,
+            // type: Array<UPActionSheetItem>,
+			type: Array<UTSJSONObject>,
             default: crtProp['actions']
         },
         // 取消按钮的文字，不为空时显示按钮

@@ -3,23 +3,117 @@
 		{
 			"path": "pages/example/components",
 			"style": {
-				"navigationBarTitleText": "uview-plus"
+				"navigationBarTitleText": "uview-ultra"
 			}
 		}
 	],
 	"subPackages": [{
 		"root": "pages/componentsA",
 		"pages": [
+			// 过渡动画
 			{
-				"path": "divider/divider",
+				"path": "transition/transition",
 				"style": {
-					"navigationBarTitleText": "分割线"
+					"navigationBarTitleText": "过渡动画"
+				}
+			},
+			// {
+			// 	"path": "test/test",
+			// 	"style": {
+			// 		"navigationBarTitleText": "测试"
+			// 	}
+			// },
+			{
+				"path": "icon/icon",
+				"style": {
+					"navigationBarTitleText": "图标"
 				}
 			},
 			{
-				"path": "empty/empty",
+				"path": "cell/cell",
 				"style": {
-					"navigationBarTitleText": "内容为空"
+					"navigationBarTitleText": "单元格"
+				}
+			},
+			{
+				"path": "line/line",
+				"style": {
+					"navigationBarTitleText": "线条"
+				}
+			},
+			{
+				"path": "image/image",
+				"style": {
+					"navigationBarTitleText": "图片"
+				}
+			},
+			{
+				"path": "link/link",
+				"style": {
+					"navigationBarTitleText": "超链接"
+				}
+			},
+			{
+				"path": "button/button",
+				"style": {
+					"navigationBarTitleText": "按钮"
+				}
+			},
+			{
+				"path": "loading-icon/loading-icon",
+				"style": {
+					"navigationBarTitleText": "加载中图标"
+				}
+			}
+			,{
+				"path": "overlay/overlay",
+				"style": {
+					"navigationBarTitleText": "遮罩层",
+					"navigationStyle": "custom"
+				}
+			}
+			,{
+				"path": "loading-page/loading-page",
+				"style": {
+					"navigationBarTitleText": "加载页",
+					"navigationStyle": "custom"
+				}
+			}
+			,{
+				"path": "popup/popup",
+				"style": {
+					"navigationBarTitleText": "弹窗",
+					"navigationStyle": "custom"
+				}
+			}
+			,{
+				"path": "radio/radio",
+				"style": {
+					"navigationBarTitleText": "单选框"
+				}
+			}
+			,{
+				"path": "checkbox/checkbox",
+				"style": {
+					"navigationBarTitleText": "复选框"
+				}
+			}
+			,{
+				"path": "backtop/backtop",
+				"style": {
+					"navigationBarTitleText": "返回顶部"
+				}
+			},
+			{
+				"path": "gap/gap",
+				"style": {
+					"navigationBarTitleText": "间隔槽"
+				}
+			},
+			{
+				"path": "grid/grid",
+				"style": {
+					"navigationBarTitleText": "宫格"
 				}
 			},
 			{
@@ -27,24 +121,60 @@
 				"style": {
 					"navigationBarTitleText": "评分"
 				}
-			},
-			{
-				"path": "sticky/sticky",
-				"style": {
-					"navigationBarTitleText": "吸顶"
-				}
-			}
-			,{
-				"path": "swipeAction/swipeAction",
-				"style": {
-					"navigationBarTitleText": "滑动单元格"
-				}
 			}
 		]
 	}, {
 		"root": "pages/componentsB",
 		"pages": [
+			// {
+			// 	"path": "parse/parse",
+			// 	"style": {
+			// 		"navigationBarTitleText": "富文本解析器"
+			// 	}
+			// }, {
+			// 	"path": "parse/jump",
+			// 	"style": {
+			// 		"navigationBarTitleText": "内部链接"
+			// 	}
+			// }
 			{
+				"path": "actionSheet/actionSheet",
+				"style": {
+					"navigationBarTitleText": "上拉菜单",
+					"navigationStyle": "custom"
+				}
+			},
+			{
+				"path": "color/color",
+				"style": {
+					"navigationBarTitleText": "色彩"
+				}
+			}
+			, {
+				"path": "badge/badge",
+				"style": {
+					"navigationBarTitleText": "徽标数"
+				}
+			} 
+			,{
+				"path": "tag/tag",
+				"style": {
+					"navigationBarTitleText": "标签"
+				}
+			}
+			, {
+				"path": "alert/alert",
+				"style": {
+					"navigationBarTitleText": "警告"
+				}
+			}
+			// , {
+			// 	"path": "progress/progress",
+			// 	"style": {
+			// 		"navigationBarTitleText": "进度条"
+			// 	}
+			// }
+			,{
 				"path": "dropdown/dropdown",
 				"style": {
 					"navigationBarTitleText": "下拉菜单"
@@ -127,8 +257,15 @@
 				"style" : {
 					"navigationBarTitleText" : "瀑布流"
 				}
-			}, {
+			},
+			{
 				"path": "upload/upload",
+				"style": {
+					"navigationBarTitleText": "上传"
+				}
+			},
+			{
+				"path": "code/code",
 				"style": {
 					"navigationBarTitleText": "上传"
 				}
@@ -141,6 +278,24 @@
 			"path": "codeInput/codeInput",
 			"style": {
 				"navigationBarTitleText": "验证码输入"
+			}
+		},
+		{
+			"path": "layout/layout",
+			"style": {
+				"navigationBarTitleText": "布局"
+			}
+		},
+		{
+			"path": "text/text",
+			"style": {
+				"navigationBarTitleText": "验证码输入"
+			}
+		},
+		{
+			"path": "textarea/textarea",
+			"style": {
+				"navigationBarTitleText": "文本域"
 			}
 		},
 		{

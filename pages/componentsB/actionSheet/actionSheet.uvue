@@ -77,7 +77,8 @@
 	<!-- #endif -->
 </template>
 <script>
-	import { toast } from '@/uni_modules/uview-plus/libs/function/index'
+	import { toast } from '@/uni_modules/uv-plus/index.uts'
+	import { UPActionSheetItem } from '@/uni_modules/uv-plus/types/index.uts'
 	export default {
 		data() {
 			return {
@@ -137,7 +138,6 @@
 				list: [{
 						title: '普通使用',
 						iconUrl: 'https://cdn.uviewui.com/uview/demo/actionSheet/custom.png'
-
 					},
 					{
 						title: '设置状态',
@@ -159,7 +159,7 @@
 						title: '微信开放能力',
 						iconUrl: 'https://cdn.uviewui.com/uview/demo/actionSheet/open.png'
 					}
-				] as Array<UTSJSONObject>
+				]
 			}
 		},
 		onLoad() {

@@ -1,0 +1,11 @@
+export type UPActionSheetItem = {
+  name?: string,
+  title?: string,
+  subname?: string,
+  loading?: boolean,
+  disabled?: boolean,
+  color?: string,
+  fontSize?: string,
+  openType?: string,
+  iconUrl?: string,
+}

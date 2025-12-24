@@ -39,7 +39,7 @@
 						<!-- #ifdef MP -->
 						<button
 						    class="up-reset-button"
-						    :openType="item.openType"
+						    :openType="item['openType']"
 						    @getuserinfo="onGetUserInfo"
 						    @contact="onContact"
 						    @getphonenumber="onGetPhoneNumber"
@@ -144,7 +144,7 @@
 	 * @event {Function} opensetting	在打开授权设置页后回调，openType="openSetting"时有效
 	 * @example <up-action-sheet :actions="list" :title="title" :show="show"></up-action-sheet>
 	 */
-	import { actionSheetItem } from './actionSheet.uts'
+	import { UPActionSheetItem } from './types.uts'
 	export default {
 		name: "up-action-sheet",
 		// 一些props参数和methods方法，通过mixin混入，因为其他文件也会用到
@@ -189,7 +189,7 @@
 				this.$emit('close')
 			},
 			selectHandler(index: number) {
-				// const item:actionSheetItem = this.actions[index]
+				// const item:UPActionSheetItem = this.actions[index]
 				// if (item != null && item['disabled'] != true && item['loading'] != true) {
 				// 	this.$emit('select', item)
 				// 	if (this.closeOnClickAction) {
