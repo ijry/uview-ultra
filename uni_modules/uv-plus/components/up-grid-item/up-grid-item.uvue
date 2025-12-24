@@ -91,22 +91,22 @@
 			clickHandler() {
 				let name = this.name
 				// 如果没有设置name属性，历遍父组件的children数组，判断当前的元素是否和本实例this相等，找出当前组件的索引
-				const children: ComponentPublicInstance[] = this.$parent?.$data['children'] as ComponentPublicInstance[]
+				const children: ComponentPublicInstance[] = this.parent?.$data['children'] as ComponentPublicInstance[]
 				if(children != null && this.name === null) {
 					name = children.findIndex((child: ComponentPublicInstance) => child === this)
 				}
 				// 调用父组件方法，发出事件
-				this.$parent!.$callMethod('childClick', name.toString())
+				this.parent!.$callMethod('childClick', name)
 				// this.$parent && this.$parent.childClick(name)
 				this.$emit('click', name)
 			},
 			getItemWidth(): void {
 				// 如果是nvue，不能使用百分比，只能使用固定宽度
 				let width = ''
-				if(this.$parent != null) {
+				if(this.parent != null) {
 					// 获取父组件宽度后，除以栅格数，得出每个item的宽度
 					// const parentWidth = await this.getParentWidth()
-					const parentWidth = parseFloat(this.$parent.$data['width'].toString())
+					const parentWidth = parseFloat(this.parent.$data['width'].toString())
 					width = (parentWidth / parseInt(this.parentData['col'].toString())).toString() + 'px'
 				}
 				this.width = width
@@ -118,28 +118,29 @@
 			gridItemClasses() {
 				if(this.parentData?.['border'] as Boolean) {
 					let classes = [] as String[]
-
-					(this.$parent?.$data?.['children'] as ComponentPublicInstance[]).map((
-						child: ComponentPublicInstance, index: number) =>{
-						// let parentCol = parseInt(this.parentData['col'].toString())
-						let parentCol = 3
-						if(this === child && parentCol > 0) {
-							const len = (this.$parent?.$data?.['children'] as ComponentPublicInstance[]).length
-							// 贴近右边屏幕边沿的child，并且最后一个（比如只有横向2个的时候），无需右边框
-							if((index + 1) % parentCol !== 0 && index + 1 !== len) {
-								classes.push('up-border-right')
+					if (this.parent != null) {
+						(this.parent?.$data['children'] as ComponentPublicInstance[]).map((
+							child: ComponentPublicInstance, index: number) =>{
+							// let parentCol = parseInt(this.parentData['col'].toString())
+							let parentCol = 3
+							if(this === child && parentCol > 0) {
+								const len = (this.parent?.$data?.['children'] as ComponentPublicInstance[]).length
+								// 贴近右边屏幕边沿的child，并且最后一个（比如只有横向2个的时候），无需右边框
+								if((index + 1) % parentCol !== 0 && index + 1 !== len) {
+									classes.push('up-border-right')
+								}
+								// 总的宫格数量对列数取余的值
+								// 如果取余后，值为0，则意味着要将最后一排的宫格，都不需要下边框
+								const lessNum = len % parentCol === 0 ? parentCol : len % parentCol
+								// 最下面的一排child，无需下边框
+								if(index < len - lessNum) {
+									classes.push('up-border-bottom')
+								}
+							} else {
+								console.log('parentCol is 0')
 							}
-							// 总的宫格数量对列数取余的值
-							// 如果取余后，值为0，则意味着要将最后一排的宫格，都不需要下边框
-							const lessNum = len % parentCol === 0 ? parentCol : len % parentCol
-							// 最下面的一排child，无需下边框
-							if(index < len - lessNum) {
-								classes.push('up-border-bottom')
-							}
-						} else {
-							console.log('parentCol is 0')
-						}
-					})
+						})
+					}
 					// 支付宝，头条小程序无法动态绑定一个数组类名，否则解析出来的结果会带有","，而导致失效
 					// #ifdef MP-ALIPAY || MP-TOUTIAO
 					classes = classes.join(' ')

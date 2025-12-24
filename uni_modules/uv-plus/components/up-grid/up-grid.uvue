@@ -49,7 +49,7 @@
 				}
 			},
 		},
-		created() {
+		mounted() {
 			// 如果将children定义在data中，在微信小程序会造成循环引用而报错
 			// this.children = []
 			this.getWidth()
@@ -88,16 +88,14 @@
 		methods: {
 			// 获取父元素的尺寸
 			getWidth() {
-				this.upGetRect(`.up-grid`, false).then(res => {
-					let size = res as NodeInfo;
-					// console.log('&&&&&&&&&&&&&&&&&&&&&',size)
+				this.upGetRect(`.up-grid`, false).then((size: NodeInfo) => {
 					if (size.width != null) {
 						this.width = size.width
 					}
 				})
 			},
 			// 此方法由up-grid-item触发，用于在up-grid发出事件
-			childClick(name: string) {
+			childClick(name: any) {
 				this.$emit('click', name)
 			}
 		}

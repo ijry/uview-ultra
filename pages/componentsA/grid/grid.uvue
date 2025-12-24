@@ -9,16 +9,16 @@
 					align="center"
 				>
 					<up-grid-item
-						v-for="(baseListItem,baseListIndex) in baseList"
+						v-for="(baseListItem, baseListIndex) in baseList"
 						@click="click('test')"
 						:key="baseListIndex"
 					>
 						<up-icon
 							:customStyle="{paddingTop:20+'rpx'}"
-							:name="baseListItem.name"
+							:name="baseListItem['name']"
 							:size="22"
 						></up-icon>
-						<text class="grid-text">{{baseListItem.title}}</text>
+						<text class="grid-text">{{baseListItem['title']}}</text>
 					</up-grid-item>
 				</up-grid>
 			</view>
@@ -28,16 +28,16 @@
 			<view>
 				<up-grid :border="true">
 					<up-grid-item
-						v-for="(listItem,listIndex) in list"
+						v-for="(listItem, listIndex) in list"
 						:key="listIndex"
 						customStyle="padding-top: 10px; padding-bottom: 10px" 
 					>
 						<up-icon
 							:customStyle="{paddingTop:20+'rpx'}"
-							:name="listItem.name"
+							:name="listItem['name']"
 							:size="22"
 						></up-icon>
-						<text class="grid-text">{{listItem.title}}</text>
+						<text class="grid-text">{{listItem['title']}}</text>
 					</up-grid-item>
 				</up-grid>
 			</view>
@@ -56,10 +56,10 @@
 					>
 						<up-icon
 							:customStyle="{paddingTop:20+'rpx'}"
-							:name="listItem.name"
+							:name="listItem['name']"
 							:size="22"
 						></up-icon>
-						<text class="grid-text">{{listItem.title}}</text>
+						<text class="grid-text">{{listItem['title']}}</text>
 					</up-grid-item>
 				</up-grid>
 			</view>
@@ -172,9 +172,9 @@
 			}
 		},
 		methods: {
-			click(name) {
+			click(name: number) {
 				console.log(name)
-				this.$refs.uToastRef.success(`点击了第${name}个`)
+				(this.$refs['uToastRef'] as ComponentPublicInstance)?.$callMethod('success',`点击了第${name}个`)
 			}
 		}
 	}
