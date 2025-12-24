@@ -8,6 +8,18 @@ import index from './libs/function/index.uts'
 export {mixin, mpMixin}
 export * from './libs/function/index'
 
+// export class UPArray = {
+// 	list: [] as Array<any>
+// 	constructor(length: number = 0 ) {
+// 		for (var index = 0; index < length; index++) {
+// 			list.push('')
+// 		}
+// 	}
+// 	fill(num: number) {
+// 		this.for
+// 	}
+// }
+
 export function loadFont() {
 	uni.loadFontFace({
 	  global: true,

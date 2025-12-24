@@ -122,6 +122,11 @@
 				"style": {
 					"navigationBarTitleText": "提示消息"
 				}
+			}, {
+				"path" : "waterfall/waterfall",
+				"style" : {
+					"navigationBarTitleText" : "瀑布流"
+				}
 			}
 		]
 	}, {

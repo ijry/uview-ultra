@@ -293,6 +293,12 @@ export default [{
         title: 'Sticky 吸顶',
         title_en: 'Sticky'
     },
+	{
+		path: '/pages/componentsB/waterfall/waterfall',
+		icon: 'waterfall',
+		title: 'Waterfall 瀑布流',
+		title_en: 'Waterfall'
+	},
     {
         path: '/pages/componentsA/divider/divider',
         icon: 'divider',
