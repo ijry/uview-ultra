@@ -127,6 +127,11 @@
 				"style" : {
 					"navigationBarTitleText" : "瀑布流"
 				}
+			}, {
+				"path": "upload/upload",
+				"style": {
+					"navigationBarTitleText": "上传"
+				}
 			}
 		]
 	}, {
@@ -247,6 +252,12 @@
 				"style": {
 					"navigationBarTitleText": "迷你导航",
 					"navigationStyle": "custom"
+				}
+			},
+			{
+				"path" : "box/box",
+				"style" : {
+					"navigationBarTitleText" : "盒子"
 				}
 			}
 		]

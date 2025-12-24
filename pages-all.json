@@ -144,13 +144,7 @@
 		// 	"style": {
 		// 		"navigationBarTitleText": "内部链接"
 		// 	}
-		// }, {
-		// 	"path": "upload/upload",
-		// 	"style": {
-		// 		"navigationBarTitleText": "上传"
-		// 	}
 		// }
-		// }, 
 		{
 			"path": "color/color",
 			"style": {
@@ -267,12 +261,6 @@
 	{
 		"root": "pages/componentsD",
 		"pages": [
-			{
-			    "path" : "box/box",
-			    "style" : {
-			        "navigationBarTitleText" : "盒子"
-			    }
-			}
 			// {
 			// 	"path": "qrcode/qrcode",
 			// 	"style": {

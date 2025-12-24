@@ -149,9 +149,9 @@
 			// #ifdef VUE3
 			// 监听v-mode的变化，重新初始化内部的值
 			modelValue: {
-				handler: function (newV, oldV) {
+				handler: function (newV: string|number, oldV: string|number) {
 					if (newV !== this.currentValue) {
-						this.currentValue = this.format(this.modelValue.toString())
+						this.currentValue = this.format(newV.toString())
 					}
 				},
 				immediate: true

@@ -1,17 +1,22 @@
 <template>
+	<!-- #ifdef APP -->
+	<scroll-view style="flex:1">
+	<!-- #endif -->
 	<view class="u-page">
 		<view class="u-demo-block">
 			<text class="u-demo-block__title">基础用法</text>
 			<view class="u-demo-block__content">
-				<view class="u-page__upload-item">
-				<up-upload
-				    :fileList="fileList1"
-				    @afterRead="afterRead"
-				    @delete="deletePic"
-				    name="1"
-				    multiple
-				    :maxCount="10"
-				></up-upload>
+				<view class="u-page__upload-item" style="display: flex;">
+					<up-upload
+						:fileList="fileList1"
+						useBeforeRead
+						@beforeRead="beforeRead"
+						@afterRead="afterRead"
+						@delete="deletePic"
+						name="1"
+						multiple
+						:maxCount="10"
+					></up-upload>
 				</view>
 			</view>
 		</view>
@@ -97,60 +102,67 @@
 			</view>
 		</view>
 	</view>
+	<!-- #ifdef APP -->
+	</scroll-view>
+	<!-- #endif -->
 </template>
 
 <script>
 	export default {
 		data() {
 			return {
-				fileList1: [],
-				fileList2: [],
+				fileList1: [] as UTSJSONObject[],
+				fileList2: [] as UTSJSONObject[],
 				fileList3: [{
 					url: 'https://cdn.uviewui.com/uview/swiper/1.jpg',
-				}],
+				}] as UTSJSONObject[],
 				fileList4: [{
 						url: 'https://cdn.uviewui.com/uview/swiper/1.jpg',
 					},
 					{
 						url: 'https://cdn.uviewui.com/uview/swiper/1.jpg',
 					}
-				],
-				fileList5: [],
-				fileList6: [],
-				fileList7: []
+				] as UTSJSONObject[],
+				fileList5: [] as UTSJSONObject[],
+				fileList6: [] as UTSJSONObject[],
+				fileList7: [] as UTSJSONObject[]
 			}
 		},
 		onLoad() {
 		},
 		methods: {
 			// 删除图片
-			deletePic(event) {
-				this[`fileList${event.name}`].splice(event.index, 1)
+			deletePic(event: UTSJSONObject) {
+				(this.$data[`fileList${event.name}`] as UTSJSONObject[]).splice(event['index'] as number, 1)
+			},
+			beforeRead() {
+				console.log('beforeRead')
 			},
 			// 新增图片
-			async afterRead(event) {
+			async afterRead(event: UTSJSONObject) {
 				// 当设置 mutiple 为 true 时, file 为数组格式，否则为对象格式
-				let lists = [].concat(event.file)
-				let fileListLen = this[`fileList${event.name}`].length
-				lists.map((item) => {
-					this[`fileList${event.name}`].push({
+				let lists = ([] as UTSJSONObject[]).concat(event.file as UTSJSONObject[])
+				let fileListLen = (this.$data[`fileList${event['name']}`] as UTSJSONObject[]).length
+				lists.map((item: UTSJSONObject) => {
+					(this.$data[`fileList${event['name']}`] as UTSJSONObject[]).push({
 						...item,
 						status: 'uploading',
 						message: '上传中'
 					})
 				})
 				for (let i = 0; i < lists.length; i++) {
-					const result = await this.uploadFilePromise(lists[i].url)
-					let item = this[`fileList${event.name}`][fileListLen]
-					this[`fileList${event.name}`].splice(fileListLen, 1, Object.assign(item, {
-						status: 'success',
-						message: '',
-						url: result
-					}))
-					fileListLen++
+					// const result = await this.uploadFilePromise(lists[i]['url'].toString())
+					// let item1 = (this.$data[`fileList${event['name']}`] as UTSJSONObject[])[fileListLen]
+					// let itemAdd = UTSJSONObject.assign(item1, {
+					// 	status: 'success',
+					// 	message: '',
+					// 	url: result['data'] as string
+					// }) as UTSJSONObject
+					// (this.$data[`fileList${event['name']}`] as UTSJSONObject[]).splice(fileListLen, 1, itemAdd)
+					// fileListLen++
 				}
 			},
-			uploadFilePromise(url) {
+			uploadFilePromise(url: string): Promise<UTSJSONObject|null> {
 				return new Promise((resolve, reject) => {
 					let a = uni.uploadFile({
 						url: 'http://www.example.com/upload', // 仅为示例，非真实的接口地址
@@ -159,9 +171,9 @@
 						formData: {
 							user: 'test'
 						},
-						success: (res) => {
+						success: (res: UploadFileSuccess ) => {
 							setTimeout(() => {
-								resolve(res.data.data)
+								resolve(JSON.parseObject(res.data))
 							}, 1000)
 						}
 					});
@@ -175,6 +187,8 @@
 	.u-page {
 		&__upload-item{
 			margin-top:5px;
+			// width: 120px;
+			// height: 120px;
 		}
 	}
 </style>

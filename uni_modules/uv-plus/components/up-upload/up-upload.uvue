@@ -8,8 +8,8 @@
 				    :key="index"
 				>
 					<image
-					    v-if="item.isImage || (item.type && item.type === 'image')"
-					    :src="item.thumb || item.url"
+					    v-if="item.isImage || (item.type != null && item.type === 'image')"
+					    :src="item.thumb != null ? item.thumb : item.url"
 					    :mode="imageMode"
 					    class="up-upload__wrap__preview__image"
 					    @tap="onClickPreview(item, index)"
@@ -23,7 +23,7 @@
 							width: addUnit(width),
 							height: addUnit(height)
 						}"
-						v-else-if="(item.isVideo || (item.type && item.type === 'video')) && getVideoThumb">
+						v-else-if="(item.isVideo || (item.type != null && item.type === 'video')) && getVideoThumb">
 						<image
 							v-if="item.thumb"
 						    :src="item.thumb"
@@ -39,13 +39,13 @@
 							v-else
 						    color="#80CBF9"
 						    size="26"
-						    :name="item.isVideo || (item.type && item.type === 'video') ? 'movie' : 'file-text'"
+						    :name="item.isVideo || (item.type != null && item.type === 'video') ? 'movie' : 'file-text'"
 						></up-icon>
 						<view v-if="item.status === 'success'"
 							class="up-upload__wrap__play"
 							@tap="onClickPreview(item, index)">
 							<slot name="playIcon"></slot>
-							<up-icon v-if="!$slots['playIcon']"
+							<up-icon v-if="$slots['playIcon'] == null"
 								class="up-upload__wrap__play__icon"
 								name="play-right" size="22px"></up-icon>
 						</view>
@@ -62,10 +62,10 @@
 						<up-icon
 						    color="#80CBF9"
 						    size="26"
-						    :name="item.isVideo || (item.type && item.type === 'video') ? 'movie' : 'folder'"
+						    :name="item.isVideo || (item.type != null && item.type === 'video') ? 'movie' : 'folder'"
 						></up-icon>
 						<text class="up-upload__wrap__preview__other__text">
-							{{item.isVideo || (item.type && item.type === 'video') ? item.name || t("up.common.video") : item.name || t("up.common.file")}}
+							{{item.isVideo || (item.type != null && item.type === 'video') ? (item.name != null ? item.name : t("up.common.video")) : item.name != null ? item.name : t("up.common.file")}}
 						</text>
 					</view>
 					<view
@@ -90,7 +90,7 @@
 						    class="up-upload__status__message"
 						>{{ item.message }}</text>
 						<up-gap class="up-upload__progress" height="3px"
-							:style="{width: item.progress + '%'}"></up-gap>
+							:style="{width: (item.progress ?? 0) + '%'}"></up-gap>
 					</view>
 					<view
 					    class="up-upload__deletable"
@@ -129,17 +129,15 @@
 					</slot>
 				</view>
 			</template>
-			<canvas id="myCanvas" type="2d"
-				style="width: 100px; height: 150px;display: none;"></canvas>
 			<template v-if="isInCount">
 				<view
-				    v-if="$slots.trigger"
+				    v-if="$slots['trigger'] != null"
 				    @tap="chooseFile"
 				>
 					<slot name="trigger" />
 				</view>
 				<view
-				    v-else-if="!$slots.trigger && ($slots.default || $slots.$default)"
+				    v-else-if="$slots['trigger'] == null && ($slots['default'] != null || $slots['$default'] != null)"
 				    @tap="chooseFile"
 				>
 					<slot />
@@ -150,7 +148,7 @@
 				    :hover-class="!disabled ? 'up-upload__button--hover' : ''"
 				    hover-stay-time="150"
 				    @tap="chooseFile"
-				    :class="[disabled && 'up-upload__button--disabled']"
+				    :class="[disabled ? 'up-upload__button--disabled' : '']"
 					:style="[{
 						width: addUnit(width),
 						height: addUnit(height)
@@ -168,6 +166,8 @@
 				</view>
 			</template>
 		</view>
+		<canvas id="myCanvas" type="2d"
+			style="width: 100px; height: 150px;display: none;"></canvas>
 		<up-popup
 			mode="center"
 			v-model:show="popupShow">
@@ -177,7 +177,7 @@
 				:object-fit='videoPreviewObjectFit' show-fullscreen-btn='true'
 				enable-play-gesture controls
 				:autoplay="true" auto-pause-if-open-native
-				@loadedmetadata="loadedVideoMetadata"
+				todoloadedmetadata="loadedVideoMetadata"
 				:initial-time='0.1'>
 			</video>
 		</up-popup>
@@ -193,7 +193,8 @@
 	import { mpMixin } from '../../libs/mixin/mpMixin';
 	import { mixin } from '../../libs/mixin/mixin';
 	import { addStyle, addUnit, toast } from '../../libs/function/index';
-	import test from '../../libs/function/test';
+	import { func as testFunc, promise as testPromise,
+		image as testImage, video as testVideo } from '../../libs/function/test';
 	import { t } from '../../libs/i18n'
 	/**
 	 * upload 上传
@@ -229,6 +230,7 @@
 	 * @event {Function} delete 		删除图片
 	 * @example <up-upload :action="action" :fileList="fileList" ></up-upload>
 	 */
+	import { UPUploadListItem, UPUploadFileChoosed, UPUploadChooseFileOptions } from './types.uts'
 	export default {
 		name: "up-upload",
 		mixins: [mpMixin, mixin, mixinUpload, props],
@@ -237,7 +239,7 @@
 				// #ifdef APP-NVUE
 				successIcon: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACgAAAAoCAYAAACM/rhtAAAAAXNSR0IArs4c6QAAAERlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAA6ABAAMAAAABAAEAAKACAAQAAAABAAAAKKADAAQAAAABAAAAKAAAAAB65masAAACP0lEQVRYCc3YXygsURwH8K/dpcWyG3LF5u/6/+dKVylSypuUl6uUPMifKMWL8oKEB1EUT1KeUPdR3uTNUsSLxb2udG/cbvInNuvf2rVnazZ/ZndmZ87snjM1Z+Z3zpzfp9+Z5mEAhlvjRtZgCKs+gnPAOcAkkMOR4jEHfItjDvgRxxSQD8cM0BuOCaAvXNCBQrigAsXgggYUiwsK0B9cwIH+4gIKlIILGFAqLiBAOTjFgXJxigJp4BQD0sIpAqSJow6kjSNAFTnRaHJwLenD6Mud52VQAcrBfTd2oyq+HtGaGGWAcnAVcXWoM3bCZrdi+ncPfaAcXE5UKVpdW/vitGPqqAtn98d0gXJwX7Qp6MmegUYVhvmTIezdmHlxJCjpHRTCFerLkRRu4k0aqdajN3sWOo0BK//msHa+xDuPC/oNFMKRhTtM4xjIX0SCNpXL4+7VIaHuyiWEp2L7ahWLf8fejfPdqPmC3mJicORZUp1CQzm+GiphvljGk+PBvWRbxii+xVTj5M6CiZ/tsDufvaXyxEUDxeLIyvu3m0iOyEFWVAkydcVYdyFrE9tQk9iMq6f/GNlvwt3LjQfh60LUrw9/cFyyMJUW/XkLSNMV4Mi6C5ML+ui4x5ClAX9sB9w0wV6wglJwJCv5fOxcr6EstgbGiEw4XcfUry4cWrcEUW8n+ARKxXEJHhw2WG43UKSvwI/TSZgvl7kh0b3XLZaLEy0QmMgLZAVH7J+ALOE+AVnDvQOyiPMAWcW5gSzjCPAV+78S5WE0GrQAAAAASUVORK5CYII=',
 				// #endif
-				lists: [],
+				lists: [] as UPUploadListItem[],
 				isInCount: true,
 				popupShow: false,
 				currentItemIndex: -1
@@ -271,11 +273,17 @@
 		emits: ['error', 'beforeRead', 'oversize', 'afterRead', 'delete', 'clickPreview', 'update:fileList', 'afterAutoUpload'],
 		// #endif
 		methods: {
-			t,
-			addUnit,
-			addStyle,
+			t(key: string) {
+				return t(key)
+			},
+			addUnit(e: any) {
+				return addUnit(e)
+			},
+			addStyle(e: any) {
+				return addStyle(e)
+			},
 			videoErrorCallback() {},
-			loadedVideoMetadata(e) {
+			loadedVideoMetadata(e: any) {
 				if (this.currentItemIndex < 0) {
 					return;
 				}
@@ -289,71 +297,75 @@
 				let w = this.lists[this.currentItemIndex].width;
 				let h = this.lists[this.currentItemIndex].height;
 				const dpr = uni.getSystemInfoSync().pixelRatio;
-				uni.createSelectorQuery().select('#myVideo').context(res => {
-					console.log('select video', res)
-					const myVideo = res.context
-					uni.createSelectorQuery()
-					  .select('#myCanvas')
-					  .fields({ node: true, size: true })
-					  .exec(([res]) => {
-						console.log('select canvas', res)
-						const ctx1 = res[0].node.getContext('2d')
-						res[0].node.width = w * dpr
-						res[0].node.height = h * dpr
-						// Draw the first frame and export it as an image
-						// myVideo.onPlay(() => {
-							setTimeout(() => {
-								captureFirstFrame()
-							}, 500)
-						// })
-						const captureFirstFrame = () => {
-							ctx1.drawImage(myVideo, 0, 0, w * dpr, h * dpr)
-							wx.canvasToTempFilePath({
-								canvas: res[0].node,
-								success: (result) => {
-									console.log('First frame image path:', result
-										.tempFilePath)
-									// Now you can use the image path (result.tempFilePath)
-									this.fileList['currentItemIndex'].thumb = result.tempFilePath
-								},
-								fail: (err) => {
-									console.error('Failed to export image:', err)
-								}
-							})
-						}
+				// TODO2026
+				// uni.createSelectorQuery().select('#myVideo').context(res => {
+				// 	console.log('select video', res)
+				// 	const myVideo = res.context
+				// 	uni.createSelectorQuery()
+				// 	  .select('#myCanvas')
+				// 	  .fields({ node: true, size: true })
+				// 	  .exec(([res]) => {
+				// 		console.log('select canvas', res)
+				// 		const ctx1 = res[0].node.getContext('2d')
+				// 		res[0].node.width = w * dpr
+				// 		res[0].node.height = h * dpr
+				// 		// Draw the first frame and export it as an image
+				// 		// myVideo.onPlay(() => {
+				// 			setTimeout(() => {
+				// 				captureFirstFrame()
+				// 			}, 500)
+				// 		// })
+				// 		const captureFirstFrame = () => {
+				// 			ctx1.drawImage(myVideo, 0, 0, w * dpr, h * dpr)
+				// 			wx.canvasToTempFilePath({
+				// 				canvas: res[0].node,
+				// 				success: (result) => {
+				// 					console.log('First frame image path:', result
+				// 						.tempFilePath)
+				// 					// Now you can use the image path (result.tempFilePath)
+				// 					this.fileList['currentItemIndex'].thumb = result.tempFilePath
+				// 				},
+				// 				fail: (err) => {
+				// 					console.error('Failed to export image:', err)
+				// 				}
+				// 			})
+				// 		}
 
-						// Capture the first frame
-						setInterval(() => {
-							ctx1.drawImage(myVideo, 0, 0, w * dpr, h * dpr);
-						}, 1000 / 24)
-					}).exec()
-				}).exec()
+				// 		// Capture the first frame
+				// 		setInterval(() => {
+				// 			ctx1.drawImage(myVideo, 0, 0, w * dpr, h * dpr);
+				// 		}, 1000 / 24)
+				// 	}).exec()
+				// }).exec()
 			},
 			formatFileList() {
-				const {
-					fileList = [], maxCount
-				} = this;
-				const lists = fileList.map((item) => {
-					const name = item.name || item.url || item.thumb
-					return Object.assign(Object.assign({}, item), {
+				let fileList = this.fileList as UTSJSONObject[]
+				let maxCount = this.maxCount as number
+				let lists = [] as UPUploadListItem[]
+				fileList.forEach((item: UTSJSONObject) => {
+					const name = item['name'] != null
+						? item['name'] as string
+						: item['url'] != null ? item['url'] as string : item['thumb'] as string
+					let tmp = UTSJSONObject.assign(UTSJSONObject.assign({}, item), {
 						// 如果item.url为本地选择的blob文件的话，无法判断其为video还是image，此处优先通过accept做判断处理
-						isImage: item.name ? test.image(item.name) : (this.accept === 'image' || test.image(name)),
-						isVideo: item.name ? test.video(item.name) : (this.accept === 'video' || test.video(name)),
+						isImage: item['name'] != null ? testImage(item['name'] as string) : (this.accept === 'image' ?? testImage(name)),
+						isVideo: item['name'] != null ? testVideo(item['name'] as string) : (this.accept === 'video' ?? testVideo(name)),
 						deletable: typeof item.deletable === 'boolean' ? item.deletable : this.deletable,
 					})
-				});
+					let tmpObj = JSON.parseObject(JSON.stringify(tmp)) as UPUploadListItem
+					lists.push(tmpObj)
+				})
 				this.lists = lists
 				this.isInCount = lists.length < maxCount
 			},
-			chooseFile(params) {
-				const {
-					maxCount,
-					multiple,
-					lists,
-					disabled
-				} = this;
-				if (disabled) return Promise.reject();
-				const chooseParams = Object.assign({
+			chooseFile(params: UTSJSONObject): boolean {
+				let maxCount = this.maxCount as number
+				let multiple = this.multiple
+				let lists = this.lists
+				let disabled = this.disabled
+				// if (disabled) return Promise.reject({});
+				if (disabled) return false
+				const chooseParams = UTSJSONObject.assign({
 					accept: this.accept,
 					extension: this.extension,
 					multiple: this.multiple,
@@ -366,79 +378,80 @@
 					maxCount: maxCount - lists.length,
 					...params
 				})
-				return chooseFile(chooseParams)
-					.then((res) => {
-						const result = chooseParams.multiple ? res : res[0]
-						this.onBeforeRead(result);
-						return result
-					})
-					.catch((error) => {
-						this.$emit('error', error);
-					});
+				let chooseParamsObj = JSON.parseObject(JSON.stringify(chooseParams)) as UPUploadChooseFileOptions
+				chooseFile(chooseParamsObj).then((res: UPUploadFileChoosed[]) => {
+					const result = chooseParams['multiple'] != null && chooseParams['multiple'] != false ? res : res
+					this.onBeforeRead(result);
+				})
+				return true
+				// return result
+				// .catch((error) => {
+				// 	this.$emit('error', error);
+				// });
 			},
 			// 文件读取之前
-			onBeforeRead(file) {
-				const {
-					beforeRead,
-					useBeforeRead,
-				} = this;
+			onBeforeRead(file: UPUploadFileChoosed[]) {
+				let beforeRead = this.beforeRead
+				let useBeforeRead = this.useBeforeRead
 				let res = file
 				// beforeRead是否为一个方法
-				if (test.func(beforeRead)) {
+				if (beforeRead != null && testFunc(beforeRead)) {
 					// 如果用户定义了此方法，则去执行此方法，并传入读取的文件回调
-					res = beforeRead(file, this.getDetail());
+					// TODO2026
+					// res = beforeRead(file, this.getDetail());
 				}
 				if (useBeforeRead) {
-					res = new Promise((resolve, reject) => {
-						this.$emit(
-							'beforeRead',
-							Object.assign(Object.assign({
-								file
-							}, this.getDetail()), {
-								callback: (ok) => {
-									ok ? resolve() : reject();
-								},
-							})
-						);
-					});
+					// todo2026
+					// res = new Promise((resolve, reject) => {
+					// 	this.$emit(
+					// 		'beforeRead',
+					// 		UTSJSONObject.assign(UTSJSONObject.assign({
+					// 			file
+					// 		}, this.getDetail()), {
+					// 			callback: (ok) => {
+					// 				ok ? resolve() : reject();
+					// 			},
+					// 		})
+					// 	);
+					// });
 				}
-				if (test.promise(res)) {
-					res.then((data) => this.onAfterRead(data || file));
+				if (testPromise(res)) {
+					// res.then((data) => this.onAfterRead(data != null ? data : file));
 				} else {
-					this.onAfterRead(res || file);
+					this.onAfterRead(res != null ? res : file);
 				}
 			},
-			getDetail(index) {
+			getDetail(index: number|null = null) {
 				return {
 					name: this.name,
 					index: index == null ? this.fileList.length : index,
 				};
 			},
-			async onAfterRead(file) {
-				const {
-					maxSize,
-					afterRead
-				} = this;
-				const oversize = Array.isArray(file) ?
-					file.some((item) => item.size > maxSize) :
-					file.size > maxSize;
+			async onAfterRead(file: UPUploadFileChoosed[]) {
+				let maxSize = this.maxSize as number
+				let afterRead = this.afterRead
+				// const oversize = Array.isArray(file) ?
+				// 	file.some((item) => item.size > maxSize) :
+				// 	file.size > maxSize;
+				const even = (item: UPUploadFileChoosed): boolean => (item.size ?? 0) > maxSize;
+				const oversize = file.some(even)
 				if (oversize) {
 					uni.showToast({
 						title: t("up.upload.sizeExceed")
 					})
-					this.$emit('oversize', Object.assign({
+					this.$emit('oversize', UTSJSONObject.assign({
 						file
-					}, this.getDetail()));
+					}, this.getDetail(null)));
 					return;
 				}
 				let len = this.fileList.length;
 				if (this.autoUpload) {
 					// 当设置 mutiple 为 true 时, file 为数组格式，否则为对象格式
-					let lists = [].concat(file);
+					let lists = ([] as UPUploadFileChoosed[]).concat(file);
 					let fileListLen = this.fileList.length;
-					lists.map((item) => {
+					lists.map((item: UPUploadFileChoosed) => {
 						this.fileList.push({
-							...item,
+							...item as UTSJSONObject,
 							status: 'uploading',
 							message: t("up.upload.uploading"),
 							progress: 0
@@ -460,69 +473,75 @@
 								// 获取签名
 								console.log()
 								let formData = {};
-								let ret = await uni.request({
+								uni.request({
 									url: this.autoUploadAuthUrl,
 									method: 'get',
 									header: this.autoUploadHeader,
 									data: {
-										filename: lists[j].name
-									}
-								});
-								// console.log(ret);
-								let res0 = ret.data;
-								if (res0.code == 200) {
-									// 路径 + 文件名 + 扩展名
-									// 不传递filename就要拼接key
-									// res0.data.params.key = res0.data.params.dir + res0.data.params.uniqidName + fileExt;
-									formData = res0.data.params;
-								} else {
-									uni.showToast({
-										title: res0.msg,
-										duration: 1500
-									});
-									return;
-								}
-								var uploadTask = uni.uploadFile({
-									url: res0.data.params.host,
-									filePath: lists[j].url,
-									name: 'file',
-									// fileType: 'video', // 仅支付宝小程序，且必填。
-									// header: header,
-									formData: formData,
-									success: (uploadFileRes) => {
-										let thumb = '';
-										let afterPromise = '';
-										if (that.customAfterAutoUpload) {
-											afterPromise = new Promise((resolve, reject) => {
-												that.$emit(
-													'afterAutoUpload',
-													Object.assign(res0, {
-														callback: (r) => {
-															r.url ? resolve(r) : reject();
-														},
-													})
-												);
+										filename: lists[j]['name'] as string
+									},
+									success: (ret: RequestSuccess<any>) => {
+										// console.log(ret);
+										let res0 = ret.data as UTSJSONObject;
+										if (res0['code'] as number == 200) {
+											// 路径 + 文件名 + 扩展名
+											// 不传递filename就要拼接key
+											// res0.data.params.key = res0.data.params.dir + res0.data.params.uniqidName + fileExt;
+											formData = res0!!.getAny('data.params') as UTSJSONObject;
+										} else {
+											uni.showToast({
+												title: res0['msg'] as string,
+												duration: 1500
+											});
+											return;
+										}
+										if (res0!!.getString('data.params.host') != null) {
+											var uploadTask = uni.uploadFile({
+												url: res0!!.getString('data.params.host') ?? '',
+												filePath: lists[j].url,
+												name: 'file',
+												// fileType: 'video', // 仅支付宝小程序，且必填。
+												// header: header,
+												formData: formData,
+												success: (uploadFileRes: UploadFileSuccess) => {
+													let thumb = '';
+													let afterPromise = '';
+													if (that.customAfterAutoUpload) {
+														// todo2026
+														// afterPromise = new Promise((resolve, reject) => {
+														// 	that.$emit(
+														// 		'afterAutoUpload',
+														// 		Object.assign(res0, {
+														// 			callback: (r) => {
+														// 				r.url ? resolve(r) : reject();
+														// 			},
+														// 		})
+														// 	);
+														// });
+													}
+													let res0 = JSON.parseObject(uploadFileRes.data);
+													if (testPromise(afterPromise)) {
+														// afterPromise.then((data) => that.succcessUpload(len + j, data.url, data.thumb));
+													} else {
+														result = res0!!.getString("data.params.host") + '/' + res0!!.getString("data.params.key");
+														if (that.accept === 'video' || testVideo(result)) {
+															thumb = result + '?x-oss-process=video/snapshot,t_10000,m_fast';
+														}
+														that.succcessUpload(len + j, result, thumb);
+													}
+												}
+											});
+											uploadTask.onProgressUpdate((res) => {
+												that.updateUpload(len + j, {
+													progress: res.progress
+												});
+												// console.log('上传进度' + res.progress);
+												// console.log('已经上传的数据长度' + res.totalBytesSent);
+												// console.log('预期需要上传的数据总长度' + res.totalBytesExpectedToSend);
 											});
 										}
-										if (test.promise(afterPromise)) {
-											afterPromise.then((data) => that.succcessUpload(len + j, data.url, data.thumb));
-										} else {
-											result = res0.data.params.host + '/' + res0.data.params.key;
-											if (that.accept === 'video' || test.video(result)) {
-												thumb = result + '?x-oss-process=video/snapshot,t_10000,m_fast';
-											}
-											that.succcessUpload(len + j, result, thumb);
-										}
 									}
-								});
-								uploadTask.onProgressUpdate((res) => {
-									that.updateUpload(len + j, {
-										progress: res.progress
-									});
-									// console.log('上传进度' + res.progress);
-									// console.log('已经上传的数据长度' + res.totalBytesSent);
-									// console.log('预期需要上传的数据总长度' + res.totalBytesExpectedToSend);
-								});
+								})
 								break;
 							case 'local':
 							default:
@@ -533,30 +552,31 @@
 									name: 'file',
 									// fileType: 'video', // 仅支付宝小程序，且必填。
 									header: this.autoUploadHeader,
-									success: (uploadFileRes) => {
-										let res0 = uploadFileRes.data;
+									success: (uploadFileRes: UploadFileSuccess) => {
+										let res0 = JSON.parseObject(uploadFileRes.data);
 										let afterPromise = '';
 										if (that.customAfterAutoUpload) {
-											afterPromise = new Promise((resolve, reject) => {
-												that.$emit(
-													'afterAutoUpload',
-													Object.assign(res0, {
-														callback: (r) => {
-															r.url ? resolve(r) : reject();
-														}
-													})
-												);
-											});
+											// todo2026
+											// afterPromise = new Promise((resolve, reject) => {
+											// 	that.$emit(
+											// 		'afterAutoUpload',
+											// 		UTSJSONObject.assign(res0, {
+											// 			callback: (r) => {
+											// 				r.url ? resolve(r) : reject();
+											// 			}
+											// 		})
+											// 	);
+											// });
 										}
-										if (test.promise(afterPromise)) {
-											afterPromise.then((data) => that.succcessUpload(len + j, data.url));
+										if (testPromise(afterPromise)) {
+											// afterPromise.then((data) => that.succcessUpload(len + j, data.url));
 										} else {
-											if (res0.code != 200) {
+											if (res0!!['code'] as number != 200) {
 												uni.showToast({
-													title: res0.msg
+													title: res0!!['msg'] as string
 												});
 											} else {
-												result = res0.data.url;
+												result = res0!!.getString('data.url') ?? '';
 												that.succcessUpload(len + j, result);
 											}
 										}
@@ -575,28 +595,29 @@
 					}
 				} else {
 					if (typeof afterRead === 'function') {
-						afterRead(file, this.getDetail());
+						// todo2026
+						// afterRead(file, this.getDetail());
 					}
-					this.$emit('afterRead', Object.assign({
+					this.$emit('afterRead', UTSJSONObject.assign({
 						file
-					}, this.getDetail()));
+					}, this.getDetail(null)));
 				}
 			},
-			updateUpload(index, param) {
+			updateUpload(index: number, param: UTSJSONObject) {
 				let item = this.fileList[index];
 				this.fileList.splice(index, 1, {
-					...item,
+					...item as UTSJSONObject,
 					// 注意这里不判断会出现succcessUpload先执行又被覆盖的问题
-					status: param.progress == 100 ? 'success' : 'uploading',
+					status: param['progress'] as number == 100 ? 'success' : 'uploading',
 					message: '',
-					progress: param.progress
+					progress: param['progress'] as number
 				});
 				this.$emit('update:fileList', this.fileList);
 			},
-			succcessUpload(index, url, thumb = '') {
+			succcessUpload(index: number, url: string, thumb: string = '') {
 				let item = this.fileList[index];
 				this.fileList.splice(index, 1, {
-					...item,
+					...item as UTSJSONObject,
 					status: 'success',
 					message: '',
 					url: url,
@@ -605,29 +626,29 @@
 				});
 				this.$emit('update:fileList', this.fileList);
 			},
-			deleteItem(index) {
+			deleteItem(index: number) {
 				if (this.autoDelete) {
 					this.fileList.splice(index, 1);
 					this.$emit('update:fileList', this.fileList);
 				} else {
 					this.$emit(
 						'delete',
-						Object.assign(Object.assign({}, this.getDetail(index)), {
+						UTSJSONObject.assign(UTSJSONObject.assign({}, this.getDetail(index)), {
 							file: this.fileList[index],
 						})
 					);
 				}
 			},
 			// 预览图片
-			onPreviewImage(previewItem, index) {
+			onPreviewImage(previewItem: UPUploadListItem, index: number) {
 				if (!previewItem.isImage || !this.previewFullImage) return
                 let current = 0;
-                const urls = [];
+                const urls = [] as Array<string>;
                 let imageIndex = 0;
                 for (var i = 0; i < this.lists.length; i++) {
                     const item = this.lists[i];
-                    if (item.isImage || (item.type && item.type === 'image')) {
-                        urls.push(item.url || item.thumb);
+                    if (item.isImage || (item.type != null && item.type === 'image')) {
+                        urls.push(item.url != null ? item.url as string : item.thumb as string);
                         if (i === index) {
                             current = imageIndex;
                         }
@@ -645,15 +666,15 @@
 					},
 				});
 			},
-			onPreviewVideo(previewItem, index) {
+			onPreviewVideo(previewItem: UPUploadListItem, index: number) {
 				if (!this.previewFullImage) return;
                 let current = 0;
-                const sources = [];
+                const sources = [] as Array<UTSJSONObject>;
                 let videoIndex = 0;
                 for (var i = 0; i < this.lists.length; i++) {
                     const item = this.lists[i];
-                    if (item.isVideo || (item.type && item.type === 'video')) {
-                        sources.push(Object.assign(Object.assign({}, item), {
+                    if (item.isVideo || (item.type != null && item.type === 'video')) {
+                        sources.push(UTSJSONObject.assign(UTSJSONObject.assign({}, item), {
                             type: 'video'
                         }));
                         if (i === index) {
@@ -680,7 +701,7 @@
 				});
 				// #endif
 			},
-			onClickPreview(item, index) {
+			onClickPreview(item: UPUploadListItem, index: number) {
 				if (this.previewFullImage) {
 					switch (item.type) {
 						case 'image':
@@ -695,7 +716,7 @@
 				}
 				this.$emit(
 					'clickPreview',
-					Object.assign(Object.assign({}, item), this.getDetail(index))
+					UTSJSONObject.assign(UTSJSONObject.assign({}, item as UTSJSONObject), this.getDetail(index))
 				);
 			}
 		}
@@ -762,7 +783,7 @@
 		&__wrap {
 			@include flex;
 			flex-wrap: wrap;
-			flex: 1;
+			// flex: 1;
 
 			&__preview {
 				border-radius: $up-upload-preview-border-radius;

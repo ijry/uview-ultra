@@ -272,14 +272,14 @@ export function func(value: any): boolean {
     return typeof value === 'function'
 }
 
-// /**
-//  * 是否promise对象
-//  * @param {Object} value
-//  */
-// export function promise(value: any): boolean {
-// 	return value instanceof Promise
-// 	// return object(value) && func(value.then) && func(value.catch)
-// }
+/**
+ * 是否promise对象
+ * @param {Object} value
+ */
+export function promise(value: any): boolean {
+	return value instanceof Promise<unknown>
+	// return object(value) && func(value.then) && func(value.catch)
+}
 
 /** 是否图片格式
  * @param {Object} value
@@ -310,33 +310,33 @@ export function video(value: string): boolean {
 // }
 
 export default {
-//     email: email,
-//     mobile: mobile,
-//     url: url,
-//     date: date,
-//     dateISO: dateISO,
-//     number: number,
-//     digits,
-//     idCard,
-//     carNo,
-//     amount,
-//     chinese,
-//     letter,
-//     enOrNum,
-//     contains,
-//     range,
-//     rangeLength,
-//     empty,
-//     isEmpty: empty,
-//     jsonString,
-//     landline,
-//     object,
-       // array: array
-//     code,
-//     func,
-//     promise,
-//     video,
-//     image,
-//     regExp,
-//     string
+    // email: email,
+    // mobile: mobile,
+    // url: url,
+    // date: date,
+    // dateISO: dateISO,
+    // number: number,
+    // digits,
+    // idCard,
+    // carNo,
+    // amount,
+    // chinese,
+    // letter,
+    // enOrNum,
+    // contains,
+    // // range,
+    // // rangeLength,
+    // empty,
+    // isEmpty: empty,
+    // // jsonString,
+    // landline,
+    // object,
+    // array: array
+    // code,
+    // func,
+    // promise,
+    // video,
+    // image,
+    // // regExp,
+    // string
 } as UTSJSONObject

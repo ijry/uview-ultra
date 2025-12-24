@@ -702,9 +702,9 @@ export function page(): string {
     const pages: Array<UniNormalPage> = getCurrentPages()
     // 某些特殊情况下(比如页面进行redirectTo时的一些时机)，pages可能为空数组
 	let url = ''
-	if (pages[pages.length - 1].route != null) {
-		url = pages[pages.length - 1].route
-	}
+	// if (pages[pages.length - 1].route != null) {
+	// 	url = pages[pages.length - 1].route
+	// }
     return `/${url}`
 }
 
