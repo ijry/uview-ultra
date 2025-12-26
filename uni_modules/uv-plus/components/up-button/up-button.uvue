@@ -1,4 +1,38 @@
 <template>
+	<view style="position: relative"
+		:style="[baseColor, addStyle(customStyle)]"
+		class="up-button"
+		:hover-class="!disabled && !loading ? 'up-button--active' : ''"
+		:class="bemClass">
+		<template v-if="loading">
+		    <up-loading-icon
+		        :mode="loadingMode"
+		        :size="addUnit(loadingSize * 1.15)"
+		        :color="loadingColor"
+		    ></up-loading-icon>
+		    <text
+		        class="up-button__text up-button__loading-text"
+		        :style="[{ fontSize: textSize + 'px' }]"
+		        >{{ loadingText != '' ? loadingText : text }}</text
+		    >
+		</template>
+		<template v-else>
+		    <up-icon
+		        v-if="icon != ''"
+		        :name="icon"
+		        :color="iconColorCom"
+		        :size="addUnit(parseInt(getPx(textSize)) * 1.35)"
+		        :customStyle="{ marginRight: '2px' }"
+		    ></up-icon>
+		    <slot>
+		        <text
+		            class="up-button__text"
+		            :style="[{ fontSize: textSize + 'px'}]"
+		            >
+		            {{ text }}
+		        </text>
+		    </slot>
+		</template>
     <button
         :hover-start-time="hoverStartTime"
         :hover-stay-time="hoverStayTime"
@@ -19,42 +53,14 @@
         @opensetting="opensetting"
         @launchapp="launchapp"
 		:loading="loading"
-        :hover-class="!disabled && !loading ? 'up-button--active' : ''"
-        class="up-button up-reset-button1"
-        :style="[baseColor, nvueTextStyle, addStyle(customStyle)]"
+        :hover-class="!disabled && !loading ? 'up-button__button--active' : ''"
+		style="background: #fff;position: absolute;top:0;bottom:0;left:0;right:0;opacity: 0;"
+        class="up-reset-button"
         @click="clickHandler"
-		:class="bemClass"
     >
-		<template v-if="loading">
-		    <up-loading-icon
-		        :mode="loadingMode"
-		        :size="addUnit(loadingSize * 1.15)"
-		        :color="loadingColor"
-		    ></up-loading-icon>
-		    <text
-		        class="up-button__text up-button__loading-text"
-		        :style="[{ fontSize: textSize + 'px' }, nvueTextStyle]"
-		        >{{ loadingText != '' ? loadingText : text }}</text
-		    >
-		</template>
-		<template v-else>
-		    <up-icon
-		        v-if="icon != ''"
-		        :name="icon"
-		        :color="iconColorCom"
-		        :size="addUnit(parseInt(getPx(textSize)) * 1.35)"
-		        :customStyle="{ marginRight: '2px' }"
-		    ></up-icon>
-		    <slot>
-		        <text
-		            class="up-button__text"
-		            :style="[{ fontSize: textSize + 'px'}, nvueTextStyle]"
-		            >
-		            {{ text }}
-		        </text>
-		    </slot>
-		</template>
+		
     </button>
+</view>
 </template>
 
 <script lang="uts">
@@ -172,7 +178,7 @@ export default {
         },
         baseColor(): UTSJSONObject {
             let style = {
-				color: ''
+				color: '',
 			} as UTSJSONObject;
             // if (this.color != '') {
                 // 针对自定义了color颜色的情况，镂空状态下，就是用自定义的颜色
@@ -185,12 +191,9 @@ export default {
                     // 如果自定义的颜色为渐变色，不显示边框，以及通过backgroundImage设置渐变色
                     // weex文档说明可以写borderWidth的形式，为什么这里需要分开写？
                     // 因为weex是阿里巴巴为了部门业绩考核而做的你懂的东西，所以需要这么写才有效
-                    style['borderTopWidth'] = 0;
-                    style['borderRightWidth'] = 0;
-                    style['borderBottomWidth'] = 0;
-                    style['borderLeftWidth'] = 0;
+                    style['borderWidth'] = 0;
                     if (!this.plain) {
-                        // style['backgroundImage'] = this.color;
+                        style['backgroundImage'] = this.color;
                     }
                 } else {
                     // 非渐变色，则设置边框相关的属性
@@ -199,20 +202,6 @@ export default {
                     style['borderStyle'] = "solid";
                 }
             // }
-            return style;
-        },
-        // nvue版本按钮的字体不会继承父组件的颜色，需要对每一个text组件进行单独的设置
-        nvueTextStyle(): UTSJSONObject {
-            let style = {} as UTSJSONObject;
-            // 针对自定义了color颜色的情况，镂空状态下，就是用自定义的颜色
-            if (this.type === "info") {
-                style['color'] = "#323233";
-            }
-			// console.debug(this.color)
-            if (this.color != '') {
-                style['color'] = this.plain ? this.color : "white";
-            }
-            style['fontSize'] = this.textSize + "px";
             return style;
         },
         // 字体大小
@@ -345,9 +334,9 @@ $up-button-plain-up-button-warning-color:$up-error !default;;
     height: $up-button-up-button-height;
     position: relative;
 	box-sizing: border-box;
-	// @include flex;
-	// align-items: center;
-	// justify-content: center;
+	@include flex;
+	align-items: center;
+	justify-content: center;
 
 	&__text {
 		font-size: $up-button-text-font-size;
@@ -517,7 +506,8 @@ $up-button-plain-up-button-warning-color:$up-error !default;;
 		border-color:$up-button-before-border-color !important;
 	}
 	
-	&--active {
+	&__button--active {
+		opacity: .2 !important;
 		&:before {
 			opacity: .15
 		}
