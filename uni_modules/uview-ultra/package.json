@@ -2,7 +2,7 @@
   "id": "uview-ultra",
   "name": "uview-ultra",
   "displayName": "uview-ultra4.0尝鲜重磅发布，大满贯支持全面兼容uvue、nvue、vue鸿蒙的Vue3移动组件库。",
-  "version": "4.0.1",
+  "version": "4.0.2",
   "description": "uview-ultra已兼容vue3与uni-app/uni-app-x/鸿蒙，全面的组件和便捷的工具会让您信手拈来，如鱼得水",
   "keywords": [
     "uview-plus",
@@ -12,7 +12,6 @@
     "ui"
 ],
   "main": "index.js",
-  // "repository": "https://github.com/ijry/uview-ultra",
   "engines": {
     "HBuilderX": "^3.1.0",
     "uni-app": "^4.87",
@@ -35,7 +34,6 @@
       "data": "无",
       "permissions": "无"
     },
-    // "npmurl": "https://www.npmjs.com/package/uview-ultra",
     "type": "component-vue",
     "darkmode": "x",
     "i18n": "√",
