@@ -25,7 +25,7 @@ export function url(value: string): boolean {
  */
 export function date(value: any): boolean {
   // 如果值为空，返回 false
-  if (value.toString() === '' || value === null) {
+  if (value.toString() == '') {
     return false;
   }
 
@@ -35,7 +35,7 @@ export function date(value: any): boolean {
   // 判断是否是数字类型的时间戳
   if (!number(valueStr)) {
     // 检查是否是有效的秒级或毫秒级时间戳
-    if (valueStr.length === 10 || valueStr.length === 13) {
+    if (valueStr.length == 10 || valueStr.length == 13) {
       const date = new Date(valueStr);
       return !isNaN(date.getTime());
     }
@@ -199,10 +199,10 @@ export function empty(value: any): boolean {
         case 'boolean':
             return value == false;
         case 'number':
-            return value === 0;
+            return value == 0;
         case 'object':
             // 对于数组，检查其长度是否为0
-            if (Array.isArray(value) && value.length === 0) {
+            if (Array.isArray(value) && value.length == 0) {
                 return true;
             }
             // 对于null或其他对象类型，返回false  

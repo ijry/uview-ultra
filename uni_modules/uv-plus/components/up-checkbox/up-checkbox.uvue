@@ -41,7 +41,6 @@
 	import { mpMixin } from '../../libs/mixin/mpMixin';
 	import { mixin } from '../../libs/mixin/mixin';
 	import { addStyle, addUnit, deepMerge, formValidate, error } from '../../libs/function/index';
-	import test from '../../libs/function/test';
 	/**
 	 * checkbox  复选框
 	 * @description 复选框组件一般用于需要多个选择的场景，该组件功能完整，使用方便
@@ -121,7 +120,7 @@
 			},
 			// 组件尺寸，对应size的值，默认值为21px
 			elSize(): string {
-				return this.size.toString() != ''
+				return this.size != null && this.size.toString() != ''
 					? this.size.toString()
 					: (this.parentData['size'].toString() != ''
 						? this.parentData['size'].toString()
@@ -129,7 +128,7 @@
 			},
 			// 组件的勾选图标的尺寸，默认12px
 			elIconSize(): string {
-				return this.iconSize.toString() != ''
+				return this.iconSize != null && this.iconSize.toString() != ''
 					? this.iconSize.toString()
 					: (this.parentData['iconSize'].toString() != ''
 						? this.parentData['iconSize'].toString()
@@ -137,21 +136,21 @@
 			},
 			// 组件选中激活时的颜色
 			elActiveColor(): string {
-				return this.activeColor.toString() != ''
+				return this.activeColor != null && this.activeColor.toString() != ''
 					? this.activeColor
 					: (this.parentData['activeColor'].toString() != ''
 						? this.parentData['activeColor'].toString() : '#2979ff');
 			},
 			// 组件选未中激活时的颜色
 			elInactiveColor(): string {
-				return this.inactiveColor.toString() != ''
+				return this.inactiveColor != null && this.inactiveColor.toString() != ''
 					? this.inactiveColor.toString()
 					: (this.parentData['inactiveColor'].toString() != ''
 						? this.parentData['inactiveColor'].toString() : '#c8c9cc');
 			},
 			// label的颜色
 			elLabelColor(): string {
-				return this.labelColor.toString() != ''
+				return this.labelColor != null && this.labelColor.toString() != ''
 					? this.labelColor.toString()
 					: (this.parentData['labelColor'].toString() != ''
 						? this.parentData['labelColor'].toString() : '#606266')
@@ -241,7 +240,7 @@
 				if (!this.usedAlone) {
 					// 支付宝小程序不支持provide/inject，所以使用这个方法获取整个父组件，在created定义，避免循环引用
 					this.updateParentData()
-					if (this.$parent == null) {
+					if (this.parent == null) {
 						error('up-checkbox必须搭配up-checkbox-group组件使用')
 					}
 					const value = this.parentData['modelValue'] as string[]
@@ -314,7 +313,7 @@
 			}
 		},
 		watch:{
-			checked(newValue, oldValue){
+			checked(newValue: boolean, oldValue: boolean){
 				if (newValue !== this.isChecked) {
 					this.isChecked = newValue
 				}
@@ -330,7 +329,7 @@
 	$up-checkbox-icon-wrap-border-width:1px !default;
 	$up-checkbox-icon-wrap-border-color:#c8c9cc !default;
 	$up-checkbox-icon-wrap-icon-line-height:0 !default;
-	$up-checkbox-icon-wrap-circle-border-radius:100% !default;
+	$up-checkbox-icon-wrap-circle-border-radius: 999 !default;
 	$up-checkbox-icon-wrap-square-border-radius:3px !default;
 	$up-checkbox-icon-wrap-checked-color:#fff !default;
 	$up-checkbox-icon-wrap-checked-background-color:red !default;
@@ -415,7 +414,7 @@
 
 		&__label {
 			/* #ifndef APP-NVUE */
-			word-wrap: break-word;
+			// word-wrap: break-word;
 			/* #endif */
 			margin-left: $up-checkbox-label-margin-left;
 			margin-right: $up-checkbox-label-margin-right;

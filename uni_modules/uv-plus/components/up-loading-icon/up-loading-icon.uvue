@@ -51,7 +51,7 @@
 	/**
 	 * loading 加载动画
 	 * @author jry ijry@qq.com 2024
-	 * @description 警此组件为一个小动画，目前用在uView的loadmore加载更多和switch开关等组件的正在加载状态场景。
+	 * @description 警此组件为一个小动画，目前用在loadmore加载更多和switch开关等组件的正在加载状态场景。
 	 * @tutorial https://ijry.github.io/uview-plus/components/loading.html
 	 * @property {Boolean}			show			是否显示组件  (默认 true)
 	 * @property {String}			color			动画活动区域的颜色，只对 mode = flower 模式有效（默认color['up-tips-color']）
@@ -92,7 +92,7 @@
 			// 当为circle类型时，给其另外三边设置一个更轻一些的颜色
 			// 之所以需要这么做的原因是，比如父组件传了color为红色，那么需要另外的三个边为浅红色
 			// 而不能是固定的某一个其他颜色(因为这个固定的颜色可能浅蓝，导致效果没有那么细腻良好)
-			otherBorderColor(): any {
+			otherBorderColor(): string {
 				const lightColor = colorGradient(this.color, '#ffffff', 100)[80]
 				if (this.mode === 'circle') {
 					return this.inactiveColor != '' ? this.inactiveColor : lightColor
@@ -103,14 +103,14 @@
 			}
 		},
 		watch: {
-			show(n) {
+			show() {
 			}
 		},
 		mounted() {
 			this.init()
 		},
 		beforeMount() {
-			cancelAnimationFrame(this.animationFrame)
+			clearInterval(this.animationFrame)
 		},
 		methods: {
 			addStyle(val: any): any {
@@ -122,11 +122,13 @@
 			rotateLoader(): void {  
 				this.degree = (this.degree + 3) % 360; // 每次增加3度，循环回到0度  
 				this.transform = `rotate(${this.degree.toString()}deg)`;  
-				this.animationFrame = requestAnimationFrame(this.rotateLoader); // 递归调用以保持动画  
 			},
 			init(): void {
 				this.calcSpinnerTopAndLeft()
-				this.rotateLoader()
+				// this.animationFrame = setInterval(() =>{
+				// 	this.degree = (this.degree + 3) % 360; // 每次增加3度，循环回到0度
+				// 	this.transform = `rotate(${this.degree.toString()}deg)`;  
+				// }, 100); // 递归调用以保持动画
 			},
 			calculateSquareRadius(sideLength: number): number {  
 				// 计算正方形的对角线长度  
@@ -192,7 +194,7 @@
 	$up-loading-icon-dot-before-width:2px !default;
 	$up-loading-icon-dot-before-height:25% !default;
 	$up-loading-icon-dot-before-margin:0 auto !default;
-	$up-loading-icon-dot-before-background-color:currentColor !default;
+	$up-loading-icon-dot-before-background-color: '#fff' !default;
 	$up-loading-icon-dot-before-border-radius:8px !default;
 
 	.up-loading-icon {

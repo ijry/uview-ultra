@@ -5,13 +5,13 @@
 				height="70px" /> -->
 			<view class="nav-info">
 				<view class="nav-info__title" @tap="jumpToWx">
-					<text class="nav-info__title__text">uview-plus 4</text>
+					<text class="nav-info__title__text">UviewUltra</text>
 					<!-- #ifdef MP-WEIXIN -->
 					<!-- uni-app不支持text内部的text组件的tap事件，所以放到外部响应tap -->
 					<text class="nav-info__title__jump">查看演示</text>
 					<!-- #endif -->
 				</view>
-				<text class="nav-slogan">多平台快速开发的UI框架</text>
+				<text class="nav-slogan">全平台快速开发的UI框架</text>
 			</view>
 		</view>
 		<text class="nav-desc">{{desc}}</text>

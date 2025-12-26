@@ -223,7 +223,7 @@
 			init(): void {
 				// 支付宝小程序不支持provide/inject，所以使用这个方法获取整个父组件，在created定义，避免循环引用
 				this.updateParentData()
-				if (this.$parent == null) {
+				if (this.parent == null) {
 					error('up-radio必须搭配up-radio-group组件使用')
 				}
 				// 设置初始化时，是否默认选中的状态
@@ -233,7 +233,7 @@
 				this.getParentData('up-radio-group')
 			},
 			// 点击图标
-			iconClickHandler(e: any): void {
+			iconClickHandler(e: UniPointerEvent): void {
 				this.preventEvent(e)
 				// 如果整体被禁用，不允许被点击
 				if (!this.elDisabled) {
@@ -241,13 +241,13 @@
 				}
 			},
 			// 横向两端排列时，点击组件即可触发选中事件
-			wrapperClickHandler(e: any): void {
+			wrapperClickHandler(e: UniPointerEvent): void {
 				if (this.parentData['iconPlacement'] === 'right') {
 					this.iconClickHandler(e)
 				}
 			},
 			// 点击label
-			labelClickHandler(e: any): void {
+			labelClickHandler(e: UniPointerEvent): void {
 				this.preventEvent(e)
 				// 如果按钮整体被禁用或者label被禁用，则不允许点击文字修改状态
 				if (!this.elLabelDisabled && !this.elDisabled) {

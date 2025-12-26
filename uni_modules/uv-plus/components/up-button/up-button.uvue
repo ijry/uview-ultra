@@ -18,41 +18,42 @@
         @error="error"
         @opensetting="opensetting"
         @launchapp="launchapp"
+		:loading="loading"
         :hover-class="!disabled && !loading ? 'up-button--active' : ''"
-        class="up-button up-reset-button"
+        class="up-button up-reset-button1"
         :style="[baseColor, nvueTextStyle, addStyle(customStyle)]"
         @click="clickHandler"
-        :class="bemClass"
+		:class="bemClass"
     >
-        <template v-if="loading">
-            <up-loading-icon
-                :mode="loadingMode"
-                :size="addUnit(loadingSize * 1.15)"
-                :color="loadingColor"
-            ></up-loading-icon>
-            <text
-                class="up-button__text up-button__loading-text"
-                :style="[{ fontSize: textSize + 'px' }, nvueTextStyle]"
-                >{{ loadingText != '' ? loadingText : text }}</text
-            >
-        </template>
-        <template v-else>
-            <up-icon
-                v-if="icon"
-                :name="icon"
-                :color="iconColorCom"
-                :size="addUnit(parseInt(textSize) * 1.35)"
-                :customStyle="{ marginRight: '2px' }"
-            ></up-icon>
-            <slot>
-                <text
-                    class="up-button__text"
-                    :style="[{ fontSize: textSize + 'px'}, nvueTextStyle]"
-                    >
-                    {{ text }}
-                </text>
-            </slot>
-        </template>
+		<template v-if="loading">
+		    <up-loading-icon
+		        :mode="loadingMode"
+		        :size="addUnit(loadingSize * 1.15)"
+		        :color="loadingColor"
+		    ></up-loading-icon>
+		    <text
+		        class="up-button__text up-button__loading-text"
+		        :style="[{ fontSize: textSize + 'px' }, nvueTextStyle]"
+		        >{{ loadingText != '' ? loadingText : text }}</text
+		    >
+		</template>
+		<template v-else>
+		    <up-icon
+		        v-if="icon != ''"
+		        :name="icon"
+		        :color="iconColorCom"
+		        :size="addUnit(parseInt(getPx(textSize)) * 1.35)"
+		        :customStyle="{ marginRight: '2px' }"
+		    ></up-icon>
+		    <slot>
+		        <text
+		            class="up-button__text"
+		            :style="[{ fontSize: textSize + 'px'}, nvueTextStyle]"
+		            >
+		            {{ text }}
+		        </text>
+		    </slot>
+		</template>
     </button>
 </template>
 
@@ -63,7 +64,7 @@ import { mpMixin } from '../../libs/mixin/mpMixin';
 import { mixin } from '../../libs/mixin/mixin';
 import { propsButton } from "./props";
 import config from '../../libs/config/config';
-import { addStyle, addUnit } from '../../libs/function/index';
+import { addStyle, addUnit, getPx } from '../../libs/function/index';
 import { throttle } from '../../libs/function/throttle';
 /**
  * button 按钮
@@ -173,14 +174,14 @@ export default {
             let style = {
 				color: ''
 			} as UTSJSONObject;
-            if (this.color != '') {
+            // if (this.color != '') {
                 // 针对自定义了color颜色的情况，镂空状态下，就是用自定义的颜色
                 style['color'] = this.plain ? this.color : "white";
                 if (!this.plain) {
                     // 非镂空，背景色使用自定义的颜色
                     style["backgroundColor"] = this.color;
                 }
-                if (this.color.indexOf("gradient") !== -1) {
+                if (this.color.indexOf("gradient") != -1) {
                     // 如果自定义的颜色为渐变色，不显示边框，以及通过backgroundImage设置渐变色
                     // weex文档说明可以写borderWidth的形式，为什么这里需要分开写？
                     // 因为weex是阿里巴巴为了部门业绩考核而做的你懂的东西，所以需要这么写才有效
@@ -189,7 +190,7 @@ export default {
                     style['borderBottomWidth'] = 0;
                     style['borderLeftWidth'] = 0;
                     if (!this.plain) {
-                        style['backgroundImage'] = this.color;
+                        // style['backgroundImage'] = this.color;
                     }
                 } else {
                     // 非渐变色，则设置边框相关的属性
@@ -197,7 +198,7 @@ export default {
                     style['borderWidth'] = "1px";
                     style['borderStyle'] = "solid";
                 }
-            }
+            // }
             return style;
         },
         // nvue版本按钮的字体不会继承父组件的颜色，需要对每一个text组件进行单独的设置
@@ -233,6 +234,9 @@ export default {
 		addStyle(val: any): any {
 			return addStyle(val)
 		},
+		getPx(val: any): string {
+			return getPx(val)
+		},
         clickHandler(): void {
             // 非禁止并且非加载中，才能点击
             if (!this.disabled && !this.loading) {
@@ -246,19 +250,19 @@ export default {
 			}
         },
         // 下面为对接uniapp官方按钮开放能力事件回调的对接
-        getphonenumber(res: UTSJSONObject): void {
+        getphonenumber(res: UniEvent): void {
             this.$emit("getphonenumber", res);
         },
-        getuserinfo(res: UTSJSONObject): void {
+        getuserinfo(res: UniEvent): void {
             this.$emit("getuserinfo", res);
         },
-        error(res: UTSJSONObject): void {
+        error(res: UniEvent): void {
             this.$emit("error", res);
         },
-        opensetting(res: UTSJSONObject): void {
+        opensetting(res: UniEvent): void {
             this.$emit("opensetting", res);
         },
-        launchapp(res: UTSJSONObject): void {
+        launchapp(res: UniEvent): void {
             this.$emit("launchapp", res);
         },
     },
@@ -266,8 +270,6 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import "../../libs/css/components.scss";
-
 $up-button-up-button-height: 40px !default;
 $up-button-text-font-size: 15px !default;
 $up-button-loading-text-font-size: 15px !default;
@@ -343,168 +345,162 @@ $up-button-plain-up-button-warning-color:$up-error !default;;
     height: $up-button-up-button-height;
     position: relative;
 	box-sizing: border-box;
+	// @include flex;
+	// align-items: center;
+	// justify-content: center;
 
-    &__content {
-        width: 100%;
-        height: 100%;
-        @include flex;
-        align-items: center;
-        justify-content: center;
-        flex-direction: row;
-    }
-
-    &__text {
-        font-size: $up-button-text-font-size;
+	&__text {
+		font-size: $up-button-text-font-size;
 		color: #fff;
-    }
-
-    &__loading-text {
-        font-size: $up-button-loading-text-font-size;
-        margin-left: $up-button-loading-text-margin-left;
-    }
-
-    &--large {
-        width: $up-button-large-width;
-        height: $up-button-large-height;
-        padding: $up-button-large-padding;
-    }
-
-    &--normal {
-        padding: $up-button-normal-padding;
-        font-size: $up-button-normal-font-size;
-    }
-
-    &--small {
-        min-width: $up-button-small-min-width;
-        height: $up-button-small-height;
-        padding: $up-button-small-padding;
-        font-size: $up-button-small-font-size;
-    }
-
-    &--mini {
-        height: $up-button-mini-height;
-        font-size: $up-button-mini-font-size;
-        min-width: $up-button-mini-min-width;
-        padding: $up-button-mini-padding;
-    }
-
-    &--disabled {
-        opacity: $up-button-disabled-opacity;
-    }
-
+	}
+	
+	&__loading-text {
+		font-size: $up-button-loading-text-font-size;
+		margin-left: $up-button-loading-text-margin-left;
+	}
+	
+	&--large {
+		width: $up-button-large-width;
+		height: $up-button-large-height;
+		padding: $up-button-large-padding;
+	}
+	
+	&--normal {
+		padding: $up-button-normal-padding;
+		font-size: $up-button-normal-font-size;
+	}
+	
+	&--small {
+		min-width: $up-button-small-min-width;
+		height: $up-button-small-height;
+		padding: $up-button-small-padding;
+		font-size: $up-button-small-font-size;
+	}
+	
+	&--mini {
+		height: $up-button-mini-height;
+		font-size: $up-button-mini-font-size;
+		min-width: $up-button-mini-min-width;
+		padding: $up-button-mini-padding;
+	}
+	
+	&--disabled {
+		opacity: $up-button-disabled-opacity;
+	}
+	
 	&--active {
 		opacity: $up-button-active-opacity;
 	}
-
-    &--info {
-        .up-button__text {
-            color: $up-button-info-color;
-        }
-        background-color: $up-button-info-background-color;
-        border-color: $up-button-info-border-color;
-        border-width: $up-button-info-border-width;
-        border-style: $up-button-info-border-style;
-    }
-
-    &--success {
-        .up-button__text {
-            color: $up-button-success-color;
-        }
-        background-color: $up-button-success-background-color;
-        border-color: $up-button-success-border-color;
-        border-width: $up-button-success-border-width;
-        border-style: $up-button-success-border-style;
-    }
-
-    &--primary {
-        .up-button__text {
-            color: $up-button-primary-color;
-        }
-        background-color: $up-button-primary-background-color;
-        border-color: $up-button-primary-border-color;
-        border-width: $up-button-primary-border-width;
-        border-style: $up-button-primary-border-style;
-    }
-
-    &--error {
-        .up-button__text {
-            color: $up-button-error-color;
-        }
-        background-color: $up-button-error-background-color;
-        border-color: $up-button-error-border-color;
-        border-width: $up-button-error-border-width;
-        border-style: $up-button-error-border-style;
-    }
-
-    &--warning {
-        .up-button__text {
-            color: $up-button-warning-color;
-        }
-        background-color: $up-button-warning-background-color;
-        border-color: $up-button-warning-border-color;
-        border-width: $up-button-warning-border-width;
-        border-style: $up-button-warning-border-style;
-    }
-
-    &--block {
-        @include flex;
-        width: $up-button-block-width;
-    }
-
-    &--circle {
-        border-top-right-radius: $up-button-circle-border-top-right-radius;
-        border-top-left-radius: $up-button-circle-border-top-left-radius;
-        border-bottom-left-radius: $up-button-circle-border-bottom-left-radius;
-        border-bottom-right-radius: $up-button-circle-border-bottom-right-radius;
-    }
-
-    &--square {
-        border-bottom-left-radius: $up-button-square-border-top-right-radius;
-        border-bottom-right-radius: $up-button-square-border-top-left-radius;
-        border-top-left-radius: $up-button-square-border-bottom-left-radius;
-        border-top-right-radius: $up-button-square-border-bottom-right-radius;
-    }
-
-    &__icon {
-        min-width: $up-button-icon-min-width;
-        // line-height: inherit !important;
-        // vertical-align: top;
-    }
-
-    &--plain {
-        background-color: $up-button-plain-background-color;
-        &.up-button--primary {
-            .up-button__text {
-                color: $up-primary;
-            }
+	
+	&--info {
+		.up-button__text {
+			color: $up-button-info-color;
 		}
-        &.up-button--info {
-            .up-button__text {
-			    color:$up-button-plain-up-button-info-color;
-            }
+		background-color: $up-button-info-background-color !important;
+		border-color: $up-button-info-border-color !important;
+		border-width: $up-button-info-border-width !important;
+		border-style: $up-button-info-border-style !important;
+	}
+	
+	&--success {
+		.up-button__text {
+			color: $up-button-success-color;
 		}
-        &.up-button--success {
-            .up-button__text {
-			    color:$up-button-plain-up-button-success-color;
-            }
+		background-color: $up-button-success-background-color !important;
+		border-color: $up-button-success-border-color !important;
+		border-width: $up-button-success-border-width !important;
+		border-style: $up-button-success-border-style !important;
+	}
+	
+	&--primary {
+		.up-button__text {
+			color: $up-button-primary-color;
 		}
-        &.up-button--error {
-            .up-button__text {
-			    color:$up-button-plain-up-button-error-color;
-            }
+		background-color: $up-button-primary-background-color !important;
+		border-color: $up-button-primary-border-color !important;
+		border-width: $up-button-primary-border-width !important;
+		border-style: $up-button-primary-border-style !important;
+	}
+	
+	&--error {
+		.up-button__text {
+			color: $up-button-error-color;
 		}
-        &.up-button--warning {
-            .up-button__text {
-			    color:$up-button-plain-up-button-warning-color;
-            }
+		background-color: $up-button-error-background-color !important;
+		border-color: $up-button-error-border-color !important;
+		border-width: $up-button-error-border-width !important;
+		border-style: $up-button-error-border-style !important;
+	}
+	
+	&--warning {
+		.up-button__text {
+			color: $up-button-warning-color;
 		}
-    }
-
-    &--hairline {
-        border-width: $up-button-hairline-border-width !important;
-    }
-
-    &:before {
+		background-color: $up-button-warning-background-color !important;
+		border-color: $up-button-warning-border-color !important;
+		border-width: $up-button-warning-border-width !important;
+		border-style: $up-button-warning-border-style !important;
+	}
+	
+	&--block {
+		@include flex;
+		width: $up-button-block-width;
+	}
+	
+	&--circle {
+		border-top-right-radius: $up-button-circle-border-top-right-radius;
+		border-top-left-radius: $up-button-circle-border-top-left-radius;
+		border-bottom-left-radius: $up-button-circle-border-bottom-left-radius;
+		border-bottom-right-radius: $up-button-circle-border-bottom-right-radius;
+	}
+	
+	&--square {
+		border-bottom-left-radius: $up-button-square-border-top-right-radius;
+		border-bottom-right-radius: $up-button-square-border-top-left-radius;
+		border-top-left-radius: $up-button-square-border-bottom-left-radius;
+		border-top-right-radius: $up-button-square-border-bottom-right-radius;
+	}
+	
+	&__icon {
+		min-width: $up-button-icon-min-width;
+		// line-height: inherit !important;
+		// vertical-align: top;
+	}
+	
+	&--plain {
+		background-color: $up-button-plain-background-color !important;
+		&.up-button--primary {
+			.up-button__text {
+				color: $up-primary;
+			}
+		}
+		&.up-button--info {
+			.up-button__text {
+				color:$up-button-plain-up-button-info-color;
+			}
+		}
+		&.up-button--success {
+			.up-button__text {
+				color:$up-button-plain-up-button-success-color;
+			}
+		}
+		&.up-button--error {
+			.up-button__text {
+				color:$up-button-plain-up-button-error-color;
+			}
+		}
+		&.up-button--warning {
+			.up-button__text {
+				color:$up-button-plain-up-button-warning-color;
+			}
+		}
+	}
+	
+	&--hairline {
+		border-width: $up-button-hairline-border-width !important;
+	}
+	
+	&:before {
 		position: absolute;
 		top:$up-button-before-top;
 		left:$up-button-before-left;
@@ -517,8 +513,8 @@ $up-button-plain-up-button-warning-color:$up-error !default;;
 		transform:$up-button-before-transform;
 		opacity:$up-button-before-opacity;
 		// content: " ";
-		background-color:$up-button-before-background-color;
-		border-color:$up-button-before-border-color;
+		background-color:$up-button-before-background-color !important;
+		border-color:$up-button-before-border-color !important;
 	}
 	
 	&--active {

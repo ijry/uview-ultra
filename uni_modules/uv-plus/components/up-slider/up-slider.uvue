@@ -105,9 +105,6 @@
 	import { mpMixin } from '../../libs/mixin/mpMixin';
 	import { mixin } from '../../libs/mixin/mixin';
 	import { addStyle, getPx, sleep } from '../../libs/function/index'
-	// #ifdef APP-NVUE
-	const dom = uni.requireNativePlugin('dom')
-	// #endif
 	/**
 	 * slider 滑块选择器
 	 * @tutorial https://uview-plus.jiangruyi.com/components/slider.html
@@ -326,8 +323,8 @@
 				this.newValue = ((this.distanceX / this.sliderRect.width) * (parseFloat(this.max.toString()) - parseFloat(this.min.toString()))) + parseFloat(this.min.toString());
 				this.status = 'moving';
 				// 发出moving事件
-				let $crtFmtValue = this.updateValue(this.newValue, true, index);
-				this.$emit('changing', $crtFmtValue);
+				let crtFmtValue = this.updateValue(this.newValue, true, index);
+				this.$emit('changing', crtFmtValue);
 			},
 			onTouchEnd(e: any, index = 1) {
 				let event = e as UniTouchEvent
@@ -490,7 +487,8 @@
 			position: absolute;
 			right: 0;
 			left: 0;
-			content: '';
+			// wait uni-app-x
+			// content: '';
 			top: -8px;
 			bottom: -8px;
 			z-index: -1;

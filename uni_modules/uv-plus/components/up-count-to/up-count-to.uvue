@@ -204,7 +204,7 @@ export default {
 
 .up-count-num {
 	/* #ifndef APP-NVUE */
-	display: inline-flex;
+	display: flex;
 	/* #endif */
 	text-align: center;
 }

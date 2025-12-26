@@ -67,9 +67,9 @@
 
 <style lang="scss">
 	/* #ifndef APP-NVUE */
-	page {
-		background-color: $u-bg-color;
-	}
+	// page {
+	// 	background-color: $u-bg-color;
+	// }
 	/* #endif */
 	
 	.u-page {

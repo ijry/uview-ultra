@@ -182,7 +182,7 @@ export function addUnit(pvalue: any|null, punit = 'px'): string {
 		value = 'auto'
 	}
 	let unit = punit
-    if (unit == null || unit == '') {
+    if ( unit == '') {
      	unit = config['unit'] as string
     }
     let valueStr = value.toString()
@@ -301,7 +301,7 @@ export function randomArray(array: any[] = []): any[] {
  export function timeFormat(dateTime: any = 0, formatStr: string = 'yyyy-mm-dd'): string {
   let date: any
     // 若传入时间为假值，则取当前时间
-  if (dateTime === 0) {
+  if (dateTime == 0) {
     date = new Date()
   }
   // 若为unix秒时间戳，则转为毫秒时间戳（逻辑有点奇怪，但不敢改，以保证历史兼容）
@@ -344,10 +344,8 @@ export function randomArray(array: any[] = []): any[] {
     if (ret != null && ret[0] != null) {
 	  // console.log('ret', ret)
 	  // 年可能只需展示两位
-	  const beginIndex = key === 'y' && ret.length === 2 ? 2 : 0
-	  if (timeSource != null
-		&& timeSource != null
-		&& timeSource[key] != null
+	  const beginIndex = key === 'y' && ret.length == 2 ? 2 : 0
+	  if (timeSource[key] != null
 		&& key != '') {
 		let replaceVal: string = ''
 		let timeSourceKey = timeSource.getString(key)
@@ -723,7 +721,7 @@ export function getParent(that: ComponentPublicInstance, name = ''): ComponentPu
     while (parent != null) {
 		// console.log(parent.$options)
         // 父组件
-        if (parent != null && parent.$options != null && parent.$options['name'] != name) {
+        if (parent.$options != null && parent.$options['name'] != name) {
             // 如果组件的name不相等，继续上一级寻找
             parent = parent.$parent
         } else {

@@ -201,7 +201,7 @@
 			animate(timestamp: number) {
 				if (!this.isAnimating) return;
 				
-				if (this.startTime === 0) this.startTime = timestamp;
+				if (this.startTime == 0) this.startTime = timestamp;
 				
 				// 计算经过的时间
 				const elapsed = timestamp - this.startTime;
@@ -279,11 +279,11 @@
 				color: $up-warning;
 				/* #ifndef APP-NVUE */
 				// 这一句很重要，为了能让滚动左右连接起来
-				word-break: keep-all;
+				// word-break: keep-all;
 				white-space: nowrap;
 				/* #endif */
 				@include flex(row);
-				line-height: 100%;
+				line-height: 1;
 			}
 		}
 

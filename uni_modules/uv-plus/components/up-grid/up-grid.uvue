@@ -110,7 +110,6 @@
 		position: relative;
 		box-sizing: border-box;
 		overflow: hidden;
-		display: block;
 		justify-content: center;
 		@include flex;
 		flex-wrap: wrap;

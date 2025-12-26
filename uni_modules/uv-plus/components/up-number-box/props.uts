@@ -10,7 +10,7 @@ import { defineMixin } from '../../libs/vue.uts'
 import defProps from './numberBox.uts'
 let numberBoxProp = defProps['numberBox'] as UTSJSONObject
 
-export const props = defineMixin({
+export const propsNumberBox = defineMixin({
     props: {
         // 步进器标识符，在change回调返回
         name: {

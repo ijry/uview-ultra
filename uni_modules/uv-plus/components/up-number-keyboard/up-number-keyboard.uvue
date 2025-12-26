@@ -156,7 +156,7 @@ export default {
 	$up-number-keyboard-button-background-color:#FFFFFF !default;
 	$up-number-keyboard-button-box-shadow:0 2px 0px #BBBCBE !default;
 	$up-number-keyboard-text-font-size:20px !default;
-	$up-number-keyboard-text-font-weight:500 !default;
+	$up-number-keyboard-text-font-weight:400 !default;
 	$up-number-keyboard-text-color:$up-main-color !default;
 	$up-number-keyboard-gray-background-color:rgb(200, 202, 210) !default;
 	$up-number-keyboard-up-hover-class-background-color: #BBBCC6 !default;

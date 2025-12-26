@@ -116,7 +116,7 @@ export function plus(...nums): number {
  * 高精度减法
  * @export
  */
-export function minus(...nums): nunber {
+export function minus(...nums): number {
   if (nums.length > 2) {
     return iteratorOperation(nums, minus);
   }

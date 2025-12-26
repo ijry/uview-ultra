@@ -152,7 +152,7 @@
 <style>
     /* page不能写带scope的style标签中，否则无效 */
 	/* #ifndef APP-NVUE */
-	page {
+	.wrap {
 	    background-color: rgb(240, 240, 240);
 	}
 	/* #endif */
@@ -195,7 +195,8 @@
         margin-top: 5px;
         color: $u-main-color;
         /* #ifndef APP-NVUE */
-        word-break: break-all;
+		// wait uni-app-x
+        // word-break: break-all;
         /* #endif */
     }
 

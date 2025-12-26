@@ -358,7 +358,7 @@
 			&__scroll-view-wrapper {
 				flex: 1;
 				/* #ifndef APP-NVUE */
-				overflow: auto hidden;
+				overflow: auto;
 				/* #endif */
 			}
 

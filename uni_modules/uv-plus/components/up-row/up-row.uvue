@@ -68,9 +68,9 @@
 					// 延时一定时间，以确保节点渲染完成
 					//sleep().then(() => {
 						// uview-plus封装的获取节点的方法，详见文档
-						this.upGetRect('.up-row').then((res: UTSJSONObject) => {
+						this.upGetRect('.up-row').then((res: NodeInfo) => {
 							// console.log(res)
-							resolve(res.getNumber('width'))
+							resolve(res.width)
 						})
 					//})
 				})

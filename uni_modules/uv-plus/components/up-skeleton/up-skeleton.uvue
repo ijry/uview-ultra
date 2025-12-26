@@ -174,7 +174,7 @@
 			&__avatar {
 				/* #ifndef APP-NVUE */
 				@include background;
-				background-size: 400% 100%;
+				// background-size: 400% 100%;
 				/* #endif */
 				margin-right: 15px;
 			
@@ -194,7 +194,7 @@
 				&__title {
 					/* #ifndef APP-NVUE */
 					@include background;
-					background-size: 400% 100%;
+					// background-size: 400% 100%;
 					/* #endif */
 					border-radius: 3px;
 				}

@@ -316,14 +316,15 @@
         height: 100%;
         /* #endif */
         // 添加列之间的间距
-        &:not(:first-child) {
-            margin-left: 10rpx;
-        }
+		// wait uni-app-x
+        // &:not(:first-child) {
+        //     margin-left: 10rpx;
+        // }
     }
 
     .up-image {
         /* #ifndef APP-NVUE */
-        max-width: 100%;
+        // max-width: 100%;
         /* #endif */
     }
 </style>

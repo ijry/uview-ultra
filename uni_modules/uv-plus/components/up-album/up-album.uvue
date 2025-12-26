@@ -107,7 +107,7 @@ export default {
     watch: {
         urls: {
             immediate: true,
-            handler(newVal: Array) {
+            handler(newVal: Array<string>) {
                 if (newVal.length === 1) {
                     this.getImageRect()
                 }

@@ -121,6 +121,18 @@
 				"style": {
 					"navigationBarTitleText": "评分"
 				}
+			},
+			{
+				"path": "divider/divider",
+				"style": {
+					"navigationBarTitleText": "分割线"
+				}
+			},
+			{
+				"path": "empty/empty",
+				"style": {
+					"navigationBarTitleText": "分割线"
+				}
 			}
 		]
 	}, {
@@ -155,7 +167,7 @@
 				"style": {
 					"navigationBarTitleText": "徽标数"
 				}
-			} 
+			}
 			,{
 				"path": "tag/tag",
 				"style": {
@@ -210,39 +222,45 @@
 					"navigationBarTitleText": "键盘",
 					"navigationStyle": "custom"
 				}
-			}, 
+			}
+			, 
 			{
 				"path": "notify/notify",
 				"style": {
 					"navigationBarTitleText": "消息提示"
 				}
-			},
-			{
+			}
+			,{
 				"path": "numberBox/numberBox",
 				"style": {
 					"navigationBarTitleText": "步进器"
 				}
-			}, {
+			}
+			, {
 				"path": "search/search",
 				"style": {
 					"navigationBarTitleText": "搜索"
 				}
-			}, {
+			}
+			, {
 				"path": "slider/slider",
 				"style": {
 					"navigationBarTitleText": "滑动选择器"
 				}
-			}, {
+			}
+			, {
 				"path": "switch/switch",
 				"style": {
 					"navigationBarTitleText": "开关"
 				}
-			}, {
+			}
+			, {
 				"path": "tabbar/tabbar",
 				"style": {
 					"navigationBarTitleText": "Tabbar"
 				}
-			}, {
+			}
+			, {
 				"path": "table/table",
 				"style": {
 					"navigationBarTitleText": "表格"
@@ -267,13 +285,25 @@
 			{
 				"path": "code/code",
 				"style": {
-					"navigationBarTitleText": "上传"
+					"navigationBarTitleText": "验证码"
 				}
 			}
 		]
 	}, {
 		"root": "pages/componentsC",
 		"pages": [
+		{
+			"path": "album/album",
+			"style": {
+				"navigationBarTitleText": "相簿"
+			}
+		},
+		{
+			"path": "avatar/avatar",
+			"style": {
+				"navigationBarTitleText": "头像"
+			}
+		},
 		{
 			"path": "codeInput/codeInput",
 			"style": {

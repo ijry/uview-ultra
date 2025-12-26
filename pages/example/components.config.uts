@@ -64,7 +64,7 @@ export default [{
     list: [{
         path: '/pages/componentsC/form/form',
         icon: 'form',
-        title: 'Form 表单',
+        title: 'Form 表单(适配中)',
         title_en: 'Form'
     }, {
         path: '/pages/componentsC/calendar/calendar',

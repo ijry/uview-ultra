@@ -92,7 +92,8 @@
 	@import "../../libs/css/components.scss";
 
 	.up-index-anchor {
-		position: sticky;
+		// wait
+		position: relative;
 		top: 0;
 		@include flex;
 		align-items: center;
@@ -100,7 +101,8 @@
 		z-index: 1;
 
 		&--sticky {
-			position: sticky;
+			// wait
+			position: relative;
 			top: 0;
 		}
 

@@ -4,8 +4,8 @@
         <up-cell-group border>
             <up-cell
                 :titleStyle="{ fontWeight: 500 }"
-                @click="openTransition(item.mode)"
-                :title="item.title"
+                @click="openTransition(item['mode'] as string)"
+                :title="item['title']"
                 v-for="(item, index) in list"
                 :key="index"
                 clickable
@@ -13,7 +13,7 @@
 				<template #icon>
 					<image
 					    class="u-cell-icon"
-					    :src="item.iconUrl"
+					    :src="item['iconUrl']"
 					    mode="widthFix"
 					></image>
 				</template>
@@ -37,6 +37,7 @@
 </template>
 
 <script>
+import { mixin, sys } from '@/uni_modules/uv-plus/index.uts'
 export default {
     data() {
         return {
@@ -44,8 +45,8 @@ export default {
             show: false,
             style: {
                 position: "fixed",
-                top: `${uni.$u.sys().windowHeight / 2 - 50}px`,
-                left: `${uni.$u.sys().windowWidth / 2 - 50}px`,
+                top: `${sys().windowHeight / 2 - 50}px`,
+                left: `${sys().windowWidth / 2 - 50}px`,
                 width: "120px",
                 height: "120px",
                 backgroundColor: "#1989fa",
@@ -120,9 +121,9 @@ export default {
             ],
         };
     },
-    mixins: [uni.$u.mixin],
+    mixins: [mixin],
     methods: {
-        openTransition(mode) {
+        openTransition(mode: string) {
             this.mode = mode;
             this.show = true;
             setTimeout(() => {

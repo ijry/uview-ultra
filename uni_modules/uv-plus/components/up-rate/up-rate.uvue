@@ -278,7 +278,7 @@ $up-rate-item-icon-wrap-half-left: 0 !default;
     margin: $up-rate-margin;
     padding: $up-rate-padding;
     /* #ifndef APP-NVUE */
-    touch-action: none;
+    // touch-action: none;
     /* #endif */
 
     &__content {

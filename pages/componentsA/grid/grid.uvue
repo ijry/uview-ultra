@@ -172,9 +172,9 @@
 			}
 		},
 		methods: {
-			click(name: number) {
+			click(name: string) {
 				console.log(name)
-				(this.$refs['uToastRef'] as ComponentPublicInstance)?.$callMethod('success',`点击了第${name}个`)
+				// (this.$refs['uToastRef'] as ComponentPublicInstance)?.$callMethod('success', `点击了第${name}个`)
 			}
 		}
 	}
