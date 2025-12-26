@@ -77,8 +77,8 @@
 	<!-- #endif -->
 </template>
 <script>
-	import { toast } from '@/uni_modules/uv-plus/index.uts'
-	import { UPActionSheetItem } from '@/uni_modules/uv-plus/types/index.uts'
+	import { toast } from '@/uni_modules/uview-ultra/index.uts'
+	import { UPActionSheetItem } from '@/uni_modules/uview-ultra/types/index.uts'
 	export default {
 		data() {
 			return {

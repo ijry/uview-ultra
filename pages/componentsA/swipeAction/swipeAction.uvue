@@ -93,7 +93,7 @@
 </template>
 
 <script>
-	import { UPSwipeActionItemOption } from '@/uni_modules/uv-plus/types/index.uts'
+	import { UPSwipeActionItemOption } from '@/uni_modules/uview-ultra/types/index.uts'
 	export default {
 		data() {
 			return {

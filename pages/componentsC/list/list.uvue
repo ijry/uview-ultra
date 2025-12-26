@@ -25,7 +25,7 @@
 </template>
 
 <script>
-	import { random } from '@/uni_modules/uv-plus/libs/function/index';
+	import { random } from '@/uni_modules/uview-ultra/libs/function/index';
 	export default {
 		data() {
 			return {

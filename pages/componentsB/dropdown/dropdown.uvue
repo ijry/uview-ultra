@@ -54,7 +54,7 @@
 </template>
 
 <script>
-	import { toast } from '@/uni_modules/uv-plus/libs/function/index.uts';
+	import { toast } from '@/uni_modules/uview-ultra/libs/function/index.uts';
 	export default {
 		data() { 
 			return {

@@ -101,7 +101,7 @@
 	</view>
 </template>
 <script>
-	import { padZero, timeFormat, toast } from '@/uni_modules/uv-plus/libs/function/index.uts'
+	import { padZero, timeFormat, toast } from '@/uni_modules/uview-ultra/libs/function/index.uts'
 	export default {
 		data() {
 			const d = new Date()

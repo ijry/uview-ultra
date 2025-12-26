@@ -37,7 +37,7 @@
 </template>
 
 <script>
-import { mixin, sys } from '@/uni_modules/uv-plus/index.uts'
+import { mixin, sys } from '@/uni_modules/uview-ultra/index.uts'
 export default {
     data() {
         return {

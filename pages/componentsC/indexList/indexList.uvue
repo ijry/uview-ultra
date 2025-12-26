@@ -45,7 +45,7 @@
 </template>
 
 <script>
-	import { random } from '@/uni_modules/uv-plus/libs/function/index';
+	import { random } from '@/uni_modules/uview-ultra/libs/function/index';
 	const indexList = () => {
 		const indexList: string[] = []
 		const charCodeOfA : number | null = 'A'.charCodeAt(0)

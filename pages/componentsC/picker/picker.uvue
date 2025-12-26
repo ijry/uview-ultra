@@ -77,7 +77,7 @@
 </template>
 
 <script>
-	import { sleep } from '@/uni_modules/uv-plus/libs/function/index'
+	import { sleep } from '@/uni_modules/uview-ultra/libs/function/index'
 	export default {
 		data() {
 			return {

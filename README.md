@@ -1,30 +1,30 @@
 <p align="center">
     <img alt="logo" src="https://uview-plus.jiangruyi.com/common/logo.png" width="120" height="120" style="margin-bottom: 10px;">
 </p>
-<h3 align="center" style="margin: 30px 0 30px;font-weight: bold;font-size:40px;">uv-plus 4.0(原uview-plus)</h3>
+<h3 align="center" style="margin: 30px 0 30px;font-weight: bold;font-size:40px;">uview-ultra 4.0</h3>
 <h3 align="center">多平台快速开发的UI框架</h3>
 
-[![star](https://gitee.com/jry/uv-plus/badge/star.svg?theme=gvp)](https://gitee.com/jry/uv-plus/stargazers)
-[![stars](https://img.shields.io/github/stars/ijry/uv-plus?style=flat-square&logo=GitHub)](https://github.com/ijry/uv-plus)
-[![forks](https://img.shields.io/github/forks/ijry/uv-plus?style=flat-square&logo=GitHub)](https://github.com/ijry/uv-plus)
-[![issues](https://img.shields.io/github/issues/ijry/uv-plus?style=flat-square&logo=GitHub)](https://github.com/ijry/uv-plus/issues)
-[![Website](https://img.shields.io/badge/uv-plus-blue?style=flat-square)](https://ijry.github.io/uv-plus/)
-[![license](https://img.shields.io/github/license/ijry/uv-plus?style=flat-square)](https://en.wikipedia.org/wiki/MIT_License)
-<!-- [![release](https://img.shields.io/github/v/release/ijry/uv-plus?style=flat-square)](https://github.com/ijry/uv-plus/releases) -->
+[![star](https://gitee.com/jry/uview-ultra/badge/star.svg?theme=gvp)](https://gitee.com/jry/uview-ultra/stargazers)
+[![stars](https://img.shields.io/github/stars/ijry/uview-ultra?style=flat-square&logo=GitHub)](https://github.com/ijry/uview-ultra)
+[![forks](https://img.shields.io/github/forks/ijry/uview-ultra?style=flat-square&logo=GitHub)](https://github.com/ijry/uview-ultra)
+[![issues](https://img.shields.io/github/issues/ijry/uview-ultra?style=flat-square&logo=GitHub)](https://github.com/ijry/uview-ultra/issues)
+[![Website](https://img.shields.io/badge/uview-ultra-blue?style=flat-square)](https://ijry.github.io/uview-ultra/)
+[![license](https://img.shields.io/github/license/ijry/uview-ultra?style=flat-square)](https://en.wikipedia.org/wiki/MIT_License)
+<!-- [![release](https://img.shields.io/github/v/release/ijry/uview-ultra?style=flat-square)](https://github.com/ijry/uview-ultra/releases) -->
 
 ## 说明
 
-因为是3.0移植的4.0，时间有限，有很多细节问题需要完善与修复，个人时间精力有限，可能一个月定期维护几次，希望有能力的一起完善，提交PR。
+刚适配的uni-app-x，已经尽可能的继续跟uview-plus一样保持原始uview的接口兼容性，新版发布仍然存在细节问题需要完善与修复，后续会继续更新完善。
 
 ## 介绍
 
-全面兼容uni-app-x的uni-app生态框架，丰富的组件和便捷的工具以及兼容的API会让您轻松升级，事半功倍。
+全面兼容uni-app/uni-app-x/nvue/鸿蒙的uni-app生态框架，丰富的组件和便捷的工具以及兼容的API会让您轻松升级，事半功倍。
 
-## [官方文档：https://uv-plus.jiangruyi.com/](https://uv-plus.jiangruyi.com/)
+## [官方文档：https://uview-ultra.lingyun.com/](https://uview-ultra.lingyun.com/)
 
 ## 特性
 
-- 全面兼容uni-app-x，原生渲染，高性能
+- 全面兼容uni-app/uni-app-x/nvue/鸿蒙，原生渲染，高性能
 - 兼容安卓，iOS，微信小程序，H5，QQ小程序，百度小程序，支付宝小程序，头条小程序
 - 60+精选组件，功能丰富，多端兼容，让您快速集成，开箱即用
 - 众多贴心的JS利器，让您飞镖在手，召之即来，百步穿杨
@@ -38,16 +38,16 @@
 您可以通过**微信**扫码，查看最佳的演示效果。
 <br>
 <br>
-![image](https://uv-plus.jiangruyi.com/common/h5_qrcode.png)
-![image](https://uv-plus.jiangruyi.com/common/android_qrcode.png)
+![image](https://uview-ultra.lingyun.net/common/h5_qrcode.png)
+![image](https://uview-ultra.lingyun.net/common/android_qrcode.png)
 
 
 ## 链接
 
-- [官方文档](https://uv-plus.jiangruyi.com/)
-- [更新日志](https://uv-plus.jiangruyi.com/components/changelog.html)
-- [升级指南](https://uv-plus.jiangruyi.com/components/changeGuide.html)
-- [关于我们](https://uv-plus.jiangruyi.com/cooperation/about.html)
+- [官方文档](https://uview-ultra.lingyun.net/)
+- [更新日志](https://uview-ultra.lingyun.net/components/changelog.html)
+- [升级指南](https://uview-ultra.lingyun.net/components/changeGuide.html)
+- [关于我们](https://uview-ultra.lingyun.net/cooperation/about.html)
 
 ## 关于PR
 
@@ -56,11 +56,11 @@
 
 ## 安装
 
-#### **uni-app插件市场链接** —— [https://ext.dcloud.net.cn/plugin?name=uv-plus](https://ext.dcloud.net.cn/plugin?name=uv-plus)
+#### **uni-app插件市场链接** —— [https://ext.dcloud.net.cn/plugin?name=uview-ultra](https://ext.dcloud.net.cn/plugin?name=uview-ultra)
 
 ## 快速上手
 
-请通过[快速上手](https://uv-plus.jiangruyi.com/components/quickstart.html)了解更详细的内容
+请通过[快速上手](https://uview-ultra.lingyun.net/components/quickstart.html)了解更详细的内容
 
 ## 使用方法
 配置easycom规则后，自动按需引入，无需`import`组件，直接引用即可。
@@ -70,12 +70,4 @@
 	<up-button text="按钮"></up-button>
 </template>
 ```
-
-## 🤝需求外包
-如果你有需求想要实现，可以微信联系【ijiangruyi】。
-
-团队包含专业的项目经理、架构师、前端工程师、后端工程师、测试工程师、运维工程师，可以提供全流程的外包服务。
-
-项目支持各种类型与行业，比如商城、SCRM 系统、OA 系统、物流系统、ERP 系统、CMS 系统、支付系统、IM 聊天、微信公众号、微信小程序等等。
-
 

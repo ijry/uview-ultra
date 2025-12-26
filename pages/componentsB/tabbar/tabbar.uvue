@@ -218,7 +218,7 @@
 </template>
 
 <script>
-	import { toast } from '@/uni_modules/uv-plus/index.uts'
+	import { toast } from '@/uni_modules/uview-ultra/index.uts'
 	export default {
 		data() {
 			return {
