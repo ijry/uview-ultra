@@ -4,8 +4,8 @@
  * @param {string} endColor 结束的颜色
  * @param {number} step 颜色等分的份额
  * */
-export function colorGradient(startColor = 'rgb(0, 0, 0)',
-	endColor = 'rgb(255, 255, 255)', step = 10): Array<string> {
+export function colorGradient(startColor: string = 'rgb(0, 0, 0)',
+	endColor = 'rgb(255, 255, 255)', step: number = 10): Array<string> {
 	// console.log('startColor', startColor)
 	let startColorRgb = hexToRgb(startColor, false);
 	let startRGB: number[] = [];
@@ -43,7 +43,7 @@ export function colorGradient(startColor = 'rgb(0, 0, 0)',
 }
 
 // 将hex表示方式转换为rgb表示方式(这里返回rgb数组模式)
-export function hexToRgb(sColor: string, str = true): any {
+export function hexToRgb(sColor: string, str: boolean = true): any {
     const reg = /^#([0-9a-fA-f]{3}|[0-9a-fA-f]{6})$/
     sColor = sColor.toLowerCase()
     if (sColor != ''  && reg.test(sColor)
@@ -118,40 +118,40 @@ export function rgbToHex(rgb: string): string {
 	return _this
 }
 
-// /**
-// * JS颜色十六进制转换为rgb或rgba,返回的格式为 rgba（255，255，255，0.5）字符串
-// * sHex为传入的十六进制的色值
-// * alpha为rgba的透明度
-// */
-// export function colorToRgba(color, alpha): string {
-//     color = rgbToHex(color)
-//     // 十六进制颜色值的正则表达式
-//     const reg = /^#([0-9a-fA-f]{3}|[0-9a-fA-f]{6})$/
-//     /* 16进制颜色转为RGB格式 */
-//     let sColor = String(color).toLowerCase()
-//     if (sColor && reg.test(sColor)) {
-//         if (sColor.length === 4) {
-//             let sColorNew = '#'
-//             for (let i = 1; i < 4; i += 1) {
-//                 sColorNew += sColor.slice(i, i + 1).concat(sColor.slice(i, i + 1))
-//             }
-//             sColor = sColorNew
-//         }
-//         // 处理六位的颜色值
-//         const sColorChange = []
-//         for (let i = 1; i < 7; i += 2) {
-//             sColorChange.push(parseInt(`0x${sColor.slice(i, i + 2)}`))
-//         }
-//         // return sColorChange.join(',')
-//         return `rgba(${sColorChange.join(',')},${alpha})`
-//     }
+/**
+* JS颜色十六进制转换为rgb或rgba,返回的格式为 rgba（255，255，255，0.5）字符串
+* sHex为传入的十六进制的色值
+* alpha为rgba的透明度
+*/
+export function colorToRgba(color: string, alpha: number): string {
+    color = rgbToHex(color)
+    // 十六进制颜色值的正则表达式
+    const reg = /^#([0-9a-fA-f]{3}|[0-9a-fA-f]{6})$/
+    /* 16进制颜色转为RGB格式 */
+    let sColor = color.toLowerCase()
+    if (sColor != '' && reg.test(sColor)) {
+        if (sColor.length === 4) {
+            let sColorNew = '#'
+            for (let i = 1; i < 4; i += 1) {
+                sColorNew = sColorNew + sColor.slice(i, i + 1).concat(sColor.slice(i, i + 1))
+            }
+            sColor = sColorNew
+        }
+        // 处理六位的颜色值
+        const sColorChange = [] as Array<number>
+        for (let i = 1; i < 7; i += 2) {
+            sColorChange.push(parseInt(`0x${sColor.slice(i, i + 2)}`))
+        }
+        // return sColorChange.join(',')
+        return `rgba(${sColorChange.join(',')},${alpha})`
+    }
 
-//     return sColor
-// }
+    return sColor
+}
 
 export default {
     colorGradient,
     hexToRgb,
     rgbToHex,
-    // colorToRgba
+    colorToRgba
 }
