@@ -4,13 +4,11 @@
 <h3 align="center" style="margin: 30px 0 30px;font-weight: bold;font-size:40px;">uview-ultra 4.0</h3>
 <h3 align="center">多平台快速开发的UI框架</h3>
 
-[![star](https://gitee.com/jry/uview-ultra/badge/star.svg?theme=gvp)](https://gitee.com/jry/uview-ultra/stargazers)
-[![stars](https://img.shields.io/github/stars/ijry/uview-ultra?style=flat-square&logo=GitHub)](https://github.com/ijry/uview-ultra)
-[![forks](https://img.shields.io/github/forks/ijry/uview-ultra?style=flat-square&logo=GitHub)](https://github.com/ijry/uview-ultra)
-[![issues](https://img.shields.io/github/issues/ijry/uview-ultra?style=flat-square&logo=GitHub)](https://github.com/ijry/uview-ultra/issues)
-[![Website](https://img.shields.io/badge/uview-ultra-blue?style=flat-square)](https://ijry.github.io/uview-ultra/)
-[![license](https://img.shields.io/github/license/ijry/uview-ultra?style=flat-square)](https://en.wikipedia.org/wiki/MIT_License)
-<!-- [![release](https://img.shields.io/github/v/release/ijry/uview-ultra?style=flat-square)](https://github.com/ijry/uview-ultra/releases) -->
+[![Website](https://img.shields.io/badge/uvue-compatible-green)](https://uview-ultra.lingyun.net/)
+[![Website](https://img.shields.io/badge/nvue-compatible-green)](https://uview-ultra.lingyun.net/)
+[![Website](https://img.shields.io/badge/vue-compatible-green)](https://uview-ultra.lingyun.net/)
+[![Website](https://img.shields.io/badge/build-passing-green)](https://uview-ultra.lingyun.net/)
+[![license](https://img.shields.io/github/license/ijry/uiadmin?style=flat-square)](https://en.wikipedia.org/wiki/Apache2_License)
 
 ## 说明
 
