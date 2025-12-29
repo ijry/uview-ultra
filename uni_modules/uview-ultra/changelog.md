@@ -1,3 +1,6 @@
+## 4.0.7（2025-12-29）
+fix: 修复list-item组件warning
+
 ## 4.0.6（2025-12-29）
 fix: transition动画warning修复
 
