@@ -1,3 +1,6 @@
+## 4.0.6（2025-12-29）
+fix: transition动画warning修复
+
 ## 4.0.5（2025-12-29）
 fix:  修复Readme标签内容
 
