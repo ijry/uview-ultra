@@ -1,3 +1,6 @@
+## 4.0.4（2025-12-29）
+fix: colorGradient方法适配uts
+
 ## 4.0.3（2025-12-27）
 fix: 增加uni_modules插件依赖
 
