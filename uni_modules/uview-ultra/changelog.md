@@ -1,3 +1,6 @@
+## 4.0.8（2025-12-30）
+fix: 修复 transition组件适配后warning
+
 ## 4.0.7（2025-12-29）
 fix: 修复list-item组件warning
 
