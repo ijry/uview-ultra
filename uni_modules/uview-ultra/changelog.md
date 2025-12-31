@@ -1,3 +1,6 @@
+## 4.0.89（2025-12-31）
+improvment: number-box等组件warning处理
+
 ## 4.0.8（2025-12-30）
 fix: 修复 transition组件适配后warning
 

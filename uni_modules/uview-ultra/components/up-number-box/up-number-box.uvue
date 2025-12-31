@@ -191,7 +191,7 @@
 		methods: {
 			init() {
 				// #ifdef VUE3
-				this.currentValue = this.format(this.modelValue.toString())
+				this.currentValue = this.format(this.modelValue as string)
 				// #endif
 			},
 			// 按钮的样式
@@ -221,7 +221,7 @@
 				return (
 					this.disabled ||
 					this.disableMinus ||
-					parseFloat(this.currentValue.toString()) <= parseFloat(this.min.toString())
+					parseFloat(this.currentValue.toString()) <= parseFloat(this.min as string)
 				)
 			},
 			// 格式化整理数据，限制范围
@@ -230,7 +230,7 @@
 				// 如果为空字符串，那么设置为0，同时将值转为Number类型
 				let valueNum: number = value === '' ? 0 : parseFloat(value)
 				// 对比最大最小值，取在min和max之间的值
-				valueNum = Math.max(Math.min(parseFloat(this.max.toString()), parseFloat(value.toString())), parseFloat(this.min.toString()))
+				valueNum = Math.max(Math.min(parseFloat(this.max as string), parseFloat(value.toString())), parseFloat(this.min.toString()))
 				// 如果设定了最大的小数位数，使用toFixed去进行格式化
 				let decimalLength = parseInt(this.decimalLength.toString())
 				if (decimalLength !== 0 && valueNum !== 0) {
@@ -321,6 +321,7 @@
 			},
 			onChange() {
 				const type = this.type
+				if (type == null) return
 				if (this.isDisabled(type)) {
 					return this.$emit('overlimit', type)
 				}
