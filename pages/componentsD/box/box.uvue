@@ -68,25 +68,25 @@
 <style lang="scss">
 	/* #ifndef APP-NVUE */
 	// page {
-	// 	background-color: $u-bg-color;
+	// 	background-color: $up-bg-color;
 	// }
 	/* #endif */
 	
 	.u-page {
 		padding: 0;
 		flex: 1;
-		background-color: $u-bg-color;
+		background-color: $up-bg-color;
 
 		&__item {
 
 			&__title {
-				color: $u-tips-color;
-				background-color: $u-bg-color;
+				color: $up-tips-color;
+				background-color: $up-bg-color;
 				padding: 15px;
 				font-size: 15px;
 
 				&__slot-title {
-					color: $u-primary;
+					color: $up-primary;
 					font-size: 14px;
 				}
 			}
@@ -99,7 +99,7 @@
 		justify-content: space-between;
 		border-width: 0.5px;
 		border-radius: 100px;
-		border-color: $u-border-color;
+		border-color: $up-border-color;
 		padding: 3px 7px;
 		opacity: 0.8;
 	}

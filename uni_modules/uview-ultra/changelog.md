@@ -1,3 +1,6 @@
+## 4.0.90（2026-01-03）
+fix: 修复box组件示例sass变量前缀
+
 ## 4.0.89（2025-12-31）
 improvment: number-box等组件warning处理
 
