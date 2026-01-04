@@ -1,3 +1,6 @@
+## 4.0.94（2026-01-04）
+improvment: 修复transition组件warning
+
 ## 4.0.93（2026-01-04）
 improvment: 修复tabs组件css警告
 
