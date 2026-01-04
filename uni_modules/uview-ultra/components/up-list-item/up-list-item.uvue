@@ -87,7 +87,7 @@
 								return
 							}
 							this.rect = size
-							const preLoadScreen = parseFloat(parentIns!!.$props['preLoadScreen'] as string ?? 0)
+							const preLoadScreen = parseFloat(parentIns.$props['preLoadScreen'] != null ? parentIns.$props['preLoadScreen'].toString() : '0')
 							const windowHeight = this.sys.windowHeight
 							// #ifndef APP-NVUE
 							if (lastChild != null) {

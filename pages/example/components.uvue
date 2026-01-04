@@ -55,7 +55,7 @@
 		},
 		methods: {
 			getIcon(path: string): string {
-				return './static/uview/demo/' + path + '.png';
+				return '/static/uv/demo/' + path + '.png';
 			},
 			openPage(detail: UTSJSONObject) {
 				const path = detail['name']

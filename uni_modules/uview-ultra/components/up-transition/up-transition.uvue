@@ -132,7 +132,7 @@ export default {
 				this.transitionEnded = false
 				this.$emit('leave')
 				 // 组件执行动画，到了执行的执行时间后，执行一些额外处理
-				 setTimeout(this.onTransitionEnd, parseInt(this.duration as string ?? 0))
+				 setTimeout(this.onTransitionEnd, parseInt(this.duration != null ? this.duration.toString() : '0'))
 				 this.classes = classNames['leave-to']!!.toString()
 			})
 	    },

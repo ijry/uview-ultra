@@ -1,8 +1,8 @@
 <template>
 	<view class="nav-wrap">
 		<view class="nav-title">
-			<!-- <up-image :showLoading="true" src="./static/uview/common/logo.png" width="70px"
-				height="70px" /> -->
+			<up-image :showLoading="true" src="/static/uv/common/logo.png" width="70px"
+				height="70px" />
 			<view class="nav-info">
 				<view class="nav-info__title" @tap="jumpToWx">
 					<text class="nav-info__title__text">UviewUltra</text>
