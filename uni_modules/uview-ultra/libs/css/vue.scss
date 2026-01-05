@@ -3,8 +3,13 @@
 	.u-safe-area-inset-#{$d},
     .up-safe-area-inset-#{$d} {
 		padding-#{$d}: 0;
+		// #ifndef UNI-APP-X
 		padding-#{$d}: constant(safe-area-inset-#{$d});  
-		padding-#{$d}: env(safe-area-inset-#{$d});  
+		padding-#{$d}: env(safe-area-inset-#{$d});
+		// #endif
+		// #ifdef UNI-APP-X
+		padding-#{$d}: --uni-safe-area-inset-#{$d};
+		// #endif
 	}
 }
 

@@ -1,3 +1,6 @@
+## 4.0.97（2026-01-05）
+fix: uni-app-x下安全区域使用--uni-safe-area-inset
+
 ## 4.0.96（2026-01-05）
 fix: 修复digit工具方法
 
