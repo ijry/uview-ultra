@@ -1,3 +1,6 @@
+## 4.0.95（2026-01-05）
+fix: 修复icon组件部分warning
+
 ## 4.0.94（2026-01-04）
 improvment: 修复transition组件warning
 
