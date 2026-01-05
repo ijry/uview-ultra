@@ -63,7 +63,7 @@ function checkBoundary(num: number): void {
  * @param {function} operation 迭代操作
  * @private
  */
-function iteratorOperation(arr: number[], operation: any): any {
+function iteratorOperation(arr: number[], operation: Function): number {
   const [num1, num2, ...others] = arr;
   let res = operation(num1, num2);
 
@@ -80,19 +80,19 @@ function iteratorOperation(arr: number[], operation: any): any {
  */
 export function times(...nums: number[]): number {
   // todo
-  // if (nums.length > 2) {
-  //   return iteratorOperation(nums, times);
-  // }
+  if (nums.length > 2) {
+    return iteratorOperation(nums, times);
+  }
 
-  // const [num1, num2] = nums;
-  // const num1Changed = float2Fixed(num1);
-  // const num2Changed = float2Fixed(num2);
-  // const baseNum = digitLength(num1) + digitLength(num2);
-  // const leftValue = num1Changed * num2Changed;
+  const [num1, num2] = nums;
+  const num1Changed = float2Fixed(num1);
+  const num2Changed = float2Fixed(num2);
+  const baseNum = digitLength(num1) + digitLength(num2);
+  const leftValue = num1Changed * num2Changed;
 
-  // checkBoundary(leftValue);
+  checkBoundary(leftValue);
 
-  // return leftValue / Math.pow(10, baseNum);
+  return leftValue / Math.pow(10, baseNum);
   return 0
 }
 
