@@ -8,7 +8,7 @@
 		padding-#{$d}: env(safe-area-inset-#{$d});
 		// #endif
 		// #ifdef UNI-APP-X
-		padding-#{$d}: --uni-safe-area-inset-#{$d};
+		padding-#{$d}: var(--uni-safe-area-inset-#{$d});
 		// #endif
 	}
 }
