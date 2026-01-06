@@ -194,7 +194,7 @@
 	$up-loading-icon-dot-before-width:2px !default;
 	$up-loading-icon-dot-before-height:25% !default;
 	$up-loading-icon-dot-before-margin:0 auto !default;
-	$up-loading-icon-dot-before-background-color: '#fff' !default;
+	$up-loading-icon-dot-before-background-color: #ffffff !default;
 	$up-loading-icon-dot-before-border-radius:8px !default;
 
 	.up-loading-icon {

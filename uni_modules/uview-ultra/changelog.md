@@ -1,3 +1,6 @@
+## 4.0.100（2026-01-06）
+fix: 修复loading-icon组件颜色样式默认值
+
 ## 4.0.99（2026-01-06）
 fix: 修复number-box样式warning
 
