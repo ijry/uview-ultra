@@ -1,3 +1,9 @@
+## 4.0.99（2026-01-06）
+fix: 修复number-box样式warning
+
+## 4.0.98（2026-01-05）
+fix: 修复loading-page样式warning
+
 ## 4.0.97（2026-01-05）
 fix: uni-app-x下安全区域使用--uni-safe-area-inset
 
