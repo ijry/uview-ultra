@@ -33,7 +33,7 @@ let settings = {
  */
 export function t(value: string, params: UTSJSONObject = {}): string {
     // console.log(settings['locales'][settings['lang']])
-    if (value != '' && value != null) {
+    if (value != '') {
 		value = value.replaceAll('.', '_')
 		// console.log('**************', value)
         let lang = settings['lang']
@@ -47,7 +47,7 @@ export function t(value: string, params: UTSJSONObject = {}): string {
 		} else {
 			result = value
 		}
-		let resultStr = result != null ? result.toString() : ''
+		let resultStr = result.toString()
         // 替换{xxx}格式的变量
         // UTSJSONObject.keys(params).forEach((key: string) => {
         //     const reg = new RegExp(`{${key}}`, 'g');

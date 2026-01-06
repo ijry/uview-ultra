@@ -1,3 +1,6 @@
+## 4.0.102（2026-01-06）
+fix: 修复i18n的warning
+
 ## 4.0.101（2026-01-06）
 fix: property value `inherit` is not supported for `line-height`
 
