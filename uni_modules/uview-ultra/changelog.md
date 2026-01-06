@@ -1,3 +1,6 @@
+## 4.0.101（2026-01-06）
+fix: property value `inherit` is not supported for `line-height`
+
 ## 4.0.100（2026-01-06）
 fix: 修复loading-icon组件颜色样式默认值
 

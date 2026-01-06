@@ -88,7 +88,9 @@
 .up-reset-button {
 	padding: 0;
 	background-color: transparent;
+	/* #ifndef UNI-APP-X */
 	line-height: inherit;
+	/* #endif */
 	/* #ifndef APP-PLUS */
 	/* #ifndef UNI-APP-X */
 	font-size: inherit;
