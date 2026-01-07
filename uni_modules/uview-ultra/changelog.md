@@ -1,3 +1,9 @@
+## 4.0.104（2026-01-07）
+fix: 修复fles.scss样式兼容性warning
+
+## 4.0.103（2026-01-06）
+fix: 修复--uni-safe-area-inset缺少var
+
 ## 4.0.102（2026-01-06）
 fix: 修复i18n的warning
 

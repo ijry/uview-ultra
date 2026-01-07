@@ -254,7 +254,9 @@
 // 子元素交叉轴第一行文字基线对齐
 .u-flex-self-baseline,
 .up-flex-self-baseline {
+	/* #ifndef UNI-APP-X */
 	align-self: baseline;
+	/* #endif */
 }
 
 // 子元素交叉轴方向拉伸对齐
