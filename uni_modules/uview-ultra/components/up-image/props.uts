@@ -1,5 +1,5 @@
 import { defineMixin } from '../../libs/vue'
-import defProps from '../../libs/config/props'
+import defProps from './image.uts'
 let crtProp = defProps['image'] as UTSJSONObject
 
 export const propsImage = defineMixin({

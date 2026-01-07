@@ -7,7 +7,7 @@
  * @lastTime     : 2024-08-28 12:27:20
  */
 import { defineMixin } from '../../libs/vue.uts'
-import defProps from '../../libs/config/props.uts'
+import defProps from './cellGroup.uts'
 let cellGroup = defProps['cellGroup'] as UTSJSONObject
 
 export const propsCellGroup = defineMixin({

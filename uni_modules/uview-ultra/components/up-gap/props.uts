@@ -7,7 +7,7 @@
  * @lastTime     : 2024-08-28 12:27:20
  */
 import { defineMixin } from '../../libs/vue.uts'
-import defProps from '../../libs/config/props.uts'
+import defProps from './gap.uts'
 let gap = defProps['gap'] as UTSJSONObject
 
 export const propsGap = defineMixin({

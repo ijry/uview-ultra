@@ -222,11 +222,11 @@ export default {
                     // 判断图片横向还是竖向展示方式
                     const isHorizotal = res.width >= res.height
                     this.singleWidth = isHorizotal
-                        ? this.singleSize as Number
-                        : (res.width / res.height) * this.singleSize as Number
+                        ? this.singleSize as number
+                        : (res.width / res.height) * this.singleSize as number
                     this.singleHeight = !isHorizotal
-                        ? this.singleSize as Number
-                        : (res.height / res.width) * this.singleWidth as Number
+                        ? this.singleSize as number
+                        : (res.height / res.width) * this.singleWidth as number
                 },
                 fail: () => {
                     this.getComponentWidth()

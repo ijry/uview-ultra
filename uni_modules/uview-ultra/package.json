@@ -2,7 +2,7 @@
   "id": "uview-ultra",
   "name": "uview-ultra",
   "displayName": "UviewUltra v4.0尝鲜重磅发布，大满贯全面兼容uvue、nvue、vue鸿蒙的组件库库。",
-  "version": "4.0.107",
+  "version": "4.0.108",
   "description": "uview-ultra已兼容vue3与uni-app/uni-app-x/鸿蒙，全面的组件和便捷的工具会让您信手拈来，如鱼得水",
   "keywords": [
     "uview-plus",
@@ -40,7 +40,7 @@
     "widescreen": "x"
   },
   "uni_modules": {
-    "dependencies": ["lime-dayuts", "wa-clipboard"],
+    "dependencies": ["lime-dayuts"],
     "encrypt": [],
     "platforms": {
       "cloud": {

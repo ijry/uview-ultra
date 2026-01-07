@@ -7,7 +7,7 @@
  * @lastTime     : 2024-08-28 12:27:20
  */
 import { defineMixin } from '../../libs/vue'
-import defProps from '../../libs/config/props'
+import defProps from './transition.uts'
 let crtProp = defProps['transition'] as UTSJSONObject
 
 export const propsTransition = defineMixin({

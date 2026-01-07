@@ -1,5 +1,5 @@
 import { defineMixin } from '../../libs/vue.uts'
-import defProps from '../../libs/config/props.uts'
+import defProps from './line.uts'
 let crtProp = defProps['line'] as UTSJSONObject
 
 export const propsLine = defineMixin({
