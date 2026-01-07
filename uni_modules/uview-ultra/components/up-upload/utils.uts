@@ -102,9 +102,9 @@ export function chooseFile({
 }: UPUploadChooseFileOptions): Promise<UPUploadFileChoosed[]> {
 	let captureList = [] as Array<string>
     try {
-		if (capture != null) {
+		// if (capture != null) {
 			captureList = testArray(capture) ? capture as string[] : capture.toString().split(',');
-		}
+		// }
     } catch(e) {
     }
     return new Promise((resolve, reject) => {
