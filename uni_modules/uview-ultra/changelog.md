@@ -1,3 +1,6 @@
+## 4.0.107（2026-01-07）
+fix: 修复count-to组件warning
+
 ## 4.0.106（2026-01-07）
 fix: 修复upload组件warning
 

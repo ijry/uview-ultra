@@ -178,10 +178,10 @@ export default {
 		formatNumber(num: any): string {
 			// 将num转为Number类型，因为其值可能为字符串数值，调用toFixed会报错
 			num = parseInt(num.toString());
-			let numStr: string = num.toFixed(parseInt(this.decimals.toString())).toString();
+			let numStr: string = num.toFixed(parseInt(this.$props['decimal'].toString())).toString();
 			const x: string[] = numStr.split('.');
 			let x1 = x[0];
-			const x2 = x.length > 1 ? this.decimal.toString() + x[1] : '';
+			const x2 = x.length > 1 ? this.$props['decimal'].toString() + x[1] : '';
 			const rgx = /(\d+)(\d{3})/;
 			if (this.separator != '' && !this.isNumber(this.separator)) {
 				while (rgx.test(x1)) {
