@@ -16,9 +16,9 @@
 				borderTopColor: color,
 				borderBottomColor: otherBorderColor,
 				borderLeftColor: otherBorderColor,
-				borderRightColor: otherBorderColor,
-				'animation-duration': `${duration}ms`,
-				'animation-timing-function': (mode === 'semicircle' || mode === 'circle') ? timingFunction : ''
+				borderRightColor: otherBorderColor
+				// 'animation-duration': `${duration}ms`,
+				// 'animation-timing-function': (mode === 'semicircle' || mode === 'circle') ? timingFunction : ''
 			}"
 		>
 			<template v-if="mode === 'spinner'">
@@ -256,7 +256,10 @@
 
 	.up-loading-icon {
 		&__spinner--spinner {
+			// todo2026 wait uni-app-x
+			// #ifndef APP
 			animation-timing-function: steps(12)
+			// #endif
 		}
 
 		&__text:empty {
@@ -293,13 +296,16 @@
 		// }
 	}
 
-	// @keyframes up-rotate {
-	// 	0% {
-	// 		transform: rotate(0deg)
-	// 	}
-
-	// 	to {
-	// 		transform: rotate(1turn)
-	// 	}
-	// }
+	// todo2026 wait uni-app-x
+	// #ifndef APP
+	@keyframes up-rotate {
+		0% {
+			transform: rotate(0deg)
+		}
+	
+		to {
+			transform: rotate(1turn)
+		}
+	}
+	// #endif
 </style>

@@ -1,3 +1,6 @@
+## 4.0.111（2026-01-08）
+fix: 修复loading-icon样式warning
+
 ## 4.0.110（2026-01-08）
 fix: 修复qrcode组件在App不显示logo(uni-app)
 
