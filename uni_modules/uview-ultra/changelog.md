@@ -1,3 +1,10 @@
+## 4.0.110（2026-01-08）
+fix: 修复qrcode组件在App不显示logo(uni-app)
+
+improvment: qrcode逻辑优化封装(uni-app)
+
+fix: nvue下采用webview支持二维码显示logo(因为gcanvas不支持图片渲染)(uni-app)
+
 ## 4.0.109（2026-01-08）
 improvment: 使用官方已经支持的uni.setClipboardData代替三方插件
 

@@ -1031,11 +1031,17 @@ let QRCode = {};
             image: '',
             imageSize: 30,
             canvasId: opt.canvasId,
-            context: opt.context,
+			canvas: opt.canvas,
+			ctx: opt.ctx,
+            isNvue: opt.isNvue,
+            vuectx: opt.vuectx,
             usingComponents: opt.usingComponents,
             showLoading: opt.showLoading,
             loadingText: opt.loadingText,
         };
+
+        let canvas = null;
+
         if (typeof opt === 'string') { // 只编码ASCII字符串
             opt = {
                 text: opt
@@ -1082,15 +1088,33 @@ let QRCode = {};
             }
             return options.foreground;
         }
+
         // 创建canvas
-        let createCanvas = function (options) {
+        let createCanvas = async function (options) {
+            let isApp = false;
+            // #ifdef APP
+            isApp = true;
+            // #endif
+
             if(options.showLoading){
                 uni.showLoading({
                     title: options.loadingText,
                     mask: true
                 });
             }
-            var ctx = uni.createCanvasContext(options.canvasId, options.context);
+            var ctx = '';
+			canvas = options.canvas;
+			ctx = options.ctx;
+			// 获取canvas node节点
+			// #ifdef MP
+			// 不清楚是小程序的bug还是什么原因，canvas的node节点宽高和设置的宽高不一致 重新设置下
+			canvas.width = options.size;
+			canvas.height = options.size;
+			// #endif
+            // 设置组件中data里面的ctx
+            // options.vuectx.ctx = ctx;
+            // options.vuectx.canvas = canvas;
+
             var count = qrCodeAlg.getModuleCount();
             var ratioSize = options.size;
             var ratioImgSize = options.imageSize;
@@ -1101,14 +1125,18 @@ let QRCode = {};
             for (var row = 0; row < count; row++) {
                 for (var col = 0; col < count; col++) {
                     var w = (Math.ceil((col + 1) * tileW) - Math.floor(col * tileW));
-                    var h = (Math.ceil((row + 1) * tileW) - Math.floor(row * tileW));
+                    var h = (Math.ceil((row + 1) * tileH) - Math.floor(row * tileH));
                     var foreground = getForeGround({
                         row: row,
                         col: col,
                         count: count,
                         options: options
                     });
-                    ctx.setFillStyle(qrCodeAlg.modules[row][col] ? foreground : options.background);
+                    if (options.isNvue) {
+                        ctx.setFillStyle(qrCodeAlg.modules[row][col] ? foreground : options.background);
+                    } else {
+                        ctx.fillStyle = qrCodeAlg.modules[row][col] ? foreground : options.background;
+                    }
                     ctx.fillRect(Math.round(col * tileW), Math.round(row * tileH), w, h);
                 }
             }
@@ -1116,18 +1144,33 @@ let QRCode = {};
                 var x = Number(((ratioSize - ratioImgSize) / 2).toFixed(2));
                 var y = Number(((ratioSize - ratioImgSize) / 2).toFixed(2));
                 drawRoundedRect(ctx, x, y, ratioImgSize, ratioImgSize, 2, 6, true, true)
-                ctx.drawImage(options.image, x, y, ratioImgSize, ratioImgSize);
+				options.vuectx.drawImage(options.image, x, y, ratioImgSize, ratioImgSize);
                 // 画圆角矩形
                 function drawRoundedRect(ctxi, x, y, width, height, r, lineWidth, fill, stroke) {
-                    ctxi.setLineWidth(lineWidth);
-                    ctxi.setFillStyle(options.background);
-                    ctxi.setStrokeStyle(options.background);
-                    ctxi.beginPath(); // draw top and top right corner 
+                    if (options.isNvue || isApp) {
+                        ctxi.setLineWidth(lineWidth);
+                        ctxi.setFillStyle(options.background);
+                        ctxi.setStrokeStyle(options.background);
+                    }
+                    else {
+                        ctxi.lineWidth = lineWidth;
+                        ctxi.fillStyle = options.background;
+                        ctxi.strokeStyle = options.background;
+                    }
+                    ctxi.beginPath(); // draw top and top right corner
                     ctxi.moveTo(x + r, y);
-                    ctxi.arcTo(x + width, y, x + width, y + r, r); // draw right side and bottom right corner 
-                    ctxi.arcTo(x + width, y + height, x + width - r, y + height, r); // draw bottom and bottom left corner 
-                    ctxi.arcTo(x, y + height, x, y + height - r, r); // draw left and top left corner 
-                    ctxi.arcTo(x, y, x + r, y, r);
+                    ctxi.lineTo(x + width, y); // move to top-right corner
+                    ctxi.arc(x + width - r, y + r, r, -Math.PI / 2, 0); // draw right side and bottom right corner
+
+                    ctxi.lineTo(x + width, y + height - r);
+                    ctxi.arc(x + width - r, y + height - r, r, 0, Math.PI / 2); // draw bottom and bottom left corner
+
+                    ctxi.lineTo(x + r, y + height);
+                    ctxi.arc(x + r, y + height - r, r, Math.PI / 2, Math.PI);// draw left and top left corner
+
+                    ctxi.lineTo(x, y + r);
+                    ctxi.arc(x + r, y + r, r, Math.PI, Math.PI * 3 / 2);
+
                     ctxi.closePath();
                     if (fill) {
                         ctxi.fill();
@@ -1138,40 +1181,67 @@ let QRCode = {};
                 }
             }
             setTimeout(() => {
-                ctx.draw(true, () => {
-                    // 保存到临时区域
-                    setTimeout(() => {
-                        uni.canvasToTempFilePath({
-                            width: options.width,
-                            height: options.height,
-                            destWidth: options.width,
-                            destHeight: options.height,
-                            canvasId: options.canvasId,
-                            quality: Number(1),
-                            success: function (res) {
-                                if (options.cbResult) {
-                                    // 由于官方还没有统一此接口的输出字段，所以先判定下  支付宝为 res.apFilePath
-                                    if (!empty(res.tempFilePath)) {
-                                        options.cbResult(res.tempFilePath)
-                                    } else if (!empty(res.apFilePath)) {
-                                        options.cbResult(res.apFilePath)
-                                    } else {
-                                        options.cbResult(res.tempFilePath)
+                // canvas2 绘制是自动的不需要手动绘制
+                if(options.isNvue || isApp){
+                    ctx.draw(true, () => {
+                        // 保存到临时区域
+                        setTimeout(() => {
+                            if (options.isNvue) {
+                                ctx.toTempFilePath(
+                                    0,
+                                    0,
+                                    options.width,
+                                    options.height,
+                                    options.width,
+                                    options.height,
+                                    "",
+                                    1,
+                                    function(res) {
+                                        if (options.cbResult) {
+                                            options.cbResult(res.tempFilePath)
+                                        }
                                     }
-                                }
-                            },
-                            fail: function (res) {
-                                if (options.cbResult) {
-                                    options.cbResult(res)
-                                }
-                            },
-                            complete: function () {
-                                uni.hideLoading();
-                            },
-                        }, options.context);
-                    }, options.text.length + 100);
-                });
-            }, options.usingComponents ? 0 : 150);
+                                );
+                            } else {
+                                uni.canvasToTempFilePath({
+                                    width: options.width,
+                                    height: options.height,
+                                    destWidth: options.width,
+                                    destHeight: options.height,
+                                    canvasId: options.canvasId,
+                                    quality: Number(1),
+                                    success: function (res) {
+										// console.log('绘制成功', res)
+                                        if (options.cbResult) {
+                                            // 由于官方还没有统一此接口的输出字段，所以先判定下  支付宝为 res.apFilePath
+                                            if (!empty(res.tempFilePath)) {
+                                                options.cbResult(res.tempFilePath)
+                                            } else if (!empty(res.apFilePath)) {
+                                                options.cbResult(res.apFilePath)
+                                            } else {
+                                                options.cbResult(res.tempFilePath)
+                                            }
+                                        }
+                                    },
+                                    fail: function (res) {
+										console.log('绘制失败', res)
+                                        if (options.cbResult) {
+                                            options.cbResult(res)
+                                        }
+                                    },
+                                    complete: function () {
+                                        uni.hideLoading();
+                                    },
+                                }, options.vuectx);
+                            }
+                        }, options.text.length + 100);
+                    });
+                }
+                else{
+                    options.cbResult("")
+                }
+
+            }, options.usingComponents ? 100 : 200);
         }
         createCanvas(this.options);
         // 空判定
@@ -1193,7 +1263,12 @@ let QRCode = {};
         }
     };
     QRCode.prototype.clear = function (fn) {
-        var ctx = uni.createCanvasContext(this.options.canvasId, this.options.context)
+        var ctx = '';
+        if (options.isNvue) {
+            ctx = options.ctx;
+        } else {
+            uni.createCanvasContext(this.options.canvasId, this.options.vuectx)
+        }
         ctx.clearRect(0, 0, this.options.size, this.options.size)
         ctx.draw(false, () => {
             if (fn) {
