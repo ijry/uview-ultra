@@ -1,3 +1,6 @@
+## 4.0.112（2026-01-08）
+fix:  修复count-down数值对比warning
+
 ## 4.0.111（2026-01-08）
 fix: 修复loading-icon样式warning
 

@@ -50,12 +50,12 @@ export function parseFormat(format: string, timeData: UTSJSONObject): string {
     } else {
         format = format.replace('HH', padZero(hours))
     }
-    if (format.indexOf('mm') === -1) {
+    if (format.indexOf('mm') == -1) {
         seconds += minutes * 60
     } else {
         format = format.replace('mm', padZero(minutes))
     }
-    if (format.indexOf('ss') === -1) {
+    if (format.indexOf('ss') == -1) {
         milliseconds += seconds * 1000
     } else {
         format = format.replace('ss', padZero(seconds))
