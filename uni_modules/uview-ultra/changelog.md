@@ -1,3 +1,6 @@
+## 4.0.113（2026-01-08）
+fix: 修复code-input组件animation样式warning
+
 ## 4.0.112（2026-01-08）
 fix:  修复count-down数值对比warning
 

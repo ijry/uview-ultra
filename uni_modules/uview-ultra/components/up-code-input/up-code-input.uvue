@@ -246,7 +246,8 @@
 				/* #endif */
 				width: $up-code-input-cursor-width;
 				height: $up-code-input-cursor-height;
-				animation: $up-code-input-cursor-animation-duration up-cursor-flicker infinite;
+				// todo wait uni-app-x
+				// animation: $up-code-input-cursor-animation-duration up-cursor-flicker infinite;
 			}
 		}
 
