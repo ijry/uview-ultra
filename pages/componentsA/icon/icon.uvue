@@ -28,13 +28,10 @@
 </template>
 
 <script>
-	// #ifdef APP
-	import { setClipboardData, getClipboardData } from "@/uni_modules/wa-clipboard"
-	// #endif
-
 	type iconItem = {
 	  name: string
 	}
+	import { toast } from '@/uni_modules/uview-ultra/index.uts'
 	export default {
 		data() {
 			return {
@@ -626,10 +623,11 @@
 			},
 			selectIcon(name: string) {
 				// #ifdef APP
-				setClipboardData(name);
+				uni.setClipboardData({
+					data: name
+				});
 				// #endif
-				uni.hideToast()
-			// 	uni.$u.toast('图标名称已复制');
+				toast('图标名称已复制');
 			}
 		}
 	}
