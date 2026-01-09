@@ -1,3 +1,6 @@
+## 4.0.116（2026-01-09）
+fix: 修复loading-icon组件toString使用warning
+
 ## 4.0.115（2026-01-09）
 improvment: 优化getParent方法warning
 
