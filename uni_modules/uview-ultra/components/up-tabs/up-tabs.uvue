@@ -212,7 +212,7 @@
 					return;
 				}
 				// 获取滑块该移动的位置
-				let lineOffsetLeft = this.list
+				let lineOffsetLeft = this.$props['list']
 					.slice(0, this.innerCurrent)
 					.reduce((total: number, curr: UTSJSONObject) => {
 						return total + ((curr['rect'] as NodeInfo).width ?? 0)
@@ -267,9 +267,9 @@
 				if (this.innerCurrent < 0) {
                     this.innerCurrent = 0;
                 }
-				const tabRect = this.list[this.innerCurrent]
+				const tabRect = this.$props['list'][this.innerCurrent]
 				// 累加得到当前item到左边的距离
-				const offsetLeft = this.list
+				const offsetLeft = this.$props['list']
 					.slice(0, this.innerCurrent)
 					.reduce((total: number, curr: UTSJSONObject) => {
 						return total + ((curr['rect'] as NodeInfo).width ?? 0)
@@ -286,7 +286,7 @@
 			// 获取所有标签的尺寸
 			resize() {
 				// 如果不存在list，则不处理
-				if(this.list.length === 0) {
+				if(this.$props['list'].length === 0) {
 					return
 				}
 				Promise.all([this.getTabsRect(), this.getAllItemRect()]).then((res: Array<Array<NodeInfo>>) => {
@@ -307,7 +307,7 @@
 						if (item != null) {
 							this.scrollViewWidth = this.scrollViewWidth + (item.width??0)
 							// 另外计算每一个item的中心点X轴坐标
-							this.list[index]['rect'] = item
+							this.$props['list'][index]['rect'] = item
 						}
 					})
 					// console.log('******tabsRect******', this.tabsRect, this.scrollViewWidth)
@@ -327,7 +327,7 @@
 			// 获取所有标签的尺寸
 			getAllItemRect(): Promise<Array<NodeInfo>>  {
 				return new Promise(resolve => {
-					const promiseAllArr = this.list.map((item: UTSJSONObject, index: number) => {
+					const promiseAllArr = this.$props['list'].map((item: UTSJSONObject, index: number) => {
 						return this.queryRect(`up-tabs__wrapper__nav__item-${index}`)
 					})
 					Promise.all(promiseAllArr).then((sizes: NodeInfo[]) => resolve(sizes))

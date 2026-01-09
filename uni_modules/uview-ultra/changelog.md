@@ -1,3 +1,6 @@
+## 4.0.117（2026-01-09）
+fix: 修复tabs组件props使用相关warning
+
 ## 4.0.116（2026-01-09）
 fix: 修复loading-icon组件toString使用warning
 
