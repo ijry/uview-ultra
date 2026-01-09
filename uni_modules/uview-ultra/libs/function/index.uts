@@ -721,7 +721,10 @@ export function getParent(that: ComponentPublicInstance, name = ''): ComponentPu
     while (parent != null) {
 		// console.log(parent.$options)
         // 父组件
-        if (parent.$options != null && parent.$options['name'] != name) {
+        if (
+			// parent.$options != null && 
+			parent.$options['name'] != null &&
+			parent.$options['name'] != name) {
             // 如果组件的name不相等，继续上一级寻找
             parent = parent.$parent
         } else {

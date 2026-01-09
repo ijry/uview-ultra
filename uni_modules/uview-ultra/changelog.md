@@ -1,3 +1,6 @@
+## 4.0.115（2026-01-09）
+improvment: 优化getParent方法warning
+
 ## 4.0.114（2026-01-09）
 improvment: 修复tag组件warning(uni-app-x)
 
