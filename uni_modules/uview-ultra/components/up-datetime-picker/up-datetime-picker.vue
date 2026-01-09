@@ -55,7 +55,7 @@
 	import { props } from './props.js';
 	import { mpMixin } from '../../libs/mixin/mpMixin.js';
 	import { mixin } from '../../libs/mixin/mixin.js';
-	import dayjs from 'dayjs/esm/index';
+	import dayjs from './dayjs.esm.min.js';
 	import { range, error, padZero } from '../../libs/function/index.js';
 	import test from '../../libs/function/test.js';
 	/**
