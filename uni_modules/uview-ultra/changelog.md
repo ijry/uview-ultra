@@ -1,3 +1,6 @@
+## 4.0.114（2026-01-09）
+improvment: 修复tag组件warning(uni-app-x)
+
 ## 4.0.113（2026-01-08）
 fix: 修复code-input组件animation样式warning
 

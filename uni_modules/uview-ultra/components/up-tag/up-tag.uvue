@@ -146,11 +146,11 @@
 			},
 			// 点击关闭按钮
 			closeHandler(): void {
-				this.$emit('close', this.name.toString())
+				this.$emit('close', this.$props['name'].toString())
 			},
 			// 点击标签
 			clickHandler(): void {
-				this.$emit('click', this.name.toString())
+				this.$emit('click', this.$props['name'].toString())
 			}
 		}
 	}
