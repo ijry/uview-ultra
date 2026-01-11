@@ -44,20 +44,28 @@
 		"distribute": {
 			"modules": {},
 			"icons": {
-				"hdpi": "",
-				"xhdpi": "",
-				"xxhdpi": "",
-				"xxxhdpi": ""
+				"hdpi": "unpackage/res/icons/72x72.png",
+				"xhdpi": "unpackage/res/icons/96x96.png",
+				"xxhdpi": "unpackage/res/icons/144x144.png",
+				"xxxhdpi": "unpackage/res/icons/192x192.png"
 			},
 			"splashScreens": {
 				"default": {}
-			}
+			},
+			"abiFilters": [
+				"arm64-v8a",
+				"armeabi-v7a",
+				"x86",
+				"x86_64"
+			]
 		}
 	},
 	"app-ios": {
 		"distribute": {
 			"modules": {},
-			"icons": {},
+			"icons": {
+				"appstore": "unpackage/res/icons/1024x1024.png"
+			},
 			"splashScreens": {}
 		}
 	},
