@@ -1,3 +1,9 @@
+## 4.0.119（2026-01-10）
+improvment: dropdown组建warning修复
+
+## 4.0.118（2026-01-10）
+improvment: 内置dayjs防止未安装依赖（uni-app）
+
 ## 4.0.117（2026-01-09）
 fix: 修复tabs组件props使用相关warning
 

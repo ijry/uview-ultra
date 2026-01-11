@@ -107,7 +107,7 @@
 					if ((parent.$data['children']as ComponentPublicInstance[]).length == 1) this.active = true;
 					// 父组件无法监听children的变化，故将子组件的title，传入父组件的menuList数组中
 					(parent.$data['menuList'] as UPDropdownMenu[]).push({
-						title: this.title.toString(),
+						title: this.$props['title'].toString(),
 						disabled: this.disabled
 					});
 				}
