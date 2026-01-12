@@ -1,3 +1,6 @@
+## 4.0.122（2026-01-12）
+fix: 修复swiper-action组件warning
+
 ## 4.0.121（2026-01-12）
 fix: 修复sticky组件warning
 

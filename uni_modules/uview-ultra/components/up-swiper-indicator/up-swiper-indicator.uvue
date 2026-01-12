@@ -57,7 +57,7 @@
 		computed: {
 			lengthArray(): Array<string> {
 				let list: Array<string> = []
-				for (var index = 0; index < this.length as number; index++) {
+				for (var index = 0; index < this.$props['length'] as number; index++) {
 					list.push(index.toString())
 				}
 				return list
