@@ -1,3 +1,6 @@
+## 4.0.120（2026-01-12）
+fix: 修复mixin语法问题（uin-app-x）
+
 ## 4.0.119（2026-01-10）
 improvment: dropdown组建warning修复
 

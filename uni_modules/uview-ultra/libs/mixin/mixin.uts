@@ -166,7 +166,7 @@ export const mixin = defineMixin({
 			if (index <= -1) {
 				this.childrenRefs.push(str)
 			}
-		}
+		},
         /**
          * 获取父组件数据
          * @author jry ijry@qq.com
