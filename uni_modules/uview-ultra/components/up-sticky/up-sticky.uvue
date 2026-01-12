@@ -79,7 +79,7 @@
 				return style
 			},
 			uZindex(): number {
-				return this.zIndex.toString() != '' ? (this.zIndex as number) : zIndex['sticky'] as number
+				return this.$props['zIndex'].toString() != '' ? (this.zIndex as number) : zIndex['sticky'] as number
 			}
 		},
 		mounted() {
