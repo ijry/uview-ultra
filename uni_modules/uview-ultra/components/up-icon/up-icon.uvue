@@ -89,41 +89,41 @@
 					classes.push(this.customPrefix)
 				}
 				// 主题色，通过类配置
-				// console.log('####', config.getArray('type'), this.color)
+				// console.log('####', config.getArray('type'), this.$props['color'].toString())
 				let types: Array<string>|null = config.getArray('type') as Array<string>
-				if (this.color != '' && types != null
+				if (this.$props['color'].toString() != '' && types != null
 					&& types?.includes(this.$props['color'].toString()) as Boolean
-				) classes.push('up-icon__icon--' + this.color)
+				) classes.push('up-icon__icon--' + this.$props['color'].toString())
 				// 阿里，头条，百度小程序通过数组绑定类名时，无法直接使用[a, b, c]的形式，否则无法识别
 				// 故需将其拆成一个字符串的形式，通过空格隔开各个类名
 				return classes.join(' ')
 			},
 			iconStyle(): any {
 				let style = {
-					fontSize: addUnit(this.size.toString()),
-					lineHeight: addUnit(this.size.toString()),
-					fontWeight: this.bold ? 'bold' : 'normal',
+					fontSize: addUnit(this.$props['size'].toString()),
+					lineHeight: addUnit(this.$props['size'].toString()),
+					fontWeight: (this.props['bold'] as boolean) ? 'bold' : 'normal',
 					// 某些特殊情况需要设置一个到顶部的距离，才能更好的垂直居中
-					top: addUnit(this.top)
+					top: addUnit(this.props['top'])
 				}
 				// 非主题色值时，才当作颜色值
 				let types: Array<string>|null = config.getArray('type') as Array<string>
 				// console.log('###', types)
-				if (this.color != '' && types != null && !types.includes(this.color)) {
-					style['color'] = this.color
+				if (this.$props['color'].toString() != '' && types != null && !types.includes(this.$props['color'].toString())) {
+					style['color'] = this.$props['color'].toString()
 				}
 
 				return style
 			},
 			// 判断传入的name属性，是否图片路径，只要带有"/"均认为是图片形式
 			isImg(): boolean {
-				return this.name.indexOf('/') !== -1
+				return this.$props['name'].toString().indexOf('/') !== -1
 			},
 			imgStyle(): any {
 				let style = {}
 				// 如果设置width和height属性，则优先使用，否则使用size属性
-				style['width'] = this.width != '' ? addUnit(this.width) : addUnit(this.size!!.toString())
-				style['height'] = this.height != '' ? addUnit(this.height) : addUnit(this.size!!.toString())
+				style['width'] = this.$props['width'] != '' ? addUnit(this.$props['width']) : addUnit(this.$props['size']!!.toString())
+				style['height'] = this.$props['height'] != '' ? addUnit(this.$props['height']) : addUnit(this.$props['size']!!.toString())
 				return style
 			},
 			// 通过图标名，查找对应的图标
@@ -131,10 +131,10 @@
 				// 使用自定义图标的时候页面上会把name属性也展示出来，所以在这里处理一下
 				if (this.customPrefix !== "upicon") return "";
 				// 如果内置的图标中找不到对应的图标，就直接返回name值，因为用户可能传入的是unicode代码
-				if (icons['upicon-' + this.name] != null) {
-					return icons['upicon-' + this.name] as string
+				if (icons['upicon-' + this.$props['name']] != null) {
+					return icons['upicon-' + this.$props['name']] as string
 				} else {
-					return this.name
+					return this.$props['name']
 				}
 			}
 		},
@@ -148,10 +148,10 @@
 				return addUnit(val)
 			},
 			clickHandler(e: UniPointerEvent) {
-				this.$emit('click', this.index)
+				this.$emit('click', this.$props['index'])
 				// 是否阻止事件冒泡
-			 	if (this.stop) {
-					this.preventEvent(e)
+			 	if (this.$props['stop'] as boolean) {
+					this.$callMetod('preventEvent', e)
 				}
 			}
 		}

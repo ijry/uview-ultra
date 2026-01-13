@@ -1,3 +1,6 @@
+## 4.0.123（2026-01-13）
+fix: 修复icon组件warning
+
 ## 4.0.122（2026-01-12）
 fix: 修复swiper-action组件warning
 
