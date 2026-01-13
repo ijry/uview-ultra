@@ -102,9 +102,9 @@
 				let style = {
 					fontSize: addUnit(this.$props['size'].toString()),
 					lineHeight: addUnit(this.$props['size'].toString()),
-					fontWeight: (this.props['bold'] as boolean) ? 'bold' : 'normal',
+					fontWeight: (this.$props['bold'] as boolean) ? 'bold' : 'normal',
 					// 某些特殊情况需要设置一个到顶部的距离，才能更好的垂直居中
-					top: addUnit(this.props['top'])
+					top: addUnit(this.$props['top'])
 				}
 				// 非主题色值时，才当作颜色值
 				let types: Array<string>|null = config.getArray('type') as Array<string>
@@ -117,7 +117,7 @@
 			},
 			// 判断传入的name属性，是否图片路径，只要带有"/"均认为是图片形式
 			isImg(): boolean {
-				return this.$props['name'].toString().indexOf('/') !== -1
+				return this.$props['name'].toString().indexOf('/') != -1
 			},
 			imgStyle(): any {
 				let style = {}
@@ -134,7 +134,7 @@
 				if (icons['upicon-' + this.$props['name']] != null) {
 					return icons['upicon-' + this.$props['name']] as string
 				} else {
-					return this.$props['name']
+					return this.$props['name'].toString()
 				}
 			}
 		},
@@ -151,7 +151,7 @@
 				this.$emit('click', this.$props['index'])
 				// 是否阻止事件冒泡
 			 	if (this.$props['stop'] as boolean) {
-					this.$callMetod('preventEvent', e)
+					this.$callMethod('preventEvent', e)
 				}
 			}
 		}
