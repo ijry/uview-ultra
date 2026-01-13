@@ -239,7 +239,7 @@
 				// #ifdef APP-NVUE
 				successIcon: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACgAAAAoCAYAAACM/rhtAAAAAXNSR0IArs4c6QAAAERlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAA6ABAAMAAAABAAEAAKACAAQAAAABAAAAKKADAAQAAAABAAAAKAAAAAB65masAAACP0lEQVRYCc3YXygsURwH8K/dpcWyG3LF5u/6/+dKVylSypuUl6uUPMifKMWL8oKEB1EUT1KeUPdR3uTNUsSLxb2udG/cbvInNuvf2rVnazZ/ZndmZ87snjM1Z+Z3zpzfp9+Z5mEAhlvjRtZgCKs+gnPAOcAkkMOR4jEHfItjDvgRxxSQD8cM0BuOCaAvXNCBQrigAsXgggYUiwsK0B9cwIH+4gIKlIILGFAqLiBAOTjFgXJxigJp4BQD0sIpAqSJow6kjSNAFTnRaHJwLenD6Mud52VQAcrBfTd2oyq+HtGaGGWAcnAVcXWoM3bCZrdi+ncPfaAcXE5UKVpdW/vitGPqqAtn98d0gXJwX7Qp6MmegUYVhvmTIezdmHlxJCjpHRTCFerLkRRu4k0aqdajN3sWOo0BK//msHa+xDuPC/oNFMKRhTtM4xjIX0SCNpXL4+7VIaHuyiWEp2L7ahWLf8fejfPdqPmC3mJicORZUp1CQzm+GiphvljGk+PBvWRbxii+xVTj5M6CiZ/tsDufvaXyxEUDxeLIyvu3m0iOyEFWVAkydcVYdyFrE9tQk9iMq6f/GNlvwt3LjQfh60LUrw9/cFyyMJUW/XkLSNMV4Mi6C5ML+ui4x5ClAX9sB9w0wV6wglJwJCv5fOxcr6EstgbGiEw4XcfUry4cWrcEUW8n+ARKxXEJHhw2WG43UKSvwI/TSZgvl7kh0b3XLZaLEy0QmMgLZAVH7J+ALOE+AVnDvQOyiPMAWcW5gSzjCPAV+78S5WE0GrQAAAAASUVORK5CYII=',
 				// #endif
-				lists: [] as UPUploadListItem[],
+				lists: [] as Array<UPUploadListItem>,
 				isInCount: true,
 				popupShow: false,
 				currentItemIndex: -1
@@ -340,7 +340,7 @@
 			},
 			formatFileList() {
 				let fileList = this.fileList as UTSJSONObject[]
-				let maxCount = this.maxCount as number
+				let maxCount = parseInt(this.maxCount.toString())
 				let lists = [] as UPUploadListItem[]
 				fileList.forEach((item: UTSJSONObject) => {
 					const name = item['name'] != null
@@ -352,8 +352,10 @@
 						isVideo: item['name'] != null ? testVideo(item['name'] as string) : (this.accept === 'video' ?? testVideo(name)),
 						deletable: typeof item.deletable === 'boolean' ? item.deletable : this.deletable,
 					})
-					let tmpObj = JSON.parseObject(JSON.stringify(tmp)) as UPUploadListItem
-					lists.push(tmpObj)
+					let tmpObj = (JSON.parse<UPUploadListItem>(JSON.stringify(tmp)))
+					if (tmpObj != null) {
+						lists.push(tmpObj!)
+					}
 				})
 				this.lists = lists
 				this.isInCount = lists.length < maxCount

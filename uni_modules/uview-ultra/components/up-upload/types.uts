@@ -1,6 +1,6 @@
 export type UPUploadListItem = {
-	name : string,
-	type : string,
+	name ?: string,
+	type ?: string,
 	status ?: string,
 	isImage : boolean,
 	isVideo : boolean,
