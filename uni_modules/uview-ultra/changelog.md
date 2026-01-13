@@ -1,3 +1,6 @@
+## 4.0.127（2026-01-13）
+fix: 修复list组件在支付宝小程序下scrolltolower无法触发（uni-app、uni-app-x） #422
+
 ## 4.0.126（2026-01-13）
 fix: 修复throttle
 
