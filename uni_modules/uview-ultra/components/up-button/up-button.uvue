@@ -158,7 +158,7 @@ export default {
                 // 如果有设置color值，则用color值，否则使用type主题颜色
                 return this.color != ''
                     ? this.color
-                    : config.getString(`color.up-${this.type}`) as String;
+                    : config.getString(`color.up-${this.type}`) as string;
             }
             if (this.type == "info") {
                 return "#c9c9c9";
@@ -186,7 +186,7 @@ export default {
                     // 非镂空，背景色使用自定义的颜色
                     style["backgroundColor"] = this.color;
                 }
-                if (this.color.indexOf("gradient") != -1) {
+                if (this.$props['color'].indexOf("gradient") != -1) {
                     // 如果自定义的颜色为渐变色，不显示边框，以及通过backgroundImage设置渐变色
                     // weex文档说明可以写borderWidth的形式，为什么这里需要分开写？
                     // 因为weex是阿里巴巴为了部门业绩考核而做的你懂的东西，所以需要这么写才有效
