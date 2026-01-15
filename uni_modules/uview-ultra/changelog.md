@@ -1,3 +1,6 @@
+## 4.0.131（2026-01-15）
+improvment: bem方法迁移至function工具中（uni-app-x）
+
 ## 4.0.130（2026-01-14）
 fix：恢复code组件props类型
 

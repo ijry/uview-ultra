@@ -7,6 +7,44 @@ import { round } from './digit.uts'
 import config from '../config/config'
 
 /**
+   * 生成bem规则类名
+   * 由于微信小程序，H5，nvue之间绑定class的差异，无法通过:class="[bem()]"的形式进行同用
+   * 故采用如下折中做法，最后返回的是数组（一般平台）或字符串（支付宝和字节跳动平台），类似['a', 'b', 'c']或'a b c'的形式
+   * @param {String} name 组件名称
+   * @param {Array} fixed 一直会存在的类名
+   * @param {Array} change 会根据变量值为true或者false而出现或者隐藏的类名
+   * @returns {Array|string}
+   */
+export function bem(name: string, fixed: Array<string>, change: Array<Array<any>>): string  {
+	  // 类名前缀
+	  const prefix = `up-${name}--`
+	  const classes = {}
+	  let that = this
+	  if (fixed.length > 0) {
+		  fixed.map((item) => {
+				// 这里的类名，会一直存在
+				classes[prefix + item] = true
+		  })
+	  }
+	  if (change.length > 0) {
+		  change.map((item) => {
+			  // 这里的类名，会根据item[1]的值为true或者false，而进行添加或者移除某一个类
+			  if (item[1] as boolean) {
+				(classes[prefix + (item[0] as string)] = item[1] as boolean)
+			  }
+			  // : (delete classes[prefix + item[0]])
+		  })
+	  }
+	  // #ifdef APP
+	  return UTSJSONObject.keys(classes).join(' ')
+	  // #endif
+	  // #ifdef WEB || MP
+	  return UTSJSONObject.keys(classes).join(' ')
+	  // #endif
+	  // 支付宝，头条小程序无法动态绑定一个数组类名，否则解析出来的结果会带有","，而导致失效
+}
+
+/**
  * @description 如果value小于min，取min；如果value大于max，取max
  * @param {number} min 
  * @param {number} max 

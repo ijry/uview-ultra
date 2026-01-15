@@ -2,6 +2,7 @@ import { defineMixin } from '../vue.uts'
 import {
 	array as testArray
 } from '../function/test.uts'
+import { bem } from '../../libs/function/index';
 // import route from '../util/route'
 export const mixin = defineMixin({
     // 定义每个组件都可能需要用到的外部样式以及类名
@@ -50,33 +51,8 @@ export const mixin = defineMixin({
 		   * @param {Array} change 会根据变量值为true或者false而出现或者隐藏的类名
 		   * @returns {Array|string}
 		   */
-		bem: function (name: String, fixed: Array<String>, change: Array<Array<any>>): String  {
-			  // 类名前缀
-			  const prefix = `up-${name}--`
-			  const classes = {}
-			  let that = this
-			  if (fixed.length > 0) {
-				  fixed.map((item) => {
-						// 这里的类名，会一直存在
-						classes[prefix + item] = true
-				  })
-			  }
-			  if (change.length > 0) {
-				  change.map((item) => {
-					  // 这里的类名，会根据item[1]的值为true或者false，而进行添加或者移除某一个类
-					  if (item[1] as boolean) {
-					  	(classes[prefix + (item[0] as string)] = item[1] as boolean)
-					  }
-					  // : (delete classes[prefix + item[0]])
-				  })
-			  }
-			  // #ifdef APP
-			  return UTSJSONObject.keys(classes).join(' ')
-			  // #endif
-			  // #ifdef WEB || MP
-			  return UTSJSONObject.keys(classes).join(' ')
-			  // #endif
-			  // 支付宝，头条小程序无法动态绑定一个数组类名，否则解析出来的结果会带有","，而导致失效
+		bem: function (name: string, fixed: Array<string>, change: Array<Array<any>>): string  {
+			return bem(name, fixed, change)
 		},
         // 跳转某一个页面
         openPage: function(urlKey: string = 'url'): void {

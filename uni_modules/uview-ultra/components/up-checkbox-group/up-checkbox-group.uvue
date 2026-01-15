@@ -11,6 +11,7 @@
 	import { propsCheckboxGroup } from './props';
 	import { mpMixin } from '../../libs/mixin/mpMixin';
 	import { mixin } from '../../libs/mixin/mixin';
+	import { bem } from '../../libs/function/index';
 	/**
 	 * checkboxGroup 复选框组
 	 * @description 复选框组件一般用于需要多个选择的场景，该组件功能完整，使用方便
@@ -56,8 +57,7 @@
 			  };
 			},
 			bemClass() {
-				// this.bem为一个computed变量，在mixin中
-				return this.bem('checkbox-group', [this.placement], [])
+				return bem('checkbox-group', [this.placement], [])
 			},
 		},
 		watch: {

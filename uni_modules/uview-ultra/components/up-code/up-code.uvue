@@ -78,7 +78,6 @@
 					clearInterval(this.timer ?? 0)
 					this.timer = 0
 				}
-				alert()
 				this.$emit('start')
 				this.canGetCode = false
 				// 这里放这句，是为了一开始时就提示，否则要等setInterval的1秒后才会有提示
