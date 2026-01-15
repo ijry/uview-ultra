@@ -46,7 +46,6 @@ export function bem(name: string, fixed: Array<string>, change: Array<Array<any>
 	  // 类名前缀
 	  const prefix = `up-${name}--`
 	  const classes = {}
-	  let that = this
 	  if (fixed.length > 0) {
 		  fixed.map((item) => {
 				// 这里的类名，会一直存在
