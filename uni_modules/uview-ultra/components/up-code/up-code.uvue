@@ -30,7 +30,7 @@
 		mixins: [mpMixin, mixin, propsCode],
 		data() {
 			return {
-				secNum: this.seconds as number,
+				secNum: 0,
 				timer: 0,
 				canGetCode: true, // 是否可以执行验证码操作
 			}
@@ -41,8 +41,8 @@
 		watch: {
 			seconds: {
 				immediate: true,
-				handler(n: number) {
-					this.secNum = n
+				handler(n: string|number) {
+					this.secNum = parseInt(n.toString())
 				}
 			}
 		},
@@ -75,9 +75,10 @@
 			start(): void {
 				// 防止快速点击获取验证码的按钮而导致内部产生多个定时器导致混乱
 				if(this.timer != 0) {
-					clearInterval(this.timer)
+					clearInterval(this.timer ?? 0)
 					this.timer = 0
 				}
+				alert()
 				this.$emit('start')
 				this.canGetCode = false
 				// 这里放这句，是为了一开始时就提示，否则要等setInterval的1秒后才会有提示
@@ -87,7 +88,7 @@
 						// 用当前倒计时的秒数替换提示字符串中的"x"字母
 						this.changeEvent(this.changeText.replace(/x|X/, (this.secNum - 1).toString()))
 					} else {
-						clearInterval(this.timer)
+						clearInterval(this.timer ?? 0)
 						this.timer = 0
 						this.changeEvent(this.endText)
 						this.secNum = parseInt(this.seconds.toString())
@@ -126,7 +127,7 @@
 		// 组件销毁的时候，清除定时器，否则定时器会继续存在，系统不会自动清除
 		beforeUnmount() {
 			this.setTimeToStorage()
-			clearTimeout(this.timer)
+			clearTimeout(this.timer ?? 0)
 			this.timer = 0
 		}
 	}

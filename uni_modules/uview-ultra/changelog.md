@@ -1,3 +1,12 @@
+## 4.0.130（2026-01-14）
+fix：恢复code组件props类型
+
+## 4.0.129（2026-01-14）
+fix: 优化digit工具方法（uni-app-x)
+
+## 4.0.128（2026-01-14）
+fix: 修复tabs组建warning
+
 ## 4.0.127（2026-01-13）
 fix: 修复list组件在支付宝小程序下scrolltolower无法触发（uni-app、uni-app-x） #422
 

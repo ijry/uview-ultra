@@ -116,7 +116,7 @@ export function plus(...nums): number {
  * 高精度减法
  * @export
  */
-export function minus(...nums): number {
+export function minus(...nums: number[]): number {
   if (nums.length > 2) {
     return iteratorOperation(nums, minus);
   }
@@ -132,18 +132,18 @@ export function minus(...nums): number {
  */
 export function divide(...nums: number[]): number {
  // todo
- //  if (nums.length > 2) {
- //    return iteratorOperation(nums, divide);
- //  }
+  if (nums.length > 2) {
+    return iteratorOperation(nums, divide);
+  }
 
- //  const [num1, num2] = nums;
- //  const num1Changed = float2Fixed(num1);
- //  const num2Changed = float2Fixed(num2);
- //  checkBoundary(num1Changed);
- //  checkBoundary(num2Changed);
- //  // 重要，这里必须用strip进行修正
- //  return times(num1Changed / num2Changed,
-	// strip(Math.pow(10, digitLength(num2) - digitLength(num1))));
+  const [num1, num2] = nums;
+  const num1Changed = float2Fixed(num1);
+  const num2Changed = float2Fixed(num2);
+  checkBoundary(num1Changed);
+  checkBoundary(num2Changed);
+  // 重要，这里必须用strip进行修正
+  return times(num1Changed / num2Changed,
+	 strip(Math.pow(10, digitLength(num2) - digitLength(num1))));
 }
 
 /**

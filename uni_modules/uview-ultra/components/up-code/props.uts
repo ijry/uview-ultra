@@ -15,7 +15,7 @@ export const propsCode = defineMixin({
     props: {
         // 倒计时总秒数
         seconds: {
-            type: [Number],
+            type: [String, Number],
             default: crtProp['seconds']
         },
         // 尚未开始时提示
