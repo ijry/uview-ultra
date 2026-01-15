@@ -63,13 +63,13 @@
 		},
 		computed: {
 			textStr(): string {
-				let str = this.extraValue.toString() != ''
-					? this.extraValue.toString()
-					: (this.urls.length - this.showUrl.length).toString()
+				let str = this.$props['extraValue'].toString() != ''
+					? this.$props['extraValue'].toString()
+					: ((this.$props['urls'] as Array<string>).length - this.showUrl.length).toString()
 				return '+' + str
 			},
-			showUrl(): Array<any> {
-				return this.urls.slice(0, parseInt(this.maxCount.toString()))
+			showUrl(): Array<string> {
+				return (this.$props['urls'] as Array<string>).slice(0, parseInt(this.$props['maxCount'].toString()))
 			}
 		},
 		emits: ["showMore"],
@@ -80,8 +80,8 @@
 			src(item: any): string {
 				if (typeof item == 'object') {
 					let item1 = item as UTSJSONObject
-					return (this.keyName != '' && item1.getString(this.keyName) != null)
-						? item1.getString(this.keyName)!
+					return (this.$props['keyName'] != '' && item1.getString(this.$props['keyName']) != null)
+						? item1.getString(this.$props['keyName'])!
 						: item1.getString('url')!
 				} else {
 					return item.toString()

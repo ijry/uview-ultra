@@ -1,3 +1,6 @@
+## 4.0.134（2026-01-15）
+fix: 修复avatar-group组件warning
+
 ## 4.0.133（2026-01-15）
 fix: 修复parse组件props缺少)（uni-app）
 
