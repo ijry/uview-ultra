@@ -5,7 +5,7 @@
 		    v-for="(item, index) in showUrl"
 		    :key="index"
 		    :style="{
-				marginLeft: index === 0 ? 0 : addUnit(-parseFloat(size.toString()) * parseFloat(gap.toString()))
+				marginLeft: index == 0 ? 0 : addUnit(-parseFloat(size.toString()) * parseFloat(gap.toString()))
 			}"
 		>
 			<up-avatar
@@ -16,7 +16,7 @@
 			></up-avatar>
 			<view
 			    class="up-avatar-group__item__show-more"
-			    v-if="showMore && index === showUrl.length - 1 && (urls.length > parseInt(maxCount.toString()) || parseInt(extraValue.toString()) > 0)"
+			    v-if="showMore && index == showUrl.length - 1 && (urls.length > parseInt(maxCount.toString()) || parseInt(extraValue.toString()) > 0)"
 				@tap="clickHandler"
 			>
 				<up-text

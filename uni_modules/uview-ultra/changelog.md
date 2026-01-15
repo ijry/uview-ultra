@@ -1,3 +1,6 @@
+## 4.0.137（2026-01-15）
+fix: 修复button和avatar-group语法
+
 ## 4.0.136（2026-01-15）
 fix: 修复button组件warning: Type 'String' is not assignable to type 'string'
 
