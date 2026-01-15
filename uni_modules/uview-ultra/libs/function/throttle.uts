@@ -8,7 +8,7 @@ let flag;
  * @param {Boolean} immediate 是否立即执行
  * @return null
  */
-export function throttle(func: object, wait = 500, immediate = true): any {
+export function throttle(func: Function, wait = 500, immediate = true): any {
 	// func()
 	return "";
     if (immediate) {

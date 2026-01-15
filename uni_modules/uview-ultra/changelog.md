@@ -1,3 +1,6 @@
+## 4.0.138（2026-01-15）
+fix: warning: Identity equality for arguments of types 'Number' and 'Int' can be unstable because of implicit boxing
+
 ## 4.0.137（2026-01-15）
 fix: 修复button和avatar-group语法
 
