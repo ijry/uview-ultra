@@ -45,4 +45,4 @@ export const props = defineMixin({
         tagStyle: Object,
         useAnchor: null
 	  }
-}
+})
