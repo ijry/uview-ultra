@@ -74,21 +74,21 @@
 				let valueReturn = ''
 				switch (this.numberType.toString()) {
 					case "overflow":
-						valueReturn = parseInt(this.value.toString()) > parseInt(this.max.toString()) ? this.max.toString() + "+" : this.value.toString()
+						valueReturn = parseInt(this.$props['value'].toString()) > parseInt(this.max.toString()) ? this.max.toString() + "+" : this.$props['value'].toString()
 						break;
 					case "ellipsis":
-						valueReturn = parseInt(this.value.toString()) > parseInt(this.max.toString()) ? "..." : this.value.toString()
+						valueReturn = parseInt(this.$props['value'].toString()) > parseInt(this.max.toString()) ? "..." : this.$props['value'].toString()
 						break;
 					case "limit":
-						valueReturn = parseInt(this.value.toString()) > 999
+						valueReturn = parseInt(this.$props['value'].toString()) > 999
 								?
-									parseInt(this.value.toString()) >= 9999 ?
-									(Math.floor(parseInt(this.value.toString()) / 1e4 * 100) / 100).toString() + "w"
-									: (Math.floor(parseInt(this.value.toString()) / 1e3 * 100) / 100).toString() + "k"
-								: this.value.toString()
+									parseInt(this.$props['value'].toString()) >= 9999 ?
+									(Math.floor(parseInt(this.$props['value'].toString()) / 1e4 * 100) / 100).toString() + "w"
+									: (Math.floor(parseInt(this.$props['value'].toString()) / 1e3 * 100) / 100).toString() + "k"
+								: this.$props['value'].toString()
 						break;
 					default:
-						valueReturn = this.value.toString()
+						valueReturn = this.$props['value'].toString()
 				}
 				return valueReturn
 			},
