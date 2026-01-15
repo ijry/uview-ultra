@@ -80,8 +80,8 @@
 			src(item: any): string {
 				if (typeof item == 'object') {
 					let item1 = item as UTSJSONObject
-					return (this.$props['keyName'] != '' && item1.getString(this.$props['keyName']) != null)
-						? item1.getString(this.$props['keyName'])!
+					return (this.$props['keyName'] != '' && item1.getString(this.$props['keyName'].toString()) != null)
+						? item1.getString(this.$props['keyName'].toString())!
 						: item1.getString('url')!
 				} else {
 					return item.toString()
