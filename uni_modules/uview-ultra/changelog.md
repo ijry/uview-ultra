@@ -1,3 +1,12 @@
+## 4.0.141（2026-01-15）
+fix: 修复radio组件使用size参数warning
+
+## 4.0.140（2026-01-15）
+fix: 修复throttle方法Function类型
+
+## 4.0.139（2026-01-15）
+fix: 修复throttle方法Function类型
+
 ## 4.0.138（2026-01-15）
 fix: warning: Identity equality for arguments of types 'Number' and 'Int' can be unstable because of implicit boxing
 

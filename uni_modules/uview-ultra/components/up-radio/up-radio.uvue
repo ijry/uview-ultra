@@ -118,8 +118,8 @@
 			},
 			// 组件尺寸，对应size的值，默认值为21px
 			elSize(): string {
-				return this.size.toString() != ''
-					? this.size.toString()
+				return this.$props['size'].toString() != ''
+					? this.$props['size'].toString()
 					: (this.parentData['size'].toString() != '' ? this.parentData['size'].toString() : '21px');
 			},
 			// 组件的勾选图标的尺寸，默认12px
