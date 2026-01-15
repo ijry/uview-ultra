@@ -63,7 +63,7 @@
 	import { propsCollapseItem } from './props';
 	import { mpMixin } from '../../libs/mixin/mpMixin';
 	import { mixin } from '../../libs/mixin/mixin';
-	import { guid, sleep, error } from '../../libs/function/index';
+	import { guid, sleep, upGetRect, error } from '../../libs/function/index';
 	import { array as testArray } from '../../libs/function/test';
 	/**
 	 * collapseItem 折叠面板Item
@@ -117,9 +117,9 @@
 			}
 		},
 		computed: {
-			titleCpu() {
+			titleCpu(): string {
 				if (this.$slots['title'] == null) {
-					return title
+					return this.$props['title']
 				} else {
 					return ''
 				}
@@ -130,6 +130,13 @@
 			// console.log('$slots', this.$slots)
 		},
 		methods: {
+			titleCpu1(): string {
+				if (this.$slots['title'] == null) {
+					return this.$props['title'].toString()
+				} else {
+					return ''
+				}
+			},
 			// 异步获取内容，或者动态修改了内容时，需要重新初始化
 			async init() {
 				// 初始化数据
@@ -204,7 +211,8 @@
 				// #ifndef APP-NVUE
 				// upGetRect为自带的节点查询简化方法
 				return new Promise(resolve => {
-					this.upGetRect(`#${this.elId}`, false).then(res => {
+					upGetRect(`#${this.elId}`, false).then(res => {
+						// console.log(res)
 						let size = res as NodeInfo;
 						resolve(size)
 					})

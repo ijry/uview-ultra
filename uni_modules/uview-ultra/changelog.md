@@ -1,3 +1,6 @@
+## 4.0.132（2026-01-15）
+improvment: upGetRect方法从mixin迁移至function为组合式API适配（uni-app-x）
+
 ## 4.0.131（2026-01-15）
 improvment: bem方法迁移至function工具中（uni-app-x）
 

@@ -6,6 +6,33 @@ import {
 import { round } from './digit.uts'
 import config from '../config/config'
 
+// 查询节点信息
+// 目前此方法在支付宝小程序中无法获取组件跟接点的尺寸，为支付宝的bug(2020-07-21)
+// 解决办法为在组件根部再套一个没有任何作用的view元素
+export function upGetRect(selector: string, all: boolean = false, comp: ComponentPublicInstance|null = null): Promise<NodeInfo> {
+	return new Promise((resolve) => {
+		if (all == true) {
+			uni.createSelectorQuery()
+				.in(comp).select(selector)
+				.boundingClientRect((res) => {
+					const nodeInfoArray = res as NodeInfo[]
+					const nodeInfoArrayItem = nodeInfoArray[0]
+					resolve(nodeInfoArrayItem)
+				})
+				.exec()
+		} else {
+			uni.createSelectorQuery()
+				.in(comp).selectAll(selector)
+				.boundingClientRect((res) => {
+					const nodeInfoArray = res as NodeInfo[]
+					const nodeInfoArrayItem = nodeInfoArray[0]
+					resolve(nodeInfoArrayItem)
+				})
+				.exec()
+		}
+	})
+}
+		
 /**
    * 生成bem规则类名
    * 由于微信小程序，H5，nvue之间绑定class的差异，无法通过:class="[bem()]"的形式进行同用
