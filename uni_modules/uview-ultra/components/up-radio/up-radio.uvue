@@ -124,46 +124,46 @@
 			},
 			// 组件的勾选图标的尺寸，默认12px
 			elIconSize(): any {
-				return this.iconSize.toString() != ''
-					? this.iconSize.toString()
+				return this.$props['iconSize'].toString() != ''
+					? this.$props['iconSize'].toString()
 					: (this.parentData['iconSize'].toString() != '' ? this.parentData['iconSize'].toString() : '12px');
 			},
 			// 组件选中激活时的颜色
 			elActiveColor(): string {
-				return this.activeColor != ''
-					? this.activeColor
+				return this.$props['activeColor'] != ''
+					? this.$props['activeColor']
 					: (this.parentData['activeColor'] as string != '' ? this.parentData['activeColor'] as string : '#2979ff');
 			},
 			// 组件选未中激活时的颜色
 			elInactiveColor(): string {
-				return this.inactiveColor != ''
-					? this.inactiveColor
+				return this.$props['inactiveColor'] != ''
+					? this.$props['inactiveColor']
 					: (this.parentData['inactiveColor'] as string !='' ? this.parentData['inactiveColor'] as string :
 					'#c8c9cc');
 			},
 			// label的颜色
 			elLabelColor(): string {
-				return this.labelColor != ''
-					? this.labelColor
+				return this.$props['labelColor'] != ''
+					? this.$props['labelColor']
 					: (this.parentData['labelColor'] as string !='' ? this.parentData['labelColor'] as string : '#606266')
 			},
 			// 组件的形状
 			elShape(): string {
-				return this.shape !=''
-					? this.shape
+				return this.$props['shape'] !=''
+					? this.$props['shape']
 					: (this.parentData['shape'] as string != '' ? this.parentData['shape'] as string : 'circle');
 			},
 			// label大小
 			elLabelSize(): string {
 				return addUnit(
-					this.labelSize.toString() != ''
-						? this.labelSize.toString()
+					this.$props['labelSize'].toString() != ''
+						? this.$props['labelSize'].toString()
 						: (this.parentData['labelSize'].toString() != '' ? this.parentData['labelSize'].toString() :
 					'15'))
 			},
 			elIconColor(): string {
-				const iconColor = this.iconColor != ''
-					? this.iconColor
+				const iconColor = this.$props['iconColor'].toString() != ''
+					? this.$props['iconColor'].toString()
 					: (this.parentData['iconColor'] as string != '' ? this.parentData['iconColor'] as string :
 						'#ffffff');
 				// 图标的颜色
