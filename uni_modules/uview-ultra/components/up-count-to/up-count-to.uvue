@@ -68,10 +68,10 @@ export default {
 		}
 	},
 	mounted() {
-		this.localStartVal = parseInt(this.startVal.toString())
-		this.displayValue = this.formatNumber(this.startVal)
-		this.localDuration = parseInt(this.duration.toString())
-		if (this.autoplay) {
+		this.localStartVal = parseInt(this.$props['startVal'].toString())
+		this.displayValue = this.formatNumber(this.$props['startVal'])
+		this.localDuration = parseInt(this.$props['duration'].toString())
+		if (this.$props['autoplay'].toString() == 'true') {
 			this.start();
 		}
 	},
@@ -98,9 +98,9 @@ export default {
 		},
 		// 开始滚动数字
 		start() {
-			this.localStartVal = this.startVal as number;
+			this.localStartVal = parseInt(this.$props['startVal'].toString());
 			this.startTime = null;
-			this.localDuration = this.duration as number;
+			this.localDuration = parseInt(this.$props['duration'].toString());
 			this.paused = false;
 			this.rAF = this.requestAnimationFrame();
 		},
@@ -134,7 +134,7 @@ export default {
 			if (this.rAF != null) {
 				this.cancelAnimationFrame(this.rAF);
 			}
-			this.displayValue = this.formatNumber(this.startVal);
+			this.displayValue = this.formatNumber(this.$props['startVal']);
 		},
 		count(timestamp: number) {
 			if (this.startTime == null || this.startTime === 0) this.startTime = timestamp;
@@ -144,15 +144,15 @@ export default {
 			
 			if (this.useEasing) {
 				if (this.countDown) {
-					this.printVal = this.localStartVal - this.easingFn(progress, 0, this.localStartVal - (this.endVal as number), this.localDuration);
+					this.printVal = this.localStartVal - this.easingFn(progress, 0, this.localStartVal - parseInt(this.$props['endVal'].toString()), this.localDuration);
 				} else {
-					this.printVal = this.easingFn(progress, this.localStartVal, (this.endVal as number) - this.localStartVal, this.localDuration);
+					this.printVal = this.easingFn(progress, this.localStartVal, parseInt(this.$props['endVal'].toString()) - this.localStartVal, this.localDuration);
 				}
 			} else {
 				if (this.countDown) {
-					this.printVal = this.localStartVal - (this.localStartVal - (this.endVal as number)) * (progress / this.localDuration);
+					this.printVal = this.localStartVal - (this.localStartVal - parseInt(this.$props['endVal'].toString())) * (progress / this.localDuration);
 				} else {
-					this.printVal = this.localStartVal + ((this.endVal as number) - this.localStartVal) * (progress / this.localDuration);
+					this.printVal = this.localStartVal + (parseInt(this.$props['endVal'].toString()) - this.localStartVal) * (progress / this.localDuration);
 				}
 			}
 			
@@ -167,7 +167,7 @@ export default {
 			if (progress < this.localDuration) {
 				this.rAF = this.requestAnimationFrame();
 			} else {
-				this.displayValue = this.formatNumber(this.endVal);
+				this.displayValue = this.formatNumber(parseInt(this.$props['endVal'].toString()));
 				this.$emit('end');
 			}
 		},
