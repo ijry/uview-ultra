@@ -53,7 +53,7 @@
 		// #endif
 		computed: {
 			parentCol(): number {
-				if (this.parentData != null) {
+				if (this.parentData != null && this.parentData['col'] != null) {
 					return parseInt(this.parentData['col'].toString())
 				}
 				return 0

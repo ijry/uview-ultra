@@ -1,3 +1,9 @@
+## 4.0.143（2026-01-16）
+​fix: 修复grid-item报wanning Object is possibly 'null'​
+
+## 4.0.142（2026-01-15）
+fix: 修复bem方法冗余语句
+
 ## 4.0.141（2026-01-15）
 fix: 修复radio组件使用size参数warning
 
