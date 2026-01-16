@@ -1,0 +1,56 @@
+/**
+ * 小程序开放能力相关事件处理的组合式函数
+ * 提供处理各种开放能力事件的方法
+ */
+export const useOpenType = (emit: (event: string, detail?: any) => void) => {
+    /**
+     * 获取用户信息事件处理
+     */
+    const onGetUserInfo = (event: UniCustomEvent<UTSJSONObject>) => {
+        emit('getuserinfo', event.detail);
+    };
+
+    /**
+     * 联系人事件处理
+     */
+    const onContact = (event: UniCustomEvent<UTSJSONObject>) => {
+        emit('contact', event.detail);
+    };
+
+    /**
+     * 获取手机号事件处理
+     */
+    const onGetPhoneNumber = (event: UniCustomEvent<UTSJSONObject>) => {
+        emit('getphonenumber', event.detail);
+    };
+
+    /**
+     * 错误事件处理
+     */
+    const onError = (event: UniCustomEvent<UTSJSONObject>) => {
+        emit('error', event.detail);
+    };
+
+    /**
+     * 启动APP事件处理
+     */
+    const onLaunchApp = (event: UniCustomEvent<UTSJSONObject>) => {
+        emit('launchapp', event.detail);
+    };
+
+    /**
+     * 打开设置事件处理
+     */
+    const onOpenSetting = (event: UniCustomEvent<UTSJSONObject>) => {
+        emit('opensetting', event.detail);
+    };
+
+    return {
+        onGetUserInfo,
+        onContact,
+        onGetPhoneNumber,
+        onError,
+        onLaunchApp,
+        onOpenSetting
+    };
+};

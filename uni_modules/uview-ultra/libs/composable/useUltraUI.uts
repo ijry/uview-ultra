@@ -1,0 +1,23 @@
+import type { PropType } from 'vue'
+
+export const commonProps = {
+    // 每个组件都有的父组件传递的样式，可以为字符串或者对象形式
+    customStyle: {
+        type: [UTSJSONObject, String],
+        default: {}
+    },
+    customClass: {
+        type: String,
+        default: ''
+    },
+    // 跳转的页面路径
+    url: {
+        type: String,
+        default: ''
+    },
+    // 页面跳转的类型
+    linkType: {
+        type: String,
+        default: 'navigateTo'
+    }
+}

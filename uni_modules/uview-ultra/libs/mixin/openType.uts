@@ -25,3 +25,6 @@ export const openType = defineMixin({
         }
     }
 })
+
+// 注意：此文件已被弃用，请使用 composable/useOpenType.uts 组合式函数
+// 保留此文件仅用于向后兼容性提示

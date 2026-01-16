@@ -1,4 +1,5 @@
 import { defineMixin } from '../../libs/vue'
+import type { PropType } from 'vue'
 import defProps from './actionSheet.uts'
 let crtProp = defProps['actionSheet'] as UTSJSONObject
 
@@ -22,9 +23,10 @@ export const propsActionSheet = defineMixin({
         },
         // 数据
         actions: {
-            // type: Array<UPActionSheetItem>,
-			type: Array<UTSJSONObject>,
-            default: crtProp['actions']
+            type: Array as PropType<UTSJSONObject[]>,
+ 		    default: () : Array<UTSJSONObject> => {
+       		    return crtProp['actions']
+     	    }
         },
         // 取消按钮的文字，不为空时显示按钮
         cancelText: {
