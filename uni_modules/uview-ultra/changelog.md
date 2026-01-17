@@ -1,3 +1,6 @@
+## 4.0.146（2026-01-17）
+fix: 修复radio组件props类型转换
+
 ## 4.0.145（2026-01-16）
 fix: 修复radio组件props报warning
 

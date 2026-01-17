@@ -130,27 +130,27 @@
 			},
 			// 组件选中激活时的颜色
 			elActiveColor(): string {
-				return this.$props['activeColor'] != ''
-					? this.$props['activeColor']
+				return this.$props['activeColor'] as string != ''
+					? this.$props['activeColor'] as string
 					: (this.parentData['activeColor'] as string != '' ? this.parentData['activeColor'] as string : '#2979ff');
 			},
 			// 组件选未中激活时的颜色
 			elInactiveColor(): string {
-				return this.$props['inactiveColor'] != ''
-					? this.$props['inactiveColor']
+				return this.$props['inactiveColor'] as string != ''
+					? this.$props['inactiveColor'] as string
 					: (this.parentData['inactiveColor'] as string !='' ? this.parentData['inactiveColor'] as string :
 					'#c8c9cc');
 			},
 			// label的颜色
 			elLabelColor(): string {
-				return this.$props['labelColor'] != ''
-					? this.$props['labelColor']
+				return this.$props['labelColor'] as string != ''
+					? this.$props['labelColor'] as string
 					: (this.parentData['labelColor'] as string !='' ? this.parentData['labelColor'] as string : '#606266')
 			},
 			// 组件的形状
 			elShape(): string {
-				return this.$props['shape'] !=''
-					? this.$props['shape']
+				return this.$props['shape'] as string !=''
+					? this.$props['shape'] as string
 					: (this.parentData['shape'] as string != '' ? this.parentData['shape'] as string : 'circle');
 			},
 			// label大小
@@ -164,7 +164,7 @@
 			elIconColor(): string {
 				const iconColor = this.$props['iconColor'].toString() != ''
 					? this.$props['iconColor'].toString()
-					: (this.parentData['iconColor'] as string != '' ? this.parentData['iconColor'] as string :
+					: (this.parentData['iconColor'].toString() != '' ? this.parentData['iconColor'] as string :
 						'#ffffff');
 				// 图标的颜色
 				if (this.elDisabled) {
