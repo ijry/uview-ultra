@@ -1,4 +1,6 @@
-import type { PropType } from 'vue'
+import { ref, reactive } from 'vue'
+import { bem, upGetRect } from '../function/index'
+import { array as testArray } from '../function/test.uts'
 
 export const commonProps = {
     // 每个组件都有的父组件传递的样式，可以为字符串或者对象形式
@@ -19,5 +21,167 @@ export const commonProps = {
     linkType: {
         type: String,
         default: 'navigateTo'
+    }
+}
+
+// 定义组件公共属性和方法的组合式函数
+export const useUltraUI = () => {
+    // 定义响应式数据
+    const parent = ref<ComponentPublicInstance | null>(null)
+    const parentData = reactive<Record<string, any>>({})
+    const children = ref<ComponentPublicInstance[]>([])
+    const childrenRefs = ref<string[]>([])
+
+    // 生成bem规则类名
+    const bemFunc = (name: string, fixed: Array<string>, change: Array<Array<any>>): string => {
+        return bem(name, fixed, change)
+    }
+
+    // 跳转某一个页面
+    const openPage = (urlKey: string = 'url'): void => {
+        // const url: string = this.$data?.[urlKey].toString()
+        // if (url != '') {
+        //     // h5官方回应：发行h5会自动摇树优化，所有使用uni的地方，都会被直接转换成具体的API调用 https://ask.dcloud.net.cn/question/161523?notification_id-1201922__rf-false__item_id-226372
+        //     // 使用封装的 route 进行跳转（直接调用方法），不使用 uni 对象
+        //     // route({ type: this.linkType, url })
+        //     // 执行类似uni.navigateTo的方法
+        //     uni[this.linkType]({
+        //         url
+        //     })
+        // }
+    }
+
+    // 获取子组件索引
+    const getChildIndex = (ins: ComponentPublicInstance) => {
+        let index = -1
+        if (parent.value != null) {
+            (parent.value!!.$data['children'] as ComponentPublicInstance[]).forEach((child: ComponentPublicInstance, idx: number) => {
+                if (child == ins) {
+                    index = idx
+                }
+            })
+        }
+        return index
+    }
+
+    // 获取父组件
+    const getParent = (name: string, instance: ComponentPublicInstance): ComponentPublicInstance | null => {
+        let parent = instance.$parent
+        // 通过while遍历，这里主要是为了H5需要多层解析的问题
+        while (parent != null) {
+            // 父组件
+            if (parent.$options != null && parent.$options['name'] != name) {
+                // 如果组件的name不相等，继续上一级寻找
+                parent = parent.$parent
+            } else {
+                // 一定要break,return会导致死循环CPU飙升。
+                break
+            }
+        }
+        return parent
+    }
+
+    // 添加子组件
+    const addChild = (ins: ComponentPublicInstance): void => {
+        let exist = false
+        let childs: ComponentPublicInstance[] = children.value
+        childs.map((child: ComponentPublicInstance) => {
+            if (ins == child) {
+                exist = true
+            }
+        })
+        if (!exist) {
+            children.value.push(ins)
+        }
+    }
+
+    // 添加子组件引用
+    const addChildRef = (str: string): void => {
+        let index = childrenRefs.value.indexOf('str')
+        if (index <= -1) {
+            childrenRefs.value.push(str)
+        }
+    }
+
+    // 获取父组件数据
+    const getParentData = (parentName: string, instance: ComponentPublicInstance, refMode: boolean = false): any => {
+        // 避免在created中去定义parent变量
+        // 这里的本质原理是，通过获取父组件实例(也即类似up-radio的父组件up-radio-group的this)
+        // 将父组件this中对应的参数，赋值给本组件up-radio的this)的parentData对象中对应的属性
+        // 之所以需要这么做，是因为所有端中，头条小程序不支持通过this.parent.xxx去监听父组件参数的变化
+        // 此处并不会自动更新子组件的数据，而是依赖父组件up-radio-group去监听data的变化，手动调用更新子组件的方法去重新获取
+        // 注意不能赋值给parent,会导致与addChild中push冲突
+        let parentIns = getParent(parentName, instance)
+        parent.value = parentIns
+        if (parentIns != null) {
+            if (parentIns?.$data != null && parentIns?.$data?.['children'] != null) {
+                // 如果父组件的children不存在本组件的实例，才将本实例添加到父组件的children中
+                if (refMode) {
+                    parentIns?.$callMethod('addChildRef', instance.$data['refstr'])
+                } else {
+                    parentIns?.$callMethod('addChild', instance)
+                }
+            }
+            // 遍历parentData中的属性，将parent中的同名属性赋值给parentData
+            Object.keys(parentData).map((key: string) => {
+                if (parentIns?.$props != null && parentIns?.$props?.[key] != null) {
+                    if (parentData[key] != null) {
+                        parentData[key] = parentIns?.$props?.[key]
+                    }
+                }
+                if (parentIns?.$data != null && parentIns?.$data?.[key] != null) {
+                    if (parentData[key] != null) {
+                        parentData[key] = parentIns?.$data?.[key]
+                    }
+                }
+            })
+        }
+        return {}
+    }
+
+    // 阻止事件冒泡
+    const preventEvent = (e: UniEvent) => {
+        e.stopPropagation()
+    }
+
+    // 空操作
+    const noop = (e: UniEvent) => {
+        preventEvent(e)
+    }
+
+    // 组件销毁时清理逻辑
+    const onComponentDestroy = (instance: ComponentPublicInstance) => {
+        // 判断当前页面是否存在parent和children，一般在checkbox和checkbox-group父子联动的场景会有此情况
+        // 组件销毁时，移除子组件在父组件children数组中的实例，释放资源，避免数据混乱
+        if (instance.$parent && testArray(parent.value?.children)) {
+            // 组件销毁时，移除父组件中的children数组中对应的实例
+            const childrenList = parent.value!.children
+            childrenList.map((child: ComponentPublicInstance, index: number) => {
+                // 如果相等，则移除
+                if (child === instance) {
+                    childrenList.splice(index, 1)
+                }
+            })
+        }
+    }
+
+    return {
+        // 响应式数据
+        parent,
+        parentData,
+        children,
+        childrenRefs,
+
+        // 方法
+        bemFunc,
+        openPage,
+        getChildIndex,
+        getParent,
+        addChild,
+        addChildRef,
+        getParentData,
+        preventEvent,
+        noop,
+        onComponentDestroy
     }
 }
