@@ -103,7 +103,7 @@
 	</up-popup>
 </template>
 
-<script setup lang="ts">
+<script setup lang="uts">
 import { computed, onBeforeUnmount } from 'vue'
 import type { PropType } from 'vue'
 import { propsActionSheet } from './props'
@@ -118,7 +118,7 @@ const { onComponentDestroy, preventEvent, noop} = useUltraUI()
 
 // options
 defineOptions({
-  ...mpSharedMpOptions,
+  // ...mpSharedMpOptions,
   name: 'up-action-sheet'
 })
 

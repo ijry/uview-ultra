@@ -1,3 +1,6 @@
+## 4.1.2（2026-01-19）
+refactor: 【组合式API重构】album组件（uni-app-x）
+
 ## 4.1.1（2026-01-19）
 refactor: 组合式API重构之全局mixin转为组合式API（uni-app-x）
 
