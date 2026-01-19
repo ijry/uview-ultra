@@ -104,16 +104,17 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onBeforeUnmount } from 'vue'
 import type { PropType } from 'vue'
 import { propsActionSheet } from './props'
 import { useOpenType } from '../../libs/composable/useOpenType'
 import { buttonProps } from '../../libs/composable/useButton'
 import { mpSharedMpOptions } from '../../libs/composable/useMp'
-import { commonProps } from '../../libs/composable/useUltraUI'
-import { mixin } from '../../libs/mixin/mixin'
+import { commonProps, useUltraUI } from '../../libs/composable/useUltraUI'
 import { addUnit } from '../../libs/function/index'
 import { UPActionSheetItem, UPActionSheetProps } from './types.uts'
+
+const { onComponentDestroy, preventEvent, noop} = useUltraUI()
 
 // options
 defineOptions({
@@ -130,6 +131,10 @@ const props = defineProps({
 
 onMounted(() => {
 	// console.log(props)
+})
+
+onBeforeUnmount(() => {
+	onComponentDestroy()
 })
 
 // emit定义

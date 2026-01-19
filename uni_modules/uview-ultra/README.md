@@ -2,7 +2,7 @@
     <img alt="logo" src="https://uview-plus.jiangruyi.com/common/logo.png" width="120" height="120" style="margin-bottom: 10px;">
 </p>
 <h3 align="center" style="margin: 30px 0 30px;font-weight: bold;font-size:40px;">uview-ultra 4.0</h3>
-<h3 align="center">多平台快速开发的UI框架</h3>
+<h3 align="center">多平台快速开发的UI框架（组合式API重构进行中）</h3>
 
 [![Website](https://img.shields.io/badge/uvue-compatible-green)](https://uview-ultra.lingyun.net/)
 [![Website](https://img.shields.io/badge/nvue-compatible-green)](https://uview-ultra.lingyun.net/)
