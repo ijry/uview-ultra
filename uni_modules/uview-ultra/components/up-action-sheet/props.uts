@@ -1,10 +1,9 @@
-import { defineMixin } from '../../libs/vue'
 import type { PropType } from 'vue'
 import defProps from './actionSheet.uts'
 let crtProp = defProps['actionSheet'] as UTSJSONObject
 
 import { UPActionSheetItem } from './types.uts'
-export const propsActionSheet = defineMixin({
+export const propsActionSheet = {
     props: {
         // 操作菜单是否展示 （默认false）
         show: {
@@ -64,4 +63,4 @@ export const propsActionSheet = defineMixin({
             default: crtProp['wrapMaxHeight']
         },
     }
-})
+}

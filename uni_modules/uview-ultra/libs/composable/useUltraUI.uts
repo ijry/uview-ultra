@@ -28,7 +28,7 @@ export const commonProps = {
 export const useUltraUI = () => {
     // 定义响应式数据
     const parent = ref<ComponentPublicInstance | null>(null)
-    const parentData = reactive<Record<string, any>>({})
+    const parentData = reactive<UTSJSONObject>({})
     const children = ref<ComponentPublicInstance[]>([])
     const childrenRefs = ref<string[]>([])
 
@@ -38,7 +38,7 @@ export const useUltraUI = () => {
     }
 
     // 跳转某一个页面
-    const openPage = (urlKey: string = 'url'): void => {
+    const openPage = (urlKey: string): void => {
         // const url: string = this.$data?.[urlKey].toString()
         // if (url != '') {
         //     // h5官方回应：发行h5会自动摇树优化，所有使用uni的地方，都会被直接转换成具体的API调用 https://ask.dcloud.net.cn/question/161523?notification_id-1201922__rf-false__item_id-226372
@@ -104,7 +104,7 @@ export const useUltraUI = () => {
     }
 
     // 获取父组件数据
-    const getParentData = (parentName: string, instance: ComponentPublicInstance, refMode: boolean = false): any => {
+    const getParentData = (parentName: string, instance: ComponentPublicInstance, refMode: boolean): any => {
         // 避免在created中去定义parent变量
         // 这里的本质原理是，通过获取父组件实例(也即类似up-radio的父组件up-radio-group的this)
         // 将父组件this中对应的参数，赋值给本组件up-radio的this)的parentData对象中对应的属性
@@ -123,7 +123,7 @@ export const useUltraUI = () => {
                 }
             }
             // 遍历parentData中的属性，将parent中的同名属性赋值给parentData
-            Object.keys(parentData).map((key: string) => {
+            UTSJSONObject.keys(parentData).map((key: string) => {
                 if (parentIns?.$props != null && parentIns?.$props?.[key] != null) {
                     if (parentData[key] != null) {
                         parentData[key] = parentIns?.$props?.[key]
@@ -153,16 +153,16 @@ export const useUltraUI = () => {
     const onComponentDestroy = (instance: ComponentPublicInstance) => {
         // 判断当前页面是否存在parent和children，一般在checkbox和checkbox-group父子联动的场景会有此情况
         // 组件销毁时，移除子组件在父组件children数组中的实例，释放资源，避免数据混乱
-        if (instance.$parent && testArray(parent.value?.children)) {
-            // 组件销毁时，移除父组件中的children数组中对应的实例
-            const childrenList = parent.value!.children
-            childrenList.map((child: ComponentPublicInstance, index: number) => {
-                // 如果相等，则移除
-                if (child === instance) {
-                    childrenList.splice(index, 1)
-                }
-            })
-        }
+        // if (instance.$parent && testArray(parent.value?.children)) {
+        //     // 组件销毁时，移除父组件中的children数组中对应的实例
+        //     const childrenList = parent.value!.children
+        //     childrenList.map((child: ComponentPublicInstance, index: number) => {
+        //         // 如果相等，则移除
+        //         if (child === instance) {
+        //             childrenList.splice(index, 1)
+        //         }
+        //     })
+        // }
     }
 
     return {

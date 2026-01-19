@@ -39,12 +39,12 @@
 						<button
 						    class="up-reset-button"
 						    :openType="item['openType']"
-						    @getuserinfo="onGetUserInfo"
-						    @contact="onContact"
-						    @getphonenumber="onGetPhoneNumber"
-						    @error="onError"
-						    @launchapp="onLaunchApp"
-						    @opensetting="onOpenSetting"
+						    @getuserinfo="onOpenType('getuserinfo', $event)"
+						    @contact="onOpenType('contact', $event)"
+						    @getphonenumber="onOpenType('getphonenumber', $event)"
+						    @error="onOpenType('error', $event)"
+						    @launchapp="onOpenType('launchapp', $event)"
+						    @opensetting="onOpenType('opensetting', $event)"
 						    :lang="lang"
 						    :session-from="sessionFrom"
 						    :send-message-title="sendMessageTitle"
@@ -104,17 +104,17 @@
 </template>
 
 <script setup lang="uts">
-import { computed, onBeforeUnmount } from 'vue'
 import type { PropType } from 'vue'
-import { propsActionSheet } from './props'
+import { computed, onBeforeUnmount } from 'vue'
+// import { propsActionSheet } from './props'
 import { useOpenType } from '../../libs/composable/useOpenType'
 import { buttonProps } from '../../libs/composable/useButton'
 import { mpSharedMpOptions } from '../../libs/composable/useMp'
 import { commonProps, useUltraUI } from '../../libs/composable/useUltraUI'
 import { addUnit } from '../../libs/function/index'
 import { UPActionSheetItem, UPActionSheetProps } from './types.uts'
-
-const { onComponentDestroy, preventEvent, noop} = useUltraUI()
+import defProps from './actionSheet.uts'
+// const { onComponentDestroy, preventEvent, noop} = useUltraUI()
 
 // options
 defineOptions({
@@ -123,49 +123,103 @@ defineOptions({
 })
 
 // props
+// const props = defineProps({
+// 	...propsActionSheet['props'],
+// 	...commonProps,
+// 	...buttonProps
+// })
+
 const props = defineProps({
-	...propsActionSheet.props,
-	...commonProps,
-	...buttonProps
+	// 操作菜单是否展示 （默认false）
+	show: {
+	    type: Boolean,
+	    default: defProps.getBoolean('actionSheet.show')
+	},
+	// 标题
+	title: {
+	    type: String,
+	    default: defProps.getString('actionSheet.title')
+	},
+	// 选项上方的描述信息
+	description: {
+	    type: String,
+	    default: defProps.getString('actionSheet.description')
+	},
+	// 数据
+	actions: {
+	    type: Array as PropType<UTSJSONObject[]>,
+	    default: () : Array<UTSJSONObject> => {
+		    return []
+	    }
+	},
+	// 取消按钮的文字，不为空时显示按钮
+	cancelText: {
+	    type: String,
+	    default: defProps.getString('actionSheet.cancelText')
+	},
+	// 点击某个菜单项时是否关闭弹窗
+	closeOnClickAction: {
+	    type: Boolean,
+	    default: defProps.getBoolean('actionSheet.closeOnClickAction')
+	},
+	// 处理底部安全区（默认true）
+	safeAreaInsetBottom: {
+	    type: Boolean,
+	    default: defProps.getBoolean('actionSheet.safeAreaInsetBottom')
+	},
+	// 小程序的打开方式
+	openType: {
+	    type: String,
+	    default: defProps.getString('actionSheet.openType')
+	},
+	// 点击遮罩是否允许关闭 (默认true)
+	closeOnClickOverlay: {
+	    type: Boolean,
+	    default: defProps.getBoolean('actionSheet.closeOnClickOverlay')
+	},
+	// 圆角值
+	round: {
+	    type: [Boolean, String, Number],
+	    default: defProps.getAny('actionSheet.round')
+	},
+	// 选项区域最大高度
+	wrapMaxHeight: {
+	    type: [String],
+	    default: defProps.getString('actionSheet.wrapMaxHeight')
+	},
 })
 
 onMounted(() => {
-	// console.log(props)
+	console.log(props)
 })
 
 onBeforeUnmount(() => {
-	onComponentDestroy()
+	// onComponentDestroy()
 })
 
 // emit定义
-const emit = defineEmits(['close', 'select', 'update:show', 'getuserinfo', 'contact', 'getphonenumber', 'error', 'launchapp', 'opensetting'])
-
-// 使用useOpenType组合式函数
-const { 
-    onGetUserInfo, 
-    onContact, 
-    onGetPhoneNumber, 
-    onError, 
-    onLaunchApp, 
-    onOpenSetting
-} = useOpenType(emit)
-
-
+const emit = defineEmits([
+	'close', 'select', 'update:show',
+	'getuserinfo', 'contact', 'getphonenumber', 'error', 'launchapp', 'opensetting'
+])
+const onOpenType = (name: string, event: UniCustomEvent<UTSJSONObject>) => {
+	emit(name, event.detail)
+}
 
 // 操作项目的样式
 const itemStyle = computed(() => {
     return (index: number): any => {
         let style = {}
-        if (props.actions[index]?.color != null && props.actions[index]?.color != '') {
-            style['color'] = props.actions[index].color
-        }
-        if (props.actions[index]?.fontSize != null && props.actions[index]?.fontSize != '') {
-             style['fontSize'] = addUnit(props.actions[index].fontSize)
-        }
-        // 选项被禁用的样式
-        if (props.actions[index]?.disabled != null && props.actions[index]?.disabled == true) {
-            style['color'] = '#c0c4cc'
-        }
+        // if (props['actions'][index]['color'] != null && props.actions[index]['color'] != '') {
+        //     style['color'] = props.actions[index].color
+        // }
+        // if (props.actions[index]['fontSize'] != null && props.actions[index]['fontSize'] != '') {
+        //      style['fontSize'] = addUnit(props.actions[index].fontSize)
+        // }
+        // // 选项被禁用的样式
+        // if (props.actions[index]['disabled'] != null && props.actions[index]['disabled'] == true) {
+        //     style['color'] = '#c0c4cc'
+        // }
         return style
     }
 })
@@ -185,8 +239,8 @@ const cancel = () => {
 }
 
 const selectHandler = (index: number) => {
-    const item:UPActionSheetItem = props.actions[index]
-    if (item != null && item.disabled != true && item.loading != true) {
+    const item = props.actions[index]
+    if (item['disabled'] != true && item['loading'] != true) {
         emit('select', item)
         if (props.closeOnClickAction) {
             emit('update:show')
