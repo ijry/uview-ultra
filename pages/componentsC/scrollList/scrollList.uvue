@@ -16,7 +16,7 @@
 						class="scroll-list__goods-item"
 						v-for="(item, index) in goodsArr"
 						:key="index"
-						:class="[(index === 9) ? 'scroll-list__goods-item--no-margin-right': '']"
+						:class="[(index == 9) ? 'scroll-list__goods-item--no-margin-right': '']"
 					>
 						<image
 							class="scroll-list__goods-item__image"

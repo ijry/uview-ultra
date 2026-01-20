@@ -1,3 +1,6 @@
+## 4.1.11（2026-01-20）
+fix: 修复scroll-list组件warning
+
 ## 4.1.10（2026-01-20）
 fix: 修复avatar组件warning
 
