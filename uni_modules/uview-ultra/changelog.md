@@ -1,3 +1,6 @@
+## 4.1.5（2026-01-20）
+fix: 修复up-count-to组件语法（uni-app-x）
+
 ## 4.1.4（2026-01-20）
 fix: 修复touch.uts语法（uni-app-x）
 
