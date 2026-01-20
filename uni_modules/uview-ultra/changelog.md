@@ -1,3 +1,6 @@
+## 4.1.9（2026-01-20）
+add: 在template中无法使用addStyle所以新增内置$upAddStyle支持
+
 ## 4.1.8（2026-01-20）
 add: 在template中无法使用addUnit所以新增内置$upAddUnit支持
 

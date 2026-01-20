@@ -2,7 +2,7 @@ import { defineMixin } from '../vue.uts'
 import {
 	array as testArray
 } from '../function/test.uts'
-import { bem, addUnit as _addUnit , upGetRect } from '../../libs/function/index';
+import { bem, addUnit as _addUnit, addStyle as _addStyle, upGetRect } from '../../libs/function/index';
 export const mixin = defineMixin({
     // 定义每个组件都可能需要用到的外部样式以及类名
     props: {
@@ -44,6 +44,9 @@ export const mixin = defineMixin({
 		$upAddUnit(val: any|null, unit: string|null = ''): string {
 			return _addUnit(val, unit)
 		},
+		$upAddStyle(customStyle: any, target = 'object'): any {
+			return _addStyle(customStyle, target)
+		}
 		/**
 		   * 生成bem规则类名
 		   * 由于微信小程序，H5，nvue之间绑定class的差异，无法通过:class="[bem()]"的形式进行同用
