@@ -112,9 +112,9 @@
 				handler(newVal) {
 					this.avatarUrl = newVal
 					// 如果没有传src，则主动触发error事件，用于显示默认的头像，否则src为''空字符等的时候，会无内容展示
-					if(newVal != null) {
+					// if(newVal != null) {
 						this.errorHandler()
-					}
+					// }
 				}
 			}
 		},
@@ -124,7 +124,7 @@
 				if (this.text != '' || this.icon != '') {
 				  let colorIndexNo: number = parseInt(this.colorIndex.toString())
 				  if (this.randomBgColor) {
-				    if (this.colorIndex.toString() !== '' && colorIndexNo != null) {
+				    if (this.colorIndex.toString() !== '') {
 				      result = this.colors[colorIndexNo]
 				    } else {
 				      result = this.colors[random(0, 19)]
@@ -167,7 +167,7 @@
 			},
 			// 判断传入的name属性，是否图片路径，只要带有"/"均认为是图片形式
 			isImg() {
-				return this.src.indexOf('/') !== -1
+				return this.src.indexOf('/') != -1
 			},
 			// 图片加载时失败时触发
 			errorHandler() {
