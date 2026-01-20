@@ -9,7 +9,7 @@ import config from '../config/config'
 // 查询节点信息
 // 目前此方法在支付宝小程序中无法获取组件跟接点的尺寸，为支付宝的bug(2020-07-21)
 // 解决办法为在组件根部再套一个没有任何作用的view元素
-export function upGetRect(selector: string, all: boolean = false, comp: ComponentPublicInstance|null = null): Promise<NodeInfo> {
+export function upGetRect(selector: string, all: boolean = false, comp: ComponentPublicInstance|ComponentInternalInstance|null = null): Promise<NodeInfo> {
 	return new Promise((resolve) => {
 		if (all == true) {
 			uni.createSelectorQuery()
@@ -697,7 +697,7 @@ export function formValidate(instance: any, event: any): void {
 //  * @param {string} key 需要获取的属性字段
 //  * @returns {*}
 //  */
-export function getProperty(obj, key: string): any {
+export function getProperty(obj: UTSJSONObject, key: string): any {
     if (null == obj) {
         return ''
     }
@@ -706,16 +706,16 @@ export function getProperty(obj, key: string): any {
     }
     if (key.indexOf('.') !== -1) {
         const keys = key.split('.')
-        let firstObj = obj[keys[0]] || {}
+        let firstObj = (obj[keys[0]] ?? {}) as UTSJSONObject
 
         for (let i = 1; i < keys.length; i++) {
-            if (firstObj) {
-                firstObj = firstObj[keys[i]]
+            if (firstObj != null) {
+                firstObj = firstObj[keys[i]] as UTSJSONObject
             }
         }
         return firstObj
     }
-    return obj[key]
+    return obj[key] ?? {}
 }
 
 // /**
@@ -820,35 +820,4 @@ export function getParentData(that: any, parentName: string): any {
     //     })
     // }
     return {}
-}
-
-export default {
-    range,
-    getPx,
-    sleep,
-    os,
-    sys,
-    random,
-    guid,
-	getParent,
-    addStyle,
-    addUnit,
-    deepClone,
-    deepMerge,
-    error,
-    randomArray,
-    timeFormat,
-//     // timeFrom,
-    trim,
-//     // queryParams,
-    toast,
-    type2icon,
-    priceFormat,
-    getDuration,
-    padZero,
-	formValidate,
-	getProperty,
-	setProperty,
-    page,
-    pages
 }

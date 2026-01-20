@@ -3,7 +3,7 @@ import { mixin } from './libs/mixin/mixin'
 // 小程序特有的mixin
 import { mpMixin } from './libs/mixin/mpMixin'
 
-import index from './libs/function/index.uts'
+import * as index from './libs/function/index.uts'
 
 export {mixin, mpMixin}
 export * from './libs/function/index'
@@ -34,8 +34,14 @@ export function loadFont() {
 	})
 }
 
+// const $up = {
+// 	addUnit: index.addUnit,
+// 	addStyle: index.addStyle
+// }
+
 const install = (Vue: any) :void => {
-    // Vue.config.globalProperties.$u = $u
+	// wait uni-app-x support
+    // Vue.config.globalProperties.$up = $up
     Vue.mixin(mixin)
 }
 

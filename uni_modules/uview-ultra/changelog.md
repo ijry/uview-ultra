@@ -1,3 +1,6 @@
+## 4.1.6（2026-01-20）
+refactor: 【组合式API重构】 常用方法优化（uni-app-x）
+
 ## 4.1.5（2026-01-20）
 fix: 修复up-count-to组件语法（uni-app-x）
 
