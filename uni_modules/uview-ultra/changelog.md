@@ -1,3 +1,6 @@
+## 4.1.4（2026-01-20）
+fix: 修复touch.uts语法（uni-app-x）
+
 ## 4.1.3（2026-01-19）
 refactor: 【组合式API重构】album组件和action-sheet组件（uni-app-x）
 

@@ -23,7 +23,7 @@ export const touchMixin = defineMixin({
 			startX: 0,
 			startY: 0
 		}
-	}
+	},
     methods: {
         getTouchPoint(e: UniTouchEvent) {
             if (e == null) {
