@@ -28,7 +28,7 @@
                         {
                             width: imageWidth,
                             height: imageHeight,
-                            borderRadius: shape == 'circle' ? '10000px' : addUnitTpl(radius)
+                            borderRadius: shape == 'circle' ? '10000px' : $upAddUnit(radius)
                         }
                     ]"
                 ></image>
@@ -41,7 +41,7 @@
                     "
                     class="up-album__row__wrapper__text"
                     :style="{
-					    borderRadius: shape == 'circle' ? '50%' : addUnitTpl(radius),
+					    borderRadius: shape == 'circle' ? '50%' : $upAddUnit(radius),
 				    }"
                 >
                     <up-text
@@ -63,16 +63,10 @@ import { ref, computed, watch, getCurrentInstance } from 'vue'
 // import { propsAlbum } from './props'
 import { mpSharedMpOptions } from '../../libs/composable/useMp'
 import { commonProps, useUltraUI } from '../../libs/composable/useUltraUI'
-// import { useFuncIndex } from '../../libs/composable/useFuncIndex'
 import { addUnit, sleep, upGetRect } from '../../libs/function/index'
 import defProps from './album.uts'
 import imageProps from '../up-image/image.uts'
-const instance = getCurrentInstance()
-
-// const { addUnit, sleep, upGetRect } = useFuncIndex()
-function addUnitTpl(e: any, y: string = 'px'): string {
-	return addUnit(e, y)
-}
+const instance = getCurrentInstance()!.proxy!
 
 // options
 defineOptions({

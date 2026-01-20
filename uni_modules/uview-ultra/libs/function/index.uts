@@ -240,13 +240,13 @@ export function addStyle(customStyle: any, target = 'object'): any {
  * @param {string|number} value 需要添加单位的值
  * @param {string} unit 添加的单位名 比如px
  */
-export function addUnit(pvalue: any|null, punit = 'px'): string {
+export function addUnit(pvalue: any|null, punit: string|null = ''): string {
 	let value = pvalue
 	if (value == '' || value == null) {
 		value = 'auto'
 	}
 	let unit = punit
-    if ( unit == '') {
+    if (unit == '' || unit == null) {
      	unit = config['unit'] as string
     }
     let valueStr = value.toString()

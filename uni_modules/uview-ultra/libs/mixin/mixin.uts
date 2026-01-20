@@ -2,8 +2,7 @@ import { defineMixin } from '../vue.uts'
 import {
 	array as testArray
 } from '../function/test.uts'
-import { bem, upGetRect } from '../../libs/function/index';
-// import route from '../util/route'
+import { bem, addUnit as _addUnit , upGetRect } from '../../libs/function/index';
 export const mixin = defineMixin({
     // 定义每个组件都可能需要用到的外部样式以及类名
     props: {
@@ -42,6 +41,9 @@ export const mixin = defineMixin({
     computed: {
     },
     methods: {
+		$upAddUnit(val: any|null, unit: string|null = ''): string {
+			return _addUnit(val, unit)
+		},
 		/**
 		   * 生成bem规则类名
 		   * 由于微信小程序，H5，nvue之间绑定class的差异，无法通过:class="[bem()]"的形式进行同用
@@ -93,7 +95,9 @@ export const mixin = defineMixin({
             while (parent != null) {
             	// console.log(parent.$options)
                 // 父组件
-                if (parent.$options != null && parent.$options['name'] != name) {
+                if (
+					// parent.$options != null &&
+					parent.$options['name'] != name) {
                     // 如果组件的name不相等，继续上一级寻找
                     parent = parent.$parent
                 } else {

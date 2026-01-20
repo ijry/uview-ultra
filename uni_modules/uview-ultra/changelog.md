@@ -1,3 +1,6 @@
+## 4.1.8（2026-01-20）
+add: 在template中无法使用addUnit所以新增内置$upAddUnit支持
+
 ## 4.1.7（2026-01-20）
 fix: 修复完善up-collapse-item子组件
 

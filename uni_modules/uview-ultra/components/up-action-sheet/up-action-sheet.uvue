@@ -123,12 +123,6 @@ defineOptions({
 })
 
 // props
-// const props = defineProps({
-// 	...propsActionSheet['props'],
-// 	...commonProps,
-// 	...buttonProps
-// })
-
 const props = defineProps({
 	// 操作菜单是否展示 （默认false）
 	show: {
@@ -187,6 +181,8 @@ const props = defineProps({
 	    type: [String],
 	    default: defProps.getString('actionSheet.wrapMaxHeight')
 	},
+	// 	...commonProps,
+	// 	...buttonProps
 })
 
 onMounted(() => {
