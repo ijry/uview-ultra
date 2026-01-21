@@ -160,7 +160,7 @@
 				let values = e.getArray('values')
 				let index = e.getNumber('index')
 				let picker = this.$refs['uPicker3']
-				if (columnIndex === 0) {
+				if (columnIndex == 0) {
 					// picker.setColumnValues(1, this.columnData[index])
 				}
 			},
@@ -171,7 +171,7 @@
 				let values = e.getArray('values')
 				let index = e.getNumber('index')
 				let picker = this.$refs['uPicker4']
-				if (columnIndex === 0) {
+				if (columnIndex == 0) {
 					this.loading = true
 					//sleep(1500).then(() => {
 						// picker.setColumnValues(1, this.columnData[index])
