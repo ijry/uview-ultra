@@ -157,7 +157,7 @@
 						break;
 					case 1:
 						e.forEach((value, index: number) => {
-							index === 0 ? this.values[this.index - 1] = value : this.values[this.index - 1] += ';' + value
+							index == 0 ? this.values[this.index - 1] = value : this.values[this.index - 1] += ';' + value
 						})
 						break;
 					case 2:
@@ -177,7 +177,7 @@
 						break;
 					case 7:
 						e.forEach((value, index: number) => {
-							index === 0 ? this.values[this.index - 1] = value : this.values[this.index - 1] += ';' + value
+							index == 0 ? this.values[this.index - 1] = value : this.values[this.index - 1] += ';' + value
 						})
 						break;
 				}
