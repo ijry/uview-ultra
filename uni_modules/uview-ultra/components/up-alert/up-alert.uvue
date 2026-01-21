@@ -7,7 +7,7 @@
 		    class="up-alert"
 		    :class="[`up-alert--${type}--${effect}`]"
 		    @tap.stop="clickHandler"
-		    :style="[addStyle(customStyle)]"
+		    :style="[$upAddStyle(customStyle)]"
 		>
 			<view
 			    class="up-alert__icon"
@@ -53,87 +53,114 @@
 	</up-transition>
 </template>
 
-<script>
-	import { propsAlert } from './props';
-	import { mpMixin } from '../../libs/mixin/mpMixin';
-	import { mixin } from '../../libs/mixin/mixin';
-	import { addUnit, addStyle } from '../../libs/function/index';
-	/**
-	 * Alert  警告提示
-	 * @description 警告提示，展现需要关注的信息。
-	 * @tutorial https://ijry.github.io/uview-plus/components/alertTips.html
-	 * 
-	 * @property {String}			title       显示的文字 
-	 * @property {String}			type        使用预设的颜色  （默认 'warning' ）
-	 * @property {String}			description 辅助性文字，颜色比title浅一点，字号也小一点，可选  
-	 * @property {Boolean}			closable    关闭按钮(默认为叉号icon图标)  （默认 false ）
-	 * @property {Boolean}			showIcon    是否显示左边的辅助图标   （ 默认 false ）
-	 * @property {String}			effect      多图时，图片缩放裁剪的模式  （默认 'light' ）
-	 * @property {Boolean}			center		文字是否居中  （默认 false ）
-	 * @property {String | Number}	fontSize    字体大小  （默认 14 ）
-	 * @property {Object}			customStyle	定义需要用到的外部样式
-	 * @event    {Function}        click       点击组件时触发
-	 * @example  <up-alert :title="title"  type = "warning" :closable="closable" :description = "description"></up-alert>
-	 */
-	export default {
-		name: 'up-alert',
-		mixins: [mpMixin, mixin, propsAlert],
-		data() {
-			return {
-				show: true
-			}
-		},
-		computed: {
-			style1() {
-				return {
-					fontSize: addUnit(this.fontSize),
-					textAlign: center ? 'center' : 'left'
-				}
-			},
-			iconColor(): string {
-				return this.effect === 'light' ? this.type : '#ffffff'
-			},
-			// 不同主题对应不同的图标
-			iconName() {
-				switch (this.type) {
-					case 'success':
-						return 'checkmark-circle-fill';
-						break;
-					case 'error':
-						return 'close-circle-fill';
-						break;
-					case 'warning':
-						return 'error-circle-fill';
-						break;
-					case 'info':
-						return 'info-circle-fill';
-						break;
-					case 'primary':
-						return 'more-circle-fill';
-						break;
-					default: 
-						return 'error-circle-fill';
-				}
-			}
-		},
-		emits: ["click"],
-		methods: {
-			addUnit(val: any) {
-				return addUnit(val)
-			},
-			addStyle(val: any) {
-				return addStyle(val)
-			},
-			// 点击内容
-			clickHandler() {
-				this.$emit('click')
-			},
-			// 点击关闭按钮
-			closeHandler() {
-				this.show = false
-			}
-		}
-	}
+<script setup lang="ts">
+import { computed, ref } from 'vue'
+import { addUnit, addStyle } from '../../libs/function/index'
+import defProps from './alert'
+
+// 定义props
+const props = defineProps({
+    // 主题，success/warning/info/error
+    type: {
+        type: String,
+        default: defProps.getString('alert.type')
+    },
+    // 辅助性文字
+    description: {
+        type: String,
+        default: defProps.getString('alert.description')
+    },
+    // 是否可关闭
+    closable: {
+        type: Boolean,
+        default: defProps.getBoolean('alert.closable')
+    },
+    // 是否显示图标
+    showIcon: {
+        type: Boolean,
+        default: defProps.getBoolean('alert.showIcon')
+    },
+    // 浅或深色调，light-浅色，dark-深色
+    effect: {
+        type: String,
+        default: defProps.getString('alert.effect')
+    },
+    // 文字是否居中
+    center: {
+        type: Boolean,
+        default: defProps.getBoolean('alert.center')
+    },
+    // 字体大小
+    fontSize: {
+        type: [String, Number],
+        default: defProps.getNumber('alert.fontSize')
+    },
+    // 自定义样式
+    customStyle: {
+        type: Object,
+        default: () => ({})
+    },
+    // 标题文字
+    title: {
+        type: String,
+        default: defProps.getString('alert.title', '')
+    }
+});
+
+// 定义事件
+const emit = defineEmits(['click']);
+
+// 响应式数据
+const show = ref(true);
+
+// 计算属性
+const style1 = computed(() => {
+    return {
+        fontSize: addUnit(props.fontSize),
+        textAlign: props.center ? 'center' : 'left'
+    }
+});
+
+const iconColor = computed(() => {
+    return props.effect == 'light' ? props.type : '#ffffff'
+});
+
+// 不同主题对应不同的图标
+const iconName = computed(() => {
+    switch (props.type) {
+        case 'success':
+            return 'checkmark-circle-fill';
+        case 'error':
+            return 'close-circle-fill';
+        case 'warning':
+            return 'error-circle-fill';
+        case 'info':
+            return 'info-circle-fill';
+        case 'primary':
+            return 'more-circle-fill';
+        default: 
+            return 'error-circle-fill';
+    }
+});
+
+// 方法
+const addUnitFunc = (val: any) => {
+    return addUnit(val)
+};
+
+const addStyleFunc = (val: any) => {
+    return addStyle(val)
+};
+
+// 点击内容
+const clickHandler = () => {
+    emit('click')
+};
+
+// 点击关闭按钮
+const closeHandler = () => {
+    show.value = false
+};
 </script>
 
 <style lang="scss" scoped>

@@ -1,3 +1,6 @@
+## 4.1.17（2026-01-21）
+refactor: 【组合式API重构】 up-alert组件（uni-app-x）
+
 ## 4.1.16（2026-01-21）
 fix: 修复checkbox组件warning
 
