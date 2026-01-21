@@ -1,3 +1,6 @@
+## 4.1.16（2026-01-21）
+fix: 修复checkbox组件warning
+
 ## 4.1.15（2026-01-21）
 fix: 修复action-sheet组件warning
 

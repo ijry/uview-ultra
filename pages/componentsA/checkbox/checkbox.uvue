@@ -61,7 +61,7 @@
 							:key="index"
 							:label="item['name']"
 							:name="item['name']"
-							:disabled="index===0"
+							:disabled="index == 0"
 						>
 						</up-checkbox>
 					</up-checkbox-group>
