@@ -171,7 +171,7 @@
 			},
 			filter: function(mode: string, options: string[]) {
 				if (mode === 'year') {
-					return options.filter((option: string) => parseInt(option) % 2 === 0);
+					return options.filter((option: string) => parseInt(option) % 2 == 0);
 				}
 
 				return options;
