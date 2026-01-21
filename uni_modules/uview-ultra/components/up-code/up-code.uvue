@@ -117,7 +117,7 @@
 					let nowTimestamp = Math.floor(new Date().getTime() / 1000)
 					// 将本该结束时候的时间戳保存起来 => 当前时间戳 + 剩余的秒数
 					uni.setStorage({
-						key: this.uniqueKey + '_$uCountDownTimestamp',
+						key: this.uniqueKey + '_$upCountDownTimestamp',
 						data: (nowTimestamp + this.secNum).toString()
 					})
 				}
