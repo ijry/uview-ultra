@@ -169,7 +169,7 @@
 			// 点击cell，判断显示哪个功能
 			openSheet(index: number) {
 				// #ifndef MP
-				if (index === 5) return toast('请在微信内预览')
+				if (index == 5) return toast('请在微信内预览')
 				// #endif
 				let indexStr = index.toString()
 				this.$data[`show${indexStr}`] = true
