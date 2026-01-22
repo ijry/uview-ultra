@@ -10,7 +10,7 @@
 export default {
     // avatarGroup 组件
     avatarGroup: {
-        urls: [] as Array<any>,
+        urls: [] as Array<string>,
         maxCount: 5,
         shape: 'circle',
         mode: 'scaleToFill',
