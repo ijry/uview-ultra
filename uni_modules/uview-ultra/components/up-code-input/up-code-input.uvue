@@ -145,27 +145,27 @@
 					height: addUnit(this.size)
 				}
 				// 盒子模式下，需要额外进行处理
-				if (this.mode === 'box') {
+				if (this.mode == 'box') {
 					// 设置盒子的边框，如果是细边框，则设置为0.5px宽度
 					style['border'] = `${this.hairline ? 0.5 : 1}px solid ${this.borderColor}`
 					// 如果盒子间距为0的话
-					if (getPx(this.space) === '0') {
+					if (getPx(this.space) == '0') {
 						// 给第一和最后一个盒子设置圆角
-						if (index === 0) {
+						if (index == 0) {
 							style['borderTopLeftRadius'] = '3px'
 							style['borderBottomLeftRadius'] = '3px'
 						}
-						if (index === this.codeLength.length - 1) {
+						if (index == this.codeLength.length - 1) {
 							style['borderTopRightRadius'] = '3px'
 							style['borderBottomRightRadius'] = '3px'
 						}
 						// 最后一个盒子的右边框需要保留
-						if (index !== this.codeLength.length - 1) {
+						if (index != this.codeLength.length - 1) {
 							style['borderRight'] = 'none'
 						}
 					}
 				}
-				if (index !== this.codeLength.length - 1) {
+				if (index != this.codeLength.length - 1) {
 					// 设置验证码字符之间的距离，通过margin-right设置，最后一个字符，无需右边框
 					style['marginRight'] = addUnit(this.space)
 				} else {

@@ -1,3 +1,6 @@
+## 4.1.22（2026-01-22）
+fix: code-input组件warning处理
+
 ## 4.1.21（2026-01-22）
 refactor: 【组合式API重构】 avatar-group组件（uni-app-x）
 
