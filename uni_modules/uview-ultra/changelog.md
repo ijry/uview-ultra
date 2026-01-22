@@ -1,3 +1,6 @@
+## 4.1.20（2026-01-22）
+refactor: 【组合式API重构】avatar组件（uni-app-x）
+
 ## 4.1.19（2026-01-22）
 fix: 完善up-code组件
 

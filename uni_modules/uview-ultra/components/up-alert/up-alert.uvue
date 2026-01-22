@@ -55,8 +55,15 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import { mpSharedMpOptions } from '../../libs/composable/useMp'
 import { addUnit, addStyle } from '../../libs/function/index'
 import defProps from './alert'
+
+// options
+defineOptions({
+  //...mpSharedMpOptions,
+  name: 'up-alert'
+})
 
 // 定义props
 const props = defineProps({
