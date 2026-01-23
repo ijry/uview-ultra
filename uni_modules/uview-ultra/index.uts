@@ -37,7 +37,7 @@ export function loadFont() {
 	})
 }
 const $up = {
- 	addUnit: (e: any, y: string): string {
+ 	addUnit: (e: any, y: string): string => {
 		return index.addUnit(e, y)
 	},
  	// addStyle: index.addStyle
