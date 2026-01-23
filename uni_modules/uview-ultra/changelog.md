@@ -1,3 +1,6 @@
+## 4.1.26（2026-01-23）
+fix: 修复input组件warning
+
 ## 4.1.25（2026-01-23）
 fix: 优化up-tabbar组件change事件（uni-app-x）
 

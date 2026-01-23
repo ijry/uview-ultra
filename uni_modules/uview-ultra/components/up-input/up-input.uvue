@@ -156,15 +156,15 @@ export default {
             immediate: true,
             handler(newVal: string, oldVal: string) {
                 // console.log(newVal, oldVal)
-                if (this.changeFromInner || this.innerValue === newVal) {
+                if (this.changeFromInner || this.innerValue == newVal) {
                     this.changeFromInner = false; // 重要否则会出现双向绑定失效问题https://github.com/ijry/uview-plus/issues/419
                     return;
                 }
                 this.innerValue = newVal;
                 // 在H5中，外部value变化后，修改input中的值，不会触发@input事件，此时手动调用值变化方法
                 if (
-                    this.firstChange === false &&
-					this.changeFromInner === false
+                    this.firstChange == false &&
+					this.changeFromInner == false
                 ) {
                     this.valueChange(this.innerValue, true);
                 } else {
@@ -237,7 +237,7 @@ export default {
 		},
         // 当键盘输入时，触发input事件
         onInput(e: UniInputEvent): void {
-            let { value = "" } = e.detail;
+            let { value } = e.detail;
             // 为了避免props的单向数据流特性，需要先将innerValue值设置为当前值，再在$nextTick中重新赋予设置后的值才有效
             console.log('onInput', value, this.innerValue)
             this.innerValue = value;
