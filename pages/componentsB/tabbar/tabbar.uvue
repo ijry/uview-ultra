@@ -61,7 +61,7 @@
 			</up-tabbar>
 		</view>
 		<view class="u-page__item">
-			<text class="u-page__item__title">匹配标签的名称</text>
+			<text class="u-page__item__title">匹配标签的名称{{ value3 }}</text>
 			<up-tabbar
 			    :placeholder="false"
 			    :value="value3"

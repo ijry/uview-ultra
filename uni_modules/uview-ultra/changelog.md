@@ -1,3 +1,6 @@
+## 4.1.25（2026-01-23）
+fix: 优化up-tabbar组件change事件（uni-app-x）
+
 ## 4.1.24（2026-01-23）
 fix: 修复throttle方法及up-button点击事件不触发问题（uni-app-x）
 
