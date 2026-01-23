@@ -120,7 +120,7 @@
 			},
 			// 组件尺寸，对应size的值，默认值为21px
 			elSize(): string {
-				return this.size != null && this.size.toString() != ''
+				return this.size.toString() != ''
 					? this.size.toString()
 					: (this.parentData['size'].toString() != ''
 						? this.parentData['size'].toString()
@@ -128,7 +128,7 @@
 			},
 			// 组件的勾选图标的尺寸，默认12px
 			elIconSize(): string {
-				return this.iconSize != null && this.iconSize.toString() != ''
+				return this.iconSize.toString() != ''
 					? this.iconSize.toString()
 					: (this.parentData['iconSize'].toString() != ''
 						? this.parentData['iconSize'].toString()
@@ -136,21 +136,21 @@
 			},
 			// 组件选中激活时的颜色
 			elActiveColor(): string {
-				return this.activeColor != null && this.activeColor.toString() != ''
+				return this.activeColor.toString() != ''
 					? this.activeColor
 					: (this.parentData['activeColor'].toString() != ''
 						? this.parentData['activeColor'].toString() : '#2979ff');
 			},
 			// 组件选未中激活时的颜色
 			elInactiveColor(): string {
-				return this.inactiveColor != null && this.inactiveColor.toString() != ''
+				return this.inactiveColor.toString() != ''
 					? this.inactiveColor.toString()
 					: (this.parentData['inactiveColor'].toString() != ''
 						? this.parentData['inactiveColor'].toString() : '#c8c9cc');
 			},
 			// label的颜色
 			elLabelColor(): string {
-				return this.labelColor != null && this.labelColor.toString() != ''
+				return this.labelColor.toString() != ''
 					? this.labelColor.toString()
 					: (this.parentData['labelColor'].toString() != ''
 						? this.parentData['labelColor'].toString() : '#606266')
@@ -219,12 +219,13 @@
 				const style = {}
 				if (!this.usedAlone) {
 					if (this.parentData['borderBottom'].toString() != ''
-						&& this.parentData['placement'].toString() === 'row') {
+						&& this.parentData['placement'].toString() == 'row') {
+						console.log(this.parentData)
 						error('检测到您将borderBottom设置为true，需要同时将up-checkbox-group的placement设置为column才有效')
 					}
 					// 当父组件设置了显示下边框并且排列形式为纵向时，给内容和边框之间加上一定间隔
 					if (this.parentData['borderBottom'].toString() != ''
-						&& this.parentData['placement'].toString() === 'column') {
+						&& this.parentData['placement'].toString() == 'column') {
 						style['paddingBottom'] = '8px'
 					}
 				}
@@ -243,7 +244,10 @@
 					if (this.parent == null) {
 						error('up-checkbox必须搭配up-checkbox-group组件使用')
 					}
-					const value = this.parentData['modelValue'] as string[]
+					let value: string[] = []
+					if (this.parentData['modelValue'] != null) {
+						value = this.parentData['modelValue'] as string[]
+					}
 					// 设置初始化时，是否默认选中的状态，父组件up-checkbox-group的value可能是array，所以额外判断
 					if (this.checked) {
 						this.isChecked = true
@@ -306,15 +310,15 @@
 				this.isChecked = !this.isChecked
 				this.emitEvent()
 				if (!this.usedAlone) {
-					if (this?.$parent != null) {
-						this?.$parent.$callMethod('unCheckedOther', this)
+					if (this?.parent != null) {
+						this?.parent?.$callMethod('unCheckedOther', this)
 					}
 				}
 			}
 		},
 		watch:{
 			checked(newValue: boolean, oldValue: boolean){
-				if (newValue !== this.isChecked) {
+				if (newValue != this.isChecked) {
 					this.isChecked = newValue
 				}
 			}

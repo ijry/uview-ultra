@@ -65,10 +65,10 @@
 			parentDataSelf: {
 			  handler() {
 				if (this.children != null) {
-				  this.children?.map((child) => {
-					  console.log(child)
+				  this.children?.map((child: ComponentPublicInstance) => {
+					console.log(child)
 					// 判断子组件(up-checkbox)如果有init方法的话，就就执行(执行的结果是子组件重新从父组件拉取了最新的值)
-					//child.$callMethod('init', this);
+					child?.$callMethod('init');
 				  });
 				}
 			  },
@@ -84,7 +84,7 @@
 		emits: ['update:modelValue', 'change'],
 		methods: {
 			// 将其他的checkbox设置为未选中的状态
-			unCheckedOther(childInstance: any) {
+			unCheckedOther(childInstance: ComponentPublicInstance) {
 				const values = [] as string[]
 				// console.log(this)
 				if (this.children != null) {
