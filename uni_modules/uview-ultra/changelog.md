@@ -1,3 +1,6 @@
+## 4.1.28（2026-01-23）
+refactor: 【组合式API重构】 back-top组件（uni-app-x）
+
 ## 4.1.27（2026-01-23）
 fix: 修复index.uts
 
