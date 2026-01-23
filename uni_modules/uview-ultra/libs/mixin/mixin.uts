@@ -46,7 +46,7 @@ export const mixin = defineMixin({
 		},
 		$upAddStyle(customStyle: any, target = 'object'): any {
 			return _addStyle(customStyle, target)
-		}
+		},
 		/**
 		   * 生成bem规则类名
 		   * 由于微信小程序，H5，nvue之间绑定class的差异，无法通过:class="[bem()]"的形式进行同用
