@@ -5,7 +5,7 @@
 			@click="showByClickInput = !showByClickInput">
             <slot>
                 <view>
-					{{ inputLabel != null && inputLabel.length > 0 ? inputLabel.join('/') : placeholder }}
+					{{ inputLabel.length > 0 ? inputLabel.join('/') : placeholder }}
 				</view>
             </slot>
         </view>

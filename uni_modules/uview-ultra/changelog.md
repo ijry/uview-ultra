@@ -1,3 +1,6 @@
+## 4.1.23（2026-01-23）
+fix: up-picker组件warning处理
+
 ## 4.1.22（2026-01-22）
 fix: code-input组件warning处理
 
