@@ -1,3 +1,6 @@
+## 4.1.24（2026-01-23）
+fix: 修复throttle方法及up-button点击事件不触发问题（uni-app-x）
+
 ## 4.1.23（2026-01-23）
 fix: up-picker组件warning处理
 

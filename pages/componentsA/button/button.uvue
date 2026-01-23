@@ -315,6 +315,9 @@
 		},
 		methods: {
 			click() {
+				uni.showToast({
+					title: 'clicked'
+				})
 				console.log('click');
 			}
 		}
