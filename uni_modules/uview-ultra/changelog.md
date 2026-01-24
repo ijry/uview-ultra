@@ -1,3 +1,10 @@
+## 4.1.29（2026-01-24）
+refactor: 【组合式API重构】 父子组件架构支持组合式函数hooks方式（uni-app-x）
+
+refactor: 【组合式API重构】 up-checkbox组件（uni-app-x）
+
+refactor: 【组合式API重构】 up-checkbox-group组件（uni-app-x）
+
 ## 4.1.28（2026-01-23）
 refactor: 【组合式API重构】 back-top组件（uni-app-x）
 
