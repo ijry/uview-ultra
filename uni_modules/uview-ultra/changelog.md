@@ -1,3 +1,6 @@
+## 4.2.2（2026-01-24）
+refactor: 【组合式API重构】 up-code组件（uni-app-x）
+
 ## 4.2.1（2026-01-24）
 fix: 修复upload类型报错
 
