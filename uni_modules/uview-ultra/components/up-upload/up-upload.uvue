@@ -394,7 +394,7 @@
 				// });
 			},
 			// 文件读取之前
-			onBeforeRead(file: UPUploadFileChoosed[]) {
+			onBeforeRead(file: Array<UPUploadFileChoosed|null>) {
 				let beforeRead = this.beforeRead
 				let useBeforeRead = this.useBeforeRead
 				let res = file
@@ -422,6 +422,7 @@
 				if (testPromise(res)) {
 					// res.then((data) => this.onAfterRead(data != null ? data : file));
 				} else {
+					// @ts-ignore
 					this.onAfterRead(res != null ? res : file);
 				}
 			},
@@ -432,13 +433,13 @@
 					index: index == null ? this.fileList.length : index,
 				};
 			},
-			async onAfterRead(file: UPUploadFileChoosed[]) {
+			async onAfterRead(file: Array<UPUploadFileChoosed|null>) {
 				let maxSize = this.maxSize as number
 				let afterRead = this.afterRead
 				// const oversize = Array.isArray(file) ?
 				// 	file.some((item) => item.size > maxSize) :
 				// 	file.size > maxSize;
-				const even = (item: UPUploadFileChoosed): boolean => (item.size ?? 0) > maxSize;
+				const even = (item: UPUploadFileChoosed|null): boolean => ((item != null && item.size != null) ? item.size : 0) > maxSize;
 				const oversize = file.some(even)
 				if (oversize) {
 					uni.showToast({
