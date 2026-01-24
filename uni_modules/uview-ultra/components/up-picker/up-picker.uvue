@@ -142,7 +142,9 @@ export default {
 	emits: ['close', 'cancel', 'confirm', 'change', 'update:modelValue'],
     computed: {
 		pickerViewHeight(): string {
+			// @ts-ignore
 			let tmp = parseInt(this.visibleItemCount.toString())
+			// @ts-ignore
 				* parseInt(this.itemHeight.toString())
 			return addUnit(tmp)
 		},
@@ -155,6 +157,7 @@ export default {
             items.forEach(element => {
 				if (typeof element == 'object') {
 					if (element != null) {
+						// @ts-ignore
 						res.push((element as UTSJSONObject)[this.keyName].toString())
 					}
 				}

@@ -52,7 +52,9 @@
 				}
 				// 通过给up-row左右两边的负外边距，消除up-col在有gutter时，第一个和最后一个元素的左内边距和右内边距造成的影响
 				if(this.gutter != '') {
+					// @ts-ignore
 					style['marginLeft'] = addUnit((0-parseInt(this.gutter.toString()))/2)
+					// @ts-ignore
 					style['marginRight'] = addUnit((0-parseInt(this.gutter.toString()))/2)
 				}
 				return deepMerge(style, addStyle(this.customStyle))
@@ -68,6 +70,7 @@
 					// 延时一定时间，以确保节点渲染完成
 					//sleep().then(() => {
 						// uview-plus封装的获取节点的方法，详见文档
+						// @ts-ignore
 						this.upGetRect('.up-row').then((res: NodeInfo) => {
 							// console.log(res)
 							resolve(res.width)

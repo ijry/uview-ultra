@@ -96,7 +96,9 @@
 		methods: {
 			updateChildren() {
 				// 如果存在子元素，则执行子元素的updateFromParent进行更新数据
+				// @ts-ignore
 				if(this.children.length > 0) {
+					// @ts-ignore
 					this.children.map((child: ComponentPublicInstance) => {
 						child?.$callMethod('updateFromParent')
 					})
@@ -107,6 +109,7 @@
 				if (!this.fixed || !this.placeholder) return
 				// 延时一定时间
 				await sleep(20)
+				// @ts-ignore
 				this.upGetRect('.up-tabbar__content').then((size: NodeInfo) => {
 					// 修复IOS safearea bottom 未填充高度
 					this.placeholderHeight = size.height ?? 50

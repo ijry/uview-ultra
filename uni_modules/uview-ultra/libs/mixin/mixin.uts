@@ -73,17 +73,21 @@ export const mixin = defineMixin({
             // }
         },
         $uGetRect(selector: string, all: boolean = false): Promise<NodeInfo> {
+			// @ts-ignore
             return upGetRect(selector, all, this)
         },
         // 查询节点信息
         // 目前此方法在支付宝小程序中无法获取组件跟接点的尺寸，为支付宝的bug(2020-07-21)
         // 解决办法为在组件根部再套一个没有任何作用的view元素
         upGetRect(selector: string, all: boolean = false): Promise<NodeInfo> {
+			// @ts-ignore
             return upGetRect(selector, all, this)
         },
 		getChildIndex(ins: ComponentPublicInstance ) {
 			let index = -1
-			if (this.parent  != null) {
+			// @ts-ignore
+			if (this.parent != null) {
+				// @ts-ignore
 				(this.parent!!.$data['children'] as ComponentPublicInstance[]).forEach((child: ComponentPublicInstance, idx: number) =>  {
 					if (child == ins) {
 						index = idx
@@ -93,6 +97,7 @@ export const mixin = defineMixin({
 			return index
 		},
         getParent(name: string): ComponentPublicInstance|null {
+			// @ts-ignore
             let parent = this.$parent
             // 通过while历遍，这里主要是为了H5需要多层解析的问题
             while (parent != null) {
@@ -112,6 +117,7 @@ export const mixin = defineMixin({
         },
 		addChild(ins: ComponentPublicInstance): void {
 			let exist = false
+			// @ts-ignore
 			let childs: ComponentPublicInstance[] = this.children
 			childs.map((child: ComponentPublicInstance) => {
 				// console.log('&&&&&', child)
@@ -121,12 +127,15 @@ export const mixin = defineMixin({
 			})
 			if (exist == false) {
 				// console.log('ins&&&&&&&&&', ins)
+				// @ts-ignore
 				this.children.push(ins)
 			}
 		},
 		addChildRef(str: string): void {
+			// @ts-ignore
 			let index = this.childrenRefs.indexOf('str')
 			if (index <= -1) {
+				// @ts-ignore
 				this.childrenRefs.push(str)
 			}
 		},
@@ -144,25 +153,33 @@ export const mixin = defineMixin({
             // 此处并不会自动更新子组件的数据，而是依赖父组件up-radio-group去监听data的变化，手动调用更新子组件的方法去重新获取
 			// 注意不能赋值给parent,会导致与addChild中push冲突
             let parent = this.getParent(parentName)
+			// @ts-ignore
 			this.parent = parent
             if (parent != null) {
+				// @ts-ignore
 				if (parent?.$data != null && parent?.$data?.['children'] != null) {
 					// 如果父组件的children不存在本组件的实例，才将本实例添加到父组件的children中
 					if (refMode) {
+						// @ts-ignore
 						parent?.$callMethod('addChildRef', this.$data['refstr'])
 					} else {
 						parent?.$callMethod('addChild', this)
 					}
 				}
                 // 历遍parentData中的属性，将parent中的同名属性赋值给parentData
+				// @ts-ignore
                 UTSJSONObject.keys(this.parentData).map((key: string) => {
                     if (parent?.$props != null && parent?.$props?.[key] != null) {
+						// @ts-ignore
 						if (this.parentData?.[key] != null) {
+							// @ts-ignore
 							this.parentData[key] = parent?.$props?.[key]
 						}
                     }
 					if (parent?.$data != null && parent?.$data?.[key] != null) {
+						// @ts-ignore
 						if (this.parentData?.[key] != null) {
+							// @ts-ignore
 							this.parentData[key] = parent?.$data?.[key]
 						}
 					}

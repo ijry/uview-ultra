@@ -171,6 +171,7 @@
 			},
 			updateParentData() {
 				// 此方法在mixin中
+				// @ts-ignore
 				this.getParentData('up-collapse')
 			},
 			async setContentAnimate() {

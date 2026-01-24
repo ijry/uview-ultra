@@ -168,8 +168,8 @@
 	
 	// 组件尺寸，对应size的值，默认值为21px
 	const elSize = computed((): string => {
-		return props.size.toString() != ''
-			? props.size.toString()
+		return props.size!.toString() != ''
+			? props.size!.toString()
 			: (parentData.value['size'] != null
 				? parentData.value['size'].toString()
 				: '21');
@@ -177,8 +177,8 @@
 	
 	// 组件的勾选图标的尺寸，默认12px
 	const elIconSize = computed((): string => {
-		return props.iconSize.toString() != ''
-			? props.iconSize.toString()
+		return props.iconSize!.toString() != ''
+			? props.iconSize!.toString()
 			: (parentData.value['iconSize'] != null
 				? parentData.value['iconSize'].toString()
 				: '12');
@@ -279,11 +279,11 @@
 	const checkboxStyle = computed((): any => {
 		const style = {};
 		if (!props.usedAlone && parentData.value != null) {
-			if (parentData.value['borderBottom'].toString() == 'true' && parentData.value['placement'] == 'row') {
+			if (parentData.value['borderBottom']!.toString() == 'true' && parentData.value['placement'] == 'row') {
 				error('检测到您将borderBottom设置为true，需要同时将up-checkbox-group的placement设置为column才有效')
 			}
 			// 当父组件设置了显示下边框并且排列形式为纵向时，给内容和边框之间加上一定间隔
-			if (parentData.value['borderBottom'].toString() == 'true' && parentData.value['placement'] == 'column') {
+			if (parentData.value['borderBottom']!.toString() == 'true' && parentData.value['placement'] == 'column') {
 				style['paddingBottom'] = '8px'
 			}
 		}
@@ -324,7 +324,7 @@
 				// 查找数组是是否存在this.name元素值
 				if (valueTmp != null) {
 					// console.log('***', valueTmp)
-					const even = (element: any): boolean => element.toString() == props.name.toString()
+					const even = (element: any): boolean => element.toString() == props.name!.toString()
 					isChecked.value = valueTmp.some(even)
 				}
 			}

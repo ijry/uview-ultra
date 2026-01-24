@@ -20,7 +20,9 @@ export default {
 
             // 添加上月数据
             arr.push(
+			// @ts-ignore
                 ...new Array(start).fill(1).map((e, i) => {
+					// @ts-ignore
                     const day = prevDays - start + i + 1
 
                     return {
@@ -33,25 +35,28 @@ export default {
 
             // 添加本月数据
             arr.push(
+			// @ts-ignore
                 ...new Array(days - 0).fill(1).map((e, i) => {
                     const day = i + 1
 
                     return {
                         value: day,
-                        date: dayjs(this.date).date(day).format('YYYY-MM-DD')
+                        date: dayuts(this.date).date(day).format('YYYY-MM-DD')
                     }
                 })
             )
 
             // 添加下个月
             arr.push(
+				// @ts-ignore
                 ...new Array(42 - days - start).fill(1).map((e, i) => {
                     const day = i + 1
 
                     return {
                         value: day,
                         disabled: true,
-                        date: dayjs(this.date).add(1, 'month').date(day).format('YYYY-MM-DD')
+						// @ts-ignore
+                        date: dayuts(this.date).add(1, 'month').date(day).format('YYYY-MM-DD')
                     }
                 })
             )
@@ -60,21 +65,23 @@ export default {
             for (let n = 0; n < arr.length; n += 7) {
                 this.month.push(
                     arr.slice(n, n + 7).map((e, i) => {
+						// @ts-ignore
                         e.index = i + n
 
                         // 自定义信息
+						// @ts-ignore
                         const custom = this.customList.find((c) => c.date == e.date)
 
                         // 农历
                         if (this.lunar) {
-                            const {
-                                IDayCn,
-                                IMonthCn
-                            } = this.getLunar(e.date)
+							// @ts-ignore
+                            const { IDayCn, IMonthCn } = this.getLunar(e.date)
+							// @ts-ignore
                             e.lunar = IDayCn == '初一' ? IMonthCn : IDayCn
                         }
 
                         return {
+							// @ts-ignore
                             ...e,
                             ...custom
                         }

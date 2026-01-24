@@ -77,7 +77,9 @@
 			switchStyle(): UTSJSONObject {
 				let style = {}
 				// 这里需要加2，是为了腾出边框的距离，否则圆点node会和外边框紧贴在一起
+				// @ts-ignore
 				style['width'] = addUnit(parseInt(this.size.toString()) * 2 + 2)
+				// @ts-ignore
 				style['height'] = addUnit(parseInt(this.size.toString()) + 2)
 				// style['borderColor'] = this.value ? 'rgba(0, 0, 0, 0)' : 'rgba(0, 0, 0, 0.12)'
 				// 如果自定义了“非激活”演示，name边框颜色设置为透明(跟非激活颜色一致)
@@ -91,7 +93,9 @@
 			nodeStyle(): UTSJSONObject {
 				let style = {}
 				// 如果自定义非激活颜色，将node圆点的尺寸减少两个像素，让其与外边框距离更大一点
+				// @ts-ignore
 				style['width'] = addUnit(parseInt(this.size.toString()) - parseInt(this.space.toString()))
+				// @ts-ignore
 				style['height'] = addUnit(parseInt(this.size.toString()) - parseInt(this.space.toString()))
 				const translateX = this.isActive ? addUnit(this.space) : addUnit(this.size);
 				style['transform'] = `translateX(-${translateX})`
@@ -100,7 +104,9 @@
 			bgStyle(): UTSJSONObject {
 				let style = {}
 				// 这里配置一个多余的元素在HTML中，是为了让switch切换时，有更良好的背景色扩充体验(见实际效果)
+				// @ts-ignore
 				style['width'] = addUnit(parseInt(this.size.toString()) * 2 - parseInt(this.size.toString()) / 2)
+				// @ts-ignore
 				style['height'] = addUnit(parseInt(this.size.toString()))
 				style['backgroundColor'] = this.inactiveColor
 				// 打开时，让此元素收缩，否则反之

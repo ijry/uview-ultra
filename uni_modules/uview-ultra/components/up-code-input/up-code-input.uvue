@@ -110,6 +110,7 @@
 			// 根据长度，循环输入框的个数，因为头条小程序数值不能用于v-for
 			codeLength(): Array<string> {
 				let list: Array<string> = [];
+				// @ts-ignore
 				for (var index = 0; index < (this.maxlength as Number); index++) {
 					list.push('');
 				}
@@ -190,7 +191,7 @@
 				// 修改通过v-model双向绑定的值
                 this.$emit("update:modelValue", value);
 				// 达到用户指定输入长度时，发出完成事件
-				if (value.length >= (this.maxlength as Number)) {
+				if (value.length >= (this.maxlength as number)) {
 					this.$emit('finish', value)
 				}
 			}

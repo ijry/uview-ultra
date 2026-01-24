@@ -201,6 +201,7 @@
 		mounted() {
 			// 获取滑块条的尺寸信息
 			if (!this.useNative) {
+				// @ts-ignore
 				this.upGetRect('.up-slider__base').then((rect: NodeInfo) => {
 					this.sliderRect.width = rect.width ?? 0;
 					this.sliderRect.left = rect.left ?? 0;
@@ -221,7 +222,9 @@
 			},
 			init() {
 				if (this.isRange) {
+					// @ts-ignore
 					this.updateValue(parseFloat(this.rangeValue[0].toString()), false, 0);
+					// @ts-ignore
 					this.updateValue(parseFloat(this.rangeValue[1].toString()), false, 1);
 				} else {
 					// #ifdef VUE3
@@ -272,7 +275,9 @@
 				this.startX = touches.clientX;
 				// 此处的this.modelValue虽为props值，但是通过$emit('update:modelValue')进行了修改
 				if (this.isRange) {
+					// @ts-ignore
 					this.startValue0 = this.format(parseFloat(this.rangeValue[0].toString()), 0);
+					// @ts-ignore
 					this.startValue = this.format(parseFloat(this.rangeValue[1].toString()), 1);
 				} else {
 					// #ifdef VUE3
@@ -295,6 +300,7 @@
 				this.distanceX = clientX - this.sliderRect.left;
 				// 获得移动距离对整个滑块的值，此为带有多位小数的值，不能用此更新视图
 				// 否则造成通信阻塞，需要每改变一个step值时修改一次视图
+				// @ts-ignore
 				this.newValue = ((this.distanceX / this.sliderRect.width) * (parseFloat(this.max.toString()) - parseFloat(this.min.toString()))) + parseFloat(this.min.toString());
 				this.status = 'moving';
 				// 发出moving事件
@@ -320,6 +326,7 @@
 				this.distanceX = clientX - this.sliderRect.left;
 				// 获得移动距离对整个滑块的值，此为带有多位小数的值，不能用此更新视图
 				// 否则造成通信阻塞，需要每改变一个step值时修改一次视图
+				// @ts-ignore
 				this.newValue = ((this.distanceX / this.sliderRect.width) * (parseFloat(this.max.toString()) - parseFloat(this.min.toString()))) + parseFloat(this.min.toString());
 				this.status = 'moving';
 				// 发出moving事件
@@ -361,6 +368,7 @@
 				// #ifndef APP-NVUE
 				// nvue下暂时无法获取坐标
 				let clientX = event.x - this.sliderRect.left
+				// @ts-ignore
 				this.newValue = ((clientX / this.sliderRect.width) * (parseFloat(this.max.toString()) - parseFloat(this.min.toString()))) + parseFloat(this.min.toString());
 				this.updateValue(this.newValue, false, 1);
 				// #endif
@@ -369,10 +377,13 @@
 				// 去掉小数部分，同时也是对step步进的处理
 				let valueFormat: number = this.format(value, index);
 				// 不允许滑动的值超过max最大值
+				// @ts-ignore
 				if(valueFormat > parseFloat(this.max.toString())) {
+					// @ts-ignore
 					valueFormat = parseFloat(this.max.toString())
 				}
 				// 设置移动的距离，不能用百分比，因为NVUE不支持。
+				// @ts-ignore
 				let width = Math.min((valueFormat - parseFloat(this.min.toString())) / (parseFloat(this.max.toString()) - parseFloat(this.min.toString())) * this.sliderRect.width, this.sliderRect.width)
 				let barStyle = {
 					width: width.toString() + 'px'
@@ -386,6 +397,7 @@
 				}
 				// 修改value值
 				if (this.isRange) {
+					// @ts-ignore
 					this.rangeValue[index] = valueFormat;
 					this.$emit("update:modelValue", this.rangeValue);
 				} else {
@@ -420,14 +432,20 @@
 					switch (index) {
 						case 0:
 							return Math.round(
+								// @ts-ignore
 								Math.max(parseFloat(this.min.toString()), Math.min(value, parseFloat(this.rangeValue[1].toString())- parseFloat(this.step.toString()), parseFloat(this.max.toString())))
+								// @ts-ignore
 								/ parseFloat(this.step.toString())
+								// @ts-ignore
 							) * parseInt(this.step.toString());
 							break;
 						case 1:
 							return Math.round(
+								// @ts-ignore
 								Math.max(parseFloat(this.min.toString()), parseFloat(this.rangeValue[0].toString()) + parseFloat(this.step.toString()), Math.min(value, parseFloat(this.max.toString())))
+								// @ts-ignore
 								/ parseFloat(this.step.toString())
+								// @ts-ignore
 							) * parseFloat(this.step.toString());
 							break;
 						default:
@@ -435,8 +453,11 @@
 					}
 				} else {
 					return Math.round(
+						// @ts-ignore
 						Math.max(parseFloat(this.min.toString()), Math.min(value, parseFloat(this.max.toString())))
+						// @ts-ignore
 						/ parseFloat(this.step.toString())
+					// @ts-ignore
 					) * parseFloat(this.step.toString());
 				}
 				return 0

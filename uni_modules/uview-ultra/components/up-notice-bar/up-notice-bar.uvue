@@ -84,6 +84,7 @@
 				this.$emit('click', index)
 				if (this.url != '' && this.linkType != '') {
 					// 此方法写在mixin中，另外跳转的url和linkType参数也在mixin的props中
+					// @ts-ignore
 					this.openPage()
 				}
 			},

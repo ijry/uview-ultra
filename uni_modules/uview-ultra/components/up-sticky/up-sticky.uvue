@@ -102,6 +102,7 @@
 			},
 			initObserveContent() {
 				// 获取吸顶内容的高度，用于在js吸顶模式时，给父元素一个填充高度，防止"塌陷"
+				// @ts-ignore
 				this.upGetRect('#' + this.elId).then((res: NodeInfo) => {
 					this.height = (res.height ?? '').toString()
 					this.left = res.left ?? 0

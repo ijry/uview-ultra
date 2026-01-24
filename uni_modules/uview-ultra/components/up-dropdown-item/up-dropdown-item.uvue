@@ -89,6 +89,7 @@
 				// let parent = this.getParent('up-dropdown', this);
 				let parent = this.$parent;
 				if (parent != null) {
+					// @ts-ignore
 					this.parent = parent;
 					// 将子组件的激活颜色配置为父组件设置的激活和未激活时的颜色
 					if (parent.$data['activeColor'] != null) {
@@ -103,6 +104,7 @@
 					// 	return this === val;
 					// })
 					// if (exist == null) (parent.$data['children'] as ComponentPublicInstance[]).push(this);
+					// @ts-ignore
 					this.getParentData('up-dropdown')
 					if ((parent.$data['children']as ComponentPublicInstance[]).length == 1) this.active = true;
 					// 父组件无法监听children的变化，故将子组件的title，传入父组件的menuList数组中

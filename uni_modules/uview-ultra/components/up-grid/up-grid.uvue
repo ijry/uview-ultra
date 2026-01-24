@@ -88,6 +88,7 @@
 		methods: {
 			// 获取父元素的尺寸
 			getWidth() {
+				// @ts-ignore
 				this.upGetRect(`.up-grid`, false).then((size: NodeInfo) => {
 					if (size.width != null) {
 						this.width = size.width

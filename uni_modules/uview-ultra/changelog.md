@@ -1,3 +1,8 @@
+## 4.2.0（2026-01-24）
+fix: 处理H5端编译大量warning
+
+change: LICENSE协议变更
+
 ## 4.1.29（2026-01-24）
 refactor: 【组合式API重构】 父子组件架构支持组合式函数hooks方式（uni-app-x）
 

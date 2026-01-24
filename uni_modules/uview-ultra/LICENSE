@@ -1,30 +1,19 @@
-uview-ultra遵循Apache2开源协议发布，并提供免费使用。
+uview-ultra遵循以下开源协议发布。
 版权所有Copyright © 2006-2099 by lingyun.net
 All rights reserved。
 
-Apache Licence是著名的非盈利开源组织Apache采用的协议。
-该协议和BSD类似，鼓励代码共享和尊重原作者的著作权，
-允许代码修改，再作为开源或商业软件发布。需要满足
-的条件：
-1． 需要给代码的用户一份Apache Licence ；
-2． 如果你修改了代码，需要在被修改的文件中说明；
-3． 在延伸的代码中（修改和有源代码衍生的代码中）需要
-带有原来代码中的协议，商标，专利声明和其他原来作者规
-定需要包含的说明；
-4． 如果再发布的产品中包含一个Notice文件，则在Notice文
-件中需要带有本协议内容。你可以在Notice中增加自己的
-许可，但不可以表现为对Apache Licence构成更改。
-具体的协议参考：http://www.apache.org/licenses/LICENSE-2.0
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
-FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
-COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
-INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
-BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
-LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
-ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-POSSIBILITY OF SUCH DAMAGE.
+本协议鼓励尊重原作者的版权以及防止社区发展中分裂（类似io.js 分裂事件），
+允许代码修改，允许商业使用。需要满足的条件：
+1． 本项目的前身采用了uViewUI的代码，虽然本项目已经进行了彻底的
+组合式API等方面的重构，但为了回馈该项目的付出，uViewUI项目作者（所有方）享有自由
+的权限，不受以以下条款限制；
+2． 需要给代码的用户一份此Licence文件；
+3． 如果你修改了代码，需要在被修改的文件中说明；
+4． 遵循防止社区分裂原则，可以在自己项目、公司项目中自由修改、下载、使用官方版本，
+但是禁止将代码用于竞争产品，禁止发布分叉产品，也禁止在竞争产品中使用该软件任意代码，
+唯一的例外情况是官方明确宣布停止维护更新该软件，或者在uni-app重大版本升级（类如vue3
+和uni-app-x等级的升级）后官方表示暂不发布新的升级支持版本，本条条款限制将自动失效，
+那么你此后可以进行分叉、竞争产品的发布；
+5.  在你发布的衍生开源或者商业项目（如模板、uni-app工程等）中完整引用本软件完整代码包
+是被允许的不违背条款4，；
+6.  如果您进行了PR贡献，您仍热需要遵循该协议；

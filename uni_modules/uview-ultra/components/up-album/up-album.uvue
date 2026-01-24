@@ -63,7 +63,7 @@ import { ref, computed, watch, getCurrentInstance } from 'vue'
 // import { propsAlbum } from './props'
 import { mpSharedMpOptions } from '../../libs/composable/useMp'
 import { commonProps, useUltraUI } from '../../libs/composable/useUltraUI'
-import { addUnit, sleep, upGetRect } from '../../libs/function/index'
+import { addUnit, getPx, sleep, upGetRect } from '../../libs/function/index'
 import defProps from './album.uts'
 import imageProps from '../up-image/image.uts'
 const instance = getCurrentInstance()!.proxy!
@@ -224,7 +224,8 @@ const getImageRect = () => {
             const isHorizotal = res.width >= res.height
             singleWidth.value = isHorizotal
                 ? props.singleSize as number
-                : (res.width / res.height) * props.singleSize as number
+				// @ts-ignore
+                : (res.width / res.height) * getPx(props.singleSize) as number
             singleHeight.value = !isHorizotal
                 ? props.singleSize as number
                 : (res.height / res.width) * singleWidth.value as number

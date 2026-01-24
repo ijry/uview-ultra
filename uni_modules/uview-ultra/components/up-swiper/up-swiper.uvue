@@ -212,6 +212,7 @@
 				const lastItem = this.getSource(this.list[index])
 				if (testVideo(lastItem)) {
 					// 当视频隐藏时，暂停播放
+					// @ts-ignore
 					const video = uni.createVideoContext(`video-${index}`, this)
 					video!!.pause()
 				}

@@ -230,8 +230,10 @@
 				// 如果为空字符串，那么设置为0，同时将值转为Number类型
 				let valueNum: number = value === '' ? 0 : parseFloat(value)
 				// 对比最大最小值，取在min和max之间的值
+				// @ts-ignore
 				valueNum = Math.max(Math.min(parseFloat(this.max as string), parseFloat(value.toString())), parseFloat(this.min.toString()))
 				// 如果设定了最大的小数位数，使用toFixed去进行格式化
+				// @ts-ignore
 				let decimalLength = parseInt(this.decimalLength.toString())
 				if (decimalLength !== 0 && valueNum !== 0) {
 					valueNum = parseFloat(valueNum.toFixed(decimalLength))
@@ -292,6 +294,7 @@
 				// 最大允许的小数长度
 				if (this.decimalLength !== null && formatted.indexOf('.') !== -1) {
 					const pair = formatted.split('.')
+					// @ts-ignore
 					formatted = `${pair[0]}.${pair[1].slice(0, parseInt(this.decimalLength.toString()))}`
 				}
 				let formatted2 = this.format(formatted)
@@ -325,9 +328,11 @@
 				if (this.isDisabled(type)) {
 					return this.$emit('overlimit', type)
 				}
+				// @ts-ignore
 				const diff = type === 'minus' ? 0-parseFloat(this.step.toString()) : 0+parseFloat(this.step.toString())
 				const value = this.format(this.add(0+parseFloat(this.currentValue.toString()), diff).toString())
 				this.emitChange(value, type)
+				// @ts-ignore
 				this.$emit(type)
 			},
 			// 对值扩大后进行四舍五入，再除以扩大因子，避免出现浮点数操作的精度问题

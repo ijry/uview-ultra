@@ -73,7 +73,9 @@
 			},
 			updateParentData(): void {
 				// 此方法在mixin中
+				// @ts-ignore
 				this.getParentData('up-list', true)
+				// @ts-ignore
 				this.getParentData('up-list', false)
 			},
 			resize() {
@@ -108,6 +110,7 @@
 			// 查询元素尺寸
 			queryRect(el: string): Promise<NodeInfo> {
 				return new Promise((resolve) => {
+					// @ts-ignore
 					this.upGetRect(`.${el}`).then((size: NodeInfo) => {
 						resolve(size)
 					})

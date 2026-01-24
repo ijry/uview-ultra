@@ -340,6 +340,7 @@
 			},
 			formatFileList() {
 				let fileList = this.fileList as UTSJSONObject[]
+				// @ts-ignore
 				let maxCount = parseInt(this.maxCount.toString())
 				let lists = [] as UPUploadListItem[]
 				fileList.forEach((item: UTSJSONObject) => {
@@ -380,8 +381,9 @@
 					maxCount: maxCount - lists.length,
 					...params
 				})
+				// @ts-ignore
 				let chooseParamsObj = JSON.parseObject(JSON.stringify(chooseParams)) as UPUploadChooseFileOptions
-				chooseFile(chooseParamsObj).then((res: UPUploadFileChoosed[]) => {
+				chooseFile(chooseParamsObj).then((res: Array<UPUploadFileChoosed|null>) => {
 					const result = chooseParams['multiple'] != null && chooseParams['multiple'] != false ? res : res
 					this.onBeforeRead(result);
 				})
@@ -426,6 +428,7 @@
 			getDetail(index: number|null = null) {
 				return {
 					name: this.name,
+					// @ts-ignore
 					index: index == null ? this.fileList.length : index,
 				};
 			},
@@ -446,12 +449,15 @@
 					}, this.getDetail(null)));
 					return;
 				}
+				// @ts-ignore
 				let len = this.fileList.length;
 				if (this.autoUpload) {
 					// 当设置 mutiple 为 true 时, file 为数组格式，否则为对象格式
 					let lists = ([] as UPUploadFileChoosed[]).concat(file);
+					// @ts-ignore
 					let fileListLen = this.fileList.length;
 					lists.map((item: UPUploadFileChoosed) => {
+						// @ts-ignore
 						this.fileList.push({
 							...item as UTSJSONObject,
 							status: 'uploading',
@@ -477,7 +483,7 @@
 								let formData = {};
 								uni.request({
 									url: this.autoUploadAuthUrl,
-									method: 'get',
+									method: 'GET',
 									header: this.autoUploadHeader,
 									data: {
 										filename: lists[j]['name'] as string
@@ -607,6 +613,7 @@
 			},
 			updateUpload(index: number, param: UTSJSONObject) {
 				let item = this.fileList[index];
+				// @ts-ignore
 				this.fileList.splice(index, 1, {
 					...item as UTSJSONObject,
 					// 注意这里不判断会出现succcessUpload先执行又被覆盖的问题
@@ -618,6 +625,7 @@
 			},
 			succcessUpload(index: number, url: string, thumb: string = '') {
 				let item = this.fileList[index];
+				// @ts-ignore
 				this.fileList.splice(index, 1, {
 					...item as UTSJSONObject,
 					status: 'success',
@@ -630,6 +638,7 @@
 			},
 			deleteItem(index: number) {
 				if (this.autoDelete) {
+					// @ts-ignore
 					this.fileList.splice(index, 1);
 					this.$emit('update:fileList', this.fileList);
 				} else {
@@ -676,7 +685,8 @@
                 for (var i = 0; i < this.lists.length; i++) {
                     const item = this.lists[i];
                     if (item.isVideo || (item.type != null && item.type === 'video')) {
-                        sources.push(UTSJSONObject.assign(UTSJSONObject.assign({}, item), {
+                        // @ts-ignore
+						sources.push(UTSJSONObject.assign(UTSJSONObject.assign({}, item), {
                             type: 'video'
                         }));
                         if (i === index) {
@@ -718,6 +728,7 @@
 				}
 				this.$emit(
 					'clickPreview',
+					// @ts-ignore
 					UTSJSONObject.assign(UTSJSONObject.assign({}, item as UTSJSONObject), this.getDetail(index))
 				);
 			}

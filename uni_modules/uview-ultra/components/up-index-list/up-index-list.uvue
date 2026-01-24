@@ -144,6 +144,7 @@
 		computed: {
 			// 如果有传入外部的indexList锚点数组则使用，否则使用内部生成A-Z字母
 			uIndexList(): Array<any> {
+				// @ts-ignore
 				if(this.indexList.length > 0) {
 					return this.$props['indexList'] as Array<any>
 				} else {
@@ -339,7 +340,7 @@
 							height: 0
 						} as NodeInfo)
 					}
-
+					// @ts-ignore
 					this.upGetRect('.up-index-list__header').then((size: NodeInfo) => {
 						resolve(size)
 					})
@@ -354,6 +355,7 @@
 					this.scrolling = false
 				})
 				let scrollTop = 0
+				// @ts-ignore
 				const len = this.children.length
 				let children: childrenType[] = []
 
@@ -363,7 +365,9 @@
 				let top = header.height ?? 0
 				const anchors = this.anchors
 				// 由于list组件无法获取cell的top值，这里通过header slot和各个item之间的height，模拟出类似非nvue下的位置信息
+				// @ts-ignore
 				children = this.children!!.map((item: ComponentPublicInstance, index: number) => {
+					// @ts-ignore
 					const childHeight = parseFloat(item.$data['height'].toString()) + parseInt(getPx(this.itemMargin))
 					const child = {
 						height: childHeight,
@@ -403,6 +407,7 @@
 			// 获取整个列表的尺寸信息
 			getIndexListRect(): Promise<NodeInfo> {
 				return new Promise((resolve) => {
+					// @ts-ignore
 					this.$uGetRect('.up-index-list__scroll-view').then((size: NodeInfo) => {
 						resolve(size)
 					})
@@ -411,6 +416,7 @@
 			// 获取右边字母索引的尺寸信息
 			getIndexListLetterRect(): Promise<NodeInfo> {
 				return new Promise((resolve) => {
+					// @ts-ignore
 					this.$uGetRect('.up-index-list__letter').then((size: NodeInfo) => {
 						resolve(size)
 					})
@@ -453,6 +459,7 @@
 			// 获取滚动区域的尺寸信息
 			getIndexListScrollViewRect(): Promise<NodeInfo> {
 				return new Promise((resolve) => {
+					// @ts-ignore
 					this.upGetRect('.up-index-list').then((size: NodeInfo) => {
 						resolve(size)
 					})

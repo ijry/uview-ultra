@@ -37,6 +37,11 @@
 import defProps from './avatarGroup'
 import { addUnit } from '../../libs/function/index'
 
+defineOptions({
+  //...mpSharedMpOptions,
+  name: 'up-avatar-group'
+})
+
 // 定义props
 const props = defineProps({
     // 头像图片组

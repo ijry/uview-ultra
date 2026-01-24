@@ -43,6 +43,7 @@
 		methods: {
 			init() {
 				// 此处会活动父组件实例，并赋值给实例的parent属性
+				// @ts-ignore
 				this.getParentData('up-index-list')
 				if (this.parent == null) {
 					return error('up-index-item必须要搭配up-index-list组件使用')
@@ -57,6 +58,7 @@
 			},
 			getIndexItemRect(): Promise<NodeInfo> {
 				return new Promise((resolve) => {
+					// @ts-ignore
 					this.upGetRect('.up-index-item').then((size) => {
 						resolve(size as NodeInfo)
 					})

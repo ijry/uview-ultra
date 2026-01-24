@@ -28,7 +28,7 @@ export default {
 		multiple: false,
 		deletable: true,
 		maxSize: Number.MAX_VALUE,
-		fileList: [] as UTSJSONObject[]
+		fileList: [] as UTSJSONObject[],
 		uploadText: '',
 		width: 80,
 		height: 80,

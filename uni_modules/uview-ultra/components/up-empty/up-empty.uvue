@@ -98,6 +98,7 @@
 			},
 			// 判断icon是否图片路径
 			isSrc(): boolean {
+				// @ts-ignore
 				return this.icon.indexOf('/') >= 0
 			}
 		},

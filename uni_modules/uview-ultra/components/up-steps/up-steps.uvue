@@ -48,6 +48,7 @@
 		methods: {
 			// 更新子组件的数据
 			updateChildData() {
+				// @ts-ignore
 				this.children.map((child: ComponentPublicInstance) => {
 					// 先判断子组件是否存在对应的方法
 					child.$callMethod('updateFromParent')
@@ -59,6 +60,7 @@
 			}
 		},
 		created() {
+			// @ts-ignore
 			this.children = []
 		}
 	}

@@ -151,6 +151,7 @@ export default {
                 href
             } = this
 
+			// @ts-ignore
             let textStr = text.toString()
 
             // 价格类型
@@ -180,6 +181,7 @@ export default {
                 // }
 				if (format != '') {
                     // 如果format非正则，非函数，则使用默认的时间格式化方法进行操作
+					// @ts-ignore
                     return timeFormat(textStr, format.toString())
                 }
                 // 如果没有设置format，则设置为默认的时间格式化形式

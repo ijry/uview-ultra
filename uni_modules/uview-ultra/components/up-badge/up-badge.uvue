@@ -1,6 +1,6 @@
 <template>
 	<text class="up-badge"
-		v-if="show && ((parseInt(value.toString()) === 0 ? showZero : true) || isDot)"
+		v-if="show && ((parseInt(value.toString()) == 0 ? showZero : true) || isDot)"
 		:class="[isDot ? 'up-badge--dot' : 'up-badge--not-dot',
 			inverted ? 'up-badge--inverted' : '',
 			shape === 'horn' ? 'up-badge--horn' : '',
@@ -72,14 +72,18 @@
 			},
 			showValue(): string {
 				let valueReturn = ''
+				// @ts-ignore
 				switch (this.numberType.toString()) {
 					case "overflow":
+						// @ts-ignore
 						valueReturn = parseInt(this.$props['value'].toString()) > parseInt(this.max.toString()) ? this.max.toString() + "+" : this.$props['value'].toString()
 						break;
 					case "ellipsis":
+						// @ts-ignore
 						valueReturn = parseInt(this.$props['value'].toString()) > parseInt(this.max.toString()) ? "..." : this.$props['value'].toString()
 						break;
 					case "limit":
+						// @ts-ignore
 						valueReturn = parseInt(this.$props['value'].toString()) > 999
 								?
 									parseInt(this.$props['value'].toString()) >= 9999 ?

@@ -1,4 +1,4 @@
-import { array as testArray } from '../../libs/function/test'\
+import { array as testArray } from '../../libs/function/test'
 import { UPUploadFileChoosed, UPUploadChooseFileOptions } from './types.uts'
 
 function pickExclude(objOri: ChooseImageTempFile|ChooseMediaTempFile|ChooseFileTempFile, keys: string[]) {
@@ -15,9 +15,10 @@ function pickExclude(objOri: ChooseImageTempFile|ChooseMediaTempFile|ChooseFileT
     }, {})
 }
 
-function formatImage(res: ChooseImageSuccess): Array<UPUploadFileChoosed> {
+function formatImage(res: ChooseImageSuccess): Array<UPUploadFileChoosed|null> {
+	// @ts-ignore
     return res.tempFiles.map((item: ChooseImageTempFile) => {
-		return {
+		let tmp = {
 			...pickExclude(item, ['path']),
 			type: 'image',
 			url: item.path,
@@ -30,36 +31,42 @@ function formatImage(res: ChooseImageSuccess): Array<UPUploadFileChoosed> {
 			// #ifndef H5
 			name: item.path.split('/').pop() + '.png',
 			// #endif
-		} as UPUploadFileChoosed
+		}
+		return JSON.parseObject<UPUploadFileChoosed>(JSON.stringify(tmp))
 	})
 }
 
-function formatVideo(res: ChooseVideoSuccess): Array<UPUploadFileChoosed> {
+function formatVideo(res: ChooseVideoSuccess): Array<UPUploadFileChoosed|null> {
 	// console.log(res)
+	// @ts-ignore
+	let tmp = {
+		// @ts-ignore
+	    ...pickExclude(res, ['tempFilePath', 'thumbTempFilePath', 'errMsg']),
+	    type: 'video',
+	    url: res.tempFilePath,
+	    // thumb: res.thumbTempFilePath,
+		thumb: '',
+		size: res.size,
+		width: res.width ?? 0, // APP 2.1.0+、H5、微信小程序、京东小程序
+		height: res.height ?? 0, // APP 2.1.0+、H5、微信小程序、京东小程序
+		// #ifdef H5
+		name: res.name,
+		file: res
+		// #endif
+		// #ifndef H5
+		name: res.tempFilePath.split('/').pop() + '.mp4',
+		// #endif
+	}
     return [
-        {
-            ...pickExclude(res, ['tempFilePath', 'thumbTempFilePath', 'errMsg']),
-            type: 'video',
-            url: res.tempFilePath,
-            // thumb: res.thumbTempFilePath,
-			thumb: '',
-			size: res.size,
-			width: res.width ?? 0, // APP 2.1.0+、H5、微信小程序、京东小程序
-			height: res.height ?? 0, // APP 2.1.0+、H5、微信小程序、京东小程序
-			// #ifdef H5
-			name: res.name,
-			file: res
-			// #endif
-			// #ifndef H5
-			name: res.tempFilePath.split('/').pop() + '.mp4',
-			// #endif
-        } as UPUploadFileChoosed
-    ] as UPUploadFileChoosed[]
+		JSON.parseObject<UPUploadFileChoosed>(JSON.stringify(tmp))
+    ]
 }
 
-function formatMedia(res: ChooseMediaSuccess): Array<UPUploadFileChoosed> {
+function formatMedia(res: ChooseMediaSuccess): Array<UPUploadFileChoosed|null> {
+	// @ts-ignore
     return res.tempFiles.map((item : ChooseMediaTempFile) => {
-		return {
+		let tmp = {
+			// @ts-ignore
 			...pickExclude(item, ['fileType', 'thumbTempFilePath', 'tempFilePath']),
 			type: res.type,
 			url: item.tempFilePath,
@@ -71,13 +78,15 @@ function formatMedia(res: ChooseMediaSuccess): Array<UPUploadFileChoosed> {
 			// #ifndef H5
 			name: item.tempFilePath.split('/').pop() + (res.type === 'video' ? '.mp4': '.png'),
 			// #endif
-		} as UPUploadFileChoosed
+		}
+		JSON.parseObject<UPUploadFileChoosed>(JSON.stringify(tmp))
 	})
 }
 
-function formatFile(res: ChooseFileSuccess[]): Array<UPUploadFileChoosed> {
+function formatFile(res: ChooseFileSuccess[]): Array<UPUploadFileChoosed|null> {
+	// @ts-ignore
     return res.tempFiles.map((item: ChooseFileTempFile) => {
-		return{
+		let tmp ={
 			...pickExclude(item, ['path']), 
 			url: item.path, 
 			size:item.size,
@@ -86,7 +95,8 @@ function formatFile(res: ChooseFileSuccess[]): Array<UPUploadFileChoosed> {
 			type: item.type,
 			file: item
 			// #endif 
-		} as UPUploadFileChoosed
+		}
+		JSON.parseObject<UPUploadFileChoosed>(JSON.stringify(tmp))
 	})
 }
 export function chooseFile({
@@ -99,7 +109,7 @@ export function chooseFile({
     camera,
     maxCount,
     extension
-}: UPUploadChooseFileOptions): Promise<UPUploadFileChoosed[]> {
+}: UPUploadChooseFileOptions): Promise<Array<UPUploadFileChoosed|null>> {
 	let captureList = [] as Array<string>
     try {
 		// if (capture != null) {
@@ -114,6 +124,7 @@ export function chooseFile({
                 count: multiple ? Math.min(maxCount, 9) : 1,
                 sourceType: captureList,
                 sizeType,
+				// @ts-ignore
                 success: (res: ChooseImageSuccess) => resolve(formatImage(res)),
                 fail: reject
             })
@@ -137,7 +148,9 @@ export function chooseFile({
                 sourceType: captureList,
                 compressed,
                 maxDuration,
+				// @ts-ignore
                 camera,
+				// @ts-ignore
                 success: (res: ChooseVideoSuccess) => resolve(formatVideo(res)),
                 fail: reject
             })
@@ -148,6 +161,7 @@ export function chooseFile({
             let params = {
                 count: multiple ? maxCount : 1,
                 type: accept,
+				// @ts-ignore
                 success: (res) => resolve(formatFile(res)),
                 fail: reject
             }
@@ -160,8 +174,10 @@ export function chooseFile({
             // #endif
             // #ifdef H5
             // 需要hx2.9.9以上才支持uni.chooseFile
+			// @ts-ignore
 			params['success'] = (res: ChooseFileSuccess ) => resolve(formatFile(res)),
-            uni.chooseFile(params as ChooseFileSuccess )
+            // @ts-ignore
+			uni.chooseFile(params as ChooseFileSuccess )
             // #endif
             break
 		// #endif
@@ -180,12 +196,16 @@ export function chooseFile({
             let paramsFile = {
                 count: multiple ? maxCount : 1,
 				type: 'all',
+				// @ts-ignore
 				success: (res) => resolve(formatFile(res)),
 				fail: reject
             }
-            if (extension != null extension.length && extension.length > 0) {
-                paramsFile.extension = extension
+			// @ts-ignore
+            if (extension != null && extension.length && extension.length > 0) {
+                // @ts-ignore
+				paramsFile.extension = extension
             }
+			// @ts-ignore
 			uni.chooseFile(paramsFile)
 			// #endif
         }

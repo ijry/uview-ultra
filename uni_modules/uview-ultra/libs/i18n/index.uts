@@ -43,6 +43,7 @@ export function t(value: string, params: UTSJSONObject = {}): string {
         // }
 		let result = ''
 		if (locales[lang] != null) {
+			// @ts-ignore
 			result = (locales[lang] as UTSJSONObject)[value].toString()
 		} else {
 			result = value

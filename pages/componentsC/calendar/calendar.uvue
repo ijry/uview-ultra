@@ -153,10 +153,13 @@
 				console.log(e);
 				switch(this.index - 1) {
 					case 0:
+						// @ts-ignore
 						this.values[this.index - 1] = e[0];
 						break;
 					case 1:
+						// @ts-ignore
 						e.forEach((value, index: number) => {
+							// @ts-ignore
 							index == 0 ? this.values[this.index - 1] = value : this.values[this.index - 1] += ';' + value
 						})
 						break;
@@ -170,13 +173,16 @@
 						this.values[this.index - 1] = e[0] + '~' + e[e.length - 1];
 						break;
 					case 5:
+						// @ts-ignore
 						this.values[this.index - 1] = e[0];
 						break;
 					case 6:
+						// @ts-ignore
 						this.values[this.index - 1] = e[0];
 						break;
 					case 7:
 						e.forEach((value, index: number) => {
+							// @ts-ignore
 							index == 0 ? this.values[this.index - 1] = value : this.values[this.index - 1] += ';' + value
 						})
 						break;

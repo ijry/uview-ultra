@@ -119,6 +119,7 @@
 					name: this.name
 				})
 				// 如果配置了url(此props参数通过mixin引入)参数，跳转页面
+				// @ts-ignore
 				this.openPage()
 				// 是否阻止事件传播
 			// 	this.stop && this.preventEvent(e)

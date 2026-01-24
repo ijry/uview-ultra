@@ -175,6 +175,7 @@
 			},
 			init() {
 				// #ifdef VUE3
+				// @ts-ignore
 				this.innerValue = this.correctValue(this.modelValue.toString())
 				// #endif
 				// #ifdef VUE2
@@ -249,11 +250,15 @@
 				let selectValue: any = ''
 				if(this.mode === 'time') {
 					// 根据value各列索引，从各列数组中，取出当前时间的选中值
+					// @ts-ignore
 					selectValue = `${this.intercept(values[0][indexs[0]].toString())}:${this.intercept(values[1][indexs[1]].toString())}`
 				} else {
 					// 将选择的值转为数值，比如'03'转为数值的3，'2019'转为数值的2019
+					// @ts-ignore
 					const year = parseInt(this.intercept(values[0][indexs[0]].toString(),'year'))
+					// @ts-ignore
 					const month = parseInt(this.intercept(values[1][indexs[1]].toString()))
+					// @ts-ignore
 					let date = parseInt(values[2] != null ? this.intercept(values[2][indexs[2]].toString()) : '1')
 					let hour = 0, minute = 0
 					// 此月份的最大天数
@@ -265,8 +270,10 @@
 					// 不允许超过maxDate值
 					date = Math.min(maxDate, date)
 					if (this.mode === 'datetime') {
-					    hour = parseInt(this.intercept(values[3][indexs[3]].toString()))
-					    minute = parseInt(this.intercept(values[4][indexs[4]].toString()))
+					    // @ts-ignore
+						hour = parseInt(this.intercept(values[3][indexs[3]].toString()))
+					    // @ts-ignore
+						minute = parseInt(this.intercept(values[4][indexs[4]].toString()))
 					}
 					// 转为时间模式
 					selectValue = new Date(year, month - 1, date, hour, minute).getTime()
@@ -354,6 +361,7 @@
 				const originColumns = this.getOriginColumns();
 				const results: Array<Array<string>> = [];
 				originColumns.forEach((column: UTSJSONObject) => {
+					// @ts-ignore
 					const formattedValues: string[] = (column['values'] as Array<string>).map((value: string) => formatter(column['type'].toString(), value));
 					results.push(formattedValues);
 				});
@@ -364,6 +372,7 @@
 				let results: Array<UTSJSONObject> = []
 				let rangesList:Array<UTSJSONObject> = this.getRanges()
 			    rangesList.forEach((item: UTSJSONObject) => {
+					// @ts-ignore
 					let type = item['type'].toString()
 					let ranges: Array<number> = item['ranges'] as Array<number>
 			        let values: string[] = times(ranges[1] - ranges[0] + 1, type, ranges)
@@ -420,7 +429,9 @@
 					return `${ hour }:${ minute }`
 				} else {
 					// 如果是日期格式，控制在最小日期和最大日期之间
+					// @ts-ignore
 					value = dayuts(value).isBefore(dayuts(this.minDate)) ? this.minDate : value
+					// @ts-ignore
 					value = dayuts(value).isAfter(dayuts(this.maxDate)) ? this.maxDate : value
 					return value
 				}

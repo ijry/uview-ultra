@@ -28,7 +28,9 @@
 			},
 			// 当父组件需要子组件需要共享的参数发生了变化，手动通知子组件
 			parentData() {
+				// @ts-ignore
 				if (this!.children!.length > 0) {
+					// @ts-ignore
 					this!.children!.map((child: ComponentPublicInstance) => {
 						// 判断子组件(up-checkbox)如果有updateParentData方法的话，就就执行(执行的结果是子组件重新从父组件拉取了最新的值)
 						// if (typeof(child.updateParentData) === 'function') {
@@ -39,6 +41,7 @@
 			}
 		},
 		created() {
+			// @ts-ignore
 			this.children = []
 		},
 		computed: {
@@ -52,6 +55,7 @@
 		methods: {
 			// 重新初始化一次内部的所有子元素
 			init() {
+				// @ts-ignore
 				this!.children!.map((child: ComponentPublicInstance) => {
 					child.$callMethod('init')
 				})
@@ -62,6 +66,7 @@
 			 */
 			onChange(target: ComponentPublicInstance) {
 				let changeArr:Array<any> = []
+				// @ts-ignore
 				this!.children!.map((child:ComponentPublicInstance, index: number) => {
 					// console.log('**accordion**', this.accordion)
 					// 如果是手风琴模式，将其他的折叠面板收起来

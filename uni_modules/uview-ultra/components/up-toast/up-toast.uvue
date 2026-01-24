@@ -131,6 +131,7 @@
 				if (['error', 'warning', 'success', 'primary'].includes(this.tmpConfig['type'] as string)) {
 					// loading-icon组件内部会对color参数进行一个透明度处理，该方法要求传入的颜色值
 					// 必须为rgb格式的，所以这里做一个处理
+					// @ts-ignore
 					colorTmp = hexToRgb(color[this.tmpConfig['type'] as string].toString()).toString()
 				}
 				return colorTmp

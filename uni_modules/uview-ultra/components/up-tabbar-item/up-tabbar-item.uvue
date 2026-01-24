@@ -106,12 +106,14 @@
 					error('up-tabbar-item必须搭配up-tabbar组件使用')
 				}
 				// 本子组件在up-tabbar的children数组中的索引
+				// @ts-ignore
 				const index = this.getChildIndex(this)
 				// 判断本组件的name(如果没有定义name，就用index索引)是否等于父组件的value参数
 				this.isActive = (this.name != null ? this.name : index) === this.parentData['value']
 			},
 			updateParentData() {
 				// 此方法在mixin中
+				// @ts-ignore
 				this.getParentData('up-tabbar')
 			},
 			// 此方法将会被父组件up-tabbar调用
@@ -121,10 +123,13 @@
 			},
 			clickHandler() {
 				nextTick(() => {
+					// @ts-ignore
 					const index = this.getChildIndex(this)
 					const name = this.name != null ? this.name : index
 					// 点击的item为非激活的item才发出change事件
+					// @ts-ignore
 					if (this.parent != null && name.toString() != this.parent.$props['value'].toString()) {
+						// @ts-ignore
 						this.parent.$emit('change', name)
 					}
 					this.$emit('click', name)

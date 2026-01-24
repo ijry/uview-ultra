@@ -133,6 +133,7 @@
 				let result: string[] = [],
 					// 每组text标签的字符长度
 					len = 20
+				// @ts-ignore
 				const textArr = this.text.split('')
 				for (let i = 0; i < textArr.length; i += len) {
 					// 对拆分的后的text进行slice分割，得到的为数组再进行join拼接为字符串
@@ -181,8 +182,11 @@
 				}
 				
 				// 获取容器和文字的宽度
+				// @ts-ignore
 				await sleep(10); // 短暂延迟确保DOM渲染完成
+				// @ts-ignore
 				const textRect = await this.upGetRect('.up-notice__content__text') as NodeInfo;
+				// @ts-ignore
 				const containerRect = await this.upGetRect('.up-notice__content') as NodeInfo;
 				
 				this.scrollWidth = textRect.width ?? 0;

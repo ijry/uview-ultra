@@ -108,10 +108,12 @@
 		computed: {
 			lineStyle2() {
 				const style = {}
+				// @ts-ignore
 				if (this.parentData['direction'].toString() === 'row') {
 					if (this.index == 0) {
 						style['width'] = '0px'
 						style['left'] = (this.size['width'] as number / 2).toString() + 'px'
+						// @ts-ignore
 					} else if (this.index == (this.parent!.$data['children'] as ComponentPublicInstance[]).length - 1) {
 						style['width'] = '0px'
 						style['left'] = '0px'
@@ -121,12 +123,17 @@
 					}
 				}
 
+				// @ts-ignore
 				if (this.parent != null
+				// @ts-ignore
 					&& this.parent.$data['children'] != null
+					// @ts-ignore
 					&& this.index + 1 < (this.parent.$data['children'] as ComponentPublicInstance[]).length) {
+					// @ts-ignore
 					const nextChild = (this.parent.$data['children'] as ComponentPublicInstance[])[this.index + 1];
 					if (nextChild != null && nextChild.$props['error'] as boolean) {
 						style['backgroundColor'] = color['error']
+						// @ts-ignore
 					} else if ((this.index - 1) < parseInt(this.parentData['current'].toString())) {
 						style['backgroundColor'] = this.parentData['activeColor']
 					} else {
@@ -137,10 +144,12 @@
 			},
 			lineStyle() {
 				const style = {}
+				// @ts-ignore
 				if (this.parentData['direction'].toString() === 'row') {
 					if (this.index == 0) {
 						style['width'] = (this.size['width'] as number).toString() + 'px'
 						style['left'] = (this.size['width'] as number / 2).toString() + 'px'
+						// @ts-ignore
 					} else if (this.index == (this.parent!.$data['children'] as ComponentPublicInstance[]).length - 1) {
 						style['width'] = (this.size['width'] as number / 2).toString() + 'px'
 						style['left'] = '0px'
@@ -153,12 +162,17 @@
 					// style['top'] = (this.size['height'] / 2).toString() + 'px'
 				}
 				
+				// @ts-ignore
 				if (this.parent != null
+				// @ts-ignore
 					&& this.parent.$data['children'] != null
+					// @ts-ignore
 					&& this.index + 1 < (this.parent.$data['children'] as ComponentPublicInstance[]).length) {
+					// @ts-ignore
 					const nextChild = (this.parent.$data['children'] as ComponentPublicInstance[])[this.index + 1];
 					if (nextChild != null && nextChild.$props['error'] as boolean) {
 						style['backgroundColor'] = color['error']
+						// @ts-ignore
 					} else if (this.index < parseInt(this.parentData['current'].toString())) {
 						style['backgroundColor'] = this.parentData['activeColor']
 					} else {
@@ -169,12 +183,15 @@
 			},
 			itemStyleInner(): any {
 				return {
+					// @ts-ignore
 					...this.itemStyle
 				}
 			},
 			statusClass() {
 				let index = this.index
+				// @ts-ignore
 				let error = this.error
+				// @ts-ignore
 				let current = parseInt(this.parentData['current'].toString())
 				if (current == index) {
 					return error === true ? 'error' : 'process'
@@ -206,11 +223,16 @@
 			},
 			contentStyle(): any {
 				const style = {}
+				// @ts-ignore
 				if (this.parentData['direction'].toString() === 'column') {
+					// @ts-ignore
 					style['marginLeft'] = this.parentData['dot'].toString() == 'true' ? '2px' : '6px'
+					// @ts-ignore
 					style['marginTop'] = this.parentData['dot'].toString() == 'true' ? '0px' : '6px'
 				} else {
+					// @ts-ignore
 					style['marginTop'] = this.parentData['dot'].toString() == 'true' ? '2px' : '6px'
+					// @ts-ignore
 					style['marginLeft'] = this.parentData['dot'].toString() == 'true' ? '2px' : '6px'
 				}
 
@@ -218,7 +240,9 @@
 			}
 		},
 		mounted() {
+			// @ts-ignore
 			if (this.parent != null) {
+				// @ts-ignore
 				this.parent?.$callMethod('updateFromChild')
 			}
 			sleep().then(() => {
@@ -229,19 +253,22 @@
 			init() {
 				// 初始化数据
 				this.updateParentData()
+				// @ts-ignore
 				if (this.parent == null) {
 					return error('up-steps-item必须要搭配up-steps组件使用')
 				}
+				// @ts-ignore
 				(this.parent.$data['children'] as ComponentPublicInstance[]).forEach((child: ComponentPublicInstance, index: number) => {
 					if (child == this) {
 						this.index = index
 					}
 				})
-				
+				// @ts-ignore
 				this.childLength = (this.parent.$data['children'] as ComponentPublicInstance[]).length
 			},
 			updateParentData() {
 				// 此方法在mixin中
+				// @ts-ignore
 				this.getParentData('up-steps')
 			},
 			// 父组件数据发生变化
@@ -250,6 +277,7 @@
 			},
 			// 获取组件的尺寸，用于设置横线的位置
 			getStepsItemRect() {
+				// @ts-ignore
 				this.upGetRect('.up-steps-item').then((size: NodeInfo) => {
 					// console.log(size)
 					this.size['width'] = size.width != null ? size.width : 0

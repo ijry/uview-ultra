@@ -144,6 +144,7 @@
 			},
             init() {
 				if (this.modelValue != null) {
+					// @ts-ignore
 					this.activeIndex = parseFloat(this.modelValue.toString())
 				}
 				sleep().then(() => {
@@ -154,12 +155,14 @@
 			// 获取评分组件盒子的布局信息
 			async getRateItemRect() {
 				await sleep();
+				// @ts-ignore
 				this.upGetRect("#" + this.elId).then((res: NodeInfo) => {
 					this.rateBoxLeft = res.left ?? 0;
 				});
 			},
 			// 获取单个星星的尺寸
 			getRateIconWrapRect() {
+				// @ts-ignore
 				this.$uGetRect("." + this.elClass).then((res: NodeInfo) => {
 					this.rateWidth = res.width ?? 0;
 				});
@@ -170,6 +173,7 @@
 				if (!this.touchable) {
 					return;
 				}
+				// @ts-ignore
 				this.preventEvent(e);
 				const x = e.changedTouches[0].pageX;
 				this.getActiveIndex(x);
@@ -180,6 +184,7 @@
 				if (!this.touchable) {
 					return;
 				}
+				// @ts-ignore
 				this.preventEvent(e);
 				const x = e.changedTouches[0].pageX;
 				this.getActiveIndex(x);
@@ -191,6 +196,7 @@
 				if (os() === "ios" && this.moving) {
 					return;
 				}
+				// @ts-ignore
 				this.preventEvent(ee);
 				let x = 0;
 				// x = e.changedTouches[0].pageX;
@@ -215,6 +221,7 @@
 					return;
 				}
 				// 判断当前操作的点的x坐标值，是否在允许的边界范围内
+				// @ts-ignore
 				const allRateWidth = this.rateWidth * parseFloat(this.count.toString()) + this.rateBoxLeft;
 				// 如果小于第一个图标的左边界，设置为最小值，如果大于所有图标的宽度，则设置为最大值
 				x = range(this.rateBoxLeft, allRateWidth, x) - this.rateBoxLeft
@@ -242,11 +249,13 @@
 					} else {
 						if (decimal > this.rateWidth / 2) index++;
 					}
-
 				}
+				// @ts-ignore
 				this.activeIndex = Math.min(index, parseFloat(this.count.toString()));
 				// 对最少颗星星的限制
+				// @ts-ignore
 				if (this.activeIndex < parseInt(this.minCount.toString())) {
+					// @ts-ignore
 					this.activeIndex = parseInt(this.minCount.toString());
 				}
 

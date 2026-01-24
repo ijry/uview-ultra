@@ -269,7 +269,9 @@
                 }
 				const tabRect = (this.$props['list'] as Array<UTSJSONObject>)[this.innerCurrent]
 				// 累加得到当前item到左边的距离
+				// @ts-ignore
 				const offsetLeft = this.list
+					// @ts-ignore
 					.slice(0, this.innerCurrent)
 					.reduce((total: number, curr: UTSJSONObject) => {
 						return total + ((curr['rect'] as NodeInfo).width ?? 0)
@@ -307,6 +309,7 @@
 						if (item != null) {
 							this.scrollViewWidth = this.scrollViewWidth + (item.width??0)
 							// 另外计算每一个item的中心点X轴坐标
+							// @ts-ignore
 							this.list[index]['rect'] = item
 						}
 					})
@@ -338,6 +341,7 @@
 				// upGetRect为uview-plus自带的节点查询简化方法，详见文档介绍：https://uview-plus.jiangruyi.com/js/getRect.html
 				// 组件内部一般用this.$uGetRect，对外的为uni.$u.getRect，二者功能一致，名称不同
 				return new Promise(resolve => {
+					// @ts-ignore
 					this.upGetRect(`.${el}`).then((size: NodeInfo) => {
 						resolve(size)
 					})

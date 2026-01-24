@@ -86,16 +86,20 @@
 			// 获取父组件的参数
 			updateParentData() {
 				// 此方法写在mixin中
+				// @ts-ignore
 				this.getParentData('up-grid');
 			},
 			clickHandler() {
 				let name = this.name
 				// 如果没有设置name属性，历遍父组件的children数组，判断当前的元素是否和本实例this相等，找出当前组件的索引
+				// @ts-ignore
 				const children: ComponentPublicInstance[] = this.parent?.$data['children'] as ComponentPublicInstance[]
 				if(children != null && this.name === null) {
+					// @ts-ignore
 					name = children.findIndex((child: ComponentPublicInstance) => child === this)
 				}
 				// 调用父组件方法，发出事件
+				// @ts-ignore
 				this.parent!.$callMethod('childClick', name)
 				// this.$parent && this.$parent.childClick(name)
 				this.$emit('click', name)
@@ -106,7 +110,9 @@
 				if(this.parent != null) {
 					// 获取父组件宽度后，除以栅格数，得出每个item的宽度
 					// const parentWidth = await this.getParentWidth()
+					// @ts-ignore
 					const parentWidth = parseFloat(this.parent.$data['width'].toString())
+					// @ts-ignore
 					width = (parentWidth / parseInt(this.parentData['col'].toString())).toString() + 'px'
 				}
 				this.width = width
@@ -119,11 +125,14 @@
 				if(this.parentData?.['border'] as Boolean) {
 					let classes = [] as String[]
 					if (this.parent != null) {
+						// @ts-ignore
 						(this.parent?.$data['children'] as ComponentPublicInstance[]).map((
 							child: ComponentPublicInstance, index: number) =>{
 							// let parentCol = parseInt(this.parentData['col'].toString())
 							let parentCol = 3
+							// @ts-ignore
 							if(this === child && parentCol > 0) {
+								// @ts-ignore
 								const len = (this.parent?.$data?.['children'] as ComponentPublicInstance[]).length
 								// 贴近右边屏幕边沿的child，并且最后一个（比如只有横向2个的时候），无需右边框
 								if((index + 1) % parentCol !== 0 && index + 1 !== len) {

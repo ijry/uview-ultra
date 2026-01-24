@@ -74,7 +74,8 @@ export const propsSwitch = defineMixin({
         },
         // 切换前执行的回调函数
         beforeChange: {
-            type: function,
+			// @ts-ignore
+            type: Function,
             default: switchProp['beforeChange']
         }
     }

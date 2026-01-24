@@ -61,15 +61,20 @@
 				else return this.align
 			},
 			colStyle(): any {
+				// @ts-ignore
 				let pct = 100 / this.gridNum * parseInt(this.span.toString());
 				const style = {
 					// 这里写成"padding: 0 10px"的形式是因为nvue的需要
+					// @ts-ignore
 					paddingLeft: addUnit(parseInt(getPx(this.parentData['gutter'].toString()))/2),
+					// @ts-ignore
 					paddingRight: addUnit(parseInt(getPx(this.parentData['gutter'].toString()))/2),
 					alignItems: this.uAlignItem,
+					// @ts-ignore
 					justifyContent: this.uJustify,
 					textAlign: this.textAlign,
 					flex: `0 0 ${pct.toString()}%`,
+					// @ts-ignore
 					marginLeft: (100 / 12 * parseInt(this.offset.toString())).toString() + '%'
 				}
 				return deepMerge(style, addStyle(this.customStyle))
@@ -90,6 +95,7 @@
 				// })
 			},
 			updateParentData(): void {
+				// @ts-ignore
 				this.getParentData('up-row')
 			},
 			clickHandler(e: any): void {

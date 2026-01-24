@@ -90,6 +90,7 @@
             // 添加窗口大小变化监听
             // #ifdef H5
             if (this.columns === 'auto') {
+				// @ts-ignore
                 uni.onWindowResize(this.handleWindowResize);
             }
             // #endif
@@ -106,7 +107,8 @@
         computed: {
             // 破坏flowList变量的引用，否则watch的结果新旧值是一样的
             copyFlowList(): UTSJSONObject[] {
-                if (this.modelValue == null || this.modelValue.length == 0) {
+                // @ts-ignore
+				if (this.modelValue == null || this.modelValue.length == 0) {
                     // console.log('clear');
                     return [];
                 } else {
@@ -134,7 +136,8 @@
                     const columnGap = 7;
                     // 计算可容纳的列数
                     let columnCount = Math.max(1, Math.floor(this.windowWidth / (this.minColumnWidth + columnGap)));
-                    if (columnCount < this.columnsMin as number) {
+                    // @ts-ignore
+					if (columnCount < this.columnsMin as number) {
                         columnCount = this.columnsMin as number
                     }
                     return columnCount;
@@ -186,7 +189,8 @@
                 // 获取各列当前高度
                 for (let i = 0; i < this.columnList.length; i++) {
                     // try {
-                        const rect: NodeInfo = await this.upGetRect(`#up-column-${i}`);
+                        // @ts-ignore
+						const rect: NodeInfo = await this.upGetRect(`#up-column-${i}`);
                         // console.log(`#up-column-${i}`, rect.height)
                         columnHeights[i] = rect.height ?? 0;
                     // } catch (e) {
@@ -204,7 +208,8 @@
                     await sleep(this.addTime as number)
 					await nextTick();
 					try {
-					    const rect: NodeInfo = await this.upGetRect(`#up-column-${minHeightIndex}`)
+					    // @ts-ignore
+						const rect: NodeInfo = await this.upGetRect(`#up-column-${minHeightIndex}`)
 						// console.log(`#up-column-${minHeightIndex}`, rect.height)
 						if (rect.height != null) {
 							columnHeights[minHeightIndex] = rect.height ?? 0;
@@ -246,6 +251,7 @@
                 // 遍历所有列查找并删除数据
                 for (let i = 0; i < this.columnList.length; i++) {
                     const index = (this.columnList[i] as UTSJSONObject[]).findIndex((val: UTSJSONObject) => {
+						// @ts-ignore
 						return val[this.idKey].toString() == id.toString()
 					});
                     if (index !== -1) {
@@ -255,7 +261,9 @@
                 }
                 
                 // 同时清除父组件的数据中的对应id的条目
-                const modelValueIndex = this.modelValue.findIndex((val: UTSJSONObject) => {
+                // @ts-ignore
+				const modelValueIndex = this.modelValue.findIndex((val: UTSJSONObject) => {
+					// @ts-ignore
 					return val[this.idKey].toString() == id.toString()
 				});
                 if (modelValueIndex !== -1) {
@@ -273,6 +281,7 @@
                 // 在所有列中查找数据
                 for (let i = 0; i < this.columnList.length; i++) {
                     const index = this.columnList[i].findIndex((val: UTSJSONObject) => {
+						// @ts-ignore
 						return val[this.idKey] != null && val[this.idKey].toString() == id.toString()
 					});
                     if (index !== -1) {
@@ -286,7 +295,9 @@
                 
                 if (found && targetItem != null) {
                     // 修改父组件的数据中的对应id的条目
+					// @ts-ignore
                     const modelValueIndex = this.modelValue.findIndex((val: UTSJSONObject) => {
+						// @ts-ignore
 						return val[this.idKey] != null && val[this.idKey].toString() == id.toString()
 					});
                     if (modelValueIndex !== -1) {

@@ -161,6 +161,7 @@
 			},
 			confirm(e: UTSJSONObject) {
 				this.$data[`show${this.current}`] = false
+				// @ts-ignore
 				this.result(e['value'].toString(), e['mode'].toString())
 			},
 			change(e: UTSJSONObject) {

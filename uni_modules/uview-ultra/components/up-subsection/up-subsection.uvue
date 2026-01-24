@@ -112,6 +112,7 @@ export default {
 			// #ifndef APP-NVUE
 			if (this.itemRect.width != null) {
 				style.transform = `translateX(${
+					// @ts-ignore
 				    this.innerCurrent * (this.itemRect['width'] as Number)
 				}px)`;
 			}
@@ -142,6 +143,7 @@ export default {
         	return addUnit(e);
         },
         async init() {
+			// @ts-ignore
             this.innerCurrent = parseInt(this.current.toString())
 			await sleep(30);
 			this.getRect();
@@ -188,6 +190,7 @@ export default {
         // 获取组件的尺寸
         getRect() {
             // #ifndef APP-NVUE
+			// @ts-ignore
             this.upGetRect(".up-subsection__item--0", false).then((res) => {
 				let size = res as NodeInfo;
                 this.itemRect = size;

@@ -199,6 +199,7 @@ const emit = defineEmits([
 	'getuserinfo', 'contact', 'getphonenumber', 'error', 'launchapp', 'opensetting'
 ])
 const onOpenType = (name: string, event: UniCustomEvent<UTSJSONObject>) => {
+	// @ts-ignore
 	emit(name, event.detail)
 }
 

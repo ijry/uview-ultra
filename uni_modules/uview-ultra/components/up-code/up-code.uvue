@@ -50,6 +50,7 @@
 		methods: {
 			checkKeepRunning(): void {
 				// 获取上一次退出页面(H5还包括刷新)时的时间戳，如果没有上次的保存，此值可能为空
+				// @ts-ignore
 				let lastTimestamp = parseInt(uni.getStorageSync(this.uniqueKey + '_$upCountDownTimestamp').toString())
 				if(lastTimestamp > 0) {
 					return this.changeEvent(this.startText)
@@ -81,15 +82,18 @@
 				this.$emit('start')
 				this.canGetCode = false
 				// 这里放这句，是为了一开始时就提示，否则要等setInterval的1秒后才会有提示
+				// @ts-ignore
 				this.changeEvent(this.changeText.replace(/x|X/, this.secNum.toString()))
 				this.timer = setInterval(() => {
 					if (this.secNum - 1 > 0) {
 						// 用当前倒计时的秒数替换提示字符串中的"x"字母
+						// @ts-ignore
 						this.changeEvent(this.changeText.replace(/x|X/, (this.secNum - 1).toString()))
 					} else {
 						clearInterval(this.timer ?? 0)
 						this.timer = 0
 						this.changeEvent(this.endText)
+						// @ts-ignore
 						this.secNum = parseInt(this.seconds.toString())
 						this.$emit('end')
 						this.canGetCode = true
@@ -101,6 +105,7 @@
 			reset(): void {
 				this.canGetCode = true
 				clearInterval(this.timer)
+				// @ts-ignore
 				this.secNum = parseInt(this.seconds.toString())
 				this.changeEvent(this.endText)
 			},
@@ -112,6 +117,7 @@
 				if(!this.keepRunning || this.timer == 0) return
 				// 记录当前的时间戳，为了下次进入页面，如果还在倒计时内的话，继续倒计时
 				// 倒计时尚未结束，结果大于0；倒计时已经开始，就会小于初始值，如果等于初始值，说明没有开始倒计时，无需处理
+				// @ts-ignore
 				if(this.secNum > 0 && this.secNum < parseInt(this.seconds.toString())) {
 					// 获取当前时间戳(+ new Date()为特殊写法)，除以1000变成秒，再去除小数部分
 					let nowTimestamp = Math.floor(new Date().getTime() / 1000)
