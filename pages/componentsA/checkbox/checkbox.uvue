@@ -1,4 +1,7 @@
 <template>
+	<!-- #ifdef APP -->
+	<scroll-view style="flex:1">
+	<!-- #endif -->
 	<view class="u-page">
 		<view class="u-demo-block">
 			<text class="u-demo-block__title">基本案例</text>
@@ -24,7 +27,7 @@
 		</view>
 		<view class="u-demo-block">
 			<text class="u-demo-block__title">自定义形状</text>
-			<text class="u-block__title">中国四大名著是？</text>
+			<text class="u-block__title">中国四大名著是？{{checkboxValue2}}</text>
 			<view class="u-demo-block__content">
 				<view class="u-page__checkbox-item">
 					<up-checkbox-group
@@ -47,7 +50,7 @@
 		</view>
 		<view class="u-demo-block">
 			<text class="u-demo-block__title">是否禁用</text>
-			<text class="u-block__title">下面什么东西不能吃？</text>
+			<text class="u-block__title">下面什么东西不能吃？{{checkboxValue3}}</text>
 			<view class="u-demo-block__content">
 				<view class="u-page__checkbox-item">
 					<up-checkbox-group
@@ -160,6 +163,9 @@
 			</view>
 		</view>
 	</view>
+<!-- #ifdef APP -->
+	</scroll-view>
+	<!-- #endif -->
 </template>
 
 <script>

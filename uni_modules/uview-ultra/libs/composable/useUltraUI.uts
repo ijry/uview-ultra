@@ -24,8 +24,25 @@ export const commonProps = {
     }
 }
 
+export type UPUseUltraUIType = {
+	parent: Ref<ComponentPublicInstance|null>,
+	parentData: Ref<UTSJSONObject>,
+	children: Ref<ComponentPublicInstance[]>,
+	childrenRefs: Ref<string[]>,
+	openPage:(urlKey: string) => void,
+	getChildIndex: (ins: ComponentPublicInstance) => number,
+	getParent: (name: string, instance: ComponentPublicInstance) => ComponentPublicInstance|null,
+	addChild: (ins: ComponentPublicInstance) => void,
+	addChildRef: (str: string) => void,
+	getChildren: () => ComponentPublicInstance[],
+	getParentData: (parentName: string, instance: ComponentPublicInstance, refMode: boolean) => ComponentPublicInstance|null,
+	onComponentDestroy: (instance: ComponentPublicInstance) => void,
+	preventEvent: (e: UniEvent) => void,
+	noop: (e: UniEvent) => void,
+}
+
 // 定义组件公共属性和方法的组合式函数
-export const useUltraUI = () => {
+export const useUltraUI = function(): UPUseUltraUIType  {
     // 定义响应式数据
     const parent = ref<ComponentPublicInstance | null>(null)
     const parentData = ref<UTSJSONObject>({})
@@ -47,7 +64,7 @@ export const useUltraUI = () => {
     }
 
     // 获取子组件索引
-    const getChildIndex = function(ins: ComponentPublicInstance) {
+    const getChildIndex = function(ins: ComponentPublicInstance): number {
         let index = -1
         if (parent.value != null) {
             (parent.value!!.$data['children'] as ComponentPublicInstance[]).forEach((child: ComponentPublicInstance, idx: number) => {
@@ -129,6 +146,7 @@ export const useUltraUI = () => {
             UTSJSONObject.keys(parentData.value).map((key: string) => {
 				const propsData = parentIns?.$callMethod('getProps') as UTSJSONObject
 				// console.log(propsData['size'])
+				// console.log(key, '=', propsData)
                 if (propsData?.[key] != null) {
                     parentData.value[key] = propsData?.[key]
                 }
@@ -142,12 +160,12 @@ export const useUltraUI = () => {
     }
 
     // 阻止事件冒泡
-    const preventEvent = function(e: UniEvent) {
+    const preventEvent = function(e: UniEvent): void {
         e.stopPropagation()
     }
 
     // 空操作
-    const noop = function(e: UniEvent)  {
+    const noop = function(e: UniEvent): void {
         preventEvent(e)
     }
 
@@ -155,16 +173,18 @@ export const useUltraUI = () => {
     const onComponentDestroy = function(instance: ComponentPublicInstance)  {
         // 判断当前页面是否存在parent和children，一般在checkbox和checkbox-group父子联动的场景会有此情况
         // 组件销毁时，移除子组件在父组件children数组中的实例，释放资源，避免数据混乱
-        // if (instance.$parent && testArray(parent.value?.children)) {
-        //     // 组件销毁时，移除父组件中的children数组中对应的实例
-        //     const childrenList = parent.value!.children
-        //     childrenList.map((child: ComponentPublicInstance, index: number) => {
-        //         // 如果相等，则移除
-        //         if (child === instance) {
-        //             childrenList.splice(index, 1)
-        //         }
-        //     })
-        // }
+        if (parent.value != null) {
+            // 组件销毁时，移除父组件中的children数组中对应的实例
+            const childrenList = parent.value.$callMethod('getChildren') as ComponentPublicInstance[]
+			//if (childrenList != null) {
+				childrenList.map((child: ComponentPublicInstance, index: number) => {
+				    // 如果相等，则移除
+				    if (child === instance) {
+				        childrenList.splice(index, 1)
+				    }
+				})
+			//}
+        }
     }
 
     return {

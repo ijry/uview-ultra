@@ -135,9 +135,9 @@
 	const isChecked = ref(false)
 	
 	// 是否禁用，如果父组件up-checkbox-group禁用的话，将会忽略子组件的配置
-	const elDisabled = computed(() => {
-		let disabledStr = props.disabled.toString();
-		if (disabledStr !== '') {
+	const elDisabled = computed((): boolean => {
+		let disabledStr = props.disabled
+		if (disabledStr != '') {
 			if (disabledStr == 'true') {
 				return true;
 			} else {
@@ -145,15 +145,15 @@
 			}
 		} else {
 			return parentData.value != null
-				? parentData.value['disabled']
+				? parentData.value['disabled'] != null ? parentData.value['disabled'] as boolean : false
 				: false;
 		}
 	})
 	
 	// 是否禁用label点击
-	const elLabelDisabled = computed(() => {
-		let labelDisabledStr = props.labelDisabled.toString();
-		if (labelDisabledStr !== '') {
+	const elLabelDisabled = computed((): boolean => {
+		let labelDisabledStr = props.labelDisabled
+		if (labelDisabledStr != '') {
 			if (labelDisabledStr == 'true') {
 				return true;
 			} else {
@@ -161,31 +161,31 @@
 			}
 		} else {
 			return parentData.value != null
-				? parentData.value['labelDisabled'] 
+				? parentData.value['labelDisabled'] != null ? parentData.value['labelDisabled'] as boolean : false
 				: false;
 		}
 	})
 	
 	// 组件尺寸，对应size的值，默认值为21px
-	const elSize = computed(() => {
-		return props.size != ''
-			? props.size
+	const elSize = computed((): string => {
+		return props.size.toString() != ''
+			? props.size.toString()
 			: (parentData.value['size'] != null
 				? parentData.value['size'].toString()
 				: '21');
 	})
 	
 	// 组件的勾选图标的尺寸，默认12px
-	const elIconSize = computed(() => {
-		return props.iconSize != ''
-			? props.iconSize
+	const elIconSize = computed((): string => {
+		return props.iconSize.toString() != ''
+			? props.iconSize.toString()
 			: (parentData.value['iconSize'] != null
 				? parentData.value['iconSize'].toString()
 				: '12');
 	})
 	
 	// 组件选中激活时的颜色
-	const elActiveColor = computed(() => {
+	const elActiveColor = computed((): string => {
 		return props.activeColor != ''
 			? props.activeColor
 			: (parentData.value['activeColor'] != null
@@ -194,7 +194,7 @@
 	})
 	
 	// 组件选未中激活时的颜色
-	const elInactiveColor = computed(() => {
+	const elInactiveColor = computed((): string => {
 		return props.inactiveColor != ''
 			? props.inactiveColor
 			: (parentData.value['inactiveColor'] != null
@@ -203,7 +203,7 @@
 	})
 	
 	// label的颜色
-	const elLabelColor = computed(() => {
+	const elLabelColor = computed((): string => {
 		return props.labelColor != null
 			? props.labelColor.toString()
 			: (parentData.value['labelColor'] != null
@@ -212,7 +212,7 @@
 	})
 	
 	// 组件的形状
-	const elShape = computed(() => {
+	const elShape = computed((): string => {
 		return props.shape != null
 			? props.shape.toString()
 			: (parentData.value['shape'] != null
@@ -221,7 +221,7 @@
 	})
 	
 	// label大小
-	const elLabelSize = computed(() => {
+	const elLabelSize = computed((): string => {
 		return addUnit(props.labelSize != null
 			? props.labelSize.toString()
 			: (parentData.value['labelSize'] != null
@@ -229,14 +229,14 @@
 				: '15'));
 	})
 	
-	const elIconColor = computed(() => {
+	const elIconColor = computed((): string => {
 		const iconColor = props.iconColor.toString() != '' 
 			? props.iconColor.toString()
 			: (parentData.value['iconColor'] != null
 				? parentData.value['iconColor'].toString() 
 				: '#ffffff');
 		// 图标的颜色
-		if (elDisabled.value) {
+		if (elDisabled.value as boolean) {
 			// disabled状态下，已勾选的checkbox图标改为elInactiveColor
 			return isChecked.value ? elInactiveColor.value : 'transparent';
 		} else {
@@ -244,54 +244,50 @@
 		}
 	})
 	
-	const iconClasses = computed(() => {
-		let classes = [] as Array<string>;
+	const iconClasses = computed((): string => {
+		let classes = [] as Array<string>
 		// 组件的形状
-		classes.push('up-checkbox__icon-wrap--' + elShape.value.toString());
-		if (elDisabled.value) {
-			classes.push('up-checkbox__icon-wrap--disabled');
+		classes.push('up-checkbox__icon-wrap--' + elShape.value.toString())
+		if (elDisabled.value as boolean) {
+			classes.push('up-checkbox__icon-wrap--disabled')
 		}
-		if (isChecked.value && elDisabled.value) {
-			classes.push('up-checkbox__icon-wrap--disabled--checked');
+		if (isChecked.value && elDisabled.value as boolean) {
+			classes.push('up-checkbox__icon-wrap--disabled--checked')
 		}
-		let classStr = "";
-		// 支付宝，头条小程序无法动态绑定一个数组类名，否则解析出来的结果会带有","，而导致失效
-		// #ifdef MP-ALIPAY || MP-TOUTIAO
-		classStr = classes.join(' ');
-		// #endif
-		classStr = classes.join(' ');
-		return classStr;
+		let classStr = ""
+		classStr = classes.join(' ')
+		return classStr
 	})
 	
-	const iconWrapStyle = computed(() => {
+	const iconWrapStyle = computed((): any => {
 		// checkbox的整体样式
 		const style = {};
-		style['backgroundColor'] = isChecked.value && !elDisabled.value ? elActiveColor.value : '#ffffff';
-		style['borderColor'] = isChecked.value && !elDisabled.value ? elActiveColor.value : elInactiveColor.value;
-		style['width'] = addUnit(elSize.value);
-		style['height'] = addUnit(elSize.value);
+		style['backgroundColor'] = isChecked.value && !elDisabled.value ? elActiveColor.value : '#ffffff'
+		style['borderColor'] = isChecked.value && !elDisabled.value ? elActiveColor.value : elInactiveColor.value
+		style['width'] = addUnit(elSize.value)
+		style['height'] = addUnit(elSize.value)
 		// 如果是图标在右边的话，移除它的右边距
 		if (!props.usedAlone && parentData.value != null
 			&& parentData.value['iconPlacement'] != null) {
 			if (parentData.value['iconPlacement'].toString() == 'right') {
-				style['marginRight'] = 0;
+				style['marginRight'] = 0
 			}
 		}
-		return style;
+		return style
 	})
 	
-	const checkboxStyle = computed(() => {
+	const checkboxStyle = computed((): any => {
 		const style = {};
 		if (!props.usedAlone && parentData.value != null) {
-			if (parentData.value['borderBottom'] && parentData.value['placement'] == 'row') {
-				error('检测到您将borderBottom设置为true，需要同时将up-checkbox-group的placement设置为column才有效');
+			if (parentData.value['borderBottom'].toString() == 'true' && parentData.value['placement'] == 'row') {
+				error('检测到您将borderBottom设置为true，需要同时将up-checkbox-group的placement设置为column才有效')
 			}
 			// 当父组件设置了显示下边框并且排列形式为纵向时，给内容和边框之间加上一定间隔
-			if (parentData.value['borderBottom'] && parentData.value['placement'] == 'column') {
-				style['paddingBottom'] = '8px';
+			if (parentData.value['borderBottom'].toString() == 'true' && parentData.value['placement'] == 'column') {
+				style['paddingBottom'] = '8px'
 			}
 		}
-		return deepMerge(style, addStyle(props.customStyle));
+		return deepMerge(style, addStyle(props.customStyle))
 	})
 	
 	// 判断是否单独使用
@@ -317,56 +313,25 @@
 			if (parent.value == null) {
 				error('up-checkbox必须搭配up-checkbox-group组件使用')
 			}
-			const value = parentData.value['modelValue'];
+			const value = parentData.value['modelValue']
 			// console.log(value)
 			// 设置初始化时，是否默认选中的状态，父组件up-checkbox-group的value可能是array，所以额外判断
 			if (props.checked) {
 				isChecked.value = true;
-			} else if (testArray(value)) {
-				// console.log(value)
+			} else if (value != null) {
+				const valueTmp: Array<any> = value as Array<any>
+				// console.log(value)x
 				// 查找数组是是否存在this.name元素值
-				isChecked.value = value.some((item: any) => {
-					return item == props.name;
-				});
+				if (valueTmp != null) {
+					// console.log('***', valueTmp)
+					const even = (element: any): boolean => element.toString() == props.name.toString()
+					isChecked.value = valueTmp.some(even)
+				}
 			}
 		} else {
 			if (props.checked) {
-				isChecked.value = true;
+				isChecked.value = true
 			}
-		}
-	}
-	
-	// 横向两端排列时，点击组件即可触发选中事件
-	function wrapperClickHandler(e: UniEvent) {
-		if (!props.usedAlone && parentData.value != null
-			&& parentData.value['iconPlacement'] != null) {
-			if (parentData.value['iconPlacement'].toString() == 'right') {
-				iconClickHandler(e);
-			} else {
-				iconClickHandler(e);
-			}
-		} else {
-			iconClickHandler(e);
-		}
-	}
-	
-	// 点击图标
-	function iconClickHandler(e: UniEvent) {
-		// 阻止事件冒泡
-		e.stopPropagation()
-		// 如果整体被禁用，不允许被点击
-		if (!elDisabled.value) {
-			setRadioCheckedStatus()
-		}
-	}
-	
-	// 点击label
-	function labelClickHandler(e: UniEvent) {
-		// 阻止事件冒泡
-		e.stopPropagation()
-		// 如果按钮整体被禁用或者label被禁用，则不允许点击文字修改状态
-		if (!elLabelDisabled.value && !elDisabled.value) {
-			setRadioCheckedStatus()
 		}
 	}
 	
@@ -396,12 +361,46 @@
 		}
 	}
 	
+	// 点击图标
+	function iconClickHandler(e: UniEvent) {
+		// 阻止事件冒泡
+		e.stopPropagation()
+		// 如果整体被禁用，不允许被点击
+		if (!elDisabled.value) {
+			setRadioCheckedStatus()
+		}
+	}
+	
+	// 横向两端排列时，点击组件即可触发选中事件
+	function wrapperClickHandler(e: UniEvent) {
+		if (!props.usedAlone && parentData.value != null
+			&& parentData.value['iconPlacement'] != null) {
+			if (parentData.value['iconPlacement'].toString() == 'right') {
+				iconClickHandler(e);
+			} else {
+				iconClickHandler(e);
+			}
+		} else {
+			iconClickHandler(e);
+		}
+	}
+	
+	// 点击label
+	function labelClickHandler(e: UniEvent) {
+		// 阻止事件冒泡
+		e.stopPropagation()
+		// 如果按钮整体被禁用或者label被禁用，则不允许点击文字修改状态
+		if (!elLabelDisabled.value && !elDisabled.value) {
+			setRadioCheckedStatus()
+		}
+	}
+	
 	// 监听 checked 属性变化
-	watch(() => props.checked, (newVal: boolean) => {
+	watch((): boolean => props.checked, (newVal: boolean) => {
 		if (newVal != isChecked.value) {
 			isChecked.value = newVal
 		}
-	});
+	})
 	
 	// 在组件挂载时初始化
 	onMounted(() => {
