@@ -1,3 +1,6 @@
+## 4.2.3（2026-01-25）
+refactor: 【组合式API重构】 修复addUnit错误返回auto导致样式异常（uni-app-x）
+
 ## 4.2.2（2026-01-24）
 refactor: 【组合式API重构】 up-code组件（uni-app-x）
 
