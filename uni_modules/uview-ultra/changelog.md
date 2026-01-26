@@ -1,3 +1,9 @@
+## 4.2.7（2026-01-26）
+refactor: 【组合式API重构】 up-td组件（uni-app-x）
+
+## 4.2.6（2026-01-26）
+refactor: 【组合式API重构】 up-th组件（uni-app-x）
+
 ## 4.2.5（2026-01-26）
 refactor: 【组合式API重构】 up-tr组件（uni-app-x）
 
