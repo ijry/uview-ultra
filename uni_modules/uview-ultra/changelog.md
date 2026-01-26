@@ -1,3 +1,6 @@
+## 4.2.4（2026-01-26）
+refactor: 【组合式API重构】 优化完善组件父子关系管理组合式函数（uni-app-x）
+
 ## 4.2.3（2026-01-25）
 refactor: 【组合式API重构】 修复addUnit错误返回auto导致样式异常（uni-app-x）
 

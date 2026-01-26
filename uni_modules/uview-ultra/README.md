@@ -2,13 +2,12 @@
     <img alt="logo" src="https://uview-plus.jiangruyi.com/common/logo.png" width="120" height="120" style="margin-bottom: 10px;">
 </p>
 <h3 align="center" style="margin: 30px 0 30px;font-weight: bold;font-size:40px;">uview-ultra 4.0</h3>
-<h3 align="center">多平台快速开发的UI框架（组合式API重构进行中）</h3>
+<h3 align="center">多平台快速开发的UI框架（组合式API全新重构进行中）</h3>
 
 [![Website](https://img.shields.io/badge/uvue-compatible-green)](https://uview-ultra.lingyun.net/)
 [![Website](https://img.shields.io/badge/nvue-compatible-green)](https://uview-ultra.lingyun.net/)
 [![Website](https://img.shields.io/badge/vue-compatible-green)](https://uview-ultra.lingyun.net/)
 [![Website](https://img.shields.io/badge/build-passing-green)](https://uview-ultra.lingyun.net/)
-[![license](https://img.shields.io/github/license/ijry/uiadmin?style=flat-square)](https://en.wikipedia.org/wiki/Apache2_License)
 
 ## 说明
 
@@ -24,7 +23,7 @@
 
 - 全面兼容uni-app/uni-app-x/nvue/鸿蒙，原生渲染，高性能
 - 兼容安卓，iOS，微信小程序，H5，QQ小程序，百度小程序，支付宝小程序，头条小程序
-- 60+精选组件，功能丰富，多端兼容，让您快速集成，开箱即用
+- 100+精选组件，功能丰富，多端兼容，让您快速集成，开箱即用
 - 众多贴心的JS利器，让您飞镖在手，召之即来，百步穿杨
 - 众多的常用页面和布局，让您专注逻辑，事半功倍
 - 详尽的文档支持，现代化的演示效果

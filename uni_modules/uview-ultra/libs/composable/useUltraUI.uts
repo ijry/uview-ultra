@@ -42,10 +42,10 @@ export type UPUseUltraUIType = {
 }
 
 // 定义组件公共属性和方法的组合式函数
-export const useUltraUI = function(): UPUseUltraUIType  {
+export function useUltraUI(parentDataInit: UTSJSONObject = {}): UPUseUltraUIType  {
     // 定义响应式数据
     const parent = ref<ComponentPublicInstance | null>(null)
-    const parentData = ref<UTSJSONObject>({})
+    const parentData = ref(parentDataInit) as Ref<UTSJSONObject>
     const children = ref<ComponentPublicInstance[]>([])
     const childrenRefs = ref<string[]>([])
 
@@ -82,16 +82,19 @@ export const useUltraUI = function(): UPUseUltraUIType  {
         // 通过while遍历，这里主要是为了H5需要多层解析的问题
         while (parentTmp != null) {
             // 父组件
-			let pname = parentTmp?.$callMethod('getName')
-			// console.log(parentTmp)
-            if (pname != null && pname.toString() != name) {
-                // 如果组件的name不相等，继续上一级寻找
-                parentTmp = parentTmp?.$parent
-            } else {
-                // 一定要break,return会导致死循环CPU飙升。
-                break
-            }
+			let pname: string|null = null
+			if (parentTmp?.$options != null && parentTmp?.$options.name != null) {
+				pname = parentTmp?.$options.name
+			}
+			if (pname == name) {
+				// 一定要break,return会导致死循环CPU飙升。
+				break
+			} else {
+				// 如果组件的name不相等，继续上一级寻找
+				parentTmp = parentTmp?.$parent
+			}
         }
+        parent.value = parentTmp
         return parentTmp
     }
 
@@ -131,29 +134,38 @@ export const useUltraUI = function(): UPUseUltraUIType  {
         // 注意不能赋值给parent,会导致与addChild中push冲突
         let parentIns = getParent(parentName, instance)
 		// console.log('parentIns', parentIns)
-        parent.value = parentIns
+        // parent.value = parentIns
         if (parentIns != null) {
 			let chds: ComponentPublicInstance[]|null = parentIns.$callMethod('getChildren') as ComponentPublicInstance[]
             if (chds != null) {
                 // 如果父组件的children不存在本组件的实例，才将本实例添加到父组件的children中
                 if (refMode) {
-                    parentIns?.$callMethod('addChildRef', instance.$data['refstr'])
+                    // if (Reflect.has(parentIns!, 'addChildRef')) {
+                        parentIns?.$callMethod('addChildRef', instance.$data['refstr'])
+                    // }
                 } else {
-                    parentIns?.$callMethod('addChild', instance)
+                    // if (Reflect.has(parentIns, 'addChild')) {
+                        parentIns?.$callMethod('addChild', instance)
+                    // }
                 }
             }
             // 遍历parentData中的属性，将parent中的同名属性赋值给parentData
             UTSJSONObject.keys(parentData.value).map((key: string) => {
-				const propsData = parentIns?.$callMethod('getProps') as UTSJSONObject
-				// console.log(propsData['size'])
-				// console.log(key, '=', propsData)
-                if (propsData?.[key] != null) {
-                    parentData.value[key] = propsData?.[key]
-                }
-				const refsData = parentIns?.$callMethod('getRefs') as UTSJSONObject
-                if (refsData?.[key] != null) {
-                    parentData.value[key] = refsData?.[key]
-                }
+                // if (Reflect.has(parentIns!, 'getProps')) {
+                    const propsData = parentIns?.$callMethod('getProps') as UTSJSONObject
+                    // console.log(propsData['size'])
+                    // console.log(key, '=', propsData)
+                    if (propsData?.[key] != null) {
+                        parentData.value[key] = propsData?.[key]
+                    }
+                // }
+
+				// if (Reflect.has(parentIns!, 'getRefs')) {
+                    const refsData = parentIns?.$callMethod('getRefs') as UTSJSONObject
+                    if (refsData?.[key] != null) {
+                        parentData.value[key] = refsData?.[key]
+                    }
+                // }
             })
         }
         return parentIns
