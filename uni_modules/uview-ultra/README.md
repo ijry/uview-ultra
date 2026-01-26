@@ -9,6 +9,11 @@
 [![Website](https://img.shields.io/badge/vue-compatible-green)](https://uview-ultra.lingyun.net/)
 [![Website](https://img.shields.io/badge/build-passing-green)](https://uview-ultra.lingyun.net/)
 
+
+
+![image](https://uview-ultra.lingyun.net/UltraUI/slider.jpg)
+
+
 ## 说明
 
 刚适配的uni-app-x，已经尽可能的继续跟uview-plus一样保持原始uview的接口兼容性，新版发布仍然存在细节问题需要完善与修复，后续会继续更新完善。
