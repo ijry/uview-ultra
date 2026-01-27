@@ -439,7 +439,10 @@
 				// const oversize = Array.isArray(file) ?
 				// 	file.some((item) => item.size > maxSize) :
 				// 	file.size > maxSize;
-				const even = (item: UPUploadFileChoosed|null): boolean => ((item != null && item.size != null) ? item.size : 0) > maxSize;
+				const even = (item: UPUploadFileChoosed|null): boolean => {
+					let tmp:number = (item != null && item.size != null) ? item.size : 0
+					return tmp > maxSize
+				}
 				const oversize = file.some(even)
 				if (oversize) {
 					uni.showToast({
