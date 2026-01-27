@@ -15,7 +15,6 @@
 	const { children, getChildren, addChild } = useUltraUI()
 	const instance = getCurrentInstance()!.proxy!
 	
-	const COMPONENT_NAME = 'up-checkbox-group'
 	defineOptions({
 		//...mpSharedMpOptions,
 		name: 'up-checkbox-group'
@@ -166,9 +165,6 @@
 		return {
 		}
 	}
-	const getName = function(): string {
-		return COMPONENT_NAME
-	}
 	
 	// 暴露方法给子组件
 	defineExpose({
@@ -176,8 +172,7 @@
 		getChildren,
 		addChild,
 		getProps,
-		getRefs,
-		getName
+		getRefs
 	});
 </script>
 

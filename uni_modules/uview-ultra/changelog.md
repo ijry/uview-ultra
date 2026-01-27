@@ -1,3 +1,6 @@
+## 4.2.9（2026-01-27）
+refactor: 【组合式API重构】 up-checkbox组件优化（uni-app-x）
+
 ## 4.2.8（2026-01-26）
 refactor: 【组合式API重构】 up-table组件（uni-app-x）
 

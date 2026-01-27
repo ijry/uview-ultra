@@ -427,7 +427,7 @@
 	$up-checkbox-icon-wrap-border-width:1px !default;
 	$up-checkbox-icon-wrap-border-color:#c8c9cc !default;
 	$up-checkbox-icon-wrap-icon-line-height:0 !default;
-	$up-checkbox-icon-wrap-circle-border-radius:100% !default;
+	$up-checkbox-icon-wrap-circle-border-radius:99px !default;
 	$up-checkbox-icon-wrap-square-border-radius:3px !default;
 	$up-checkbox-icon-wrap-checked-color:#fff !default;
 	$up-checkbox-icon-wrap-checked-background-color:red !default;
