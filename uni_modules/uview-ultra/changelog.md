@@ -1,3 +1,6 @@
+## 4.2.13（2026-01-27）
+fix: 修复refactor: 【组合式API重构】 up-code-input组件（uni-app-x）
+
 ## 4.2.12（2026-01-27）
 fix: 修复refactor: 【组合式API重构】 up-col组件（uni-app-x）
 
