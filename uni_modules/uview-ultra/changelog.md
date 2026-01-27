@@ -1,3 +1,6 @@
+## 4.2.11（2026-01-27）
+fix: 修复refactor: 【组合式API重构】 up-row组件（uni-app-x）
+
 ## 4.2.10（2026-01-27）
 refactor: 【组合式API重构】 up-upload组件优化（uni-app-x）
 
