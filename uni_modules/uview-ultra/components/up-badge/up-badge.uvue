@@ -5,15 +5,16 @@
 			inverted ? 'up-badge--inverted' : '',
 			shape === 'horn' ? 'up-badge--horn' : '',
 			inverted ? `up-badge--${type}--inverted` : `up-badge--${type}`]"
-		:style="[addStyle(customStyle), badgeStyle]"
+		:style="[$upAddStyle(customStyle), badgeStyle]"
 	>{{ isDot ? '' : showValue }}</text>
 </template>
 
-<script>
-	import { propsBadge } from './props';
-	import { mpMixin } from '../../libs/mixin/mpMixin';
-	import { mixin } from '../../libs/mixin/mixin';
-	import { addStyle, addUnit } from '../../libs/function/index';
+<script setup lang="uts">
+	import type { PropType } from 'vue'
+	import { computed } from 'vue'
+	import { addUnit } from '../../libs/function/index';
+	import defProps from './badge.uts'
+	
 	/**
 	 * badge 徽标数
 	 * @description 该组件一般用于图标右上角显示未读的消息数量，提示用户点击，有圆点和圆包含文字两种形式。
@@ -35,74 +36,139 @@
 	 * @property {Object}			customStyle	定义需要用到的外部样式
 	 * @example <up-badge :type="type" :count="count"></up-badge>
 	 */
-	export default {
-		name: 'up-badge',
-		mixins: [mpMixin, mixin, propsBadge],
-		computed: {
-			// 是否将badge中心与父组件右上角重合
-			boxStyle(): any {
-				let style: UTSJSONObject = {};
-				return style;
-			},
-			// 整个组件的样式
-			badgeStyle(): any {
-				const style = {}
-				if(this.color != '') {
-					style['color'] = this.color
-				}
-				if (this.bgColor != '' && !this.inverted) {
-					style['backgroundColor'] = this.bgColor
-				}
-				if (this.absolute) {
-					style['position'] = 'absolute'
-					let offsetArray:number[] = this.offset as number[]
-					// 如果有设置offset参数
-					if(offsetArray.length > 0) {
-						// top和right分为为offset的第一个和第二个值，如果没有第二个值，则right等于top
-						const top = offsetArray[0]
-						style['top'] = addUnit(top)
-						if (offsetArray.length == 2) {
-							style['right'] = addUnit(offsetArray[1])
-						} else {
-							style['right'] = addUnit(top)
-						}
-					}
-				}
-				return style
-			},
-			showValue(): string {
-				let valueReturn = ''
-				// @ts-ignore
-				switch (this.numberType.toString()) {
-					case "overflow":
-						// @ts-ignore
-						valueReturn = parseInt(this.$props['value'].toString()) > parseInt(this.max.toString()) ? this.max.toString() + "+" : this.$props['value'].toString()
-						break;
-					case "ellipsis":
-						// @ts-ignore
-						valueReturn = parseInt(this.$props['value'].toString()) > parseInt(this.max.toString()) ? "..." : this.$props['value'].toString()
-						break;
-					case "limit":
-						// @ts-ignore
-						valueReturn = parseInt(this.$props['value'].toString()) > 999
-								?
-									parseInt(this.$props['value'].toString()) >= 9999 ?
-									(Math.floor(parseInt(this.$props['value'].toString()) / 1e4 * 100) / 100).toString() + "w"
-									: (Math.floor(parseInt(this.$props['value'].toString()) / 1e3 * 100) / 100).toString() + "k"
-								: this.$props['value'].toString()
-						break;
-					default:
-						valueReturn = this.$props['value'].toString()
-				}
-				return valueReturn
-			},
+	
+	// options
+	defineOptions({
+	  name: 'up-badge'
+	})
+
+	// props
+	const props = defineProps({
+		// 是否显示圆点
+		isDot: {
+			type: Boolean,
+			default: defProps.getBoolean('badge.isDot')
 		},
-		methods: {
-			addStyle(str: any): any {
-				return addStyle(str)
+		// 显示的内容
+		value: {
+			type: [Number, String],
+			default: defProps.getString('badge.value')
+		},
+		// 显示的内容
+		modelValue: {
+			type: [Number, String],
+			default: defProps.getString('badge.modelValue')
+		},
+		// 是否显示
+		show: {
+			type: Boolean,
+			default: defProps.getBoolean('badge.show')
+		},
+		// 最大值，超过最大值会显示 '{max}+'
+		max: {
+			type: [Number, String],
+			default: defProps.getNumber('badge.max')
+		},
+		// 主题类型，error|warning|success|primary
+		type: {
+			type: String,
+			default: defProps.getString('badge.type')
+		},
+		// 当数值为 0 时，是否展示 Badge
+		showZero: {
+			type: Boolean,
+			default: defProps.getBoolean('badge.showZero')
+		},
+		// 背景颜色，优先级比type高，如设置，type参数会失效
+		bgColor: {
+			type: String,
+			default: defProps.getString('badge.bgColor')
+		},
+		// 字体颜色
+		color: {
+			type: String,
+			default: defProps.getString('badge.color')
+		},
+		// 徽标形状，circle-四角均为圆角，horn-左下角为直角
+		shape: {
+			type: String,
+			default: defProps.getString('badge.shape')
+		},
+		// 设置数字的显示方式，overflow|ellipsis|limit
+		// overflow会根据max字段判断，超出显示`${max}+`
+		// ellipsis会根据max判断，超出显示`${max}...`
+		// limit会依据1000作为判断条件，超出1000，显示`${value/1000}K`，比如2.2k、3.34w，最多保留2位小数
+		numberType: {
+			type: String,
+			default: defProps.getString('badge.numberType')
+		},
+		// 设置badge的位置偏移，格式为 [x, y]，也即设置的为top和right的值，absolute为true时有效
+		offset: {
+			type: Array as PropType<number[]>,
+			default: defProps.getArray<number>('badge.offset')
+		},
+		// 是否反转背景和字体颜色
+		inverted: {
+			type: Boolean,
+			default: defProps.getBoolean('badge.inverted')
+		},
+		// 是否绝对定位
+		absolute: {
+			type: Boolean,
+			default: defProps.getBoolean('badge.absolute')
+		}
+	})
+
+	// 整个组件的样式
+	const badgeStyle = computed(() => {
+		const style: UTSJSONObject = {}
+		if(props.color != '') {
+			style['color'] = props.color
+		}
+		if (props.bgColor != '' && !props.inverted) {
+			style['backgroundColor'] = props.bgColor
+		}
+		if (props.absolute) {
+			style['position'] = 'absolute'
+			let offsetArray = props.offset as number[]
+			// 如果有设置offset参数
+			if(offsetArray.length > 0) {
+				// top和right分为为offset的第一个和第二个值，如果没有第二个值，则right等于top
+				const top = offsetArray[0]
+				style['top'] = addUnit(top)
+				if (offsetArray.length == 2) {
+					style['right'] = addUnit(offsetArray[1])
+				} else {
+					style['right'] = addUnit(top)
+				}
 			}
 		}
-	}
+		return style
+	})
+
+	// 显示值
+	const showValue = computed(():string => {
+		let valueReturn = ''
+		switch (props.numberType.toString()) {
+			case "overflow":
+				valueReturn = parseInt(props.value.toString()) > parseInt(props.max.toString()) ? props.max.toString() + "+" : props.value.toString()
+				break;
+			case "ellipsis":
+				valueReturn = parseInt(props.value.toString()) > parseInt(props.max.toString()) ? "..." : props.value.toString()
+				break;
+			case "limit":
+				valueReturn = parseInt(props.value.toString()) > 999
+						?
+							parseInt(props.value.toString()) >= 9999 ?
+							(Math.floor(parseInt(props.value.toString()) / 1e4 * 100) / 100).toString() + "w"
+							: (Math.floor(parseInt(props.value.toString()) / 1e3 * 100) / 100).toString() + "k"
+						: props.value.toString()
+				break;
+			default:
+				valueReturn = props.value.toString()
+		}
+		return valueReturn
+	})
 </script>
 
 <style lang="scss" scoped>

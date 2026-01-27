@@ -1,3 +1,9 @@
+## 4.2.15（2026-01-27）
+fix: 修复refactor: 【组合式API重构】 up-badge组件（uni-app-x）
+
+## 4.2.14（2026-01-27）
+fix: 修复refactor: 【组合式API重构】 up-badge组件（uni-app-x）
+
 ## 4.2.13（2026-01-27）
 fix: 修复refactor: 【组合式API重构】 up-code-input组件（uni-app-x）
 
