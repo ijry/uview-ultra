@@ -12,97 +12,114 @@
 	</view>
 </template>
 
-<script>
-	import { propsCol } from './props';
-	import { mpMixin } from '../../libs/mixin/mpMixin';
-	import { mixin } from '../../libs/mixin/mixin';
-	import { addStyle, addUnit, deepMerge, getPx, getParentData } from '../../libs/function/index';
-	/**
-	 * CodeInput 栅格系统的列 
-	 * @description 该组件一般用于Layout 布局 通过基础的 12 分栏，迅速简便地创建布局
-	 * @tutorial https://ijry.github.io/uview-plus/components/Layout.html
-	 * @property {String | Number}	span		栅格占据的列数，总12等份 (默认 12 ) 
-	 * @property {String | Number}	offset		分栏左边偏移，计算方式与span相同 (默认 0 ) 
-	 * @property {String}			justify		水平排列方式，可选值为`start`(或`flex-start`)、`end`(或`flex-end`)、`center`、`around`(或`space-around`)、`between`(或`space-between`)  (默认 'start' ) 
-	 * @property {String}			align		垂直对齐方式，可选值为top、center、bottom、stretch (默认 'stretch' ) 
-	 * @property {String}			textAlign	文字水平对齐方式 (默认 'left' ) 
-	 * @property {Object}			customStyle	定义需要用到的外部样式
-	 * @event {Function}	click	col被点击，会阻止事件冒泡到row
-	 * @example	 <up-col  span="3" offset="3" > <view class="demo-layout bg-purple"></view> </up-col>
-	 */
-	export default {
-		name: 'up-col',
-		mixins: [mpMixin, mixin, propsCol],
-		data() {
-			return {
-				width: 0,
-				parent: null as ComponentPublicInstance|null,
-				parentData: {
-					gutter: 0
-				} as UTSJSONObject,
-				gridNum: 12
-			}
+<script setup lang="uts">
+	import type { PropType } from 'vue'
+	import { ref, computed, getCurrentInstance } from 'vue'
+	import defProps from './col.uts'
+	import { addStyle, addUnit, deepMerge, getPx } from '../../libs/function/index'
+	import { commonProps, useUltraUI } from '../../libs/composable/useUltraUI'
+	const { parent, parentData, getParentData } = useUltraUI({
+		gutter: 0
+	})
+	
+	defineOptions({
+		namne: 'up-col'
+	})
+	
+	// props
+	const props = defineProps({
+		// 占父容器宽度的多少等分，总分为12份
+		span: {
+			type: [String, Number],
+			default: defProps.getNumber('col.span')
 		},
-		//  微信小程序中 options 选项
-		// #ifdef MP-WEIXIN
-		options: {
-			virtualHost: true // 将自定义节点设置成虚拟的，更加接近Vue组件的表现。我们不希望自定义组件的这个节点本身可以设置样式、响应 flex 布局等
+		// 指定栅格左侧的间隔数(总12栏)
+		offset: {
+			type: [String, Number],
+			default: defProps.getNumber('col.offset')
 		},
-		// #endif
-		computed: {
-			uJustify(): string {
-				if (this.justify == 'end' || this.justify == 'start') return 'flex-' + this.justify
-				else if (this.justify == 'around' || this.justify == 'between') return 'space-' + this.justify
-				else return this.justify
-			},
-			uAlignItem(): string {
-				if (this.align == 'top') return 'flex-start'
-				if (this.align == 'bottom') return 'flex-end'
-				else return this.align
-			},
-			colStyle(): any {
-				// @ts-ignore
-				let pct = 100 / this.gridNum * parseInt(this.span.toString());
-				const style = {
-					// 这里写成"padding: 0 10px"的形式是因为nvue的需要
-					// @ts-ignore
-					paddingLeft: addUnit(parseInt(getPx(this.parentData['gutter'].toString()))/2),
-					// @ts-ignore
-					paddingRight: addUnit(parseInt(getPx(this.parentData['gutter'].toString()))/2),
-					alignItems: this.uAlignItem,
-					// @ts-ignore
-					justifyContent: this.uJustify,
-					textAlign: this.textAlign,
-					flex: `0 0 ${pct.toString()}%`,
-					// @ts-ignore
-					marginLeft: (100 / 12 * parseInt(this.offset.toString())).toString() + '%'
-				}
-				return deepMerge(style, addStyle(this.customStyle))
-			}
+		// 水平排列方式，可选值为`start`(或`flex-start`)、`end`(或`flex-end`)、`center`、`around`(或`space-around`)、`between`(或`space-between`)
+		justify: {
+			type: String,
+			default: defProps.getString('col.justify')
 		},
-		mounted() {
-			this.init()
+		// 垂直对齐方式，可选值为top、center、bottom、stretch
+		align: {
+			type: String,
+			default: defProps.getString('col.align')
 		},
-		emits: ["click"],
-		methods: {
-			init(): void {
-				// 支付宝小程序不支持provide/inject，所以使用这个方法获取整个父组件，在created定义，避免循环引用
-				this.updateParentData()
-				console.log(this.parent)
-				// this?.parent?.getComponentWidth().then((width: number|null) => {
-				// // 	this.width = parseInt(width.toString())
-				// // 	// console.log(this.width)
-				// })
-			},
-			updateParentData(): void {
-				// @ts-ignore
-				this.getParentData('up-row')
-			},
-			clickHandler(e: any): void {
-				this.$emit('click');
-			}
-		},
+		// 文字对齐方式
+		textAlign: {
+			type: String,
+			default: defProps.getString('col.textAlign')
+		}
+	})
+	
+	// 定义事件
+	const emit = defineEmits(['click'])
+	
+	// 获取实例
+	const instance = getCurrentInstance()!.proxy!
+	
+	// 响应式数据
+	const width = ref(0)
+	const gridNum = ref(12)
+	
+	// 计算属性
+	const uJustify = computed(() => {
+		if (props.justify == 'end' || props.justify == 'start') return 'flex-' + props.justify
+		else if (props.justify == 'around' || props.justify == 'between') return 'space-' + props.justify
+		else return props.justify
+	})
+	
+	const uAlignItem = computed(() => {
+		if (props.align == 'top') return 'flex-start'
+		if (props.align == 'bottom') return 'flex-end'
+		else return props.align
+	})
+	
+	const colStyle = computed(() => {
+		// @ts-ignore
+		let pct = 100 / gridNum.value * parseInt(props.span.toString());
+		const style = {
+			// 这里写成"padding: 0 10px"的形式是因为nvue的需要
+			// @ts-ignore
+			paddingLeft: addUnit(parseInt(getPx(parentData.value['gutter'].toString()))/2),
+			// @ts-ignore
+			paddingRight: addUnit(parseInt(getPx(parentData.value['gutter'].toString()))/2),
+			alignItems: uAlignItem.value,
+			// @ts-ignore
+			justifyContent: uJustify.value,
+			textAlign: props.textAlign,
+			flex: `0 0 ${pct.toString()}%`,
+			// @ts-ignore
+			marginLeft: (100 / 12 * parseInt(props.offset.toString())).toString() + '%'
+		}
+		return deepMerge(style, addStyle(props.customStyle))
+	})
+	
+	const updateParentData = (): void => {
+		// @ts-ignore
+		getParentData('up-row', instance, false)
 	}
+	
+	// 方法
+	const init = (): void => {
+		// 支付宝小程序不支持provide/inject，所以使用这个方法获取整个父组件，在created定义，避免循环引用
+		updateParentData()
+		// console.log(parent.value)
+		let widthTmp = parent.value?.$callMethod('getComponentWidth') as number|null
+		if (widthTmp != null) {
+			width.value = parseInt(widthTmp.toString())
+		}
+	}
+	
+	const clickHandler = (e: any): void => {
+		emit('click');
+	}
+	
+	// 初始化
+	init()
 </script>
 
 <style lang="scss" scoped>
