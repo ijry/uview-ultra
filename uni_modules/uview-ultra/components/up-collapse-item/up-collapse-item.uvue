@@ -158,6 +158,7 @@
 						console.log('#', value, '#')
 						return error('非手风琴模式下，up-collapse组件的value参数必须为数组')
 					}
+					// @ts-ignore
 					if (value == null || value == '') {
 						value = [] as string[]
 					}

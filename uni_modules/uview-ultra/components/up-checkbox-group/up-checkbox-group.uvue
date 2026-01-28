@@ -173,7 +173,7 @@
 		addChild,
 		getProps,
 		getRefs
-	});
+	})
 </script>
 
 <style lang="scss" scoped>

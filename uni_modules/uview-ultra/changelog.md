@@ -1,3 +1,6 @@
+## 4.2.16（2026-01-28）
+refactor: 【组合式API重构】 up-checkbox-group组件与up-collapse-item优化（uni-app-x）
+
 ## 4.2.15（2026-01-27）
 fix: 修复refactor: 【组合式API重构】 up-badge组件（uni-app-x）
 
