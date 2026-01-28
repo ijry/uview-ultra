@@ -167,18 +167,18 @@ export default {
 			this.innerFormatter = e
 		},
         onFocus(e: UniTextareaFocusEvent): void {
-            this.$emit("focus", e);
+            this.$emit("focus", e)
         },
         onBlur(e: UniTextareaBlurEvent): void {
-            this.$emit("blur", e);
+            this.$emit("blur", e)
             // 尝试调用up-form的验证方法
-            formValidate(this, "blur");
+            formValidate(this, "blur")
         },
         onLinechange(e: UniTextareaLineChangeEvent): void {
-            this.$emit("linechange", e);
+            this.$emit("linechange", e)
         },
         onInput(e: UniInputEvent): void {
-			let { value = "" } = e.detail;
+			let value = e.detail.value
 			// 格式化过滤方法
             // todox
             // const formatter = this.formatter || this.innerFormatter

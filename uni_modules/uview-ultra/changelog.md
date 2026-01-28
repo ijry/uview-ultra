@@ -1,3 +1,6 @@
+## 4.2.17（2026-01-28）
+refactor: 【组合式API重构】 up-textarea优化（uni-app-x）
+
 ## 4.2.16（2026-01-28）
 refactor: 【组合式API重构】 up-checkbox-group组件与up-collapse-item优化（uni-app-x）
 
