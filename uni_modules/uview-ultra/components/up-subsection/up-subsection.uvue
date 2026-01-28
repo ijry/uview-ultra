@@ -31,11 +31,13 @@
             v-for="(item, index) in list"
             :key="index"
         >
-            <text
-                class="up-subsection__item__text"
-                :style="[textStyle(index)]"
-                >{{ getText(item) }}</text
-            >
+			<slot name="item" :item="item" :index="index">
+				<text
+				    class="up-subsection__item__text"
+				    :style="[textStyle(index)]"
+				    >{{ getText(item) }}</text
+				>
+			</slot>
         </view>
     </view>
 </template>
@@ -289,8 +291,8 @@ export default {
         &__text {
             font-size: 12px;
             line-height: 14px;
-            @include flex;
-            align-items: center;
+            // @include flex;
+            // align-items: center;
             transition-property: color;
             transition-duration: 0.3s;
         }

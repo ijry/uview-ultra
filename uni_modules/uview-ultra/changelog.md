@@ -1,3 +1,6 @@
+## 4.2.18（2026-01-28）
+refactor: 【组合式API重构】 up-subsection优化（uni-app-x）
+
 ## 4.2.17（2026-01-28）
 refactor: 【组合式API重构】 up-textarea优化（uni-app-x）
 
