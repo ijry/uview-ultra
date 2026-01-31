@@ -1,7 +1,9 @@
 <template>
 	<view class="u-page">
 		<view class="u-demo-block">
-			<text class="u-demo-block__title">基础使用</text>
+			<view class="u-demo-block__title">
+				<text class="text">基础使用</text>
+			</view>
 			<view class="u-demo-block__content">
 				<up-tooltip
 				    :text="text1"
@@ -10,7 +12,9 @@
 			</view>
 		</view>
 		<view class="u-demo-block">
-			<text class="u-demo-block__title">下方显示</text>
+			<view class="u-demo-block__title">
+				<text class="text">下方显示</text>
+			</view>
 			<view class="u-demo-block__content" style="padding-bottom: 30px;">
 				<up-tooltip
 				    :text="text2"
@@ -19,7 +23,9 @@
 			</view>
 		</view>
 		<view class="u-demo-block">
-			<text class="u-demo-block__title">扩展按钮</text>
+			<view class="u-demo-block__title">
+				<text class="text">扩展按钮</text>
+			</view>
 			<view class="u-demo-block__content">
 				<up-tooltip
 				    :text="text3"
@@ -29,7 +35,9 @@
 			</view>
 		</view>
 		<view class="u-demo-block">
-			<text class="u-demo-block__title">自动调整位置</text>
+			<view class="u-demo-block__title">
+				<text class="text">自动调整位置</text>
+			</view>
 			<view class="u-demo-block__content">
 				<up-tooltip
 				    :text="text4"
@@ -38,7 +46,9 @@
 			</view>
 		</view>
 		<view class="u-demo-block">
-			<text class="u-demo-block__title">高亮选中文本背景色</text>
+			<view class="u-demo-block__title">
+				<text class="text">高亮选中文本背景色</text>
+			</view>
 			<view class="u-demo-block__content">
 				<up-tooltip
 				    :text="text5"

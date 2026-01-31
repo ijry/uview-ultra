@@ -1,3 +1,30 @@
+## 4.2.27（2026-01-30）
+refactor: 【组合式API重构】 subsection示例优化warning（uni-app-x）
+
+## 4.2.26（2026-01-30）
+refactor: 【组合式API重构】 swiper示例优化warning（uni-app-x）
+
+## 4.2.25（2026-01-30）
+refactor: 【组合式API重构】 tabs示例优化warning（uni-app-x）
+
+## 4.2.24（2026-01-29）
+refactor: 【组合式API重构】 text示例优化warning（uni-app-x）
+
+## 4.2.23（2026-01-29）
+refactor: 【组合式API重构】 textarea示例优化warning（uni-app-x）
+
+## 4.2.22（2026-01-29）
+refactor: 【组合式API重构】 tooltip示例优化warning（uni-app-x）
+
+## 4.2.21（2026-01-28）
+refactor: 【组合式API重构】 up-count-downr优化（uni-app-x）
+
+## 4.2.20（2026-01-28）
+refactor: 【组合式API重构】 up- picker优化（uni-app-x）
+
+## 4.2.19（2026-01-28）
+refactor: 【组合式API重构】 up-item-steps优化（uni-app-x）
+
 ## 4.2.18（2026-01-28）
 refactor: 【组合式API重构】 up-subsection优化（uni-app-x）
 

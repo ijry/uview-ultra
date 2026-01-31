@@ -131,6 +131,7 @@
 					&& this.index + 1 < (this.parent.$data['children'] as ComponentPublicInstance[]).length) {
 					// @ts-ignore
 					const nextChild = (this.parent.$data['children'] as ComponentPublicInstance[])[this.index + 1];
+					// @ts-ignore
 					if (nextChild != null && nextChild.$props['error'] as boolean) {
 						style['backgroundColor'] = color['error']
 						// @ts-ignore
@@ -170,6 +171,7 @@
 					&& this.index + 1 < (this.parent.$data['children'] as ComponentPublicInstance[]).length) {
 					// @ts-ignore
 					const nextChild = (this.parent.$data['children'] as ComponentPublicInstance[])[this.index + 1];
+					// @ts-ignore
 					if (nextChild != null && nextChild.$props['error'] as boolean) {
 						style['backgroundColor'] = color['error']
 						// @ts-ignore
@@ -194,7 +196,7 @@
 				// @ts-ignore
 				let current = parseInt(this.parentData['current'].toString())
 				if (current == index) {
-					return error === true ? 'error' : 'process'
+					return error == true ? 'error' : 'process'
 				} else if (error) {
 					return 'error'
 				} else if (current > index) {

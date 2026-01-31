@@ -84,11 +84,11 @@
 					// 获取剩余时间
 					const remain = this.getRemainTime()
 					// 重设剩余时间
-					if (!isSameSecond(remain, this.remainTime) || remain === 0) {
+					if (!isSameSecond(remain, this.remainTime) || remain == 0) {
 						this.setRemainTime(remain)
 					}
 					// 如果剩余时间不为0，则继续检查更新倒计时
-					if (this.remainTime !== 0) {
+					if (this.remainTime != 0) {
 						this.macroTick()
 					}
 				}, 30)
