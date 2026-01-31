@@ -2,7 +2,7 @@
 	<view
 	    class="up-row"
 		ref="up-row"
-	    :style="[rowStyle]"
+	    :style="[rowStyle, $upAddStyle(props.customStyle)]"
 	    @tap="clickHandler"
 	>
 		<slot />
@@ -15,7 +15,7 @@
 	import defProps from './row'
 	import { addUnit, addStyle, deepMerge, upGetRect, sleep } from '../../libs/function/index'
 	import { commonProps, useUltraUI } from '../../libs/composable/useUltraUI'
-	const { children, getChildren, addChild } = useUltraUI()
+	const { children } = useUltraUI()
 	
 	// options
 	defineOptions({
@@ -68,7 +68,7 @@
 			// @ts-ignore
 			style['marginRight'] = addUnit((0-parseInt(props.gutter.toString()))/2)
 		}
-		return deepMerge(style, addStyle(props.customStyle))
+		return style
 	})
 	
 	const clickHandler = (e: any): void => {
@@ -104,8 +104,6 @@
 	// 导出组件方法
 	defineExpose({
 		getComponentWidth,
-		getChildren,
-		addChild,
 		getProps,
 		getRefs
 	})
