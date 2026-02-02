@@ -228,24 +228,25 @@
 			format(value: string): number {
 				value = this.filter(value)
 				// 如果为空字符串，那么设置为0，同时将值转为Number类型
-				let valueNum: number = value === '' ? 0 : parseFloat(value)
+				let valueNum: number = value == '' ? 0 : parseFloat(value)
 				// 对比最大最小值，取在min和max之间的值
 				// @ts-ignore
 				valueNum = Math.max(Math.min(parseFloat(this.max as string), parseFloat(value.toString())), parseFloat(this.min.toString()))
 				// 如果设定了最大的小数位数，使用toFixed去进行格式化
 				// @ts-ignore
 				let decimalLength = parseInt(this.decimalLength.toString())
-				if (decimalLength !== 0 && valueNum !== 0) {
+				if (decimalLength != 0 && valueNum != 0) {
 					valueNum = parseFloat(valueNum.toFixed(decimalLength))
 				}
 				return valueNum
 			},
 			// 过滤非法的字符
-			filter(value: string): string {
+			filter(value: string | number): string {
+				value = value.toString()
 				// 只允许0-9之间的数字，"."为小数点，"-"为负数时候使用
 				value = value.replace(/[^0-9.-]/g, '')
 				// 如果只允许输入整数，则过滤掉小数点后的部分
-				if (this.integer && value.indexOf('.') !== -1) {
+				if (this.integer && value.indexOf('.') != -1) {
 					value = value.split('.')[0]
 				}
 				return value;
@@ -279,9 +280,7 @@
 			},
 			// 输入框值发生变化
 			onInput(e: UniInputEvent) {
-				const {
-					value = ''
-				} = e.detail
+				let value = e.detail.value
 				// 为空返回
 				if (value === '') {
 					// 为空自动设为最小值
@@ -292,7 +291,7 @@
 				// https://github.com/ijry/uview-plus/issues/613
 				this.emitChange(value);
 				// 最大允许的小数长度
-				if (this.decimalLength !== null && formatted.indexOf('.') !== -1) {
+				if (formatted.indexOf('.') != -1) {
 					const pair = formatted.split('.')
 					// @ts-ignore
 					formatted = `${pair[0]}.${pair[1].slice(0, parseInt(this.decimalLength.toString()))}`
@@ -324,7 +323,6 @@
 			},
 			onChange() {
 				const type = this.type
-				if (type == null) return
 				if (this.isDisabled(type)) {
 					return this.$emit('overlimit', type)
 				}
