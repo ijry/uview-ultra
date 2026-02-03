@@ -1,5 +1,5 @@
 <template>
-	<view class="up-box" :style="[{height: height}, addStyle(customStyle)]">
+	<view class="up-box" :style="[{height: height}, $upAddStyle(customStyle)]">
         <view class="up-box__left" :style="{borderRadius: borderRadius, backgroundColor: bgColors[0]}">
             <slot name="left">
                 <view class="flex flex-row items-center justify-center">
@@ -31,39 +31,68 @@
 	</view>
 </template>
 
-<script>
-	import { propsBox } from './props';
-	import { mpMixin } from '../../libs/mixin/mpMixin';
-	import { mixin } from '../../libs/mixin/mixin';
-	import { addStyle } from '../../libs/function/index';
-	/**
-	 * box 盒子
-	 * @description box盒子一般为左边一个盒子，右侧两个等高的半盒组成，常用于App首页座位重点突出。
-	 * @tutorial https://uview-plus.jiangruyi.com/components/box.html
-	 * @property {Array}	bgColors			背景色
-	 * @property {String}	height			    高度
-     * @property {String}	borderRadius		圆角
-	 * @property {Object}   customStyle		    定义需要用到的外部样式
-	 * 
-	 * @event {Function}			click			点击cell列表时触发
-	 * @example <up-box colors=['blue', 'red', 'yellow'] height="200px"></up-box>
-	 */
-	export default {
-		name: 'up-box',
-		data() {
-			return {
-			}
+<script setup lang="uts">
+    import type { PropType } from 'vue'
+	import { addStyle } from '../../libs/function/index.uts'
+    import defProps from './box.uts'
+	
+    // options
+	defineOptions({
+	  name: 'up-box'
+	})
+
+	const props = defineProps({
+		// 背景色
+		bgColors: {
+            type: Array as PropType<string[]>,
+			default: defProps.getArray<string>('box.bgColors')
 		},
-		mixins: [mpMixin, mixin, propsBox],
-		computed: {
+		// 高度
+		height: {
+			type: String,
+			default: () => defProps.getString('box.height')
 		},
-		emits: [],
-		methods: {
-			addStyle(obj: any) {
-				return addStyle(obj)
-			},
+		// 圆角
+		borderRadius: {
+			type: String,
+			default: () => defProps.getString('box.borderRadius')
+		},
+		// 间隔
+		gap: {
+			type: String,
+			default: () => defProps.getString('box.gap')
+		},
+		// 左侧图标
+		leftIcon: {
+			type: String,
+			default: () => defProps.getString('box.leftIcon')
+		},
+		// 左侧文案
+		leftTitle: {
+			type: String,
+			default: () => defProps.getString('box.leftTitle')
+		},
+		// 右上图标
+		rightTopIcon: {
+			type: String,
+			default: () => defProps.getString('box.rightTopIcon')
+		},
+		// 右上文案
+		rightTopTitle: {
+			type: String,
+			default: () => defProps.getString('box.rightTopTitle')
+		},
+		// 右下图标
+		rightBottomIcon: {
+			type: String,
+			default: () => defProps.getString('box.rightBottomIcon')
+		},
+		// 右下文案
+		rightBottomTitle: {
+			type: String,
+			default: () => defProps.getString('box.rightBottomTitle')
 		}
-	}
+	});
 </script>
 
 <style lang="scss" scoped>

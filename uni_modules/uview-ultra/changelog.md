@@ -1,3 +1,21 @@
+## 4.2.33（2026-02-03）
+refactor: 【组合式API重构】 up-box组件（uni-app-x）
+
+## 4.2.32（2026-02-02）
+refactor: 【组合式API重构】 优化up-avatar组件（uni-app-x）
+
+## 4.2.31（2026-02-02）
+refactor: 【组合式API重构】 优化up-col组件（uni-app-x）
+
+## 4.2.30（2026-02-02）
+refactor: 【组合式API重构】 修复up-number-box组件（uni-app-x）
+
+## 4.2.29（2026-01-31）
+refactor: 【组合式API重构】 修复up-col组件（uni-app-x）
+
+## 4.2.28（2026-01-31）
+refactor: 【组合式API重构】 steps示例优化warning（uni-app-x）
+
 ## 4.2.27（2026-01-30）
 refactor: 【组合式API重构】 subsection示例优化warning（uni-app-x）
 
