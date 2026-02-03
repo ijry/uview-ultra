@@ -1,5 +1,5 @@
 <template>
-    <view :style="[addStyle(customStyle)]"
+    <view :style="[$up.addStyle(customStyle)]"
 		:class="[customClass]" class="up-cell-group">
         <view v-if="title" class="up-cell-group__title">
             <slot name="title">
@@ -15,31 +15,26 @@
     </view>
 </template>
 
-<script>
-	import { propsCellGroup } from './props';
-	import { mpMixin } from '../../libs/mixin/mpMixin';
-	import { mixin } from '../../libs/mixin/mixin';
-	import { addStyle } from '../../libs/function/index';
-	/**
-	 * cellGroup  单元格
-	 * @author jry ijry@qq.com 2024
-	 * @description cell单元格一般用于一组列表的情况，比如个人中心页，设置页等。
-	 * @tutorial https://uview-plus.jiangruyi.com/components/cell.html
-	 * @property {String}	title		分组标题
-	 * @property {Boolean}	border		是否显示外边框 (默认 true )
-	 * @property {Object}	customStyle	定义需要用到的外部样式
-	 * @event {Function} click 	点击cell列表时触发
-	 * @example <up-cell-group title="设置喜好">
-	 */
-	export default {
-		name: 'up-cell-group',
-		mixins: [mpMixin, mixin, propsCellGroup],
-		methods: {
-			addStyle(val: any): any {
-				return addStyle(val)
-			},
-		}
-	}
+<script setup lang="ts">
+	import defProps from './cellGroup'
+	// props
+	const props = defineProps({
+		title: {
+			type: String,
+			default: defProps.getString('cellGroup.title')
+		},
+		border: {
+			type: Boolean,
+			default: defProps.getBoolean('cellGroup.border')
+		},
+		border: {
+			type: Boolean,
+			default: defProps.getBoolean('cellGroup.border')
+		},
+	})
+	defineOptions({
+		name: "up-cell-group"
+	})
 </script>
 
 <style lang="scss" scoped>

@@ -1,3 +1,6 @@
+## 4.2.34（2026-02-03）
+refactor: 【组合式API重构】 up-cell-group组件（uni-app-x）
+
 ## 4.2.33（2026-02-03）
 refactor: 【组合式API重构】 up-box组件（uni-app-x）
 
