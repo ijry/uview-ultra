@@ -36,15 +36,29 @@ export function loadFont() {
 	  }
 	})
 }
-const $up = {
- 	addUnit: (e: any, y: string): string => {
-		return index.addUnit(e, y)
-	},
- 	// addStyle: index.addStyle
-}
 
+// 快捷工具方法
+class UPUtils {
+ 	addUnit(val: any|null, unit: string|null = ''): string {
+		return index.addUnit(val, unit)
+	}
+	addStyle(customStyle: any, target = 'object'): any {
+		return index.addStyle(customStyle, target)
+	}
+	getPx(val: any, unit = false): string {
+		return index.getPx(val, unit)
+	}
+	timeFormat(dateTime: any = 0, formatStr: string = 'yyyy-mm-dd'): string {
+		return index.timeFormat(dateTime, formatStr)
+	}
+	toast(title: string, duration = 2000): void {
+		index.toast(title, duration)
+	}
+}
+const uputils = new UPUtils()
 const install = (app: VueApp): void => {
-    app.config.globalProperties.$up = $up
+	app.config.globalProperties.$u = uputils
+    app.config.globalProperties.$up = uputils
     app.mixin(mixin)
 }
 
