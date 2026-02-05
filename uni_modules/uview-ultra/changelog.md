@@ -1,3 +1,6 @@
+## 4.2.37（2026-02-05）
+refactor: 【组合式API重构】 新增up-title组件（uni-app-x）
+
 ## 4.2.36（2026-02-05）
 refactor: 【组合式API重构】 up-card组件（uni-app-x）
 
