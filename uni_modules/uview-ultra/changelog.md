@@ -1,3 +1,6 @@
+## 4.2.36（2026-02-05）
+refactor: 【组合式API重构】 up-card组件（uni-app-x）
+
 ## 4.2.35（2026-02-04）
 refactor: 【组合式API重构】 up-cell组件（uni-app-x）
 

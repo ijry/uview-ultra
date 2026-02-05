@@ -2,9 +2,10 @@
 	<view
 		class="up-card"
 		@tap.stop="click"
-		:class="{ 'up-border': border, 'up-card-full': full, 'up-card--border': parseInt(getPx(borderRadius)) > 0 }"
+		:class="{ 'up-border': border, 'up-card-full': full,
+			'up-card--border': parseInt($upGetPx(borderRadius)) > 0 }"
 		:style="{
-			borderRadius: addUnit(borderRadius),
+			borderRadius: $up.addUnit(borderRadius),
 			margin: margin,
 			boxShadow: boxShadow
 		}"
@@ -12,40 +13,43 @@
 		<view
 			v-if="showHead"
 			class="up-card__head"
-			:style="[{padding: addUnit(paddingHead != '' ? paddingHead : padding)}, headStyle]"
+			:style="[{padding: $up.addUnit(paddingHead != '' ? paddingHead : padding)}, headStyle]"
 			:class="{
 				'up-border-bottom': headBorderBottom
 			}"
 			@tap="headClick"
 		>
-			<view v-if="$slots['head'] == null" class="up-flex up-row-between">
-				<view class="up-card__head--left up-flex up-line-1" v-if="title != ''">
+			<view v-if="$slots['head'] == null"
+				class="up-flex up-row-between up-flex-between up-flex-items-center">
+				<view class="up-card__head--left up-flex up-flex-items-center up-line-11"
+					v-if="title != ''">
 					<image
 						:src="thumb"
 						class="up-card__head--left__thumb"
 						mode="aspectFill"
 						v-if="thumb"
 						:style="{ 
-							height: addUnit(thumbWidth), 
-							width: addUnit(thumbWidth), 
+							height: $up.addUnit(thumbWidth), 
+							width: $up.addUnit(thumbWidth), 
 							borderRadius: thumbCircle ? '50px' : '4px' 
 						}"
 					></image>
 					<text
 						class="up-card__head--left__title up-line-1"
 						:style="{
-							fontSize: addUnit(titleSize),
+							fontSize: $up.addUnit(titleSize),
 							color: titleColor
 						}"
 					>
 						{{ title }}
 					</text>
 				</view>
-				<view class="up-card__head--right up-line-1" v-if="subTitle != ''">
+				<view class="up-card__head--right up-line-1"
+					v-if="subTitle != ''">
 					<text
 						class="up-card__head__title__text"
 						:style="{
-							fontSize: addUnit(subTitleSize),
+							fontSize: $up.addUnit(subTitleSize),
 							color: subTitleColor
 						}"
 					>
@@ -56,14 +60,14 @@
 			<slot name="head" v-else />
 		</view>
 		<view @tap="bodyClick" class="up-card__body"
-			:style="[{padding: addUnit(paddingBody != '' ? paddingBody : padding)}, bodyStyle]">
+			:style="[{padding: $upAddUnit(paddingBody != '' ? paddingBody : padding)}, bodyStyle]">
 			<slot name="body" />
 		</view>
 		<view
 			v-if="showFoot"
 			class="up-card__foot"
 			 @tap="footClick"
-			:style="[{padding: $slots['foot'] != null ? addUnit(paddingFoot != '' ? paddingFoot : padding) : 0}, footStyle]"
+			:style="[{padding: $slots['foot'] != null ? $upAddUnit(paddingFoot != '' ? paddingFoot : padding) : 0}, footStyle]"
 			:class="{
 				'up-border-top': footBorderTop
 			}"
@@ -72,74 +76,169 @@
 		</view>
 	</view>
 </template>
-<script>
-    import { propsCard } from './props';
-    import { mpMixin } from '../../libs/mixin/mpMixin';
-    import { mixin } from '../../libs/mixin/mixin';
-    import { addStyle, addUnit, getPx } from '../../libs/function/index';
-    /**
-     * card 卡片
-     * @description 卡片组件一般用于多个列表条目，且风格统一的场景
-     * @tutorial https://uview-plus.jiangruyi.com/components/card.html
-     * @property {Boolean} full 卡片与屏幕两侧是否留空隙（默认false）
-     * @property {String} title 头部左边的标题
-     * @property {String} title-color 标题颜色（默认#303133）
-     * @property {String | Number} title-size 标题字体大小，单位rpx（默认15px）
-     * @property {String} sub-title 头部右边的副标题
-     * @property {String} sub-title-color 副标题颜色（默认#909399）
-     * @property {String | Number} sub-title-size 副标题字体大小（默认13px
-     * @property {Boolean} border 是否显示边框（默认true）
-     * @property {String | Number} index 用于标识点击了第几个卡片
-     * @property {String} box-shadow 卡片外围阴影，字符串形式（默认none）
-     * @property {String} margin 卡片与屏幕两边和上下元素的间距，需带单位，如"30px 20px"（默认15px）
-     * @property {String | Number} border-radius 卡片整体的圆角值，单位rpx（默认8px）
-     * @property {Object} head-style 头部自定义样式，对象形式
-     * @property {Object} body-style 中部自定义样式，对象形式
-     * @property {Object} foot-style 底部自定义样式，对象形式
-     * @property {Boolean} head-border-bottom 是否显示头部的下边框（默认true）
-     * @property {Boolean} foot-border-top 是否显示底部的上边框（默认true）
-     * @property {Boolean} show-head 是否显示头部（默认true）
-     * @property {Boolean} show-foot 是否显示尾部（默认true）
-     * @property {String} thumb 缩略图路径，如设置将显示在标题的左边，不建议使用相对路径
-     * @property {String | Number} thumb-width 缩略图的宽度，高等于宽，单位px（默认30px）
-     * @property {Boolean} thumb-circle 缩略图是否为圆形（默认false）
-     * @event {Function} click 整个卡片任意位置被点击时触发
-     * @event {Function} head-click 卡片头部被点击时触发
-     * @event {Function} body-click 卡片主体部分被点击时触发
-     * @event {Function} foot-click 卡片底部部分被点击时触发
-     * @example <up-card paddingFoot="2px 15px" title="card"></up-card>
-     */
-    export default {
-        name: 'up-card',
-        data() {
-            return {};
-        },
-        mixins: [mpMixin, mixin, propsCard],
-        emits: ['click', 'head-click', 'body-click', 'foot-click'],
-        methods: {
-			addStyle(e: any) {
-				return addStyle(e);
-			},
-			addUnit(e: any) {
-				return addUnit(e);
-			},
-			getPx(e: any) {
-				return getPx(e);
-			},
-            click() {
-                this.$emit('click', this.index);
-            },
-            headClick() {
-                this.$emit('head-click', this.index);
-            },
-            bodyClick() {
-                this.$emit('body-click', this.index);
-            },
-            footClick() {
-                this.$emit('foot-click', this.index);
-            }
-        }
-    };
+
+<script setup lang="uts">
+import type { PropType } from 'vue'
+import { computed } from 'vue'
+import { commonProps, useUltraUI } from '../../libs/composable/useUltraUI'
+import { addUnit, getPx } from '../../libs/function/index'
+import defProps from './card.uts'
+
+// options
+defineOptions({
+  name: 'up-card'
+})
+
+// props
+const props = defineProps({
+  // 与屏幕两侧是否留空隙
+  full: {
+    type: Boolean,
+    default: defProps.getBoolean('card.full')
+  },
+  // 标题
+  title: {
+    type: String,
+    default: defProps.getString('card.title')
+  },
+  // 标题颜色
+  titleColor: {
+    type: String,
+    default: defProps.getString('card.titleColor')
+  },
+  // 标题字体大小
+  titleSize: {
+    type: [Number, String],
+    default: defProps.getString('card.titleSize')
+  },
+  // 副标题
+  subTitle: {
+    type: String,
+    default: defProps.getString('card.subTitle')
+  },
+  // 副标题颜色
+  subTitleColor: {
+    type: String,
+    default: defProps.getString('card.subTitleColor')
+  },
+  // 副标题字体大小
+  subTitleSize: {
+    type: [Number, String],
+    default: defProps.getBoolean('card.subTitleSize')
+  },
+  // 是否显示外部边框，只对full=false时有效(卡片与边框有空隙时)
+  border: {
+    type: Boolean,
+    default: defProps.getBoolean('card.border')
+  },
+  // 用于标识点击了第几个
+  index: {
+    type: [Number, String, Object],
+    default: defProps.getString('card.index')
+  },
+  // 用于隔开上下左右的边距，带单位的写法，如："30px 30px"，"20px 20px 30px 30px"
+  margin: {
+    type: String,
+    default: defProps.getString('card.margin')
+  },
+  // card卡片的圆角
+  borderRadius: {
+    type: [Number, String],
+    default: defProps.getString('card.borderRadius')
+  },
+  // 头部自定义样式，对象形式
+  headStyle: {
+    type: Object,
+    default: defProps.getAny('card.headStyle') as UTSJSONObject
+  },
+  // 主体自定义样式，对象形式
+  bodyStyle: {
+    type: Object,
+    default: defProps.getAny('card.bodyStyle') as UTSJSONObject
+  },
+  // 底部自定义样式，对象形式
+  footStyle: {
+    type: Object,
+    default: defProps.getAny('card.footStyle') as UTSJSONObject
+  },
+  // 头部是否下边框
+  headBorderBottom: {
+    type: Boolean,
+    default: defProps.getBoolean('card.headBorderBottom')
+  },
+  // 底部是否有上边框
+  footBorderTop: {
+    type: Boolean,
+    default: defProps.getBoolean('card.footBorderTop')
+  },
+  // 标题左边的缩略图
+  thumb: {
+    type: String,
+    default: defProps.getString('card.thumb')
+  },
+  // 缩略图宽高
+  thumbWidth: {
+    type: [String, Number],
+    default: defProps.getString('card.thumbWidth')
+  },
+  // 缩略图是否为圆形
+  thumbCircle: {
+    type: Boolean,
+    default: defProps.getBoolean('card.thumbCircle')
+  },
+  // 给head，body，foot的内边距
+  padding: {
+    type: [String, Number],
+    default: defProps.getString('card.padding')
+  },
+  paddingHead: {
+    type: [String, Number],
+    default: defProps.getString('card.paddingHead')
+  },
+  paddingBody: {
+    type: [String, Number],
+    default: defProps.getString('card.paddingBody')
+  },
+  paddingFoot: {
+    type: [String, Number],
+    default: defProps.getString('card.paddingFoot')
+  },
+  // 是否显示头部
+  showHead: {
+    type: Boolean,
+    default: defProps.getBoolean('card.showHead')
+  },
+  // 是否显示尾部
+  showFoot: {
+    type: Boolean,
+    default: defProps.getBoolean('card.showFoot')
+  },
+  // 卡片外围阴影，字符串形式
+  boxShadow: {
+    type: String,
+    default: defProps.getString('card.boxShadow')
+  }
+})
+
+// 定义事件
+const emit = defineEmits(['click', 'head-click', 'body-click', 'foot-click'])
+
+// 方法
+const click = () => {
+  emit('click', props.index);
+}
+
+const headClick = () => {
+  emit('head-click', props.index);
+}
+
+const bodyClick = () => {
+  emit('body-click', props.index);
+}
+
+const footClick = () => {
+  emit('foot-click', props.index);
+}
 </script>
 
 <style lang="scss" scoped>
@@ -178,7 +277,7 @@
 
 		&--right {
 			color: $up-tips-color;
-			margin-left: 6rpx;
+			margin-left: 16rpx;
 		}
 	}
 
