@@ -287,6 +287,12 @@
 				"style": {
 					"navigationBarTitleText": "验证码"
 				}
+			},
+			{
+				"path": "card/card",
+				"style": {
+					"navigationBarTitleText": "卡片"
+				}
 			}
 		]
 	}, {

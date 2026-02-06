@@ -5,10 +5,13 @@
 	}
 	&__title {
 		margin-top:10px;
-		font-size: 15px;
-		color: $up-content-color;
+		
 		margin-bottom: 10px;
 		display: flex;
+		.text {
+			font-size: 15px;
+			color: $up-content-color;
+		}
 	}
 	&__flex{
 		display: flex;
@@ -26,10 +29,12 @@
 	padding: 15px 15px 40px 15px;
 	&__item {
 		&__title {
-			font-size: 14px;
-			color: rgb(143, 156, 162);
 			margin-bottom: 8px;
 			@include flex;
+			.text {
+				font-size: 14px;
+				color: rgb(143, 156, 162);
+			}
 		}
 	}
 }
@@ -43,10 +48,12 @@
 	}
 	
 	&__title {
-		font-size: 14px;
-		color: rgb(143, 156, 162);
 		margin-bottom: 8px;
 		@include flex;
+		.text {
+			font-size: 14px;
+			color: rgb(143, 156, 162);
+		}
 	}
 }
 

@@ -1,3 +1,6 @@
+## 4.2.39（2026-02-06）
+improvment: 优化mixin等
+
 ## 4.2.38（2026-02-05）
 refactor: 【组合式API重构】 支持template中使用$u.addUnit $u.addStyle $u.timeFormat（uni-app-x）
 
