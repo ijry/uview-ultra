@@ -1,3 +1,6 @@
+## 4.2.41（2026-02-07）
+refactor: 【组合式API重构】 优化up-action-sheet组件（uni-app-x）
+
 ## 4.2.40（2026-02-06）
 refactor: 【组合式API重构】 修复up-cell组件（uni-app-x）
 

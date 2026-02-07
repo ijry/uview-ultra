@@ -105,7 +105,7 @@
 
 <script setup lang="uts">
 import type { PropType } from 'vue'
-import { computed, onBeforeUnmount } from 'vue'
+import { computed, onBeforeUnmount, getCurrentInstance } from 'vue'
 // import { propsActionSheet } from './props'
 import { useOpenType } from '../../libs/composable/useOpenType'
 import { buttonProps } from '../../libs/composable/useButton'
@@ -114,7 +114,8 @@ import { commonProps, useUltraUI } from '../../libs/composable/useUltraUI'
 import { addUnit } from '../../libs/function/index'
 import { UPActionSheetItem, UPActionSheetProps } from './types.uts'
 import defProps from './actionSheet.uts'
-// const { onComponentDestroy, preventEvent, noop} = useUltraUI()
+const { onComponentDestroy, preventEvent, noop} = useUltraUI()
+const instance = getCurrentInstance()!.proxy!
 
 // options
 defineOptions({
@@ -186,11 +187,11 @@ const props = defineProps({
 })
 
 onMounted(() => {
-	console.log(props)
+	// console.log(props)
 })
 
 onBeforeUnmount(() => {
-	// onComponentDestroy()
+	onComponentDestroy(instance)
 })
 
 // emit定义
