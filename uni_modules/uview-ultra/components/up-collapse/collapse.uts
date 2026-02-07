@@ -10,7 +10,7 @@
 export default {
     // collapse 组件
     collapse: {
-        value: null,
+        value: '',
         accordion: false,
         border: true
     }

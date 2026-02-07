@@ -5,99 +5,110 @@
 	</view>
 </template>
 
-<script>
-	import { propsCollapse } from './props';
-	import { mpMixin } from '../../libs/mixin/mpMixin';
-	import { mixin } from '../../libs/mixin/mixin';
+<script setup lang="uts">
+	import { watch } from 'vue'
+	import defProps from './collapse.uts'
+	import { commonProps, useUltraUI } from '../../libs/composable/useUltraUI'
+	const { children, getChildren, addChild } = useUltraUI()
+	const instance = getCurrentInstance()!.proxy!
+	
+	defineOptions({
+		name: "up-collapse"
+	})
+	
+	// 定义 props
+	const props = defineProps({
+		value: {
+			type: [String, Number, Array],
+			default: () => defProps.getString('collapse.value')
+		},
+		accordion: {
+			type: Boolean,
+			default: defProps.getBoolean('collapse.accordion')
+		},
+		border: {
+			type: Boolean,
+			default: defProps.getBoolean('collapse.border')
+		}
+	})
+	
+	// 定义 emit
+	const emit = defineEmits(['change', 'open', 'close'])
+	
+	// 这里computed的变量，都是子组件up-collapse-item需要用到的，由于头条小程序的兼容性差异，子组件无法实时监听父组件参数的变化
+	// 所以需要手动通知子组件，这里返回一个parentDataSelf变量，供watch监听，在其中去通知每一个子组件
+	const parentDataSelf = computed((): UTSJSONObject => {
+		return {
+			accordion: props.accordion,
+			border: props.border,
+			value: props.value
+		};
+	});
+	
+	// 重新初始化一次内部的所有子元素
+	const init = function() {
+		// if (children.value != null) {
+			children.value?.map((child: ComponentPublicInstance) => {
+				child?.$callMethod('init')
+			})
+		// }
+	}
+	
 	/**
-	 * collapse 折叠面板 
-	 * @description 通过折叠面板收纳内容区域
-	 * @tutorial https://ijry.github.io/uview-plus/components/collapse.html
-	 * @property {String | Number | Array}	value		当前展开面板的name，非手风琴模式：[<string | number>]，手风琴模式：string | number
-	 * @property {Boolean}					accordion	是否手风琴模式（ 默认 false ）
-	 * @property {Boolean}					border		是否显示外边框 ( 默认 true ）
-	 * @event {Function}	change 		当前激活面板展开时触发(如果是手风琴模式，参数activeNames类型为String，否则为Array)
-	 * @example <up-collapse></up-collapse>
+	 * collapse-item被点击时触发，由collapse统一处理各子组件的状态
+	 * @param {Object} target 被操作的面板的实例
 	 */
-	export default {
-		name: "up-collapse",
-		mixins: [mpMixin, mixin, propsCollapse],
-		watch: {
-			needInit() {
-				this.init()
-			},
-			// 当父组件需要子组件需要共享的参数发生了变化，手动通知子组件
-			parentData() {
-				// @ts-ignore
-				if (this!.children!.length > 0) {
-					// @ts-ignore
-					this!.children!.map((child: ComponentPublicInstance) => {
-						// 判断子组件(up-checkbox)如果有updateParentData方法的话，就就执行(执行的结果是子组件重新从父组件拉取了最新的值)
-						// if (typeof(child.updateParentData) === 'function') {
-							child.$callMethod('updateParentData', this)
-						// }
-					})
-				}
-			}
-		},
-		created() {
-			// @ts-ignore
-			this.children = []
-		},
-		computed: {
-			needInit() {
-				// 通过computed，同时监听accordion和value值的变化
-				// 再通过watch去执行init()方法，进行再一次的初始化
-				return [this.accordion, this.value]
-			}
-		},
-		emits: ["open", "close", "change"],
-		methods: {
-			// 重新初始化一次内部的所有子元素
-			init() {
-				// @ts-ignore
-				this!.children!.map((child: ComponentPublicInstance) => {
-					child.$callMethod('init')
-				})
-			},
-			/**
-			 * collapse-item被点击时触发，由collapse统一处理各子组件的状态
-			 * @param {Object} target 被操作的面板的实例
-			 */
-			onChange(target: ComponentPublicInstance) {
-				let changeArr:Array<any> = []
-				// @ts-ignore
-				this!.children!.map((child:ComponentPublicInstance, index: number) => {
-					// console.log('**accordion**', this.accordion)
-					// 如果是手风琴模式，将其他的折叠面板收起来
-					if (this.accordion) {
-						if (child === target) {
-							child.$data['expanded'] = !(target.$data['expanded'] as Boolean)
-						} else {
-							child.$data['expanded'] = false
-						}
-						child.$callMethod('setContentAnimate')
-					} else {
-						if(child === target) {
-							child.$data['expanded'] = !(child.$data['expanded'] as Boolean)
-							child.$callMethod('setContentAnimate')
-						}
+	const onChange = function(target: ComponentPublicInstance) {
+		const changeArr = [] as Array<UTSJSONObject>
+		// if (children.value != '') {
+			children.value?.map((child: ComponentPublicInstance, index: number) => {
+				// 如果是手风琴模式，将其他的折叠面板收起来
+				let childState = child.$callMethod('getInternalState') as UTSJSONObject
+				if (props.accordion) {
+					if(child !== target) {
+						child.$callMethod('setContentAnimate', false)
 					}
-					// 拼接change事件中，数组元素的状态
-					changeArr.push({
-						// 如果没有定义name属性，则默认返回组件的index索引
-						name: child.$data['name'] != null ? child.$data['name'].toString() : index.toString(),
-						status: child.$data['expanded'] as Boolean ? 'open' : 'close'
-					} as UTSJSONObject)
-				})
+				}
+				if(child === target) {
+					child.$callMethod('setContentAnimate', !(childState['expanded']))
+				}
+				// 拼接change事件中，数组元素的状态
+				changeArr.push({
+					// 如果没有定义name属性，则默认返回组件的index索引
+					name: childState['name'] != null ? childState['name'].toString() : index.toString(),
+					status: childState['expanded'] ? 'open' : 'close'
+				} as UTSJSONObject)
+			})
+		// }
 
-				this.$emit('change', changeArr)
-				// console.log('expanded', target.$data['expanded'])
-				let expand = target.$data['expanded'] as Boolean
-				this.$emit(expand ? 'open' : 'close', target.$data['name'] != null ? target.$data['name'] : '')
-			}
+		emit('change', changeArr)
+		let trgetState = target.$callMethod('getInternalState') as UTSJSONObject
+		// console.log('expanded', trgetState['expanded'])
+		const expand = trgetState['expanded']
+		emit(expand ? 'open' : 'close', trgetState['name'] != null ? trgetState['name'] : '')
+	}
+	
+	// 监听 parentDataSelf 变化
+	watch(parentDataSelf, () => {
+		init()
+	}, { deep: true })
+	
+	const getProps = function(): UTSJSONObject {
+		return parentDataSelf.value
+	}
+	const getRefs = function() {
+		return {
 		}
 	}
+	
+	// 暴露方法给子组件
+	defineExpose({
+		onChange,
+		getChildren,
+		addChild,
+		getProps,
+		getRefs
+	})
 </script>
 
 <style lang="scss" scoped>
