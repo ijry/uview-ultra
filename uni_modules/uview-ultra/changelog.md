@@ -1,3 +1,6 @@
+## 4.2.43（2026-02-09）
+refactor: 【组合式API重构】 up-row-notice组件（uni-app-x）
+
 ## 4.2.42（2026-02-07）
 refactor: 【组合式API重构】 up-collapse组件（uni-app-x）
 
