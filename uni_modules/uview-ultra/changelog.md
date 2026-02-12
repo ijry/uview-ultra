@@ -1,3 +1,6 @@
+## 4.2.44（2026-02-12）
+refactor: 【组合式API重构】 up-datetime-picker组件（uni-app-x）
+
 ## 4.2.43（2026-02-09）
 refactor: 【组合式API重构】 up-row-notice组件（uni-app-x）
 
