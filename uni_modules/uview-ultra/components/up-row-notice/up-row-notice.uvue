@@ -143,6 +143,35 @@
 	const close = () => {
 		emit('close')
 	}
+
+	// 动画循环函数(不能定义为函数表达式和箭头函数，否则无法递归调用)
+	function animate(timestamp: number) {
+		if (!isAnimating.value) return;
+		
+		if (startTime.value == 0) startTime.value = timestamp;
+		
+		// 计算经过的时间
+		const elapsed = timestamp - startTime.value;
+		
+		// 根据速度计算移动距离（speed 是每秒移动的像素数）
+		const speedNum = parseInt(getPx(props.speed))
+		const distance = (speedNum * elapsed) / 1000;
+		
+		// 更新当前位置
+		currentPosition.value = containerWidth.value - distance;
+		
+		// 当文本完全滚出左侧时，重置到右侧
+		if (currentPosition.value <= -scrollWidth.value) {
+			startTime.value = timestamp;  // 重置起始时间
+			currentPosition.value = containerWidth.value;
+		}
+		
+		// 应用变换
+		transform.value = `translateX(${currentPosition.value}px)`;
+		
+		// 继续下一帧动画
+		animationFrameId.value = requestAnimationFrame((ts) => animate(ts));
+	}
 	
 	// 初始化并开始滚动
 	const startScroll = async () => {
@@ -172,35 +201,6 @@
 		animate(0);
 	}
 	
-	// 动画循环函数
-	const animate = (timestamp: number) => {
-		if (!isAnimating.value) return;
-		
-		if (startTime.value == 0) startTime.value = timestamp;
-		
-		// 计算经过的时间
-		const elapsed = timestamp - startTime.value;
-		
-		// 根据速度计算移动距离（speed 是每秒移动的像素数）
-		const speedNum = parseInt(getPx(props.speed))
-		const distance = (speedNum * elapsed) / 1000;
-		
-		// 更新当前位置
-		currentPosition.value = containerWidth.value - distance;
-		
-		// 当文本完全滚出左侧时，重置到右侧
-		if (currentPosition.value <= -scrollWidth.value) {
-			startTime.value = timestamp;  // 重置起始时间
-			currentPosition.value = containerWidth.value;
-		}
-		
-		// 应用变换
-		transform.value = `translateX(${currentPosition.value}px)`;
-		
-		// 继续下一帧动画
-		animationFrameId.value = requestAnimationFrame((ts) => animate(ts));
-	}
-	
 	// 停止滚动动画
 	const stopScroll = () => {
 		isAnimating.value = false;
@@ -220,13 +220,13 @@
 		}
 	}, {immediate: true})
 	
-	watch(() => props.fontSize, () => {
+	watch((): string|number => props.fontSize, () => {
 		// #ifndef APP-NVUE
 		startScroll();
 		// #endif
 	})
 	
-	watch(() => props.speed, () => {
+	watch((): string|number => props.speed, () => {
 		// #ifndef APP-NVUE
 		startScroll();
 		// #endif
