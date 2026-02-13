@@ -1,3 +1,6 @@
+## 4.2.46（2026-02-13）
+refactor: 【组合式API重构】 up-index-list索引列表组件（uni-app-x）
+
 ## 4.2.45（2026-02-12）
 refactor: 【组合式API重构】 修复up-row-notice组件在app-android箭头函数导致递归报错（uni-app-x）
 

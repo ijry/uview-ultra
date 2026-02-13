@@ -22,7 +22,7 @@
 		<view
 			class="up-index-list__letter"
 			ref="up-index-list__letter"
-			:style="{top: addUnit(letterInfo['top'] ?? '') , transform: 'translateY(-50%)'}"
+			:style="{top: $up.addUnit(letterInfo['top'] ?? '') , transform: 'translateY(-50%)'}"
 			@touchstart="touchStart"
 			@touchmove="touchMove"
 			@touchend="touchEnd"
@@ -47,8 +47,9 @@
 			:show="touching"
 			:customStyle="{
 				position: 'absolute',
-				right: '50px',
-				top: addUnit(indicatorTop, 'px'),
+				right: '30px',
+				top: $up.addUnit(indicatorTop, 'px'),
+				width: $up.addUnit(indicatorHeight + 10),
 				zIndex: 3
 			}"
 		>
@@ -56,8 +57,8 @@
 				class="up-index-list__indicator"
 				:class="['up-index-list__indicator--show']"
 				:style="{
-					height: addUnit(indicatorHeight),
-					width: addUnit(indicatorHeight)
+					height: $up.addUnit(indicatorHeight),
+					width: $up.addUnit(indicatorHeight)
 				}"
 			>
 				<text class="up-index-list__indicator__text">
@@ -68,405 +69,439 @@
 	</view>
 </template>
 
-<script lang="uts">
-	const indexList = () : any[] => {
-		const indexList: any[] = [];
-		const charCodeOfA: number | null = 'A'.charCodeAt(0);
-		for (let i = 0; i < 26; i++) {
-			indexList.push(String.fromCharCode(charCodeOfA! + i));
-		}
-		return indexList;
-	}
-	import { propsIndexList } from './props';
-	import { mpMixin } from '../../libs/mixin/mpMixin';
-	import { mixin } from '../../libs/mixin/mixin';
-	import { addUnit, getWindowInfo, sleep, getPx, random } from '../../libs/function/index';
-	type letterInfoType = {
-		height: number;
-		itemHeight: number;
-		top: number;
-	}
-	type childrenType = {
-		height: number;
-		top: number;
+<script setup lang="uts">
+	import type { PropType } from 'vue'
+	import { ref, computed, watch, onMounted, getCurrentInstance } from 'vue'
+	import { addUnit, getWindowInfo, sleep, getPx, random, upGetRect } from '../../libs/function/index'
+	import { commonProps, useUltraUI } from '../../libs/composable/useUltraUI'
+	const { children, addChild, getChildren } = useUltraUI()
+	import defProps from './indexList.uts'
+	
+	const instance = getCurrentInstance()!.proxy!
+	
+	type UPIndexListChildrenItemType = {
+		height: number,
+		top: number
 	}
 	
-	/**
-	 * IndexList 索引列表
-	 * @description  通过折叠面板收纳内容区域
-	 * @tutorial https://uview-plus.jiangruyi.com/components/indexList.html
-	 * @property {String}			inactiveColor	右边锚点非激活的颜色 ( 默认 '#606266' )
-	 * @property {String}			activeColor		右边锚点激活的颜色 ( 默认 '#5677fc' )
-	 * @property {Array}			indexList		索引字符列表，数组形式
-	 * @property {Boolean}			sticky			是否开启锚点自动吸顶 ( 默认 true )
-	 * @property {String | Number}	customNavHeight	自定义导航栏的高度 ( 默认 0 )
-	 * */ 
-	export default {
-		name: 'up-index-list',
-		mixins: [mpMixin, mixin, propsIndexList],
-		// #ifdef MP-WEIXIN
-		// 将自定义节点设置成虚拟的，更加接近Vue组件的表现，能更好的使用flex属性
-		options: {
-			virtualHost: true
-		},
-		// #endif
-		data() {
-			return {
-				// 当前正在被选中的字母索引
-				activeIndex: -1,
-				touchmoveIndex: 1,
-				// 索引字母的信息
-				letterInfo: {
-					height: 0,
-					itemHeight: 0,
-					top: 0
-				} as letterInfoType,
-				// 设置字母指示器的高度，后面为了让指示器跟随字母，并将尖角部分指向字母的中部，需要依赖此值
-				indicatorHeight: 50,
-				// 字母放大指示器的top值，为了让其指向当前激活的字母
-				// indicatorTop: 0
-				// 当前是否正在被触摸状态
-				touching: false,
-				// 滚动条顶部top值
-				scrollTop: 0,
-				// scroll-view的高度
-				scrollViewHeight: 0,
-				// 系统信息
-				scrolling: false,
-				scrollIntoView: '',
-				pageY: 0,
-				topOffset: 0,
-				sys: null as GetWindowInfoResult | null,
-				anchors: [] as Array<ComponentPublicInstance>,
-				indicatorText: ''
-			}
-		},
-		computed: {
-			// 如果有传入外部的indexList锚点数组则使用，否则使用内部生成A-Z字母
-			uIndexList(): Array<any> {
-				// @ts-ignore
-				if(this.indexList.length > 0) {
-					return this.$props['indexList'] as Array<any>
-				} else {
-					return indexList()
-				}
-			},
-			// 字母放大指示器的top值，为了让其指向当前激活的字母
-			indicatorTop() {
-				const {
-					top,
-					height,
-					itemHeight
-				} = this.letterInfo
-				return Math.floor(top - (height / 2) + itemHeight * this.activeIndex + itemHeight - 70 / 2)
-			}
-		},
-		watch: {
-			// 监听字母索引的变化，重新设置尺寸
-			uIndexList: {
-				immediate: false,
-				handler() {
-					sleep(30).then(() => {
-						this.setIndexListLetterInfo()
-					})
-				}
-			}
-		},
-		created() {
-			// this.children = [] as Array<ComponentPublicInstance>
-			this.anchors = [] as Array<ComponentPublicInstance>
-			this.sys = getWindowInfo()
-		},
-		mounted() {
-			this.init()
-			sleep(50).then(() => {
-				this.setIndexListLetterInfo()
-			})
-		},
-		methods: {
-			keyVal(item: UTSJSONObject | string) {
-				if (typeof item != 'string') {
-					// todo2026
-					return item
-				} else {
-					return item
-				}
-			},
-			addUnit(e: any, unit: string = 'px'): string {
-				return addUnit(e)
-			},
-			init() {
-				// 设置列表的高度为整个屏幕的高度
-				//减去this.customNavHeight，并将this.scrollViewHeight设置为maxHeight
-				//解决当up-index-list组件放在tabbar页面时,scroll-view内容较少时，还能滚动
-				let customNavHeight = getPx(this.customNavHeight)
-				// this.scrollViewHeight = this.sys.windowHeight - customNavHeight
-				this.getIndexListRect().then((sizeScroll: NodeInfo) => {
-					this.scrollViewHeight = sizeScroll?.height != null ? sizeScroll?.height : this.sys!!.windowHeight - parseInt(customNavHeight)
-					// this.topOffset = this.sys!!.windowHeight - this.scrollViewHeight
-					// console.log('scrollViewHeight', this.scrollViewHeight)
-					// console.log('topOffset', this.topOffset)
-				})
-			},
-			// 索引列表被触摸
-			touchStart(e: UniTouchEvent ) {
-				e.preventDefault()
-				// 获取触摸点信息
-				const touchStartData = e.changedTouches[0]
-				if (touchStartData == null) return
-				this.touching = true
-				const {
-					pageY,
-					screenY
-				} = touchStartData
-				// 根据当前触摸点的坐标，获取当前触摸的为第几个字母
-				const currentIndex = this.getIndexListLetter(pageY)
-				this.setValueForTouch(currentIndex)
-			},
-			// 索引字母列表被触摸滑动中
-			touchMove(e: UniTouchEvent ) {
-				e.preventDefault()
-				// 获取触摸点信息
-				let touchMove = e.changedTouches[0]
-				if (touchMove == null) return;
-				const {
-					pageY,
-					screenY
-				} = touchMove
-				// 根据当前触摸点的坐标，获取当前触摸的为第几个字母
-				const currentIndex = this.getIndexListLetter(pageY)
-				this.setValueForTouch(currentIndex)
-			},
-			// 手指离开索引字母列表
-			touchEnd(e:UniTouchEvent ) {
-				e.preventDefault()
-				// 延时一定时间后再隐藏指示器，为了让用户看的更直观，同时也是为了消除快速切换up-index-anchor组件带来的影响
-				sleep(300).then(() => {
-					this.touching = false
-					this.scrollIntoView = ''
-				})
-			},
-			// 获取当前被触摸的索引字母
-			getIndexListLetter(pageY: number): number {
-				this.pageY = pageY
-				let {
-					top,
-					height,
-					itemHeight
-				} = this.letterInfo
-				// let index = this.currentIndex;
-				let index = 0;
-				// 对H5的pageY进行修正，这是由于uni-app在H5中将触摸点的坐标跟H5的导航栏结合导致的问题
-				// #ifdef H5
-				pageY -= getWindowInfo().windowTop
-				// #endif
-				// 对第一和最后一个字母做边界处理，因为用户可能在字母列表上触摸到两端的尽头后依然继续滑动
-				// console.log('top1', top)
-				// console.log('height', height)
-				top = top - (height / 2) // 减去transfrom的translateY值导致的高度
-				pageY = pageY - this.topOffset
-				// if (this.safeBottomFix) {
-				// 	pageY = pageY + 34
-				// }
-				// console.log('topOffset', this.topOffset)
-				// console.log('pageY', pageY)
-				// console.log('top2', top)
-				if (pageY < top) {
-					index = 0
-				} else if (pageY >= top + height) {
-					// 如果超出了，取最后一个字母
-					index = this.uIndexList.length - 1
-				} else {
-					// 将触摸点的Y轴偏移值，减去索引字母的top值，除以每个字母的高度，即可得到当前触摸点落在哪个字母上
-					index = Math.floor((pageY - top) / itemHeight)
-				}
-				// console.log(index)
-				return index
-			},
-			// 设置各项由触摸而导致变化的值
-			async setValueForTouch(currentIndex: number) {
-				// 如果索引发生了变化，才触发更新
-				if (currentIndex !== this.activeIndex) {
-					this.activeIndex = currentIndex
-					// 指示器显示的字符
-					if (typeof this.uIndexList[currentIndex] == 'string') {
-						this.indicatorText = this.uIndexList[currentIndex].toString()
-					} else {
-						
-					}
-					// #ifndef MP-WEIXIN
-					// 在非微信小程序下，scrollIntoView生效，而在微信小程序下，需要通过scrollTop来滚动到指定位置
-					// 元素id不能包含特殊字符会导致H5下点击索引滚动失效
-					let tmpId = this.uIndexList[currentIndex].toString().charCodeAt(0).toString()
-					this.scrollIntoView = `up-index-item-${tmpId}`
-					console.log(this.scrollIntoView)
-					// #endif
-
-					// #ifdef MP-WEIXIN
-					// 微信小程序下，scroll-view的scroll-into-view属性无法对slot中的内容的id生效，只能通过设置scrollTop的形式去移动滚动条
-					const customNavHeight = this.customNavHeight
-
-					// 获取header slot的尺寸信息
-					const header = await this.getHeaderRect()
-					// item的top值，在nvue下，模拟出的anchor的top，类似非nvue下的index-item的top
-					let top = header.height
-					// console.log(top)
-					const anchors = this.anchors
-					// 由于list组件无法获取cell的top值，这里通过header slot和各个item之间的height，模拟出类似非nvue下的位置信息
-					let children = this.children.map((item, index) => {
-						const childHeight = item.height + getPx(this.itemMargin)
-						const child = {
-							height: childHeight,
-							top: top
-						}
-						// 进行累加，给下一个item提供计算依据
-						top = top + childHeight
-						return child
-					})
-					// console.log('this.children[currentIndex].top', children[currentIndex].top)
-					if (children[currentIndex]?.top || children[currentIndex].top === 0) {
-						this.scrollTop = children[currentIndex].top - getPx(customNavHeight)
-					}
-					// #endif
-				}
-			},
-			// 获取header slot的尺寸信息
-			getHeaderRect(): Promise<NodeInfo> {
-				// 获取header slot的高度，因为list组件中获取元素的尺寸是没有top值的
-				return new Promise((resolve) => {
-					if (this.$slots['header'] == null) {
-						resolve({
-							width: 0,
-							height: 0
-						} as NodeInfo)
-					}
-					// @ts-ignore
-					this.upGetRect('.up-index-list__header').then((size: NodeInfo) => {
-						resolve(size)
-					})
-				})
-			},
-			// scroll-view的滚动事件
-			async scrollHandler(e: UniScrollEvent) {
-				if (this.touching || this.scrolling) return
-				// 每过一定时间取样一次，减少资源损耗以及可能带来的卡顿
-				this.scrolling = true
-				sleep(10).then(() => {
-					this.scrolling = false
-				})
-				let scrollTop = 0
-				// @ts-ignore
-				const len = this.children.length
-				let children: childrenType[] = []
-
-				// 获取header slot的尺寸信息
-				const header = await this.getHeaderRect()
-				// item的top值，在nvue下，模拟出的anchor的top，类似非nvue下的index-item的top
-				let top = header.height ?? 0
-				const anchors = this.anchors
-				// 由于list组件无法获取cell的top值，这里通过header slot和各个item之间的height，模拟出类似非nvue下的位置信息
-				// @ts-ignore
-				children = this.children!!.map((item: ComponentPublicInstance, index: number) => {
-					// @ts-ignore
-					const childHeight = parseFloat(item.$data['height'].toString()) + parseInt(getPx(this.itemMargin))
-					const child = {
-						height: childHeight,
-						top: top
-					} as childrenType
-					// 进行累加，给下一个item提供计算依据
-					top = top + childHeight
-					return child
-				})
-				// #ifndef APP-NVUE
-				// 非nvue通过detail获取滚动条位移
-				scrollTop = e.detail.scrollTop
-				// console.log('scrollTop', scrollTop, this.customNavHeight)
-				// #endif
-				// 在弹窗中需要加上弹窗距离顶部的高度topOffset
-				scrollTop = scrollTop + parseInt(getPx(this.customNavHeight))
-				for (let i = 0; i < len; i++) {
-					const item: childrenType = children[i]
-					let nextItem: childrenType|null = null 
-					if (i < children.length - 1) {
-						nextItem = children[i + 1]
-					}
-					// 如果滚动条高度小于第一个item的top值，此时无需设置任意字母为高亮
-					if (scrollTop <= children[0].top || scrollTop >= children[len - 1].top + children[len - 1].height) {
-						this.activeIndex = -1
-						break
-					} else if (nextItem == null) {
-						// 当不存在下一个item时，意味着历遍到了最后一个
-						this.activeIndex = len - 1
-						break
-					} else if (scrollTop > item.top && scrollTop < nextItem.top) {
-						this.activeIndex = i
-						break
-					}
-				}
-			},
-			// 获取整个列表的尺寸信息
-			getIndexListRect(): Promise<NodeInfo> {
-				return new Promise((resolve) => {
-					// @ts-ignore
-					this.$uGetRect('.up-index-list__scroll-view').then((size: NodeInfo) => {
-						resolve(size)
-					})
-				})
-			},
-			// 获取右边字母索引的尺寸信息
-			getIndexListLetterRect(): Promise<NodeInfo> {
-				return new Promise((resolve) => {
-					// @ts-ignore
-					this.$uGetRect('.up-index-list__letter').then((size: NodeInfo) => {
-						resolve(size)
-					})
-				})
-			},
-			// 设置indexList索引的尺寸信息
-			setIndexListLetterInfo() {
-				this.getIndexListLetterRect().then((size: NodeInfo) => {
-					// console.log('getIndexListLetterRect', size)
-					const {
-						height
-					} = size
-					const sysData = getWindowInfo()
-					const windowHeight = sysData.windowHeight
-					let customNavHeight = 0
-					// 消除各端导航栏非原生和原生导致的差异，让索引列表字母对屏幕垂直居中
-					if (this.customNavHeight == 0) {
-						// #ifdef H5
-						customNavHeight = sysData.windowTop
-						// #endif
-						// #ifndef H5
-						// 在非H5中，为原生导航栏，其高度不算在windowHeight内，这里设置为负值，后面相加时变成减去其高度的一半
-						customNavHeight = -(sysData.statusBarHeight + 44)
-						// #endif
-					} else {
-						customNavHeight = parseInt(getPx(this.customNavHeight))
-					}
-					this.getIndexListScrollViewRect().then((sizeScroll:NodeInfo) => {
-						// console.log('sizeScroll', sizeScroll)
-						this.letterInfo = {
-							height: height ?? 0,
-							// 为了让字母列表对屏幕绝对居中，让其对导航栏进行修正，也即往上偏移导航栏的一半高度
-							top: (sizeScroll.height ?? 0) / 2,
-							// top: (this.scrollViewHeight - height?? 0) / 2 + customNavHeight / 2,
-							itemHeight: Math.floor((height ?? 0) / this.uIndexList.length)
-						} as letterInfoType
-					})
-				})
-			},
-			// 获取滚动区域的尺寸信息
-			getIndexListScrollViewRect(): Promise<NodeInfo> {
-				return new Promise((resolve) => {
-					// @ts-ignore
-					this.upGetRect('.up-index-list').then((size: NodeInfo) => {
-						resolve(size)
-					})
-				})
-			},
-		},
+	const indexList = () : string[] => {
+		const indexListArray: string[] = [];
+		const charCodeOfA: number | null = 'A'.charCodeAt(0);
+		for (let i = 0; i < 26; i++) {
+			indexListArray.push(String.fromCharCode(charCodeOfA! + i));
+		}
+		return indexListArray;
 	}
+	
+	defineOptions({
+		name: 'up-index-list'
+	})
+	
+	// 定义 props
+	const props = defineProps({
+		inactiveColor: {
+			type: String,
+			default: defProps.getString('indexList.inactiveColor')
+		},
+		activeColor: {
+			type: String,
+			default: defProps.getString('indexList.activeColor')
+		},
+		indexList: {
+			type: Array as PropType<string[]>,
+			default: () : Array<string> => {
+			    return defProps.getArray<string>('indexList.indexList')!!
+			}
+		},
+		sticky: {
+			type: Boolean,
+			default: defProps.getBoolean('indexList.sticky')
+		},
+		customNavHeight: {
+			type: [String, Number],
+			default: defProps.getNumber('indexList.customNavHeight')
+		},
+		safeBottomFix: {
+			type: Boolean,
+			default: defProps.getBoolean('indexList.safeBottomFix')
+		},
+		itemMargin: {
+			type: [String],
+			default: defProps.getString('indexList.itemMargin')
+		}
+	})
+	
+	// 响应式数据
+	const activeIndex = ref(-1)
+	const touching = ref(false)
+	const scrollTop = ref(0)
+	const scrollIntoView = ref('')
+	const indicatorHeight = ref(50)
+	const anchors = ref([] as Array<ComponentPublicInstance>)
+	const indicatorText = ref('')
+	const letterInfo = ref({
+		height: 0,
+		itemHeight: 0,
+		top: 0
+	})
+	const pageY = ref(0)
+	const topOffset = ref(0)
+	const sys = ref(null as GetWindowInfoResult | null)
+	const scrollViewHeight = ref(0)
+	const scrolling = ref(false)
+	
+	// 如果有传入外部的indexList锚点数组则使用，否则使用内部生成A-Z字母
+	const uIndexList = computed(() => {
+		if(props.indexList.length > 0) {
+			return props.indexList as Array<string>
+		} else {
+			return indexList()
+		}
+	})
+
+	// 获取滚动区域的尺寸信息
+	const getIndexListScrollViewRect = (): Promise<NodeInfo> => {
+		return new Promise((resolve) => {
+			// @ts-ignore
+			upGetRect('.up-index-list', false, instance).then((size: NodeInfo) => {
+				resolve(size)
+			})
+		})
+	}
+	
+	// 获取右边字母索引的尺寸信息
+	const getIndexListLetterRect = (): Promise<NodeInfo> => {
+		return new Promise((resolve) => {
+			// @ts-ignore
+			upGetRect('.up-index-list__letter', false, instance).then((size: NodeInfo) => {
+				resolve(size)
+			})
+		})
+	}
+	
+	// 设置indexList索引的尺寸信息
+	const setIndexListLetterInfo = () => {
+		getIndexListLetterRect().then((size: NodeInfo) => {
+			// console.log('getIndexListLetterRect', size)
+			const {
+				height
+			} = size
+			const sysData = getWindowInfo()
+			const windowHeight = sysData.windowHeight
+			let customNavHeight = 0
+			// 消除各端导航栏非原生和原生导致的差异，让索引列表字母对屏幕垂直居中
+			if (props.customNavHeight == 0) {
+				// #ifdef H5
+				customNavHeight = sysData.windowTop
+				// #endif
+				// #ifndef H5
+				// 在非H5中，为原生导航栏，其高度不算在windowHeight内，这里设置为负值，后面相加时变成减去其高度的一半
+				customNavHeight = -(sysData.statusBarHeight + 44)
+				// #endif
+			} else {
+				customNavHeight = parseInt(getPx(props.customNavHeight))
+			}
+			getIndexListScrollViewRect().then((sizeScroll:NodeInfo) => {
+				// console.log('sizeScroll', sizeScroll)
+				letterInfo.value = {
+					height: height ?? 0,
+					// 为了让字母列表对屏幕绝对居中，让其对导航栏进行修正，也即往上偏移导航栏的一半高度
+					top: (sizeScroll.height ?? 0) / 2,
+					// top: (this.scrollViewHeight - height?? 0) / 2 + customNavHeight / 2,
+					itemHeight: Math.floor((height ?? 0) / uIndexList.value.length)
+				}
+			})
+		})
+	}
+	
+	// 字母放大指示器的top值，为了让其指向当前激活的字母
+	const indicatorTop = computed(() => {
+		let top = letterInfo.value['top'] as number
+		let height = letterInfo.value['height'] as number
+		let itemHeight = letterInfo.value['itemHeight'] as number
+		return Math.floor(top - (height / 2) + itemHeight * activeIndex.value + itemHeight - 70 / 2)
+	})
+	
+	// 监听字母索引的变化，重新设置尺寸
+	watch((): string[] => uIndexList.value, () => {
+		sleep(30).then(() => {
+			setIndexListLetterInfo()
+		})
+	}, {
+		immediate: false
+	})
+	
+	const keyVal = (item: UTSJSONObject | string) => {
+		if (typeof item != 'string') {
+			// todo2026
+			return item
+		} else {
+			return item
+		}
+	}
+	
+	// 获取整个列表的尺寸信息
+	function getIndexListRect(): Promise<NodeInfo>  {
+		return new Promise((resolve) => {
+			// @ts-ignore
+			upGetRect('.up-index-list__scroll-view', false, instance).then((size: NodeInfo) => {
+				resolve(size)
+			})
+		})
+	}
+	
+	const init = () => {
+		// 设置列表的高度为整个屏幕的高度
+		//减去this.customNavHeight，并将this.scrollViewHeight设置为maxHeight
+		//解决当up-index-list组件放在tabbar页面时,scroll-view内容较少时，还能滚动
+		let customNavHeight = getPx(props.customNavHeight)
+		sys.value = getWindowInfo()
+		getIndexListRect().then((sizeScroll: NodeInfo) => {
+			scrollViewHeight.value = sizeScroll?.height != null ? sizeScroll?.height : sys.value!!.windowHeight - parseInt(customNavHeight)
+		})
+	}
+
+	// 获取header slot的尺寸信息
+	const getHeaderRect = (): Promise<NodeInfo> => {
+		// 获取header slot的高度，因为list组件中获取元素的尺寸是没有top值的
+		return new Promise((resolve) => {
+			if (instance.$slots['header'] == null) {
+				resolve({
+					width: 0,
+					height: 0
+				} as NodeInfo)
+			}
+			// @ts-ignore
+			upGetRect('.up-index-list__header', false, instance).then((size: NodeInfo) => {
+				resolve(size)
+			})
+		})
+	}
+	
+	// 设置各项由触摸而导致变化的值
+	const setValueForTouch = async (currentIndex: number) => {
+		// 如果索引发生了变化，才触发更新
+		if (currentIndex !== activeIndex.value) {
+			activeIndex.value = currentIndex
+			// 指示器显示的字符
+			if (typeof uIndexList.value[currentIndex] == 'string') {
+				indicatorText.value = uIndexList.value[currentIndex].toString()
+			} else {
+				
+			}
+			// #ifndef MP-WEIXIN
+			// 在非微信小程序下，scrollIntoView生效，而在微信小程序下，需要通过scrollTop来滚动到指定位置
+			// 元素id不能包含特殊字符会导致H5下点击索引滚动失效
+			let tmpId = uIndexList.value[currentIndex].toString().charCodeAt(0).toString()
+			scrollIntoView.value = `up-index-item-${tmpId}`
+			console.log(scrollIntoView.value)
+			// #endif
+	
+			// #ifdef MP-WEIXIN || APP
+			// 微信小程序下，scroll-view的scroll-into-view属性无法对slot中的内容的id生效，只能通过设置scrollTop来滚动到指定位置
+			const customNavHeight = props.customNavHeight
+	
+			// 获取header slot的尺寸信息
+			const header = await getHeaderRect()
+			// item的top值，在nvue下，模拟出的anchor的top，类似非nvue下的index-item的top
+			let top = header.height ?? 0
+			// console.log(top)
+			// 由于list组件无法获取cell的top值，这里通过header slot和各个item之间的height，模拟出类似非nvue下的位置信息
+			// console.log('children', getChildren().length)
+			let childrenItems = children.value.map((item: ComponentPublicInstance, index: number) => {
+				let itemRefs = item.$callMethod('getRefs') as UTSJSONObject
+ 				const childHeight = itemRefs['height'] as number + parseFloat(getPx(props.itemMargin))
+				const child = {
+					height: childHeight,
+					top: top
+				}
+				// 进行累加，给下一个item提供计算依据
+				top = top + childHeight
+				// #ifdef APP-NVUE
+				// 只有nvue下，需要将锚点的高度也累加，非nvue下锚点高度是包含在index-item中的。
+				top = top + anchors.value[index].height
+				// #endif
+				return child
+			})
+			// console.log('this.children[currentIndex].top', childrenItems[currentIndex].top)
+			if (childrenItems[currentIndex]?.top != null || childrenItems[currentIndex].top == 0) {
+				scrollTop.value = (childrenItems[currentIndex].top ?? 0) as number - parseFloat(getPx(customNavHeight))
+			}
+			// #endif
+			
+			// #ifdef APP-NVUE
+			// 在nvue中，由于cell和header为同级元素，所以实际是需要对header(anchor)进行偏移
+			const anchorStr = `up-index-anchor-${this.uIndexList[currentIndex]}`
+			// console.log(anchor)
+			dom.scrollToElement(anchors.value[currentIndex].$refs[anchorStr], {
+				offset: 0,
+				animated: false
+			})
+			// #endif
+		}
+	}
+	
+	// 获取当前被触摸的索引字母
+	const getIndexListLetter = (pageYO: number): number => {
+		pageY.value = pageYO
+		let top = letterInfo.value['top'] as number
+		let height = letterInfo.value['height'] as number
+		let itemHeight = letterInfo.value['itemHeight'] as number
+		// let index = this.currentIndex;
+		let index = 0;
+		// 对H5的pageY进行修正，这是由于uni-app在H5中将触摸点的坐标跟H5的导航栏结合导致的问题
+		// #ifdef H5
+		pageY.value = pageY.value - getWindowInfo().windowTop
+		// #endif
+		// 对第一和最后一个字母做边界处理，因为用户可能在字母列表上触摸到两端的尽头后依然继续滑动
+		top = top - (height / 2) // 减去transfrom的translateY值导致的高度
+		pageY.value = pageY.value - topOffset.value
+		if (pageY.value < top) {
+			index = 0
+		} else if (pageY.value >= top + height) {
+			// 如果超出了，取最后一个字母
+			index = uIndexList.value.length - 1
+		} else {
+			// 将触摸点的Y轴偏移值，减去索引字母的top值，除以每个字母的高度，即可得到当前触摸点落在哪个字母上
+			index = Math.floor((pageY.value - top) / itemHeight)
+		}
+		return index
+	}
+	
+	// 索引列表被触摸
+	const touchStart = (e: UniTouchEvent) => {
+		e.preventDefault()
+		// 获取触摸点信息
+		const touchStartData = e.changedTouches[0]
+		// if (touchStartData == null) return
+		touching.value = true
+		const {
+			pageY,
+			screenY
+		} = touchStartData
+		// 根据当前触摸点的坐标，获取当前触摸的为第几个字母
+		const currentIndex = getIndexListLetter(pageY)
+		setValueForTouch(currentIndex)
+	}
+	
+	// 索引字母列表被触摸滑动中
+	const touchMove = (e: UniTouchEvent) => {
+		e.preventDefault()
+		// 获取触摸点信息
+		let touchMoveData = e.changedTouches[0]
+		// if (touchMoveData == null) return;
+		const {
+			pageY,
+			screenY
+		} = touchMoveData
+		// 根据当前触摸点的坐标，获取当前触摸的为第几个字母
+		const currentIndex = getIndexListLetter(pageY)
+		setValueForTouch(currentIndex)
+	}
+	
+	// 手指离开索引字母列表
+	const touchEnd = (e: UniTouchEvent) => {
+		e.preventDefault()
+		// 延时一定时间后再隐藏指示器，为了让用户看的更直观，同时也是为了消除快速切换up-index-anchor组件带来的影响
+		sleep(300).then(() => {
+			touching.value = false
+			scrollIntoView.value = ''
+		})
+	}
+	
+	// scroll-view的滚动事件
+	const scrollHandler = async (e: UniScrollEvent) => {
+		if (touching.value || scrolling.value) return
+		// 每过一定时间取样一次，减少资源损耗以及可能带来的卡顿
+		scrolling.value = true
+		sleep(10).then(() => {
+			scrolling.value = false
+		})
+		let scrollTopNum = 0
+		// @ts-ignore
+		const len = children.value.length
+		let childrenItems: Array<UPIndexListChildrenItemType> = []
+
+		// 获取header slot的尺寸信息
+		const header = await getHeaderRect()
+		// item的top值，在nvue下，模拟出的anchor的top，类似非nvue下的index-item的top
+		let top = header.height ?? 0
+		// 由于list组件无法获取cell的top值，这里通过header slot和各个item之间的height，模拟出类似非nvue下的位置信息
+		// @ts-ignore
+		childrenItems = children.value!!.map((item: ComponentPublicInstance, index: number) => {
+			// @ts-ignore
+			let itemRefs = item.$callMethod('getRefs') as UTSJSONObject
+			const childHeight = parseFloat(itemRefs['height'] as number) + parseInt(getPx(props.itemMargin))
+			const child = {
+				height: childHeight,
+				top: top
+			} as UPIndexListChildrenItemType
+			// 进行累加，给下一个item提供计算依据
+			top = top + childHeight
+			// #ifdef APP-NVUE
+			// 只有nvue下，需要将锚点的高度也累加，非nvue下锚点高度是包含在index-item中的。
+			top = top + anchors.value[index].height
+			// #endif
+			return child
+		})
+		// #ifndef APP-NVUE
+		// 非nvue通过detail获取滚动条位移
+		scrollTopNum = e.detail.scrollTop
+		// console.log('scrollTop', scrollTopNum, this.customNavHeight)
+		// #endif
+		// 在弹窗中需要加上弹窗距离顶部的高度topOffset
+		scrollTopNum = scrollTopNum + parseInt(getPx(props.customNavHeight))
+		for (let i = 0; i < len; i++) {
+			const item: UPIndexListChildrenItemType = childrenItems[i]
+			let nextItem: UPIndexListChildrenItemType|null = null 
+			if (i < childrenItems.length - 1) {
+				nextItem = childrenItems[i + 1]
+			}
+			// 如果滚动条高度小于第一个item的top值，此时无需设置任意字母为高亮
+			if (scrollTopNum <= childrenItems[0].top || scrollTopNum >= childrenItems[len - 1].top + childrenItems[len - 1].height) {
+				activeIndex.value = -1
+				break
+			} else if (nextItem == null) {
+				// 当不存在下一个item时，意味着历遍到了最后一个
+				activeIndex.value = len - 1
+				break
+			} else if (scrollTopNum > item.top && scrollTopNum < nextItem.top) {
+				activeIndex.value = i
+				break
+			}
+		}
+	}
+	
+	onMounted(() => {
+		init()
+		sleep(50).then(() => {
+			setIndexListLetterInfo()
+		})
+		
+		// 初始化anchors和children
+		anchors.value = [] as Array<ComponentPublicInstance>
+		sys.value = getWindowInfo()
+	})
+
+	const addAnchors = function(anchorIns: ComponentPublicInstance) {
+		anchors.value.push(anchorIns)
+	}
+
+	const getProps = function(): UTSJSONObject {
+		return {}
+	}
+	const getRefs = function() {
+		return {
+		}
+	}
+
+	defineExpose({
+		addAnchors,
+		getChildren,
+		addChild,
+		getProps,
+		getRefs
+	})
 </script>
 
 <style lang="scss" scoped>
