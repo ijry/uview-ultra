@@ -431,7 +431,7 @@
 		childrenItems = children.value!!.map((item: ComponentPublicInstance, index: number) => {
 			// @ts-ignore
 			let itemRefs = item.$callMethod('getRefs') as UTSJSONObject
-			const childHeight = parseFloat(itemRefs['height'] as number) + parseInt(getPx(props.itemMargin))
+			const childHeight = (itemRefs['height'] as number) + parseInt(getPx(props.itemMargin))
 			const child = {
 				height: childHeight,
 				top: top

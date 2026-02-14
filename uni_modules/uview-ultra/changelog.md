@@ -1,3 +1,6 @@
+## 4.2.47（2026-02-14）
+refactor: 【组合式API重构】 up-grid宫格组件（uni-app-x）
+
 ## 4.2.46（2026-02-13）
 refactor: 【组合式API重构】 up-index-list索引列表组件（uni-app-x）
 
