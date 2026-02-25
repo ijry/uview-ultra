@@ -1,3 +1,6 @@
+## 4.2.49（2026-02-25）
+refactor: 【组合式API重构】 up-image组件（uni-app-x）
+
 ## 4.2.48（2026-02-23）
 refactor: 【组合式API重构】 up-input输入框组件（uni-app-x）
 
