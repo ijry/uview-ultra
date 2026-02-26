@@ -1,13 +1,13 @@
 <template>
 	<view style="position: relative"
-		:style="[baseColor, addStyle(customStyle)]"
+		:style="[baseColor, $upAddStyle(customStyle)]"
 		class="up-button"
 		:hover-class="!disabled && !loading ? 'up-button--active' : ''"
 		:class="bemClass">
 		<template v-if="loading">
 		    <up-loading-icon
 		        :mode="loadingMode"
-		        :size="addUnit(loadingSize * 1.15)"
+		        :size="$up.addUnit(loadingSize * 1.15)"
 		        :color="loadingColor"
 		    ></up-loading-icon>
 		    <text
@@ -21,7 +21,7 @@
 		        v-if="icon != ''"
 		        :name="icon"
 		        :color="iconColorCom"
-		        :size="addUnit(parseInt(getPx(textSize)) * 1.35)"
+		        :size="$up.addUnit(parseInt($up.getPx(textSize)) * 1.35)"
 		        :customStyle="{ marginRight: '2px' }"
 		    ></up-icon>
 		    <slot>
@@ -33,228 +33,307 @@
 		        </text>
 		    </slot>
 		</template>
-    <button
-        :hover-start-time="hoverStartTime"
-        :hover-stay-time="hoverStayTime"
-        :form-type="formType"
-        :open-type="openType"
-        :app-parameter="appParameter"
-        :hover-stop-propagation="hoverStopPropagation"
-        :send-message-title="sendMessageTitle"
-        :send-message-path="sendMessagePath"
-        :lang="lang"
-        :data-name="dataName"
-        :session-from="sessionFrom"
-        :send-message-img="sendMessageImg"
-        :show-message-card="showMessageCard"
-        @getphonenumber="getphonenumber"
-        @getuserinfo="getuserinfo"
-        @error="error"
-        @opensetting="opensetting"
-        @launchapp="launchapp"
-		:loading="loading"
-        :hover-class="!disabled && !loading ? 'up-button__button--active' : ''"
-		style="background: #fff;position: absolute;top:0;bottom:0;left:0;right:0;opacity: 0;"
-        class="up-reset-button"
-        @click="clickHandler"
-    >
-		
-    </button>
-</view>
+		<button
+			:hover-start-time="hoverStartTime"
+			:hover-stay-time="hoverStayTime"
+			:form-type="formType"
+			:open-type="openType"
+			:app-parameter="appParameter"
+			:hover-stop-propagation="hoverStopPropagation"
+			:send-message-title="sendMessageTitle"
+			:send-message-path="sendMessagePath"
+			:lang="lang"
+			:data-name="dataName"
+			:session-from="sessionFrom"
+			:send-message-img="sendMessageImg"
+			:show-message-card="showMessageCard"
+			@getphonenumber="getphonenumber"
+			@getuserinfo="getuserinfo"
+			@error="error"
+			@opensetting="opensetting"
+			@launchapp="launchapp"
+			:loading="loading"
+			:hover-class="!disabled && !loading ? 'up-button__button--active' : ''"
+			style="background: #fff;position: absolute;top:0;bottom:0;left:0;right:0;opacity: 0;"
+			class="up-reset-button"
+			@click="clickHandler"
+		>
+		</button>
+	</view>
 </template>
 
-<script lang="uts">
-import { buttonMixin } from "../../libs/mixin/button";
-import { openType } from "../../libs/mixin/openType";
-import { mpMixin } from '../../libs/mixin/mpMixin';
-import { mixin } from '../../libs/mixin/mixin';
-import { propsButton } from "./props";
-import config from '../../libs/config/config';
-import { addStyle, addUnit, getPx, bem } from '../../libs/function/index';
-import { throttle } from '../../libs/function/throttle';
-/**
- * button 按钮
- * @author jry ijry@qq.com 2024
- * @description Button 按钮
- * @tutorial https://ijry.github.io/uview-plus/components/button.html
- *
- * @property {Boolean}			hairline				是否显示按钮的细边框 (默认 true )
- * @property {String}			type					按钮的预置样式，info，primary，error，warning，success (默认 'info' )
- * @property {String}			size					按钮尺寸，large，normal，mini （默认 normal）
- * @property {String}			shape					按钮形状，circle（两边为半圆），square（带圆角） （默认 'square' ）
- * @property {Boolean}			plain					按钮是否镂空，背景色透明 （默认 false）
- * @property {Boolean}			disabled				是否禁用 （默认 false）
- * @property {Boolean}			loading					按钮名称前是否带 loading 图标(App-nvue 平台，在 ios 上为雪花，Android上为圆圈) （默认 false）
- * @property {String}	        loadingText				加载中提示文字
- * @property {String}			loadingMode				加载状态图标类型 （默认 'spinner' ）
- * @property {Number}	        loadingSize				加载图标大小 （默认 15 ）
- * @property {String}			openType				开放能力，具体请看uniapp稳定关于button组件部分说明
- * @property {String}			formType				用于 <form> 组件，点击分别会触发 <form> 组件的 submit/reset 事件
- * @property {String}			appParameter			打开 APP 时，向 APP 传递的参数，open-type=launchApp时有效 （注：只微信小程序、QQ小程序有效）
- * @property {Boolean}			hoverStopPropagation	指定是否阻止本节点的祖先节点出现点击态，微信小程序有效（默认 true ）
- * @property {String}			lang					指定返回用户信息的语言，zh_CN 简体中文，zh_TW 繁体中文，en 英文（默认 en ）
- * @property {String}			sessionFrom				会话来源，openType="contact"时有效
- * @property {String}			sendMessageTitle		会话内消息卡片标题，openType="contact"时有效
- * @property {String}			sendMessagePath			会话内消息卡片点击跳转小程序路径，openType="contact"时有效
- * @property {String}			sendMessageImg			会话内消息卡片图片，openType="contact"时有效
- * @property {Boolean}			showMessageCard			是否显示会话内消息卡片，设置此参数为 true，用户进入客服会话会在右下角显示"可能要发送的小程序"提示，用户点击后可以快速发送小程序消息，openType="contact"时有效（默认false）
- * @property {String}			dataName				额外传参参数，用于小程序的data-xxx属性，通过target.dataset.name获取
- * @property {String | Number}	throttleTime			节流，一定时间内只能触发一次 （默认 0 )
- * @property {String | Number}	hoverStartTime			按住后多久出现点击态，单位毫秒 （默认 0 )
- * @property {String | Number}	hoverStayTime			手指松开后点击态保留时间，单位毫秒 （默认 200 )
- * @property {String | Number}	text					按钮文字，之所以通过props传入，是因为slot传入的话（注：nvue中无法控制文字的样式）
- * @property {String}			icon					按钮图标
- * @property {String}			iconColor				按钮图标颜色
- * @property {String}			color					按钮颜色，支持传入linear-gradient渐变色
- * @property {Object}			customStyle				定义需要用到的外部样式
- *
- * @event {Function}	click			非禁止并且非加载中，才能点击
- * @event {Function}	getphonenumber	open-type="getPhoneNumber"时有效
- * @event {Function}	getuserinfo		用户点击该按钮时，会返回获取到的用户信息，从返回参数的detail中获取到的值同uni.getUserInfo
- * @event {Function}	error			当使用开放能力时，发生错误的回调
- * @event {Function}	opensetting		在打开授权设置页并关闭后回调
- * @event {Function}	launchapp		打开 APP 成功的回调
- * @example <up-button>月落</up-button>
- */
-export default {
-    name: "up-button",
-    // #ifdef MP
-    mixins: [mpMixin, mixin, buttonMixin, openType, propsButton],
-    // #endif
-    // #ifndef MP
-    mixins: [mpMixin, mixin, propsButton],
-    // #endif
-    computed: {
-        // 生成bem风格的类名
-        bemClass(): String {
-			let ret = ""
-            if (this.color == '') {
-                ret = bem(
-                    "button",
-                    [this.type, this.shape, this.size] ,
-                    [
-						["disabled", this.disabled],
-						["plain", this.plain],
-						["hairline", this.hairline],
-					]
-                );
-				// console.log(ret)
-            } else {
-                // 由于nvue的原因，在有color参数时，不需要传入type，否则会生成type相关的类型，影响最终的样式
-                ret = bem(
-                    "button",
-                    [this.shape, this.size] ,
-                    [
-                    	["disabled", this.disabled],
-                    	["plain", this.plain],
-                    	["hairline", this.hairline],
-                    ]
-                );
-            }
-			return ret
-        },
-        loadingColor(): string {
-            if (this.plain) {
-                // 如果有设置color值，则用color值，否则使用type主题颜色
-                return this.color != ''
-                    ? this.color
-                    : config.getString(`color.up-${this.type}`) as string;
-            }
-            if (this.type == "info") {
-                return "#c9c9c9";
-            }
-            return "rgb(200, 200, 200)";
-        },
-        iconColorCom(): String {
-            // 如果是镂空状态，设置了color就用color值，否则使用主题颜色，
-            // up-icon的color能接受一个主题颜色的值
-			if (this.iconColor != '') return this.iconColor;
-			if (this.plain) {
-                return this.color != '' ? this.color : this.type;
-            } else {
-                return "";
-            }
-        },
-        baseColor(): UTSJSONObject {
-            let style = {
-				color: '',
-			} as UTSJSONObject;
-            // if (this.color != '') {
-                // 针对自定义了color颜色的情况，镂空状态下，就是用自定义的颜色
-                style['color'] = this.plain ? this.color : "white";
-                if (!this.plain) {
-                    // 非镂空，背景色使用自定义的颜色
-                    style["backgroundColor"] = this.color;
-                }
-                if ((this.$props['color'].toString()).indexOf("gradient") != -1) {
-                    // 如果自定义的颜色为渐变色，不显示边框，以及通过backgroundImage设置渐变色
-                    // weex文档说明可以写borderWidth的形式，为什么这里需要分开写？
-                    // 因为weex是阿里巴巴为了部门业绩考核而做的你懂的东西，所以需要这么写才有效
-                    style['borderWidth'] = 0;
-                    if (!this.plain) {
-                        style['backgroundImage'] = this.color;
-                    }
-                } else {
-                    // 非渐变色，则设置边框相关的属性
-                    style['borderColor'] = this.color;
-                    style['borderWidth'] = "1px";
-                    style['borderStyle'] = "solid";
-                }
-            // }
-            return style;
-        },
-        // 字体大小
-        textSize(): String {
-            let fontSize = '14px';
-            if (this.size === "large") fontSize = '16px';
-            if (this.size === "normal") fontSize = '14px';
-            if (this.size === "small") fontSize = '12px';
-            if (this.size === "mini") fontSize = '10px';
-            return fontSize;
-        },
+<script setup lang="uts">
+import defProps from './button'
+import { computed } from 'vue'
+import { addStyle, addUnit, getPx, bem } from '../../libs/function/index'
+import { throttle } from '../../libs/function/throttle'
+import config from '../../libs/config/config'
+const props = defineProps({
+    // 是否显示按钮的细边框
+    hairline: {
+        type: Boolean,
+        default: () => defProps.getBoolean('button.hairline')
     },
-	emits: ['click', 'getphonenumber', 'getuserinfo',
-		'error', 'opensetting', 'launchapp'],
-    methods: {
-        addUnit(val: any): any {
-			return addUnit(val)
-		},
-		addStyle(val: any): any {
-			return addStyle(val)
-		},
-		getPx(val: any): string {
-			return getPx(val)
-		},
-        clickHandler(): void {
-            // 非禁止并且非加载中，才能点击
-			let that = this
-            if (!this.disabled && !this.loading) {
-				// console.log('点击');
-				// 进行节流控制，每throttle毫秒内，只在开始处执行
-				throttle(function() {
-					that.$emit("click");
-				}, that.throttleTime);
-            } else {
-				console.log('禁止点击');
-			}
-        },
-        // 下面为对接uniapp官方按钮开放能力事件回调的对接
-        getphonenumber(res: UniEvent): void {
-            this.$emit("getphonenumber", res);
-        },
-        getuserinfo(res: UniEvent): void {
-            this.$emit("getuserinfo", res);
-        },
-        error(res: UniEvent): void {
-            this.$emit("error", res);
-        },
-        opensetting(res: UniEvent): void {
-            this.$emit("opensetting", res);
-        },
-        launchapp(res: UniEvent): void {
-            this.$emit("launchapp", res);
-        },
+    // 按钮的预置样式，info，primary，error，warning，success
+    type: {
+        type: String,
+        default: () => defProps.getString('button.type')
     },
+    // 按钮尺寸，large，normal，mini
+    size: {
+        type: String,
+        default: () => defProps.getString('button.size')
+    },
+    // 按钮形状，circle（两边为半圆），square（带圆角）
+    shape: {
+        type: String,
+        default: () => defProps.getString('button.shape')
+    },
+    // 按钮是否镂空，背景色透明
+    plain: {
+        type: Boolean,
+        default: () => defProps.getBoolean('button.plain')
+    },
+    // 是否禁用
+    disabled: {
+        type: Boolean,
+        default: () => defProps.getBoolean('button.disabled')
+    },
+    // 按钮名称前是否带 loading 图标(App-nvue 平台，在 ios 上为雪花，Android上为圆圈)
+    loading: {
+        type: Boolean,
+        default: () => defProps.getBoolean('button.loading')
+    },
+    // 加载中提示文字
+    loadingText: {
+        type: String,
+        default: () => defProps.getString('button.loadingText')
+    },
+    // 加载状态图标类型
+    loadingMode: {
+        type: String,
+        default: () => defProps.getString('button.loadingMode')
+    },
+    // 加载图标大小
+    loadingSize: {
+        type: Number,
+        default: () => defProps.getNumber('button.loadingSize')
+    },
+    // 开放能力，具体请看uniapp稳定关于button组件部分说明
+    openType: {
+        type: String,
+        default: () => defProps.getString('button.openType')
+    },
+    // 用于 <form> 组件，点击分别会触发 <form> 组件的 submit/reset 事件
+    formType: {
+        type: String,
+        default: () => defProps.getString('button.formType')
+    },
+    // 打开 APP 时，向 APP 传递的参数，open-type=launchApp时有效
+    appParameter: {
+        type: String,
+        default: () => defProps.getString('button.appParameter')
+    },
+    // 指定是否阻止本节点的祖先节点出现点击态，微信小程序有效
+    hoverStopPropagation: {
+        type: Boolean,
+        default: () => defProps.getBoolean('button.hoverStopPropagation')
+    },
+    // 指定返回用户信息的语言，zh_CN 简体中文，zh_TW 繁体中文，en 英文
+    lang: {
+        type: String,
+        default: () => defProps.getString('button.lang')
+    },
+    // 会话来源，openType="contact"时有效
+    sessionFrom: {
+        type: String,
+        default: () => defProps.getString('button.sessionFrom')
+    },
+    // 会话内消息卡片标题，openType="contact"时有效
+    sendMessageTitle: {
+        type: String,
+        default: () => defProps.getString('button.sendMessageTitle')
+    },
+    // 会话内消息卡片点击跳转小程序路径，openType="contact"时有效
+    sendMessagePath: {
+        type: String,
+        default: () => defProps.getString('button.sendMessagePath')
+    },
+    // 会话内消息卡片图片，openType="contact"时有效
+    sendMessageImg: {
+        type: String,
+        default: () => defProps.getString('button.sendMessageImg')
+    },
+    // 是否显示会话内消息卡片，设置此参数为 true，用户进入客服会话会在右下角显示"可能要发送的小程序"提示，用户点击后可以快速发送小程序消息，openType="contact"时有效
+    showMessageCard: {
+        type: Boolean,
+        default: () => defProps.getBoolean('button.showMessageCard')
+    },
+    // 额外传参参数，用于小程序的data-xxx属性，通过target.dataset.name获取
+    dataName: {
+        type: String,
+        default: () => defProps.getString('button.dataName')
+    },
+    // 节流，一定时间内只能触发一次
+    throttleTime: {
+        type: [String, Number],
+        default: () => defProps.getNumber('button.throttleTime')
+    },
+    // 按住后多久出现点击态，单位毫秒
+    hoverStartTime: {
+        type: [String, Number],
+        default: () => defProps.getNumber('button.hoverStartTime')
+    },
+    // 手指松开后点击态保留时间，单位毫秒
+    hoverStayTime: {
+        type: [String, Number],
+        default: () => defProps.getNumber('button.hoverStayTime')
+    },
+    // 按钮文字，之所以通过props传入，是因为slot传入的话（注：nvue中无法控制文字的样式）
+    text: {
+        type: [String, Number],
+        default: () => defProps.getString('button.text')
+    },
+    // 按钮图标
+    icon: {
+        type: String,
+        default: () => defProps.getString('button.icon')
+    },
+    // 按钮图标颜色
+    iconColor: {
+        type: String,
+        default: () => defProps.getString('button.iconColor')
+    },
+    // 按钮颜色，支持传入linear-gradient渐变色
+    color: {
+        type: String,
+        default: () => defProps.getString('button.color')
+    }
+})
+
+const emit = defineEmits(['click', 'getphonenumber', 'getuserinfo', 'error', 'opensetting', 'launchapp'])
+
+// 生成bem风格的类名
+const bemClass = computed(() => {
+    let ret = ""
+    if (props.color == '') {
+        ret = bem(
+            "button",
+            [props.type, props.shape, props.size] ,
+            [
+                ["disabled", props.disabled],
+                ["plain", props.plain],
+                ["hairline", props.hairline],
+            ]
+        );
+    } else {
+        // 由于nvue的原因，在有color参数时，不需要传入type，否则会生成type相关的类型，影响最终的样式
+        ret = bem(
+            "button",
+            [props.shape, props.size] ,
+            [
+                ["disabled", props.disabled],
+                ["plain", props.plain],
+                ["hairline", props.hairline],
+            ]
+        );
+    }
+    return ret
+});
+
+const loadingColor = computed(() => {
+    if (props.plain) {
+        // 如果有设置color值，则用color值，否则使用type主题颜色
+        return props.color != ''
+            ? props.color
+            : config.getString(`color.up-${props.type}`) as string;
+    }
+    if (props.type == "info") {
+        return "#c9c9c9";
+    }
+    return "rgb(200, 200, 200)";
+});
+
+const iconColorCom = computed(() => {
+    // 如果是镂空状态，设置了color就用color值，否则使用主题颜色，
+    // up-icon的color能接受一个主题颜色的值
+    if (props.iconColor != '') return props.iconColor;
+    if (props.plain) {
+        return props.color != '' ? props.color : props.type;
+    } else {
+        return "";
+    }
+});
+
+const baseColor = computed(() => {
+    let style = {
+    } as UTSJSONObject;
+    // if (props.color != '') {
+        // 针对自定义了color颜色的情况，镂空状态下，就是用自定义的颜色
+        // style['color'] = props.plain ? props.color : "white";
+        if (!props.plain) {
+            // 非镂空，背景色使用自定义的颜色
+            style["backgroundColor"] = props.color;
+        }
+        if ((props.color.toString()).indexOf("gradient") != -1) {
+            // 如果自定义的颜色为渐变色，不显示边框，以及通过backgroundImage设置渐变色
+            // weex文档说明可以写borderWidth的形式，为什么这里需要分开写？
+            // 因为weex是阿里巴巴为了部门业绩考核而做的你懂的东西，所以需要这么写才有效
+            style['borderWidth'] = 0;
+            if (!props.plain) {
+                style['backgroundImage'] = props.color;
+            }
+        } else {
+            // 非渐变色，则设置边框相关的属性
+            style['borderColor'] = props.color;
+            style['borderWidth'] = "1px";
+            style['borderStyle'] = "solid";
+        }
+    // }
+    return style;
+});
+
+// 字体大小
+const textSize = computed(() => {
+    let fontSize = '14px';
+    if (props.size === "large") fontSize = '16px';
+    if (props.size === "normal") fontSize = '14px';
+    if (props.size === "small") fontSize = '12px';
+    if (props.size === "mini") fontSize = '10px';
+    return fontSize;
+});
+
+const clickHandler = (): void => {
+    // 非禁止并且非加载中，才能点击
+    if (!props.disabled && !props.loading) {
+        // 进行节流控制，每throttle毫秒内，只在开始处执行
+        throttle(() => {
+            emit("click")
+        }, parseInt(props.throttleTime.toString()))
+    } else {
+        console.log('禁止点击')
+    }
+};
+
+// 对接uniapp官方按钮开放能力事件回调
+const getphonenumber = (res: UniEvent): void => {
+    emit("getphonenumber", res)
+};
+
+const getuserinfo = (res: UniEvent): void => {
+    emit("getuserinfo", res)
+};
+
+const error = (res: UniEvent): void => {
+    emit("error", res)
+};
+
+const opensetting = (res: UniEvent): void => {
+    emit("opensetting", res)
+};
+
+const launchapp = (res: UniEvent): void => {
+    emit("launchapp", res)
 };
 </script>
 
@@ -356,19 +435,25 @@ $up-button-plain-up-button-warning-color:$up-error !default;;
 	
 	&--normal {
 		padding: $up-button-normal-padding;
-		font-size: $up-button-normal-font-size;
+		.up-button__text {
+			font-size: $up-button-normal-font-size;
+		}
 	}
 	
 	&--small {
 		min-width: $up-button-small-min-width;
 		height: $up-button-small-height;
 		padding: $up-button-small-padding;
-		font-size: $up-button-small-font-size;
+		.up-button__text {
+			font-size: $up-button-small-font-size;
+		}
 	}
 	
 	&--mini {
 		height: $up-button-mini-height;
-		font-size: $up-button-mini-font-size;
+		.up-button__text {
+			font-size: $up-button-mini-font-size;
+		}
 		min-width: $up-button-mini-min-width;
 		padding: $up-button-mini-padding;
 	}

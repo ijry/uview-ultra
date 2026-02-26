@@ -1,3 +1,6 @@
+## 4.2.51（2026-02-26）
+refactor: 【组合式API重构】 up-button组件（uni-app-x）
+
 ## 4.2.50（2026-02-26）
 refactor: 【组合式API重构】 up-icon组件（uni-app-x）
 
