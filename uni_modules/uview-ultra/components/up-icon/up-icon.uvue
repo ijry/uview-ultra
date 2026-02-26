@@ -9,13 +9,13 @@
 		    v-if="isImg"
 		    :src="name"
 		    :mode="imgMode"
-		    :style="[imgStyle, addStyle(customStyle)]"
+		    :style="[imgStyle, $up.addStyle(customStyle)]"
 		></image>
 		<text
 		    v-else
 		    class="up-icon__icon"
 		    :class="uClasses"
-		    :style="[iconStyle, addStyle(customStyle)]"
+		    :style="[iconStyle, $up.addStyle(customStyle)]"
 		    :hover-class="hoverClass"
 		>{{icon}}</text>
 		<!-- 这里进行空字符串判断，如果仅仅是v-if="label"，可能会出现传递0的时候，结果也无法显示 -->
@@ -24,136 +24,185 @@
 		    class="up-icon__label"
 		    :style="{
 			color: labelColor,
-			fontSize: addUnit(labelSize),
-			marginLeft: labelPos == 'right' ? addUnit(space) : 0,
-			marginTop: labelPos == 'bottom' ? addUnit(space) : 0,
-			marginRight: labelPos == 'left' ? addUnit(space) : 0,
-			marginBottom: labelPos == 'top' ? addUnit(space) : 0,
+			fontSize: $up.addUnit(labelSize),
+			marginLeft: labelPos == 'right' ? $up.addUnit(space) : 0,
+			marginTop: labelPos == 'bottom' ? $up.addUnit(space) : 0,
+			marginRight: labelPos == 'left' ? $up.addUnit(space) : 0,
+			marginBottom: labelPos == 'top' ? $up.addUnit(space) : 0,
 		}"
 		>{{ label }}</text>
 	</view>
 </template>
 
-<script>
-	// 引入图标名称，已经对应的unicode
+<script setup lang="uts">
 	import icons from './icons.uts'
-	import { propsIcon } from './props.uts';
-	import { mpMixin } from '../../libs/mixin/mpMixin';
-	import { mixin } from '../../libs/mixin/mixin';
-	import { addUnit, addStyle } from '../../libs/function/index';
+	import { addUnit, addStyle } from '../../libs/function/index'
+	import { commonProps, useUltraUI } from '../../libs/composable/useUltraUI'
 	import config from '../../libs/config/config';
-	/**
-	 * icon 图标
-	 * @description 基于字体的图标集，包含了大多数常见场景的图标。
-	 * @tutorial https://ijry.github.io/uview-plus/components/icon.html
-	 * @property {String}			name			图标名称，见示例图标集
-	 * @property {String}			color			图标颜色,可接受主题色 （默认 color['up-content-color'] ）
-	 * @property {String | Number}	size			图标字体大小，单位px （默认 '16px' ）
-	 * @property {Boolean}			bold			是否显示粗体 （默认 false ）
-	 * @property {String | Number}	index			点击图标的时候传递事件出去的index（用于区分点击了哪一个）
-	 * @property {String}			hoverClass		图标按下去的样式类，用法同uni的view组件的hoverClass参数，详情见官网
-	 * @property {String}			customPrefix	自定义扩展前缀，方便用户扩展自己的图标库 （默认 'upicon' ）
-	 * @property {String | Number}	label			图标右侧的label文字
-	 * @property {String}			labelPos		label相对于图标的位置，只能right或bottom （默认 'right' ）
-	 * @property {String | Number}	labelSize		label字体大小，单位px （默认 '15px' ）
-	 * @property {String}			labelColor		图标右侧的label文字颜色 （ 默认 color['up-content-color'] ）
-	 * @property {String | Number}	space			label与图标的距离，单位px （默认 '3px' ）
-	 * @property {String}			imgMode			图片的mode
-	 * @property {String}	width			显示图片小图标时的宽度
-	 * @property {String}	height			显示图片小图标时的高度
-	 * @property {String}	top				图标在垂直方向上的定位 用于解决某些情况下，让图标垂直居中的用途  （默认 0 ）
-	 * @property {Boolean}			stop			是否阻止事件传播 （默认 false ）
-	 * @property {Object}			customStyle		icon的样式，对象形式
-	 * @event {Function} click 点击图标时触发
-	 * @event {Function} touchstart 事件触摸时触发
-	 * @example <up-icon name="photo" color="#2979ff" size="28px"></up-icon>
-	 */
-	export default {
-		name: 'up-icon',
-		data() {
-			return {
+	import defProps from './icon'
+	import { computed } from 'vue'
+	const { preventEvent } = useUltraUI()
+	
+	// 定义props
+	const props = defineProps({
+		// 图标类名
+		name: {
+			type: String,
+			default: () => defProps.getString('icon.name')
+		},
+		// 图标颜色，可接受主题色
+		color: {
+			type: String,
+			default: () => defProps.getString('icon.color')
+		},
+		// 字体大小，单位px
+		size: {
+			type: [String, Number],
+			default: () => defProps.getString('icon.size')
+		},
+		// 是否显示粗体
+		bold: {
+			type: Boolean,
+			default: () => defProps.getBoolean('icon.bold')
+		},
+		// 点击图标的时候传递事件出去的index（用于区分点击了哪一个）
+		index: {
+			type: [String],
+			default: () => defProps.getString('icon.index')
+		},
+		// 触摸图标时的类名
+		hoverClass: {
+			type: String,
+			default: () => defProps.getString('icon.hoverClass')
+		},
+		// 自定义扩展前缀，方便用户扩展自己的图标库
+		customPrefix: {
+			type: String,
+			default: () => defProps.getString('icon.customPrefix')
+		},
+		// 图标右边或者下面的文字
+		label: {
+			type: [String],
+			default: () => defProps.getString('icon.label')
+		},
+		// label的位置，只能右边或者下边
+		labelPos: {
+			type: String,
+			default: () => defProps.getString('icon.labelPos')
+		},
+		// label的大小
+		labelSize: {
+			type: [String, Number],
+			default: () => defProps.getArray('icon.labelSize')
+		},
+		// label的颜色
+		labelColor: {
+			type: String,
+			default: () => defProps.getString('icon.labelColor')
+		},
+		// label与图标的距离
+		space: {
+			type: [String, Number],
+			default: () => defProps.getArray('icon.space')
+		},
+		// 图片的mode
+		imgMode: {
+			type: String,
+			default: () => defProps.getString('icon.imgMode')
+		},
+		// 用于显示图片小图标时，图片的宽度
+		width: {
+			type: [String, Number],
+			default: () => defProps.getArray('icon.width')
+		},
+		// 用于显示图片小图标时，图片的高度
+		height: {
+			type: [String, Number],
+			default: () => defProps.getArray('icon.height')
+		},
+		// 用于解决某些情况下，让图标垂直居中的用途
+		top: {
+			type: [String, Number],
+			default: () => defProps.getArray('icon.top')
+		},
+		// 是否阻止事件传播
+		stop: {
+			type: Boolean,
+			default: () => defProps.getBoolean('icon.stop')
+		}
+	})
+	
+	const emit = defineEmits(['click'])
+	
+	// 计算属性
+	const uClasses = computed(() => {
+		let classes: Array<string> = []
+		classes.push(props.customPrefix + '-' + props.name)
+		// uview-plus的自定义图标类名为up-iconfont
+		if (props.customPrefix == 'upicon') {
+			classes.push('up-iconfont')
+		} else {
+			// 不能缺少这一步，否则自定义图标会无效
+			classes.push(props.customPrefix)
+		}
+		// 主题色，通过类配置。
+		let types: Array<string>|null = config.getArray('type') as Array<string>
+		if (props.color.toString() != '' && types != null
+			&& types?.includes(props.color.toString()) as boolean
+		) classes.push('up-icon__icon--' + props.color.toString())
+		// 阿里，头条，百度小程序通过数组绑定类名时，无法直接使用[a, b, c]的形式，否则无法识别
+		// 故需将其拆成一个字符串的形式，通过空格隔开各个类名
+		return classes.join(' ')
+	})
+	
+	const iconStyle = computed(() => {
+		let style = {
+			fontSize: addUnit(props.size.toString()),
+			lineHeight: addUnit(props.size.toString()),
+			fontWeight: (props.bold as boolean) ? 'bold' : 'normal',
+			// 某些特殊情况需要设置一个到顶部的距离，才能更好的垂直居中
+			top: addUnit(props.top)
+		}
+		// 非主题色值时，才当作颜色值
+		let types: Array<string>|null = config.getArray('type') as Array<string>
+		if (props.color.toString() != '' && types != null && !types.includes(props.color.toString())) {
+			style['color'] = props.color.toString()
+		}
 
-			}
-		},
-		emits: ['click'],
-		mixins: [mpMixin, mixin, propsIcon],
-		computed: {
-			uClasses() : any {
-				let classes:Array<string> = []
-				classes.push(this.customPrefix + '-' + this.name)
-				// uview-plus的自定义图标类名为up-iconfont
-				if (this.customPrefix == 'upicon') {
-					classes.push('up-iconfont')
-				} else {
-					// 不能缺少这一步，否则自定义图标会无效
-					classes.push(this.customPrefix)
-				}
-				// 主题色，通过类配置
-				// console.log('####', config.getArray('type'), this.$props['color'].toString())
-				let types: Array<string>|null = config.getArray('type') as Array<string>
-				if (this.$props['color'].toString() != '' && types != null
-					&& types?.includes(this.$props['color'].toString()) as Boolean
-				) classes.push('up-icon__icon--' + this.$props['color'].toString())
-				// 阿里，头条，百度小程序通过数组绑定类名时，无法直接使用[a, b, c]的形式，否则无法识别
-				// 故需将其拆成一个字符串的形式，通过空格隔开各个类名
-				return classes.join(' ')
-			},
-			iconStyle(): any {
-				let style = {
-					fontSize: addUnit(this.$props['size'].toString()),
-					lineHeight: addUnit(this.$props['size'].toString()),
-					fontWeight: (this.$props['bold'] as boolean) ? 'bold' : 'normal',
-					// 某些特殊情况需要设置一个到顶部的距离，才能更好的垂直居中
-					top: addUnit(this.$props['top'])
-				}
-				// 非主题色值时，才当作颜色值
-				let types: Array<string>|null = config.getArray('type') as Array<string>
-				// console.log('###', types)
-				if (this.$props['color'].toString() != '' && types != null && !types.includes(this.$props['color'].toString())) {
-					style['color'] = this.$props['color'].toString()
-				}
-
-				return style
-			},
-			// 判断传入的name属性，是否图片路径，只要带有"/"均认为是图片形式
-			isImg(): boolean {
-				return this.$props['name'].toString().indexOf('/') != -1
-			},
-			imgStyle(): any {
-				let style = {}
-				// 如果设置width和height属性，则优先使用，否则使用size属性
-				style['width'] = this.$props['width'] != '' ? addUnit(this.$props['width']) : addUnit(this.$props['size']!!.toString())
-				style['height'] = this.$props['height'] != '' ? addUnit(this.$props['height']) : addUnit(this.$props['size']!!.toString())
-				return style
-			},
-			// 通过图标名，查找对应的图标
-			icon(): string {
-				// 使用自定义图标的时候页面上会把name属性也展示出来，所以在这里处理一下
-				if (this.customPrefix !== "upicon") return "";
-				// 如果内置的图标中找不到对应的图标，就直接返回name值，因为用户可能传入的是unicode代码
-				if (icons['upicon-' + this.$props['name']] != null) {
-					return icons['upicon-' + this.$props['name']] as string
-				} else {
-					return this.$props['name'].toString()
-				}
-			}
-		},
-		created() {
-		},
-		methods: {
-			addStyle(val: any): any {
-				return addStyle(val)
-			},
-			addUnit(val: any): string {
-				return addUnit(val)
-			},
-			clickHandler(e: UniPointerEvent) {
-				this.$emit('click', this.$props['index'])
-				// 是否阻止事件冒泡
-			 	if (this.$props['stop'] as boolean) {
-					this.$callMethod('preventEvent', e)
-				}
-			}
+		return style
+	})
+	
+	// 判断传入的name属性，是否图片路径，只要带有"/"均认为是图片形式
+	const isImg = computed(() => {
+		return props.name.toString().indexOf('/') != -1
+	})
+	
+	const imgStyle = computed(() => {
+		let style = {}
+		// 如果设置width和height属性，则优先使用，否则使用size属性
+		style['width'] = props.width != '' ? addUnit(props.width) : addUnit(props.size!!.toString())
+		style['height'] = props.height != '' ? addUnit(props.height) : addUnit(props.size!!.toString())
+		return style
+	})
+	
+	// 通过图标名，查找对应的图标
+	const icon = computed(() => {
+		// 使用自定义图标的时候页面上会把name属性也展示出来，所以在这里处理一下
+		if (props.customPrefix !== "upicon") return "";
+		// 如果内置的图标中找不到对应的图标，就直接返回name值，因为用户可能传入的是unicode代码
+		if (icons['upicon-' + props.name] != null) {
+			return icons['upicon-' + props.name] as string
+		} else {
+			return props.name.toString()
+		}
+	})
+	
+	// 方法
+	function clickHandler(e: UniPointerEvent) {
+		emit('click', props.index)
+		// 是否阻止事件冒泡
+		if (props.stop as boolean) {
+			preventEvent(e)
 		}
 	}
 </script>
@@ -196,8 +245,6 @@
 		&__icon {
 			font-family: iconfont;
 			position: relative;
-			// @include flex;
-			// align-items: center;
 
 			&--primary {
 				color: $up-icon-primary;
@@ -222,7 +269,6 @@
 
 		&__img {
 			height: auto;
-			// will-change: transform;
 		}
 
 		&__label {
