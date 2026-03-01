@@ -1,3 +1,6 @@
+## 4.2.53（2026-03-02）
+refactor: 【组合式API重构】 up-column-notice组件（uni-app-x）
+
 ## 4.2.52（2026-02-27）
 refactor: 【组合式API重构】 up-car-keyboard组件（uni-app-x）
 

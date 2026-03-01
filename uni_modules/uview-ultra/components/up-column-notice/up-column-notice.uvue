@@ -56,74 +56,103 @@
 	</view>
 </template>
 
-<script>
-	import { propsColumnNoticeProps } from './props';
-	import { mpMixin } from '../../libs/mixin/mpMixin';
-	import { mixin } from '../../libs/mixin/mixin';
-	import { addUnit, error } from '../../libs/function/index';
-	import { array as testArray } from '../../libs/function/test';
-	/**
-	 * ColumnNotice 滚动通知中的垂直滚动 内部组件
-	 * @description 该组件用于滚动通告场景，是其中的垂直滚动方式
-	 * @tutorial https://ijry.github.io/uview-plus/components/noticeBar.html
-	 * @property {Array}			text 			显示的内容，字符串
-	 * @property {String}			icon 			是否显示左侧的音量图标 （ 默认 'volume' ）
-	 * @property {String}			mode 			通告模式，link-显示右箭头，closable-显示右侧关闭图标
-	 * @property {String}			color 			文字颜色，各图标也会使用文字颜色 （ 默认 '#f9ae3d' ）
-	 * @property {String}			bgColor 		背景颜色 （ 默认 '#fdf6ec' ）
-	 * @property {String | Number}	fontSize		字体大小，单位px  （ 默认 14 ）
-	 * @property {String | Number}	speed			水平滚动时的滚动速度，即每秒滚动多少px(rpx)，这有利于控制文字无论多少时，都能有一个恒定的速度 （ 默认 80 ）
-	 * @property {Boolean}			step			direction = row时，是否使用步进形式滚动 （ 默认 false ）
-	 * @property {String | Number}	duration		滚动一个周期的时间长，单位ms （ 默认 1500 ）
-	 * @property {Boolean}			disableTouch	是否禁止用手滑动切换   目前HX2.6.11，只支持App 2.5.5+、H5 2.5.5+、支付宝小程序、字节跳动小程序 （ 默认 true ）
-	 * @example 
-	 */
-	export default {
-		mixins: [mpMixin, mixin, propsColumnNoticeProps],
-		watch: {
-			text: {
-				immediate: true,
-				handler(newValue, oldValue) {
-					if(!testArray(newValue)) {
-						error('noticebar组件direction为column时，要求text参数为数组形式')
-					}
-				}
-			}
-		},
-		computed: {
-			// 文字内容的样式
-			textStyle() {
-				let style = {}
-				style['color'] = this.color
-				style['fontSize'] = addUnit(this.fontSize)
-				return style
-			},
-			// 垂直或者水平滚动
-			vertical() {
-				if (this.mode == 'horizontal') return false
-				else return true
-			},
-		},
-		data() {
-			return {
-				index: 0
-			}
-		},
-		emits: ["click", "close"],
-		methods: {
-			noticeChange(e: UniSwiperChangeEvent){
-				this.index = e.detail.current
-			},
-			// 点击通告栏
-			clickHandler() {
-				this.$emit('click', this.index)
-			},
-			// 点击关闭按钮
-			close() {
-				this.$emit('close')
-			}
-		}
-	};
+<script setup lang="uts">
+import type { PropType } from 'vue'
+import { computed, reactive } from 'vue';
+import defProps from './columnNotice';
+import { addUnit, error } from '../../libs/function/index';
+import { array as testArray } from '../../libs/function/test';
+
+// 定义属性
+const props = defineProps({
+    text: {
+		type: Array as PropType<string[]>,
+	    default: () : Array<string> => {
+		    return []
+	    }
+    },
+    icon: {
+        type: String,
+        default: () => defProps.getString('columnNotice.icon')
+    },
+    mode: {
+        type: String,
+        default: () => defProps.getString('columnNotice.mode')
+    },
+    color: {
+        type: String,
+        default: () => defProps.getString('columnNotice.color')
+    },
+    bgColor: {
+        type: String,
+        default: () => defProps.getString('columnNotice.bgColor')
+    },
+    fontSize: {
+        type: [String, Number],
+        default: () => defProps.getNumber('columnNotice.fontSize')
+    },
+    speed: {
+        type: [String, Number],
+        default: () => defProps.getNumber('columnNotice.speed')
+    },
+    step: {
+        type: Boolean,
+        default: () => defProps.getBoolean('columnNotice.step')
+    },
+    duration: {
+        type: [String, Number],
+        default: () => defProps.getNumber('columnNotice.duration')
+    },
+    disableTouch: {
+        type: Boolean,
+        default: () => defProps.getBoolean('columnNotice.disableTouch')
+    }
+});
+
+// 定义事件
+const emit = defineEmits(['click', 'close']);
+
+// 响应式数据
+const index = ref(0)
+
+// 文字内容的样式
+const textStyle = computed(() => {
+    let style = {};
+    style['color'] = props.color;
+    style['fontSize'] = addUnit(props.fontSize);
+    return style;
+});
+
+// 垂直或者水平滚动
+const vertical = computed(() => {
+    if (props.mode == 'horizontal') return false;
+    else return true;
+});
+
+// 方法
+const noticeChange = (e: UniSwiperChangeEvent) => {
+    index.value = e.detail.current;
+};
+
+// 点击通告栏
+const clickHandler = () => {
+    emit('click', index.value);
+};
+
+// 点击关闭按钮
+const close = () => {
+    emit('close');
+};
+
+// 监听text的变化
+import { watch } from 'vue';
+watch((): string[] => props.text, (newValue: string[]) => {
+    if (!testArray(newValue)) {
+        error('noticebar组件direction为column时，要求text参数为数组形式');
+    }
+}, {
+    immediate: true
+});
 </script>
 
 <style lang="scss" scoped>
