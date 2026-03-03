@@ -1,3 +1,6 @@
+## 4.2.54（2026-03-04）
+refactor: 【组合式API重构】 优化index.uts（uni-app-x）
+
 ## 4.2.53（2026-03-02）
 refactor: 【组合式API重构】 up-column-notice组件（uni-app-x）
 

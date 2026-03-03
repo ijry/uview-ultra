@@ -87,6 +87,10 @@ export function range(min = 0, max = 0, value = 0):number {
  * @returns {number|string}
  */
 export function getPx(valueOri: any, unit = false): string {
+    // if (valueOri == null) {
+        return unit ? '0px' : '0'
+    // }
+    console.log('valueOri', valueOri)
 	let value: string = valueOri.toString()
     if (testNumber(value)) {
         return unit ? `${value}px` : (value)
@@ -436,7 +440,7 @@ export function randomArray(array: any[] = []): any[] {
 //  * 如果为布尔值false，无论什么时间，都返回多久以前的格式
 //  * @returns {string} 转化后的内容
 //  */
-// export function timeFrom(timestamp: number = 0, format: any = 'yyyy-mm-dd'): any {
+// export function timeFrom(timestamp: number = 0, format: string = 'yyyy-mm-dd'): string {
 //     if (timestamp == 0) timestamp = Number(new Date())
 //     // timestamp = parseInt(timestamp)
 //     // 判断用户输入的时间戳是秒还是毫秒,一般前端js获取的时间戳是毫秒(13位),后端传过来的为秒(10位)
@@ -556,7 +560,7 @@ export function queryParams(data: UTSJSONObject = {}, isPrefix: boolean = true, 
  * @param {String} title 提示的内容，长度与 icon 取值有关。
  * @param {Number} duration 提示的延迟时间，单位毫秒，默认：2000
  */
-export function toast(title: string, duration = 2000) {
+export function toast(title: string, duration = 2000): void {
     uni.showToast({
         title: title,
         icon: 'none',
@@ -778,27 +782,26 @@ export function pages(): Array<UniNormalPage> {
     return pages
 }
 
-export function getParent(that: ComponentPublicInstance, name = ''): ComponentPublicInstance | null {
-    // console.log('that', that)
-    let parent = that.$parent
-    // 通过while历遍，这里主要是为了H5需要多层解析的问题
-    while (parent != null) {
-		// console.log(parent.$options)
+export function getParentFunc(name = '', instance: ComponentPublicInstance): ComponentPublicInstance | null {
+    let parentTmp = instance.$parent
+    // 通过while遍历，这里主要是为了H5需要多层解析的问题
+    while (parentTmp != null) {
         // 父组件
-        if (
-			// parent.$options != null && 
-			parent.$options['name'] != null &&
-			parent.$options['name'] != name) {
-            // 如果组件的name不相等，继续上一级寻找
-            parent = parent.$parent
+        let pname: string|null = null
+        if (parentTmp?.$options != null && parentTmp?.$options.name != null) {
+            pname = parentTmp?.$options.name
+        }
+        if (pname == name) {
+            // 一定要break,return会导致死循环CPU飙升。
+            break
         } else {
-            // return parent
-			break
+            // 如果组件的name不相等，继续上一级寻找
+            parentTmp = parentTmp?.$parent
         }
     }
-    return parent
+    return parentTmp
 }
-export function getParentData(that: any, parentName: string): any {
+export function getParentDataFunc(that: any, parentName: string): any {
 	console.log('that', JSON.stringify(that))
     // 避免在created中去定义parent变量
     //if (that.parent == null) that.parent = {}
