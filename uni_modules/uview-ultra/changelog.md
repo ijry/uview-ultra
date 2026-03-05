@@ -1,3 +1,6 @@
+## 4.2.56（2026-03-05）
+refactor: 【组合式API重构】 优化getParent（uni-app-x）
+
 ## 4.2.55（2026-03-05）
 refactor: 【组合式API重构】 优化colorGradent支持常用名称颜色（uni-app-x）
 

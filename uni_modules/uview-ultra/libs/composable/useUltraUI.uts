@@ -1,5 +1,5 @@
 import { ref, reactive } from 'vue'
-import { bem, upGetRect } from '../function/index'
+import { bem, upGetRect, getParentFunc } from '../function/index'
 import { array as testArray } from '../function/test.uts'
 
 export const commonProps = {
@@ -78,22 +78,7 @@ export function useUltraUI(parentDataInit: UTSJSONObject = {}): UPUseUltraUIType
 
     // 获取父组件
     const getParent = function(name: string, instance: ComponentPublicInstance): ComponentPublicInstance | null {
-        let parentTmp = instance.$parent
-        // 通过while遍历，这里主要是为了H5需要多层解析的问题
-        while (parentTmp != null) {
-            // 父组件
-			let pname: string|null = null
-			if (parentTmp?.$options != null && parentTmp?.$options.name != null) {
-				pname = parentTmp?.$options.name
-			}
-			if (pname == name) {
-				// 一定要break,return会导致死循环CPU飙升。
-				break
-			} else {
-				// 如果组件的name不相等，继续上一级寻找
-				parentTmp = parentTmp?.$parent
-			}
-        }
+        let parentTmp = getParentFunc(name, instance)
         parent.value = parentTmp
         return parentTmp
     }
@@ -153,7 +138,7 @@ export function useUltraUI(parentDataInit: UTSJSONObject = {}): UPUseUltraUIType
             UTSJSONObject.keys(parentData.value).map((key: string) => {
                 // if (Reflect.has(parentIns!, 'getProps')) {
                     const propsData = parentIns?.$callMethod('getProps') as UTSJSONObject
-                    // console.log(propsData['size'])
+                    // console.log(propsData)
                     // console.log(key, '=', propsData)
                     if (propsData?.[key] != null) {
                         parentData.value[key] = propsData?.[key]
