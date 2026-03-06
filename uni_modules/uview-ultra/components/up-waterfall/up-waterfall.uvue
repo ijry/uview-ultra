@@ -57,7 +57,8 @@
         watch: {
             copyFlowList: {
                 handler(nVal: UTSJSONObject[], oVal: UTSJSONObject[]) {
-                    if (nVal == null || nVal.length == 0) {
+					// @ts-ignore
+                    if (nVal.length == 0) {
                         this.clear(false);
                     } else {
                         if (this.columnList.length == 1) {
@@ -108,7 +109,7 @@
             // 破坏flowList变量的引用，否则watch的结果新旧值是一样的
             copyFlowList(): UTSJSONObject[] {
                 // @ts-ignore
-				if (this.modelValue == null || this.modelValue.length == 0) {
+				if (this.modelValue.length == 0) {
                     // console.log('clear');
                     return [];
                 } else {
@@ -177,7 +178,8 @@
             
             // 处理新增数据
             async handleData(newData: UTSJSONObject[]) {
-                if (newData == null || newData.length === 0) return;
+				// @ts-ignore
+                if (newData.length == 0) return;
                 
                 // 初始化列高度数组
 				let columnHeights: Array<number> = []
@@ -254,7 +256,7 @@
 						// @ts-ignore
 						return val[this.idKey].toString() == id.toString()
 					});
-                    if (index !== -1) {
+                    if (index != -1) {
                         this.columnList[i].splice(index, 1);
                         break;
                     }
@@ -266,7 +268,7 @@
 					// @ts-ignore
 					return val[this.idKey].toString() == id.toString()
 				});
-                if (modelValueIndex !== -1) {
+                if (modelValueIndex != -1) {
                     const newModelValue = this.cloneData(this.modelValue);
                     newModelValue.splice(modelValueIndex, 1);
                     this.$emit('update:modelValue', newModelValue);
@@ -284,7 +286,7 @@
 						// @ts-ignore
 						return val[this.idKey] != null && val[this.idKey].toString() == id.toString()
 					});
-                    if (index !== -1) {
+                    if (index != -1) {
                         // 修改对应key的值
                         this.columnList[i][index][key] = value;
                         targetItem = this.columnList[i][index];
@@ -293,6 +295,7 @@
                     }
                 }
                 
+				// @ts-ignore
                 if (found && targetItem != null) {
                     // 修改父组件的数据中的对应id的条目
 					// @ts-ignore
@@ -300,7 +303,7 @@
 						// @ts-ignore
 						return val[this.idKey] != null && val[this.idKey].toString() == id.toString()
 					});
-                    if (modelValueIndex !== -1) {
+                    if (modelValueIndex != -1) {
                         let data = this.cloneData(this.modelValue);
                         data[modelValueIndex][key] = value;
                         this.$emit('update:modelValue', data);
