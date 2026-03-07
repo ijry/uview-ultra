@@ -202,7 +202,7 @@
 		flex-direction: row;
 		align-items: center;
 		justify-content: center;
-		color: $up-loading-icon-color;
+		// color: $up-loading-icon-color;
 
 		&__text {
 			margin-left: $up-loading-icon-text-margin-left;

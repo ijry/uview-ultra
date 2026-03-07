@@ -1,3 +1,6 @@
+## 4.2.59（2026-03-07）
+refactor: 【组合式API重构】 优化up-loading-icon、up-index-anchor等（uni-app-x）
+
 ## 4.2.58（2026-03-07）
 refactor: 【组合式API重构】 优化up-td、up-row等（uni-app-x）
 
