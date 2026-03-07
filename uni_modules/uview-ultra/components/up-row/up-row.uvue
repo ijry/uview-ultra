@@ -83,7 +83,7 @@
 				upGetRect('.up-row').then((res: any) => {
 					// console.log(res)
 					let node = res as NodeInfo
-					resolve(node != null ? node.width : 0)
+					resolve(node.width != null ? node.width : 0)
 				})
 			})
 		})

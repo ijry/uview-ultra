@@ -1,3 +1,6 @@
+## 4.2.58（2026-03-07）
+refactor: 【组合式API重构】 优化up-td、up-row等（uni-app-x）
+
 ## 4.2.57（2026-03-06）
 refactor: 【组合式API重构】 优化up-waterfall（uni-app-x）
 

@@ -10,7 +10,7 @@
 <script setup lang="uts">
 	import { ref, onMounted, getCurrentInstance } from 'vue'
 	import defProps from './td.uts'
-	import { addUnit, getParent } from '../../libs/function/index'
+	import { addUnit } from '../../libs/function/index'
 	import { commonProps, useUltraUI } from '../../libs/composable/useUltraUI'
 	const { parent, getParent } = useUltraUI({
 		padding: 0,

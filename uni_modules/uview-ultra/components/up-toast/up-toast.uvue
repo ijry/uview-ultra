@@ -221,7 +221,6 @@
 </script>
 
 <style lang="scss" scoped>
-
 	$up-toast-color:#fff !default;
 	$up-toast-border-radius:4px !default;
 	$up-toast-border-background-color:#585858 !default;
