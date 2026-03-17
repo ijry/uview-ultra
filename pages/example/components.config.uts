@@ -64,7 +64,7 @@ export default [{
     list: [{
         path: '/pages/componentsC/form/form',
         icon: 'form',
-        title: 'Form 表单(适配中)',
+        title: 'Form 表单',
         title_en: 'Form'
     }, {
         path: '/pages/componentsC/calendar/calendar',
@@ -81,6 +81,21 @@ export default [{
         icon: 'picker',
         title: 'Picker 选择器',
         title_en: 'Picker'
+    }, {
+        path: '/pages/componentsD/select/select',
+        icon: 'picker',
+        title: 'Select 经典下拉框',
+        title_en: 'Picker'
+    }, {
+        path: '/pages/componentsD/cascader/cascader',
+        icon: 'cascader',
+        title: 'Cascader 级联选择器',
+        title_en: 'Cascader'
+    }, {
+        path: '/pages/componentsD/choose/choose',
+        icon: 'choose',
+        title: 'Choose 选项选择器',
+        title_en: 'Choose'
     }, {
         path: '/pages/componentsC/datetimePicker/datetimePicker',
         icon: 'datetimePicker',
@@ -155,6 +170,11 @@ export default [{
         icon: 'list',
         title: 'List 列表',
         title_en: 'List'
+    },{
+        path: '/pages/componentsD/virtualList/virtualList',
+        icon: 'virtualList',
+        title: 'VirtualList 虚拟列表',
+        title_en: 'virtualList'
     }, {
         path: '/pages/componentsB/progress/progress',
         icon: 'progress',
@@ -167,6 +187,12 @@ export default [{
     	title: 'Table 表格',
     	title_en: 'Table',
     },
+	{
+		path: '/pages/componentsB/table2/table2',
+		icon: 'table',
+		title: 'Table2 表格2',
+		title_en: 'Table2',
+	},
     {
         path: '/pages/componentsB/countDown/countDown',
         icon: 'countDown',
@@ -186,6 +212,11 @@ export default [{
         icon: 'tooltip',
         title: 'Tooltip 长按提示',
         title_en: 'ActionSheet'
+    }, {
+        path: '/pages/componentsC/popover/popover',
+        icon: 'popover',
+        title: 'Popover 弹窗提示',
+        title_en: 'Popover'
     }, {
         path: '/pages/componentsB/actionSheet/actionSheet',
         icon: 'actionSheet',
@@ -232,6 +263,33 @@ export default [{
         title: 'Modal 模态框',
         title_en: 'Modal'
     }
+	, {
+        path: '/pages/componentsD/copy/copy',
+        icon: 'copy',
+        title: 'Copy 复制',
+        title_en: 'Copy'
+    }, {
+        path: '/pages/componentsD/floatButton/floatButton',
+        icon: 'copy',
+        title: 'FloatButton 悬浮按钮',
+        title_en: 'Float Button'
+    }, {
+        path: '/pages/componentsD/pullRefresh/pullRefresh',
+        icon: 'pullRefresh',
+        title: 'PullRefresh 下拉刷新',
+        title_en: 'Pull Refresh'
+    }, {
+        path: '/pages/componentsD/signature/signature',
+        icon: 'signature',
+        title: 'Signature 签名签字',
+        title_en: 'Signature Refresh'
+    },
+    {
+        path: '/pages/componentsD/agreement/agreement',
+        icon: 'agreement',
+        title: 'agreement 弹窗协议',
+        title_en: 'Agreement'
+    }
         // {
         // 	path: '/pages/componentsA/fullScreen/fullScreen',
         // 	icon: 'pressingScreen',
@@ -253,17 +311,16 @@ export default [{
         title: 'Line 线条',
         title_en: 'Line'
     }, {
+		path: '/pages/componentsB/card/card',
+		icon: 'empty',
+		title: 'Card 卡片',
+		title_en: 'Card'
+    }, {
         path: '/pages/componentsA/overlay/overlay',
         icon: 'mask',
         title: 'Overlay 遮罩层',
         title_en: 'Overlay'
     },
-	{
-			path: '/pages/componentsB/card/card',
-		icon: 'empty',
-		title: 'Card 卡片',
-		title_en: 'Card'
-	},
     // #ifndef MP-TOUTIAO
     {
         path: '/pages/componentsC/noNetwork/noNetwork',
@@ -294,11 +351,11 @@ export default [{
         title_en: 'Sticky'
     },
 	{
-		path: '/pages/componentsB/waterfall/waterfall',
-		icon: 'waterfall',
-		title: 'Waterfall 瀑布流',
-		title_en: 'Waterfall'
-	},
+        path: '/pages/componentsB/waterfall/waterfall',
+        icon: 'waterfall',
+        title: 'Waterfall 瀑布流',
+        title_en: 'Waterfall'
+    },
     {
         path: '/pages/componentsA/divider/divider',
         icon: 'divider',
@@ -309,8 +366,23 @@ export default [{
 		icon: 'box',
 		title: 'Box 盒子',
 		title_en: 'Box'
-    }
-    ]
+    }, {
+		path: '/pages/componentsD/cateTab/cateTab',
+		icon: 'box',
+		title: 'CateTab 垂直TAB',
+		title_en: 'CateTab'
+    }, {
+		path: '/pages/componentsD/title/title',
+		icon: 'title',
+		title: 'Title 标题',
+		title_en: 'Title'
+    },
+    {
+        path: '/pages/componentsD/shortVideo/shortVideo',
+        icon: 'shortVideo',
+        title: 'ShortVideo 短视频切换',
+        title_en: 'ShortVideo'
+    }]
 },
 {
     groupName: '导航组件',
@@ -339,9 +411,9 @@ export default [{
             title_en: 'Navbar'
         }, {
             path: '/pages/componentsD/navbarMini/navbarMini',
-            icon: 'navbarMini',
-            title: 'NavbarMini 导航栏',
-            title_en: 'NavbarMini'
+            icon: 'navbar',
+            title: 'NavbarMini 迷你导航栏',
+            title_en: 'Navbar'
         }, {
             path: '/pages/componentsC/tabs/tabs',
             icon: 'tabs',
@@ -376,7 +448,21 @@ export default [{
             icon: 'empty',
             title: 'Empty 内容为空',
             title_en: 'Empty'
-        }
+        },
+		{
+			path: '/pages/componentsD/pagination/pagination',
+			icon: 'pagination',
+			title: 'Pagination 分页器',
+			title_en: 'Pagination'
+			
+		},
+		{
+			path: '/pages/componentsD/tree/tree',
+			icon: 'tree',
+			title: 'Tree 树形',
+			title_en: 'Tree'
+			
+		}
     ]
 }, {
     groupName: '其他组件',
@@ -388,18 +474,30 @@ export default [{
         title: 'Parse 富文本解析器',
         title_en: 'Parse'
     },
+    {
+        path: '/pages/componentsD/markdown/markdown',
+        icon: 'markdown',
+        title: 'Markdown 解析器',
+        title_en: 'Markdown'
+    },
 	{
         path: '/pages/componentsC/codeInput/codeInput',
         icon: 'messageInput',
         title: 'CodeInput 验证码输入',
         title_en: 'CodeInput'
     },
-    // {
-    // 	path: '/pages/componentsC/avatarCropper/avatarCropper',
-    // 	icon: 'avatarCropper',
-    // 	title: 'AvatarCropper 头像裁剪（暂无）',
-    // 	title_en: 'AvatarCropper',
-    // },
+	{
+	    path: '/pages/componentsD/dragsort/dragsort',
+	    icon: 'dragsort',
+	    title: 'Dragsort 拖动排序',
+	    title_en: 'Dragsort'
+	},
+    {
+        path: '/pages/componentsD/cropper/cropper',
+        icon: 'cropper',
+        title: 'cropper 图片裁剪',
+        title_en: 'Cropper'
+    },
     {
         path: '/pages/componentsC/loadmore/loadmore',
         icon: 'loadmore',
@@ -411,12 +509,12 @@ export default [{
         title: 'ReadMore 展开阅读更多',
         title_en: 'ReadMore'
     },
-    // {
-    // 	path: '/pages/componentsA/lazyLoad/lazyLoad',
-    // 	icon: 'lazyLoad',
-    // 	title: 'LazyLoad 懒加载（暂无）',
-    // 	title_en: 'LazyLoad',
-    // },
+    {
+    	path: '/pages/componentsA/lazyLoad/lazyLoad',
+    	icon: 'lazyLoad',
+    	title: 'LazyLoad 懒加载',
+    	title_en: 'LazyLoad',
+    },
     {
         path: '/pages/componentsA/gap/gap',
         icon: 'gap',
@@ -436,12 +534,54 @@ export default [{
         path: '/pages/componentsA/transition/transition',
         icon: 'transition',
         title: 'transition 动画',
-        title_en: '动画'
-    }, {
+        title_en: 'Transition'
+    }
+	, {
         path: '/pages/componentsD/qrcode/qrcode',
         icon: 'qrcode',
-        title: 'qrcode 二维码',
-        title_en: '二维码'
+        title: 'Qrcode 二维码',
+        title_en: 'Qrcode'
+    }
+	,{
+        path: '/pages/componentsD/coupon/coupon',
+        icon: 'coupon',
+        title: 'Coupon 优惠券',
+        title_en: '优惠券'
+    },
+    {
+        path: '/pages/componentsD/barcode/barcode',
+        icon: 'barcode',
+        title: 'Barcode 条码',
+        title_en: 'Barcode'
+    },{
+        path: '/pages/componentsD/colorPicker/colorPicker',
+        icon: 'colorPicker',
+        title: 'ColorPicker 颜色选择器',
+        title_en: 'ColorPicker'
+    },
+    {
+        path: '/pages/componentsD/poster/poster',
+        icon: 'poster',
+        title: 'Poster 海报生成',
+        title_en: 'Poster'
+    },
+    {
+        path: '/pages/componentsD/goodsSku/goodsSku',
+        icon: 'goodsSku',
+        title: 'GoodsSku 商品SKU',
+        title_en: 'GoodsSku'
+    },
+    {
+        path: '/pages/componentsD/cityLocate/cityLocate',
+        icon: 'cityLocate',
+        title: 'CityLocate 城市定位',
+        title_en: 'CityLocate'
+    },
+    {
+        path: '/pages/componentsD/pdfReader/pdfReader',
+        icon: 'pdfReader',
+        title: 'PdfReader PDF阅读器',
+        title_en: 'PdfReader'
     }]
 }
 ]

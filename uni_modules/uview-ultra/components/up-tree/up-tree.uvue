@@ -1,0 +1,149 @@
+﻿<template>
+  <view class="up-tree">
+    <tree-node
+      v-for="node in treeData"
+      :key="node[props.nodeKey]"
+      :node="node"
+      :props="props"
+      :show-checkbox="showCheckbox"
+      :check-strictly="checkStrictly"
+      :expand-on-click-node="expandOnClickNode"
+      @node-click="handleNodeClick"
+      @check-change="$emit('check-change', $event)">
+      <template #default="{ nodeData, level }">
+        <slot :node="nodeData" :level="level"></slot>
+      </template>
+    </tree-node>
+  </view>
+</template>
+
+<script>
+import type { PropType } from 'vue';
+import { deepClone } from '../../libs/function/index.uts';
+import TreeNode from './tree-node.uvue';
+
+function createTreeList(): UTSJSONObject[] {
+  return [] as UTSJSONObject[];
+}
+
+function createTreeProps(): UTSJSONObject {
+  return {
+    label: 'label',
+    children: 'children',
+    nodeKey: 'id'
+  } as UTSJSONObject;
+}
+
+function valueToString(value: any): string {
+  return value == null ? '' : value.toString();
+}
+
+export default {
+  name: 'up-tree',
+  components: { TreeNode },
+  props: {
+    data: {
+      type: Array as PropType<UTSJSONObject[]>,
+      required: true,
+      default(): UTSJSONObject[] {
+        return createTreeList();
+      }
+    },
+    props: {
+      type: Object,
+      default(): UTSJSONObject {
+        return createTreeProps();
+      }
+    },
+    showCheckbox: {
+      type: Boolean,
+      default: false
+    },
+    defaultExpandAll: {
+      type: Boolean,
+      default: false
+    },
+    expandOnClickNode: {
+      type: Boolean,
+      default: true
+    },
+    checkStrictly: {
+      type: Boolean,
+      default: false
+    }
+  },
+  data() {
+    return {
+      treeData: createTreeList()
+    };
+  },
+  created() {
+    this.initTree();
+  },
+  watch: {
+    data: {
+      handler(newVal: UTSJSONObject[]) {
+        this.treeData = this.cloneTreeData(newVal);
+        this.initExpandedState(this.treeData as UTSJSONObject[], this.defaultExpandAll);
+      },
+      deep: true,
+      immediate: true
+    }
+  },
+  emits: ['node-click', 'check-change'],
+  methods: {
+    getChildrenKey(): string {
+      const props = this.props as UTSJSONObject;
+      const childrenKey = props['children'];
+      return valueToString(childrenKey) == '' ? 'children' : valueToString(childrenKey);
+    },
+    cloneTreeData(source: UTSJSONObject[]): UTSJSONObject[] {
+      const cloned = deepClone(source) as UTSJSONObject[] | null;
+      return cloned == null ? createTreeList() : cloned;
+    },
+    initTree(): void {
+      this.treeData = this.cloneTreeData(this.data as UTSJSONObject[]);
+      this.initExpandedState(this.treeData as UTSJSONObject[], this.defaultExpandAll);
+    },
+    initExpandedState(nodes: UTSJSONObject[], expanded: boolean): void {
+      const childrenKey = this.getChildrenKey();
+      for (let i = 0; i < nodes.length; i++) {
+        const node = nodes[i] as UTSJSONObject;
+        node['expanded'] = expanded;
+        const children = node[childrenKey] as UTSJSONObject[] | null;
+        if (Array.isArray(children) && children.length > 0) {
+          this.initExpandedState(children, expanded);
+        }
+      }
+    },
+    handleNodeClick(node: UTSJSONObject): void {
+      this.$emit('node-click', node);
+    },
+    getCheckedNodes(): UTSJSONObject[] {
+      const result = [] as UTSJSONObject[];
+      const childrenKey = this.getChildrenKey();
+      const traverse = (nodes: UTSJSONObject[]): void => {
+        for (let i = 0; i < nodes.length; i++) {
+          const node = nodes[i] as UTSJSONObject;
+          if (node['checked'] == true) {
+            result.push(node);
+          }
+          const children = node[childrenKey] as UTSJSONObject[] | null;
+          if (Array.isArray(children) && children.length > 0) {
+            traverse(children);
+          }
+        }
+      };
+      traverse(this.treeData as UTSJSONObject[]);
+      return result;
+    }
+  }
+};
+</script>
+
+<style scoped>
+.up-tree {
+  font-size: 28rpx;
+}
+</style>
+

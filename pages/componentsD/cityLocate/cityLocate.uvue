@@ -1,0 +1,86 @@
+<template>
+    <view class="u-page">
+      <view class="u-page__item">
+          <text class="u-page__item__title" style="margin-top: 0;">基础用法</text>
+          <view class="u-page__item__content">
+            <up-city-locate
+                :currentCity="currentCity"
+                locationType="wgs84"
+                :indexList="indexList"
+                :hotCity="hotCity"
+                :cityList="cityList"
+                @location-success="locationSuccess"
+                @select-city="selectCity">
+            </up-city-locate>
+          </view>
+      </view>
+  </view>
+</template>
+
+<script>
+export default {
+  data() {
+    return {
+      currentCity: '',
+      indexList: ['🔥', {
+        name: '所有城市',
+        key: 'All'
+      }],
+      hotCity: [{
+        name: '北京',
+        value: 'beijing'
+      }, {
+        name: '上海',
+        value: 'shanghai'
+      }, {
+        name: '广州',
+        value: 'guangzhou'
+      }],
+      cityList: [[{
+        name: '北京',
+        value: 'beijing'
+      }, {
+        name: '上海',
+        value: 'shanghai'
+      }, {
+        name: '广州',
+        value: 'guangzhou'
+      }], [{
+        name: '北京',
+        value: 'beijing'
+      }, {
+        name: '上海',
+        value: 'shanghai'
+      }, {
+        name: '广州',
+        value: 'guangzhou'
+      }, {
+        name: '深圳',
+        value: 'shenzhen'
+      }, {
+        name: '杭州',
+        value: 'hangzhou'
+      }]]
+    };
+  },
+  methods: {
+    locationSuccess(e) {
+      // 根据gps坐标去换取地址
+      // 然后传递给组件
+      this.currentCity = '南京';
+    },
+    selectCity(e) {
+      // 选择城市处理
+    }
+  }
+};
+</script>
+
+<style lang="scss" scoped>
+  .u-page__item {
+      margin-bottom: 15px;
+  }
+  .u-page__item__title {
+      margin-bottom: 10px;
+  }
+</style>
