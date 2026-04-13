@@ -1,3 +1,13 @@
+## 4.3.0（2026-04-14）
+add(form): 新增 uni-app x 表单校验支持及 Android 兼容问题
+
+- 重构 `up-form`/`up-form-item` 为 `script setup`，统一通过 `defineExpose + $callMethod` 交互，移除对子组件 `$data` 的直接访问
+- 修复表单校验链路：规则读取、触发器过滤、字段消息回写、Promise 回调处理，避免校验结果丢失
+- 增加 `UPFormRuleItem` 类型定义并在 `types/index.uts` 导出，统一表单规则结构
+- 修复 async-validator 在 uni-app x Android 的多处兼容问题（空值强转、函数调用、first 选项判空、字段聚合 NPE）
+- 调整 `up-form-item` 默认 `rules` 结构与取值逻辑，保证规则在 UTS 下可稳定识别
+- 重新启用 `pages/componentsC/form/form` 页面路由并同步相关配置格式
+
 ## 4.2.60（2026-03-08）
 refactor: 【组合式API重构】 up-gap组件（uni-app-x）
 

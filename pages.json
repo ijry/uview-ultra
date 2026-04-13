@@ -367,13 +367,13 @@
 				"navigationStyle": "custom"
 			}
 		}
-		// ,{
-		// 	"path": "form/form",
-		// 	"style": {
-		// 		"navigationBarTitleText": "表单",
-		// 		"navigationStyle": "custom"
-		// 	}
-		// }
+		,{
+			"path": "form/form",
+			"style": {
+				"navigationBarTitleText": "表单",
+				"navigationStyle": "custom"
+			}
+		}
 		, {
 			"path": "indexList/indexList",
 			"style": {
