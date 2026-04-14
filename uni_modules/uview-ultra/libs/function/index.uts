@@ -366,10 +366,10 @@ export function randomArray(array: any[] = []): any[] {
  * @param {String} fmt 格式化规则 yyyy:mm:dd|yyyy:mm|yyyy年mm月dd日|yyyy年mm月dd日 hh时MM分等,可自定义组合 默认yyyy-mm-dd
  * @returns {string} 返回格式化后的字符串
  */
- export function timeFormat(dateTime: any = 0, formatStr: string = 'yyyy-mm-dd'): string {
+ export function timeFormat(dateTime: any|null = 0, formatStr: string = 'yyyy-mm-dd'): string {
   let date: any
     // 若传入时间为假值，则取当前时间
-  if (dateTime == 0) {
+  if (dateTime == 0 || dateTime == null) {
     date = new Date()
   }
   // 若为unix秒时间戳，则转为毫秒时间戳（逻辑有点奇怪，但不敢改，以保证历史兼容）
@@ -560,7 +560,8 @@ export function queryParams(data: UTSJSONObject = {}, isPrefix: boolean = true, 
  * @param {String} title 提示的内容，长度与 icon 取值有关。
  * @param {Number} duration 提示的延迟时间，单位毫秒，默认：2000
  */
-export function toast(title: string, duration = 2000): void {
+export function toast(title: string|null, duration = 2000): void {
+	if (null == title) return;
     uni.showToast({
         title: title,
         icon: 'none',
@@ -701,23 +702,27 @@ export function formValidate(instance: any, event: any): void {
 //  * @param {string} key 需要获取的属性字段
 //  * @returns {*}
 //  */
-export function getProperty(obj: UTSJSONObject, key: string): any {
+export function getProperty(obj: UTSJSONObject|null, key: string): any {
     if (null == obj) {
         return ''
     }
     if (key === '') {
         return ''
     }
-    if (key.indexOf('.') !== -1) {
+    if (key.indexOf('.') != -1) {
         const keys = key.split('.')
-        let firstObj = (obj[keys[0]] ?? {}) as UTSJSONObject
-
-        for (let i = 1; i < keys.length; i++) {
-            if (firstObj != null) {
-                firstObj = firstObj[keys[i]] as UTSJSONObject
+        let currentObj: UTSJSONObject = obj
+        for (let i = 0; i < keys.length; i++) {
+            const value: any = currentObj[keys[i]] ?? ''
+            if (i == keys.length - 1) {
+                return value
             }
+            if (typeof value != 'object') {
+                return ''
+            }
+            currentObj = value as UTSJSONObject
         }
-        return firstObj
+        return ''
     }
     return obj[key] ?? {}
 }
@@ -728,7 +733,7 @@ export function getProperty(obj: UTSJSONObject, key: string): any {
 //  * @param {string} key 需要设置的属性
 //  * @param {string} value 设置的值
 //  */
-export function setProperty(obj: UTSJSONObject, key: string, value: string): void {
+export function setProperty(obj: UTSJSONObject, key: string, value: any): void {
     if (typeof obj !== 'object') {
         return
     }
@@ -753,7 +758,7 @@ export function setProperty(obj: UTSJSONObject, key: string, value: string): voi
 
     if (typeof key !== 'string' || key === '') {
 
-    } else if (key.indexOf('.') !== -1) { // 支持多层级赋值操作
+    } else if (key.indexOf('.') != -1) { // 支持多层级赋值操作
         const keys = key.split('.')
     //     inFn(obj, keys, value)
     } else {

@@ -22,8 +22,8 @@
 		} @else {
 			/* #ifndef UNI-APP-X */
 			display: -webkit-box!important;
-			text-overflow: ellipsis;
 			word-break: break-all;
+			text-overflow: ellipsis;
 			-webkit-line-clamp: $i;
 			-webkit-box-orient: vertical!important;
 			/* #endif */

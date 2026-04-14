@@ -1,4 +1,3 @@
 let obj: UTSJSONObject = UTSJSONObject.assign({},
 );
-console.log(obj);
 export default obj;
