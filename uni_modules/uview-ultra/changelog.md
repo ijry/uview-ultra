@@ -1,3 +1,12 @@
+## 4.3.2（2026-04-14）
+refactor: 重写 async-validator 适配 UTS 环境
+
+- 移除旧版 JS 兼容代码与冗余校验函数，全面采用 UTS 类型系统重写核心逻辑
+- 重构 Schema 类，使用 Promise 递归调用替代原有回调与 asyncMap 机制实现串行校验
+- 新增 normalizeRuleObject 统一处理规则对象，严格适配 UPFormRuleItem 类型定义
+- 简化内置校验器实现，移除深层对象嵌套校验与复杂异步并行映射逻辑
+- 标记消息模板替换、正则模式匹配及异步验证器 Promise 处理为待完善项
+
 ## 4.3.1（2026-04-14）
 fix(i18n): 修复新版本HBuilderX下多语言报错
 
