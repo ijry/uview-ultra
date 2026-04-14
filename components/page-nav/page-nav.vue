@@ -18,27 +18,26 @@
 	</view>
 </template>
 
-<script>
-	export default {
-		props: {
-			desc: String,
-			title: String,
-		},
-		data() {
-			return {
-				version: '4.0.0'
-			}
-		},
-		methods: {
-			jumpToWx() {
-				// #ifdef MP-WEIXIN
-				// uni.navigateToMiniProgram({
-				// 	appId: ''
-				// })
-				// #endif
-			}
-		},
-	}
+<script setup>
+import { ref } from 'vue'
+
+// 定义 props
+const props = defineProps({
+	desc: String,
+	title: String,
+})
+
+// 定义响应式数据
+const version = ref('4.0.0')
+
+// 定义方法
+const jumpToWx = () => {
+	// #ifdef MP-WEIXIN
+	// uni.navigateToMiniProgram({
+	// 	appId: ''
+	// })
+	// #endif
+}
 </script>
 
 <style lang="scss" scoped>

@@ -1,3 +1,11 @@
+## 4.3.1（2026-04-14）
+fix(i18n): 修复新版本HBuilderX下多语言报错
+
+- 将 `uni_modules/uview-ultra/libs/i18n/locales` 下多语言资源从 `*.json` 调整为 `*.js`（保留原内容）
+- 新增各语言 `*.uts` 资源文件，补齐 uni-app x/UTS 侧可直接导入的本地化模块
+- 更新 `libs/i18n/index.js` 与 `libs/i18n/index.uts` 的导入路径，分别指向对应平台资源
+- 调整 `components/page-nav/page-nav.vue` 为 `script setup` 写法，保持原有展示与跳转逻辑
+
 ## 4.3.0（2026-04-14）
 add(form): 新增 uni-app x 表单校验支持及 Android 兼容问题
 

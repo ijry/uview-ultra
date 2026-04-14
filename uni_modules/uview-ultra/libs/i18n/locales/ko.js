@@ -1,4 +1,4 @@
-{
+export default {
     "up_common_cancel": "취소",
     "up_common_confirm": "확인",
     "up_common_start": "시작",

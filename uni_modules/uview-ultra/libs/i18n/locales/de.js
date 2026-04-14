@@ -1,4 +1,4 @@
-{
+export default {
     "up_common_cancel": "Abbrechen",
     "up_common_confirm": "Bestätigen",
     "up_common_start": "Start",

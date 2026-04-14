@@ -1,12 +1,12 @@
-import zhHans from './locales/zh-Hans.json'
-import zhHant from './locales/zh-Hant.json'
-import en from './locales/en.json'
-import es from './locales/es.json'
-import fr from './locales/fr.json'
-import de from './locales/de.json'
-import ko from './locales/ko.json'
-import ja from './locales/ja.json'
-import ru from './locales/ru.json'
+import zhHans from './locales/zh-Hans.uts'
+import zhHant from './locales/zh-Hant.uts'
+import en from './locales/en.uts'
+import es from './locales/es.uts'
+import fr from './locales/fr.uts'
+import de from './locales/de.uts'
+import ko from './locales/ko.uts'
+import ja from './locales/ja.uts'
+import ru from './locales/ru.uts'
 
 let settings = {
     // lang: uni.getLocale(),
