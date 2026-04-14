@@ -1,3 +1,9 @@
+## 4.3.3（2026-04-14）
+fix: 修复 useUltraUI 中父组件属性与 refs 的键值判断逻辑
+
+- 将 propsData 与 refsData 的键值检查改为 UTSJSONObject.keys().includes()
+- 提升键存在性判断的准确性，避免直接访问可能引发的空值或类型异常
+- 确保仅当父组件明确传递对应字段时才同步数据至 parentData
 ## 4.3.2（2026-04-14）
 refactor: 重写 async-validator 适配 UTS 环境
 

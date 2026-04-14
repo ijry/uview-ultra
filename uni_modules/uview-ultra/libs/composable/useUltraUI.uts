@@ -140,14 +140,14 @@ export function useUltraUI(parentDataInit: UTSJSONObject = {}): UPUseUltraUIType
                     const propsData = parentIns?.$callMethod('getProps') as UTSJSONObject
                     // console.log(propsData)
                     // console.log(key, '=', propsData)
-                    if (propsData?.[key] != null) {
+                    if (UTSJSONObject.keys(propsData).includes(key)) {
                         parentData.value[key] = propsData?.[key]
                     }
                 // }
 
 				// if (Reflect.has(parentIns!, 'getRefs')) {
                     const refsData = parentIns?.$callMethod('getRefs') as UTSJSONObject
-                    if (refsData?.[key] != null) {
+                    if (UTSJSONObject.keys(refsData).includes(key)) {
                         parentData.value[key] = refsData?.[key]
                     }
                 // }
