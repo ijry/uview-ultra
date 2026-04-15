@@ -1,0 +1,10 @@
+export type UPCalendarMonthsItemDate = {
+  date: Date
+  selected: boolean | null
+  disabled: boolean | null
+  dot?: boolean  | null
+  day?: string 
+  week: number
+  month?: number
+  bottomInfo?: string 
+}

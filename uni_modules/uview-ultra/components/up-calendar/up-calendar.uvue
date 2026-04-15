@@ -63,7 +63,8 @@
 
 <script>
 import uHeader from './header.uvue'
-import uMonth, { monthsItem, monthsItemDate } from './month.uvue'
+import { UPCalendarMonthsItemDate } from './types.uts'
+import uMonth, { monthsItem } from './month.uvue'
 import { propsCalendar } from './props'
 import util from './util'
 import {dayuts} from '@/uni_modules/lime-dayuts';
@@ -279,7 +280,7 @@ export default {
 			scrollIntoViewScroll: '',
 			scrollTop:0,
 			// 过滤处理方法
-			innerFormatter: (value: monthsItemDate):monthsItemDate => value
+			innerFormatter: (value: UPCalendarMonthsItemDate):UPCalendarMonthsItemDate => value
 		}
 	},
 	watch: {
@@ -388,7 +389,7 @@ export default {
 		// 在微信小程序中，不支持将函数当做props参数，故只能通过ref形式调用
 		setFormatter(e: object)  {
 			// @ts-ignore
-			this.innerFormatter = e as ((val: monthsItemDate) => monthsItemDate)
+			this.innerFormatter = e as ((val: UPCalendarMonthsItemDate) => UPCalendarMonthsItemDate)
 		},
 		// month组件内部选择日期后，通过事件通知给父组件
 		monthSelectedM(e: Array<string>, scene: string) {
@@ -484,7 +485,7 @@ export default {
 				for (let i = 0; i < daysInMonth; i++) {
 					cm.push(1)
 				}
-				let cdate: Array<monthsItemDate> = []
+				let cdate: Array<UPCalendarMonthsItemDate> = []
 				cm.forEach((item, index) => {
 						// 日期，取值1-31
 						let day = index + 1
@@ -525,9 +526,9 @@ export default {
 							dot: false,
 							month:
 								dayuts(minDate).add(i, 'month').month() + 1
-						} as monthsItemDate
+						} as UPCalendarMonthsItemDate
 						// todo
-						// const formatter: (val: monthsItemDate) => monthsItemDate =
+						// const formatter: (val: UPCalendarMonthsItemDate) => UPCalendarMonthsItemDate =
 						// 	this.formatter != null ? this.formatter : this.innerFormatter
 						// cdate.push(formatter(config))
 						cdate.push(config)

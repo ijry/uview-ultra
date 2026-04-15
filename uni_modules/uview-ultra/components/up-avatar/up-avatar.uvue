@@ -140,11 +140,6 @@ const props = defineProps({
     name: {
         type: String,
         default: defProps.getString('avatar.name')
-    },
-    // 自定义样式
-    customStyle: {
-        type: Object,
-        default: () => ({})
     }
 });
 

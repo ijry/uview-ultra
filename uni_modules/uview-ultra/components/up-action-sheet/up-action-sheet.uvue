@@ -239,7 +239,7 @@ const cancel = () => {
 const selectHandler = (index: number) => {
     const item = props.actions[index]
     if (item['disabled'] != true && item['loading'] != true) {
-        emit('select', item)
+        emit('select', item as UTSJSONObject)
         if (props.closeOnClickAction) {
             emit('update:show')
             emit('close')
