@@ -5,7 +5,7 @@
 	    :class="[
 			'up-col-' + span
 		]"
-	    :style="[colStyle]"
+	    :style="[colStyle, $upAddStyle(customStyle)]"
 	    @tap="clickHandler"
 	>
 		<slot></slot>
@@ -95,7 +95,7 @@
 			// @ts-ignore
 			marginLeft: (100 / 12 * parseInt(props.offset.toString())).toString() + '%'
 		}
-		return deepMerge(style, addStyle(props.customStyle))
+		return style
 	})
 	
 	const updateParentData = (): void => {

@@ -188,8 +188,8 @@
 		}
 		let value = parentData.value['value'] ?? ''
 		const accordion = parentData.value['accordion']
-		
-		if (accordion as boolean) {
+
+		if (accordion != null && accordion as boolean) {
 			if (testArray(value)) {
 				return error('手风琴模式下，up-collapse组件的value参数不能为数组')
 			}

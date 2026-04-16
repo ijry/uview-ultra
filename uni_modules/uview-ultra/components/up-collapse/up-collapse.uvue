@@ -70,13 +70,13 @@
 					}
 				}
 				if(child === target) {
-					child.$callMethod('setContentAnimate', !(childState['expanded']))
+					child.$callMethod('setContentAnimate', !(childState['expanded'] as boolean))
 				}
 				// 拼接change事件中，数组元素的状态
 				changeArr.push({
 					// 如果没有定义name属性，则默认返回组件的index索引
 					name: childState['name'] != null ? childState['name'].toString() : index.toString(),
-					status: childState['expanded'] ? 'open' : 'close'
+					status: childState['expanded'] as boolean ? 'open' : 'close'
 				} as UTSJSONObject)
 			})
 		// }
@@ -84,7 +84,7 @@
 		emit('change', changeArr)
 		let trgetState = target.$callMethod('getInternalState') as UTSJSONObject
 		// console.log('expanded', trgetState['expanded'])
-		const expand = trgetState['expanded']
+		const expand = trgetState['expanded'] as boolean
 		emit(expand ? 'open' : 'close', trgetState['name'] != null ? trgetState['name'] : '')
 	}
 	
