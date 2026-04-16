@@ -130,32 +130,32 @@
 	// 将其他的checkbox设置为未选中的状态
 	function unCheckedOther(childInstance: ComponentPublicInstance) {
 		const values = [] as string[];
-		if (children.value != null) {
+		// if (children.value != null) {
 			children.value?.map((child: ComponentPublicInstance) => {
 				// 将被选中的checkbox，放到数组中返回
 				let istats = child.$callMethod('getInternalState') as UTSJSONObject
 				// console.log(istats)
-				if (istats != null) {
+				// if (istats != null) {
 					if (istats['name'] != null && istats['isChecked'] != null && istats['isChecked'].toString() == 'true') {
 						values.push(istats['name'].toString())
 					}
-				}
+				// }
 			})
-		}
+		// }
 		// 发出事件
-		emit('change', values)
+		emit('change', values, childInstance.$callMethod('getInternalState') as UTSJSONObject)
 		// 修改通过v-model绑定的值
 		emit("update:modelValue", values)
 	}
 	
 	// 监听 parentDataSelf 变化
 	watch(parentDataSelf, () => {
-		if (children.value != null) {
+		// if (children.value != null) {
 			children.value?.map((child: ComponentPublicInstance) => {
 				// 判断子组件(up-checkbox)如果有init方法的话，就就执行(执行的结果是子组件重新从父组件拉取了最新的值)
 				child?.$callMethod('init');
 			});
-		}
+		// }
 	}, { deep: true });
 	
 	const getProps = function(): UTSJSONObject {

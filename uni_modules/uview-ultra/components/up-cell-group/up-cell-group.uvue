@@ -26,11 +26,7 @@
 		border: {
 			type: Boolean,
 			default: defProps.getBoolean('cellGroup.border')
-		},
-		border: {
-			type: Boolean,
-			default: defProps.getBoolean('cellGroup.border')
-		},
+		}
 	})
 	defineOptions({
 		name: "up-cell-group"

@@ -144,9 +144,7 @@
 				return false;
 			}
 		} else {
-			return parentData.value != null
-				? parentData.value['disabled'] != null ? parentData.value['disabled'] as boolean : false
-				: false;
+			return parentData.value['disabled'] != null ? parentData.value['disabled'] as boolean : false
 		}
 	})
 	
@@ -160,9 +158,7 @@
 				return false;
 			}
 		} else {
-			return parentData.value != null
-				? parentData.value['labelDisabled'] != null ? parentData.value['labelDisabled'] as boolean : false
-				: false;
+			return parentData.value['labelDisabled'] != null ? parentData.value['labelDisabled'] as boolean : false
 		}
 	})
 	
@@ -278,7 +274,7 @@
 	
 	const checkboxStyle = computed((): any => {
 		const style = {};
-		if (!props.usedAlone && parentData.value != null) {
+		if (!props.usedAlone && parentData.value != null && parentData.value['borderBottom'] != null) {
 			if (parentData.value['borderBottom']!.toString() == 'true' && parentData.value['placement'] == 'row') {
 				error('检测到您将borderBottom设置为true，需要同时将up-checkbox-group的placement设置为column才有效')
 			}
