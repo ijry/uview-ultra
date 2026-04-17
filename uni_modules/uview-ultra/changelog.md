@@ -1,3 +1,12 @@
+## 4.3.9（2026-04-17）
+refactor: 将 up-copy 与 up-count-down 迁移至 script setup 语法
+
+- 将组件逻辑从 Options API 迁移至 <script setup lang="uts"> 组合式 API
+- 使用 defineProps 与 defineEmits 替代原有配置，移除 mixin 混入依赖
+- 采用 ref 管理内部状态，配合 watch 与生命周期钩子处理副作用与清理
+- 通过 defineExpose 显式暴露倒计时控制方法，规范外部调用接口
+- 调整倒计时递归函数声明方式以兼容 app-android 平台，并统一接入默认配置
+
 ## 4.3.8（2026-04-16）
 fix: 修复栅格样式合并问题并增强折叠面板类型安全
 

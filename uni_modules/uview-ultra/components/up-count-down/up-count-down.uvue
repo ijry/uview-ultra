@@ -6,145 +6,173 @@
 	</view>
 </template>
 
-<script>
-	import { propsCountDown } from './props';
-	import { mpMixin } from '../../libs/mixin/mpMixin';
-	import { mixin } from '../../libs/mixin/mixin';
-	import {
-		isSameSecond,
-		parseFormat,
-		parseTimeData
-	} from './utils';
-	/**
-	 * up-count-down 倒计时
-	 * @description 该组件一般使用于某个活动的截止时间上，通过数字的变化，给用户明确的时间感受，提示用户进行某一个行为操作。
-	 * @tutorial https://uview-plus.jiangruyi.com/components/countDown.html
-	 * @property {String | Number}	time		倒计时时长，单位ms （默认 0 ）
-	 * @property {String}			format		时间格式，DD-日，HH-时，mm-分，ss-秒，SSS-毫秒  （默认 'HH:mm:ss' ）
-	 * @property {Boolean}			autoStart	是否自动开始倒计时 （默认 true ）
-	 * @property {Boolean}			millisecond	是否展示毫秒倒计时 （默认 false ）
-	 * @event {Function} finish 倒计时结束时触发 
-	 * @event {Function} change 倒计时变化时触发 
-	 * @event {Function} start	开始倒计时
-	 * @event {Function} pause	暂停倒计时 
-	 * @event {Function} reset	重设倒计时，若 auto-start 为 true，重设后会自动开始倒计时 
-	 * @example <up-count-down :time="time"></up-count-down>
-	 */
-	export default {
-		name: 'up-count-down',
-		mixins: [mpMixin, mixin, propsCountDown],
-		data() {
-			return {
-				timer: -1,
-				// 各单位(天，时，分等)剩余时间
-				timeData: parseTimeData(0),
-				// 格式化后的时间，如"03:23:21"
-				formattedTime: '0',
-				// 倒计时是否正在进行中
-				runing: false,
-				endTime: 0, // 结束的毫秒时间戳
-				remainTime: 0, // 剩余的毫秒时间
-			}
+<script setup lang="uts">
+	import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
+	import defProps from '../../libs/config/props.uts'
+	import { isSameSecond, parseFormat, parseTimeData } from './utils.uts';
+
+	// props
+	const props = defineProps({
+		// 倒计时时长，单位ms
+		time: {
+			type: [String, Number],
+			default: defProps.getNumber('countDown.time')
 		},
-		watch: {
-			time(n) {
-				this.reset()
-			}
+		// 时间格式，DD-日，HH-时，mm-分，ss-秒，SSS-毫秒
+		format: {
+			type: String,
+			default: defProps.getString('countDown.format')
 		},
-		mounted() {
-			this.init()
+		// 是否自动开始倒计时
+		autoStart: {
+			type: Boolean,
+			default: defProps.getBoolean('countDown.autoStart')
 		},
-		emits: ["change", "finish"],
-		methods: {
-			init() {
-				this.reset()
-			},
-			// 开始倒计时
-			start() {
-				if (this.runing) return
-				// 标识为进行中
-				this.runing = true
-				// 结束时间戳 = 此刻时间戳 + 剩余的时间
-				this.endTime = Date.now() + this.remainTime
-				this.toTick()
-			},
-			// 根据是否展示毫秒，执行不同操作函数
-			toTick() {
-				if (this.millisecond) {
-					this.microTick()
-				} else {
-					this.macroTick()
-				}
-			},
-			macroTick() {
-				this.clearTimeout()
-				// 每隔一定时间，更新一遍定时器的值
-				// 同时此定时器的作用也能带来毫秒级的更新
-				this.timer = setTimeout(() => {
-					// 获取剩余时间
-					const remain = this.getRemainTime()
-					// 重设剩余时间
-					if (!isSameSecond(remain, this.remainTime) || remain == 0) {
-						this.setRemainTime(remain)
-					}
-					// 如果剩余时间不为0，则继续检查更新倒计时
-					if (this.remainTime != 0) {
-						this.macroTick()
-					}
-				}, 30)
-			},
-			microTick() {
-				this.clearTimeout()
-				this.timer = setTimeout(() => {
-					this.setRemainTime(this.getRemainTime())
-					if (this.remainTime !== 0) {
-						this.microTick()
-					}
-				}, 50)
-			},
-			// 获取剩余的时间
-			getRemainTime() {
-				// 取最大值，防止出现小于0的剩余时间值
-				return Math.max(this.endTime - Date.now(), 0)
-			},
-			// 设置剩余的时间
-			setRemainTime(remain: number) {
-				this.remainTime = remain
-				// 根据剩余的毫秒时间，得出该有天，小时，分钟等的值，返回一个对象
-				const timeData = parseTimeData(remain)
-				this.$emit('change', timeData)
-				// 得出格式化后的时间
-				this.formattedTime = parseFormat(this.format, timeData)
-				// 如果时间已到，停止倒计时
-				if (remain <= 0) {
-					this.pause()
-					this.$emit('finish')
-				}
-			},
-			// 重置倒计时
-			reset() {
-				this.pause()
-				this.remainTime = this.time as number
-				this.setRemainTime(this.remainTime)
-				if (this.autoStart) {
-					this.start()
-				}
-			},
-			// 暂停倒计时
-			pause() {
-				this.runing = false;
-				this.clearTimeout()
-			},
-			// 清空定时器
-			clearTimeout() {
-				clearTimeout(this.timer)
-				this.timer = -1
-			}
-		},
-		beforeUnmount() {
-			this.clearTimeout()
+		// 是否展示毫秒倒计时
+		millisecond: {
+			type: Boolean,
+			default: defProps.getBoolean('countDown.millisecond')
+		}
+	})
+
+	// 定义事件
+	const emit = defineEmits<{
+		(e: 'finish'): void
+		(e: 'change', value: any): void
+		(e: 'start'): void
+		(e: 'pause'): void
+		(e: 'reset'): void
+	}>()
+
+	// 响应式数据
+	const timer = ref(-1)
+	const timeData = ref(parseTimeData(0))
+	const formattedTime = ref('0')
+	const running = ref(false)
+	const endTime = ref(0)
+	const remainTime = ref(0)
+
+	// 清空定时器
+	const clearTimeoutFn = () => {
+		if (timer.value !== -1) {
+			clearTimeout(timer.value)
+		}
+		timer.value = -1
+	}
+
+	// 获取剩余的时间
+	const getRemainTime = (): number => {
+		// 取最大值，防止出现小于0的剩余时间值
+		return Math.max(endTime.value - Date.now(), 0)
+	}
+	
+	// 暂停倒计时
+	const pause = () => {
+		running.value = false
+		clearTimeoutFn()
+		emit('pause')
+	}
+	
+	// 设置剩余的时间
+	const setRemainTime = (remain: number) => {
+		remainTime.value = remain
+		// 根据剩余的毫秒时间，得出该有天，小时，分钟等的值，返回一个对象
+		const timeDataValue = parseTimeData(remain)
+		timeData.value = timeDataValue
+		emit('change', timeDataValue)
+		// 得出格式化后的时间
+		formattedTime.value = parseFormat(props.format, timeDataValue)
+		// 如果时间已到，停止倒计时
+		if (remain <= 0) {
+			pause()
+			emit('finish')
 		}
 	}
+
+	// 不能定义为函数表达式和箭头函数，否则app-android无法递归调用。
+	function macroTick() {
+		clearTimeoutFn()
+		// 每隔一定时间，更新一遍定时器的值
+		// 同时此定时器的作用也能带来毫秒级的更新
+		timer.value = setTimeout(() => {
+			// 获取剩余时间
+			const remain = getRemainTime()
+			// 重设剩余时间
+			if (!isSameSecond(remain, remainTime.value) || remain == 0) {
+				setRemainTime(remain)
+			}
+			// 如果剩余时间不为0，则继续检查更新倒计时
+			if (remainTime.value != 0) {
+				macroTick()
+			}
+		}, 30)
+	}
+
+	// 不能定义为函数表达式和箭头函数，否则app-android无法递归调用。
+	function microTick() {
+		clearTimeoutFn()
+		timer.value = setTimeout(() => {
+			setRemainTime(getRemainTime())
+			if (remainTime.value !== 0) {
+				microTick()
+			}
+		}, 50)
+	}
+	
+	// 根据是否展示毫秒，执行不同操作函数
+	const toTick = () => {
+		if (props.millisecond) {
+			microTick()
+		} else {
+			macroTick()
+		}
+	}
+	
+	// 开始倒计时
+	const start = () => {
+		if (running.value) return
+		running.value = true
+		endTime.value = Date.now() + remainTime.value
+		toTick()
+		emit('start')
+	}
+	
+	// 重置倒计时
+	const reset = () => {
+		pause()
+		remainTime.value = props.time as number
+		setRemainTime(remainTime.value)
+		if (props.autoStart) {
+			start()
+		}
+		emit('reset')
+	}
+	
+	// 初始化
+	const init = () => {
+		reset()
+	}
+
+	onMounted(() => {
+		init()
+	})
+
+	// 监听time变化
+	watch((): string|number => props.time, (newVal: string|number) => {
+		reset()
+	})
+	
+	// 组件卸载前清理定时器
+	onBeforeUnmount(() => {
+		clearTimeoutFn()
+	})
+
+	// 导出供模板使用的方法
+	defineExpose({
+		start,
+		pause,
+		reset
+	})
 </script>
 
 <style
