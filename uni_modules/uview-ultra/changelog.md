@@ -1,3 +1,11 @@
+## 4.3.10（2026-04-19）
+refactor: 迁移 count-to 至 setup 语法并增强 picker 滚动稳定性及datetime-picker快速滚动优化
+
+- 将 count-to 组件全面迁移至组合式 API，合并动画帧与计数逻辑以提升可维护性
+- 为 datetime-picker 新增安全取值与类型转换辅助函数，解决快速滚动时的越界与空值异常
+- 优化日期边界计算与正则解析逻辑，增加非法日期兜底、范围校验及 NaN 防护
+- 完善 show 状态监听与 close 交互逻辑，确保输入框模式下的面板显隐状态严格同步
+
 ## 4.3.9（2026-04-17）
 refactor: 将 up-copy 与 up-count-down 迁移至 script setup 语法
 

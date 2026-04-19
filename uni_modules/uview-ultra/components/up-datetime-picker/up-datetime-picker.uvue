@@ -46,12 +46,12 @@
 <script setup lang="uts">
 	// 导入ref
 	import type { PropType } from 'vue'
-	import { ref } from 'vue';
+	import { ref, watch } from 'vue';
 	import {dayuts} from '@/uni_modules/lime-dayuts';
 	import { range, error, padZero } from '../../libs/function/index.uts';
 	import { date as testDate } from '../../libs/function/test.uts';
 	import defProps from './datetimePicker.uts';
-	
+
 	// props
 	const props = defineProps({
 		hasInput: {
@@ -165,7 +165,7 @@
 			}
 		}
 	});
-	
+
 	// emits
 	const emit = defineEmits(['close', 'cancel', 'confirm', 'change', 'update:modelValue']);
 	
@@ -181,6 +181,24 @@
 	
 	const changeShow = () => {
 		showByClickInput.value = !showByClickInput.value
+	}
+
+	function toInt(value: any, fallback: number = 0): number {
+		if (value == null) return fallback
+		const num = parseInt(value.toString())
+		return isNaN(num) ? fallback : num
+	}
+
+	// 按列安全读取 picker 值，避免快速滚动时出现越界/空值
+	function safeColumnValue(values: Array<any[]>, columnIndex: number, optionIndex: number, fallback: string = ''): string {
+		const column = values.length > columnIndex && values[columnIndex] != null ? values[columnIndex] : []
+		if (column.length == 0) return fallback
+		let index = optionIndex
+		if (isNaN(index)) index = 0
+		index = range(0, column.length - 1, index)
+		const value = column[index]
+		if (value == null) return fallback
+		return value.toString()
 	}
 	
 	function getInputValue(newValue: string) {
@@ -271,7 +289,10 @@
 	
 	// 根据minDate、maxDate、minHour、maxHour等边界值，判断各列的开始和结束边界值
 	function getBoundary(type: string, innerValue: any) {
-		const value = new Date(innerValue.toString())
+		let value = new Date(innerValue.toString())
+		if (isNaN(value.getTime())) {
+			value = new Date()
+		}
 		let boundary = new Date(props.minDate as number)
 		switch (type){
 			case 'min':
@@ -365,13 +386,47 @@
 				ranges: [minMinute, maxMinute],
 			},
 		];
+		// 兜底：防止边界计算异常导致日列出现空范围（快速滚动场景）
+		if (result.length > 2) {
+			const dayItem = result[2]
+			const dayType = dayItem['type'] as string
+			if (dayType == 'day') {
+				const dayRange = dayItem['ranges'] as Array<number>
+				const start = dayRange[0]
+				const end = dayRange[1]
+				if (isNaN(start) || isNaN(end) || start > end) {
+					const fallbackDays = dayuts(innerValue.value).isValid() ? dayuts(innerValue.value).daysInMonth() : 31
+					dayItem['ranges'] = [1, fallbackDays]
+				}
+			}
+		}
 		if (props.mode === 'date')
 			result.splice(3, 2);
 		if (props.mode === 'year-month')
 			result.splice(2, 3);
 		return result;
 	}
-	
+
+
+	function timesFunc(n: number, type: string, ranges: number[]): string[] {
+		let index = -1
+		let result: string[] = []
+		if (n > 0) {
+			for (var i = 0; i < n; i++) {
+				result.push('')
+			}
+		}
+		let fu = function(index: number): string {
+			let value = (parseInt(ranges[0].toString()) + index).toString()
+			value = type === 'year' ? `${value}` : padZero(value)
+			return value
+		}
+		while (++index < n) {
+			result[index] = fu(index)
+		}
+		return result
+	}
+
 	function getOriginColumns(): Array<UTSJSONObject> {
 		// 生成各列的值
 		let results: Array<UTSJSONObject> = []
@@ -380,7 +435,7 @@
 			// @ts-ignore
 			let type = item['type'].toString()
 			let ranges: Array<number> = item['ranges'] as Array<number>
-			let values: string[] = times(ranges[1] - ranges[0] + 1, type, ranges)
+			let values: string[] = timesFunc((ranges[1] - ranges[0] + 1), type, ranges)
 			// 进行过滤
 			if (props.filter != null) {
 				let filterFunc = props.filter as (type: string, value: string[]) => string[]
@@ -509,6 +564,9 @@
 	// 关闭选择器
 	function close() {
 		if (props.closeOnClickOverlay) {
+			if (props.hasInput) {
+				showByClickInput.value = false
+			}
 			emit('close')
 		}
 	}
@@ -536,7 +594,10 @@
 	
 	//用正则截取输出值,当出现多组数字时,抛出错误
 	function intercept(e: string, type: string = ''): string {
-		let judge = e.match(/\d+/g)
+		if (e == null) {
+			return type != '' ? '0000' : '00'
+		}
+		let judge = e.toString().match(/\d+/g)
 		if (judge != null) {
 			//判断是否掺杂数字
 			if(judge!.length>1){
@@ -551,7 +612,7 @@
 				return judge![0].toString()
 			}
 		} else {
-			return '0'
+			return type != '' ? '0000' : '00'
 		}
 	}
 	
@@ -567,36 +628,53 @@
 	function change(e: UTSJSONObject) {
 		let indexs = e['indexs'] as number[]
 		let values = e['values'] as Array<any[]>
+		if (values == null) values = []
 		let selectValue: any = ''
 		if(props.mode === 'time') {
 			// 根据value各列索引，从各列数组中，取出当前时间的选中值
-			// @ts-ignore
-			selectValue = `${intercept(values[0][indexs[0]].toString())}:${intercept(values[1][indexs[1]].toString())}`
+			const hourText = safeColumnValue(values, 0, indexs[0], padZero(props.minHour))
+			const minuteText = safeColumnValue(values, 1, indexs[1], padZero(props.minMinute))
+			let hour = toInt(intercept(hourText), props.minHour)
+			let minute = toInt(intercept(minuteText), props.minMinute)
+			hour = range(props.minHour, props.maxHour, hour)
+			minute = range(props.minMinute, props.maxMinute, minute)
+			selectValue = `${padZero(hour)}:${padZero(minute)}`
 		} else {
+			const validCurrent = dayuts(innerValue.value).isValid() ? dayuts(innerValue.value) : dayuts(props.minDate)
+			const currentYear = validCurrent.year()
+			const currentMonth = validCurrent.month() + 1
+			const currentDate = validCurrent.date()
+			const currentHour = validCurrent.hour()
+			const currentMinute = validCurrent.minute()
+
+			const yearText = safeColumnValue(values, 0, indexs[0], currentYear.toString())
+			const monthText = safeColumnValue(values, 1, indexs[1], padZero(currentMonth))
 			// 将选择的值转为数值，比如'03'转为数值的3，'2019'转为数值的2019
-			// @ts-ignore
-			const year = parseInt(intercept(values[0][indexs[0]].toString(),'year'))
-			// @ts-ignore
-			const month = parseInt(intercept(values[1][indexs[1]].toString()))
-			// @ts-ignore
-			let date = parseInt(values[2] != null ? intercept(values[2][indexs[2]].toString()) : '1')
+			let year = toInt(intercept(yearText, 'year'), currentYear)
+			let month = toInt(intercept(monthText), currentMonth)
 			let hour = 0, minute = 0
+			month = range(1, 12, month)
 			// 此月份的最大天数
 			const maxDate = dayuts(`${year}-${month}`).daysInMonth()
+			const dayText = safeColumnValue(values, 2, indexs[2], padZero(Math.min(currentDate, maxDate)))
+			let date = toInt(intercept(dayText), Math.min(currentDate, maxDate))
 			// year-month模式下，date不会出现在列中，设置为1，为了符合后边需要减1的需求
 			if (props.mode === 'year-month') {
 				date = 1
 			}
 			// 不允许超过maxDate值
-			date = Math.min(maxDate, date)
+			date = range(1, maxDate, date)
 			if (props.mode === 'datetime') {
-				// @ts-ignore
-				hour = parseInt(intercept(values[3][indexs[3]].toString()))
-				// @ts-ignore
-				minute = parseInt(intercept(values[4][indexs[4]].toString()))
+				const hourText = safeColumnValue(values, 3, indexs[3], padZero(currentHour))
+				const minuteText = safeColumnValue(values, 4, indexs[4], padZero(currentMinute))
+				hour = range(0, 23, toInt(intercept(hourText), currentHour))
+				minute = range(0, 59, toInt(intercept(minuteText), currentMinute))
 			}
 			// 转为时间模式
 			selectValue = new Date(year, month - 1, date, hour, minute).getTime()
+			if (isNaN(selectValue)) {
+				selectValue = correctValue(innerValue.value)
+			}
 		}
 		// 取出准确的合法值，防止超越边界的情况
 		let selectValueFormat: any = correctValue(selectValue)
@@ -613,25 +691,6 @@
 		})
 	}
 	
-	function times(n: number, type: string, ranges: number[]): string[] {
-		let index = -1
-		let result: string[] = []
-		if (n > 0) {
-			for (var i = 0; i < n; i++) {
-				result.push('')
-			}
-		}
-		let fu = function(index: number): string {
-			let value = (parseInt(ranges[0].toString()) + index).toString()
-			value = type === 'year' ? `${value}` : padZero(value)
-			return value
-		}
-		while (++index < n) {
-			result[index] = fu(index)
-		}
-		return result
-	}
-	
 	// 通过最大值和最小值生成数组
 	function generateArray(start: number, end: number): number[] {
 		const result: number[] = []
@@ -640,10 +699,37 @@
 		}
 		return result
 	}
-	
-	// 初始化
-	init();
-</script>
+
+		watch((): boolean => props.show, (newValue: boolean) => {
+			if (!newValue && props.hasInput) {
+				showByClickInput.value = false
+			}
+			if (newValue) {
+				updateColumnValue(innerValue.value)
+			}
+		})
+		// watch((): any => props.modelValue, () => {
+		// 	init();
+		// })
+		// watch(
+		// 	(): Array<any|null> => [
+		// 		props.mode,
+		// 		props.maxDate,
+		// 		props.minDate,
+		// 		props.minHour,
+		// 		props.maxHour,
+		// 		props.minMinute,
+		// 		props.maxMinute,
+		// 		props.filter
+		// 	],
+		// 	() => {
+		// 		init();
+		// 	}
+		// )
+		
+		// 初始化
+		init();
+	</script>
 
 <style lang="scss" scoped>
 	@import '../../libs/css/components.scss';
