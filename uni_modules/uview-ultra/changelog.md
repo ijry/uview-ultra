@@ -1,3 +1,11 @@
+## 4.3.11（2026-04-20）
+feat: up-album 新增 stop 属性与 preview 事件
+
+- 新增 stop 布尔属性，支持在触发内置预览时阻止点击事件冒泡
+- 新增 preview 事件，当关闭内置预览时向外抛出图片列表与当前索引
+- 重构 onPreviewTap 方法，统一接收事件对象并拆分内置与自定义预览逻辑
+- 同步更新多端文件的默认配置、Props 定义与 Emits 声明
+
 ## 4.3.10（2026-04-19）
 refactor: 迁移 count-to 至 setup 语法并增强 picker 滚动稳定性及datetime-picker快速滚动优化
 

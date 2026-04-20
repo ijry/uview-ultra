@@ -13,7 +13,7 @@
                 v-for="(item, index1) in arr"
                 :key="index1"
                 :style="[imageStyle(index + 1, index1 + 1)]"
-                @tap="previewFullImage ? onPreviewTap(getSrc(item)) : ''"
+                @tap="onPreviewTap($event, getSrc(item))"
             >
                 <image
                     :src="getSrc(item)"
@@ -114,7 +114,7 @@ export default {
             }
         }
     },
-	emits: ["albumWidth"],
+	emits: ["preview", "albumWidth"],
     computed: {
         imageStyle() {
             return (index1, index2) => {
@@ -189,14 +189,22 @@ export default {
     methods: {
         addUnit,
         // 预览图片
-        onPreviewTap(url) {
+        onPreviewTap(e, url) {
             const urls = this.urls.map((item) => {
                 return this.getSrc(item)
             })
-            uni.previewImage({
-                current: url,
-                urls
-            })
+            if (this.previewFullImage) {
+                uni.previewImage({
+                    current: url,
+                    urls
+                })
+                this.stop && this.preventEvent(e)
+            } else {
+                this.$emit('preview', {
+                    urls,
+                    currentIndex: urls.indexOf(url)
+                })
+            }
         },
         // 获取图片的路径
         getSrc(item) {

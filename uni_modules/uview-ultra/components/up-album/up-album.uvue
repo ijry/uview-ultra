@@ -13,7 +13,7 @@
                 v-for="(item, index1) in arr"
                 :key="index1"
                 :style="[imageStyle(index + 1, index1 + 1)]"
-                @tap="previewFullImage ? onPreviewTap(getSrc(item)) : ''"
+                @tap="onPreviewTap($event, getSrc(item))"
             >
                 <image
                     :src="getSrc(item)"
@@ -150,13 +150,19 @@ const props = defineProps({
 	unit: {
 	    type: String,
 	    default: defProps.getString('album.unit')
+	},
+	// 阻止点击冒泡
+	stop: {
+	    type: Boolean,
+	    default: defProps.getBoolean('album.stop')
 	}
     // ...propsAlbum.props,
     // ...commonProps
 })
 
 // 定义 emits
-const emit = defineEmits(["albumWidth"])
+const emit = defineEmits(["preview", "albumWidth"])
+const { preventEvent } = useUltraUI()
 
 // 响应式数据
 const singleWidth = ref(0)
@@ -307,14 +313,25 @@ const albumWidth = computed(() => {
 })
 
 // 预览图片
-const onPreviewTap = (url: string) => {
+const onPreviewTap = (e: any, url: string) => {
+	let ee = e as UniPointerEvent
     const urls = props.urls.map((item: any) => {
         return getSrc(item)
     })
-    uni.previewImage({
-        current: url,
-        urls
-    })
+    if (props.previewFullImage) {
+        uni.previewImage({
+            current: url,
+            urls
+        })
+        if (props.stop) {
+            preventEvent(ee)
+        }
+    } else {
+        emit('preview', {
+            urls,
+            currentIndex: urls.indexOf(url)
+        })
+    }
 }
 </script>
 
