@@ -1,3 +1,9 @@
+## 4.3.12（2026-04-20）
+fix: 修复 NVUE 环境下折叠面板高度计算异常
+
+- 优化 APP-NVUE 条件下 getComponentRect 回调的返回值处理逻辑
+- 增加空值保护并显式将 height 设为 auto，避免布局渲染异常
+
 ## 4.3.11（2026-04-20）
 feat: up-album 新增 stop 属性与 preview 事件
 

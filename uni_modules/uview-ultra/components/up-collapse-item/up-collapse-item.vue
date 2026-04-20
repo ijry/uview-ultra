@@ -213,7 +213,9 @@
 				// 返回一个promise，让调用此方法的主体能使用then回调
 				return new Promise(resolve => {
 					dom.getComponentRect(this.$refs[this.elId], res => {
-						resolve(res.size)
+						const size = res.size || {}
+						size.height = 'auto'
+						resolve(size)
 					})
 				})
 				// #endif
