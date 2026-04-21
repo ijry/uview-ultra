@@ -1,3 +1,11 @@
+## 4.3.13（2026-04-21）
+refactor: 将 up-divider 组件重构为 setup 语法
+
+- 模板样式绑定调整为调用全局 $up.addStyle 方法
+- 脚本逻辑由 Options API 迁移至 <script setup> 组合式语法
+- 使用 defineProps 内联声明属性并对接默认配置，移除原有 mixin 依赖
+- 计算属性与事件处理函数改为直接声明，清理冗余注释
+
 ## 4.3.12（2026-04-20）
 fix: 修复 NVUE 环境下折叠面板高度计算异常
 
