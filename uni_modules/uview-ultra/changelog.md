@@ -1,3 +1,13 @@
+## 4.3.14（2026-04-22）
+refactor: 下拉菜单组件重构为 Vue3 script setup 语法
+
+- 将 Options API 全面替换为 Composition API 语法结构
+- 使用 defineProps/defineEmits/ref/computed/watch 替代原有选项式写法
+- 引入 useUltraUI 组合式函数管理父子实例通信，移除 $parent 直接调用
+- 模板绑定统一改为 props.xxx 访问，并适配 $up.addUnit 工具方法
+- 增加 Vue2/Vue3 条件编译以兼容 v-model 属性与事件触发逻辑
+- 通过 defineExpose 显式暴露 init/close/setActive 等核心方法
+
 ## 4.3.13（2026-04-21）
 refactor: 将 up-divider 组件重构为 setup 语法
 
