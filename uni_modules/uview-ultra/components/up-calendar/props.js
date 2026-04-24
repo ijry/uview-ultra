@@ -142,6 +142,11 @@ export const props = defineMixin({
 		monthNum: {
 			type: [Number, String],
 			default: 3
-		}	
+		},
+		// 是否启用非滚动的单月切换模式
+		monthSwitch: {
+			type: Boolean,
+			default: () => defProps.calendar.monthSwitch
+		}
     }
 })

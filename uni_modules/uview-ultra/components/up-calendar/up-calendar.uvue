@@ -13,8 +13,18 @@
 				:subtitle="subtitle"
 				:showSubtitle="showSubtitle"
 				:showTitle="showTitle"
+				:showSwitch="monthSwitch"
+				:prevDisabled="switchPrevDisabled"
+				:nextDisabled="switchNextDisabled"
+				:prevYearDisabled="switchPrevYearDisabled"
+				:nextYearDisabled="switchNextYearDisabled"
+				@prev="prevMonth"
+				@next="nextMonth"
+				@prevYear="prevYear"
+				@nextYear="nextYear"
 			></uHeader>
 			<scroll-view
+				v-if="!monthSwitch"
 				:style="{height: addUnit(listHeight)}"
 				scroll-y
 				@scroll="onScroll"
@@ -41,9 +51,36 @@
 					:allowSameDay="allowSameDay"
 					ref="month"
 					@monthSelected="monthSelectedM"
-					@updateMonthTop="updateMonthTopM"
+					@updateMonthTop="onUpdateMonthTopM"
 				></uMonth>
 			</scroll-view>
+			<view
+				v-else
+				:style="{height: addUnit(listHeight)}"
+			>
+				<uMonth
+					:color="color"
+					:rowHeight="rowHeight"
+					:showMark="showMark"
+					:months="currentMonths"
+					:mode="mode"
+					:maxCount="maxCount"
+					:startText="startText"
+					:endText="endText"
+					:defaultDate="defaultDate"
+					:minDate="innerMinDate"
+					:maxDate="innerMaxDate"
+					:maxMonth="monthNum"
+					:readonly="readonly"
+					:maxRange="maxRange"
+					:rangePrompt="rangePrompt"
+					:showRangePrompt="showRangePrompt"
+					:allowSameDay="allowSameDay"
+					ref="month"
+					@monthSelected="monthSelectedM"
+					@updateMonthTop="onUpdateMonthTopM"
+				></uMonth>
+			</view>
 			<slot name="footer" v-if="showConfirm">
 				<view class="up-calendar__confirm">
 					<!-- <up-button
@@ -105,6 +142,7 @@ import { number as testNumber, array as testArray } from '../../libs/function/te
  * @property {Boolean}				allowSameDay	    是否允许日期范围的起止时间为同一天，mode = range时有效 (默认 false )
  * @property {Number|String}	    round				圆角值，默认无圆角  (默认 0 )
  * @property {Number|String}	    monthNum			最多展示的月份数量  (默认 3 )
+ * @property {Boolean}	            monthSwitch			是否启用非滚动的单月切换模式  (默认 false )
  *
  * @event {Function()} confirm 		点击确定按钮时触发		选择日期相关的返回参数
  * @event {Function()} close 		日历关闭时触发			可定义页面关闭时的回调事件
@@ -263,7 +301,12 @@ export default {
 		monthNum: {
 			type: [Number, String],
 			default: 3
-		}	
+		},
+		// 是否启用非滚动的单月切换模式
+		monthSwitch: {
+			type: Boolean,
+			default: calendarProp['monthSwitch']
+		}
 	},
 	data() {
 		return {
@@ -360,6 +403,31 @@ export default {
 				return ''
 			}
 		},
+		currentMonths(): Array<monthsItem> {
+			// @ts-ignore
+			if (this.monthSwitch && this.months.length > 0) {
+				// @ts-ignore
+				return [this.months[this.monthIndex] as monthsItem]
+			}
+			// @ts-ignore
+			return this.months as Array<monthsItem>
+		},
+		switchPrevDisabled(): boolean {
+			// @ts-ignore
+			return this.monthIndex <= 0
+		},
+		switchNextDisabled(): boolean {
+			// @ts-ignore
+			return this.monthIndex >= this.months.length - 1
+		},
+		switchPrevYearDisabled(): boolean {
+			// @ts-ignore
+			return this.monthIndex - 12 < 0
+		},
+		switchNextYearDisabled(): boolean {
+			// @ts-ignore
+			return this.monthIndex + 12 > this.months.length - 1
+		},
 		buttonDisabled() {
 			// 如果为range类型，且选择的日期个数不足1个时，让底部的按钮出于disabled状态
 			// @ts-ignore
@@ -432,7 +500,7 @@ export default {
 			}
 			// 滚动区域的高度
 			// @ts-ignore
-			this.listHeight = this.rowHeight as number * 5 + 30
+			this.listHeight = (this.rowHeight as number) * (this.monthSwitch ? 6 : 5) + 30
 			this.setMonth()
 		},
 		close() {
@@ -543,9 +611,60 @@ export default {
 				}
 				// @ts-ignore
 				this.months.push(md)
-				console.log('&&&&&&&&&&&&&&&&&&&&&')
+			}
+			// @ts-ignore
+			if (this.monthSwitch) {
 				// @ts-ignore
-				console.log(this.months)
+				this.monthIndex = this.getDefaultMonthIndex()
+			}
+		},
+		getDefaultMonthIndex(): number {
+			let selected = dayuts().format('YYYY-MM')
+			// @ts-ignore
+			if (this.defaultDate != null) {
+				// @ts-ignore
+				if (!testArray(this.defaultDate)) {
+					// @ts-ignore
+					selected = dayuts(this.defaultDate).format('YYYY-MM')
+				// @ts-ignore
+				} else if ((this.defaultDate as Array<any>).length > 0) {
+					// @ts-ignore
+					selected = dayuts((this.defaultDate as Array<any>)[0]).format('YYYY-MM')
+				}
+			}
+			// @ts-ignore
+			const index = this.months.findIndex(({ year, month }): boolean => {
+				month = padZero(month)
+				return `${year}-${month}` === selected
+			})
+			return index == -1 ? 0 : index
+		},
+		prevMonth() {
+			// @ts-ignore
+			if (!this.switchPrevDisabled) {
+				// @ts-ignore
+				this.monthIndex -= 1
+			}
+		},
+		nextMonth() {
+			// @ts-ignore
+			if (!this.switchNextDisabled) {
+				// @ts-ignore
+				this.monthIndex += 1
+			}
+		},
+		prevYear() {
+			// @ts-ignore
+			if (!this.switchPrevYearDisabled) {
+				// @ts-ignore
+				this.monthIndex -= 12
+			}
+		},
+		nextYear() {
+			// @ts-ignore
+			if (!this.switchNextYearDisabled) {
+				// @ts-ignore
+				this.monthIndex += 12
 			}
 		},
 		// 滚动到默认设置的月份
@@ -591,6 +710,13 @@ export default {
 			}
 		},
 		// 更新月份的top值
+		onUpdateMonthTopM(topArr: Array<number>) {
+			// @ts-ignore
+			if (this.monthSwitch) {
+				return
+			}
+			this.updateMonthTopM(topArr)
+		},
 		updateMonthTopM(topArr: Array<number>) {
 			// 设置对应月份的top值，用于onScroll方法更新月份
 			topArr.map((item, index) => {

@@ -167,21 +167,19 @@
 			},
 			dayStyle() {
 				return (index1: number, index2: number, item: UPCalendarMonthsItemDate):any => {
-					const style = {}
-					console.log('***************************')
-					console.log(JSON.stringify(item))
+					const style = {} as UTSJSONObject
 					if (item != null) {
-						// let week:number = item['week']
-						// // 不进行四舍五入的形式保留2位小数
-						// let tmp = (this.width / 7).toFixed(3).slice(0, -1)
-						// const dayWidth = parseFloat(tmp)
-						// // 得出每个日期的宽度
-						// style['height'] = addUnit(this.rowHeight)
-						// if (index2 === 0) {
-						// 	// 获取当前为星期几，如果为0，则为星期天，减一为每月第一天时，需要向左偏移的item个数
-						// 	week = (week === 0 ? 7 : week) - 1
-						// 	style['marginLeft'] = addUnit(week * dayWidth, 'px')
-						// }
+						let week:number = item.week
+						// 不进行四舍五入的形式保留2位小数
+						let tmp = (this.width / 7).toFixed(3).slice(0, -1)
+						const dayWidth = parseFloat(tmp)
+						// 得出每个日期的宽度
+						style['height'] = addUnit(this.rowHeight)
+						if (index2 == 0) {
+							// 获取当前为星期几，如果为0，则为星期天，减一为每月第一天时，需要向左偏移的item个数
+							week = (week == 0 ? 7 : week) - 1
+							style['marginLeft'] = addUnit(week * dayWidth, 'px')
+						}
 					}
 					if (this.mode == 'range') {
 						style['padding'] = 0
@@ -363,7 +361,7 @@
 				if (disabled) return
 				// 对上一次选择的日期数组进行深度克隆
 				// let selected = deepClone(this.selected)
-				let selected = (this.selected)
+				let selected = [...this.selected]
 				if (this.mode === 'single') {
 					// 单选情况下，让数组中的元素为当前点击的日期
 					selected = [date]
@@ -427,7 +425,7 @@
 			},
 			// 设置默认日期
 			setDefaultDate() {
-				if (this.defaultDate != null) {
+				if (this.defaultDate == null) {
 					// 如果没有设置默认日期，则将当天日期设置为默认选中的日期
 					const selected = [dayuts().format("YYYY-MM-DD")]
 					return this.setSelected(selected, false)

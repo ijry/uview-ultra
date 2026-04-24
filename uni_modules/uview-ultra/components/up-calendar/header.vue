@@ -4,10 +4,36 @@
 			class="up-calendar-header__title"
 			v-if="showTitle"
 		>{{ title }}</text>
-		<text
-			class="up-calendar-header__subtitle"
+		<view
+			class="up-calendar-header__subtitle-wrap"
 			v-if="showSubtitle"
-		>{{ subtitle }}</text>
+		>
+			<text
+				v-if="showSwitch"
+				class="up-calendar-header__switch"
+				:class="{ 'up-calendar-header__switch--disabled': prevYearDisabled }"
+				@click="prevYear"
+			>«</text>
+			<text
+				v-if="showSwitch"
+				class="up-calendar-header__switch"
+				:class="{ 'up-calendar-header__switch--disabled': prevDisabled }"
+				@click="prev"
+			>‹</text>
+			<text class="up-calendar-header__subtitle">{{ subtitle }}</text>
+			<text
+				v-if="showSwitch"
+				class="up-calendar-header__switch"
+				:class="{ 'up-calendar-header__switch--disabled': nextDisabled }"
+				@click="next"
+			>›</text>
+			<text
+				v-if="showSwitch"
+				class="up-calendar-header__switch"
+				:class="{ 'up-calendar-header__switch--disabled': nextYearDisabled }"
+				@click="nextYear"
+			>»</text>
+		</view>
 		<view class="up-calendar-header__weekdays">
 			<text class="up-calendar-header__weekdays__weekday">一</text>
 			<text class="up-calendar-header__weekdays__weekday">二</text>
@@ -47,6 +73,26 @@
 				type: Boolean,
 				default: true
 			},
+			showSwitch: {
+				type: Boolean,
+				default: false
+			},
+			prevDisabled: {
+				type: Boolean,
+				default: false
+			},
+			nextDisabled: {
+				type: Boolean,
+				default: false
+			},
+			prevYearDisabled: {
+				type: Boolean,
+				default: false
+			},
+			nextYearDisabled: {
+				type: Boolean,
+				default: false
+			},
 		},
 		data() {
 			return {
@@ -54,8 +100,25 @@
 			}
 		},
 		methods: {
-			name() {
-
+			prev() {
+				if (!this.prevDisabled) {
+					this.$emit('prev')
+				}
+			},
+			next() {
+				if (!this.nextDisabled) {
+					this.$emit('next')
+				}
+			},
+			prevYear() {
+				if (!this.prevYearDisabled) {
+					this.$emit('prevYear')
+				}
+			},
+			nextYear() {
+				if (!this.nextYearDisabled) {
+					this.$emit('nextYear')
+				}
 			}
 		},
 	}
@@ -78,13 +141,34 @@
 			font-weight: bold;
 		}
 
+		&__subtitle-wrap {
+			@include flex;
+			align-items: center;
+			justify-content: center;
+			height: 40px;
+		}
+
 		&__subtitle {
 			font-size: 14px;
 			color: $up-main-color;
-			height: 40px;
 			text-align: center;
-			line-height: 40px;
 			font-weight: bold;
+			min-width: 120px;
+		}
+
+		&__switch {
+			width: 44px;
+			height: 40px;
+			line-height: 40px;
+			text-align: center;
+			color: $up-main-color;
+			font-size: 22px;
+			font-weight: bold;
+			flex-shrink: 0;
+
+			&--disabled {
+				opacity: 0.35;
+			}
 		}
 
 		&__weekdays {

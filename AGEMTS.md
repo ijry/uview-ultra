@@ -11,6 +11,10 @@
 ```
 
 ## 3) Android 调试（优先）
+### 3.0 MuMu 模拟器
+- 本仓库默认使用 MuMu 模拟器进行 Android 调试。
+- 先启动 MuMu，再执行设备检测命令确认 `deviceId`（常见为 `emulator-5554`，以实际输出为准）。
+
 ### 3.1 查看设备
 ```powershell
 & "C:\ProgramData\HBuilderX\cli.exe" devices list --platform android
@@ -48,4 +52,3 @@
   2. 若有 `warning`，需说明是否影响当前需求；
   3. 在回复中附上实际执行命令与关键结果（成功/失败 + 关键日志）。
 - 禁止“只改不验”。
-
