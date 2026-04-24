@@ -60,6 +60,10 @@ declare interface AlbumProps {
    */
   onAlbumWidth?: (width: any) => any
   /**
+   * 点击图片时触发，previewFullImage为false时返回图片信息
+   */
+  onPreview?: (payload: { urls: string[]; currentIndex: number }) => any
+  /**
    * 图片形状
    * @default "square"
    */
@@ -69,6 +73,11 @@ declare interface AlbumProps {
    * @default 0
    */
   radius?: string | number
+  /**
+   * 阻止点击事件冒泡
+   * @default true
+   */
+  stop?: boolean
 }
 
 declare interface _Album {

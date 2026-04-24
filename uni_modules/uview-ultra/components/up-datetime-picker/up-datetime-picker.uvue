@@ -200,6 +200,19 @@
 		if (value == null) return fallback
 		return value.toString()
 	}
+
+	function columnsEqual(left: Array<Array<string>>, right: Array<Array<string>>): boolean {
+		if (left.length != right.length) return false
+		for (let i = 0; i < left.length; i++) {
+			const leftColumn = left[i]
+			const rightColumn = right[i]
+			if (leftColumn.length != rightColumn.length) return false
+			for (let j = 0; j < leftColumn.length; j++) {
+				if (leftColumn[j] != rightColumn[j]) return false
+			}
+		}
+		return true
+	}
 	
 	function getInputValue(newValue: string) {
 		if (newValue == '' || newValue == null) {
@@ -460,7 +473,7 @@
 	}
 	
 	// 更新各列的值
-	function updateColumns() {
+	function buildColumns(): Array<Array<string>> {
 		const formatter = getFormatFunc()
 		// 获取各列的值，并且map后，对各列的具体值进行补0操作
 		// const results = this.getOriginColumns().map((column: UTSJSONObject) => (column['values'] as Array<string>).map((value: string) => formatter(column['type'].toString(), value)))
@@ -471,7 +484,12 @@
 			const formattedValues: string[] = (column['values'] as Array<string>).map((value: string) => formatter(column['type'].toString(), value));
 			results.push(formattedValues);
 		});
-		columns.value = results
+		return results
+	}
+
+	// 更新各列的值
+	function updateColumns() {
+		columns.value = buildColumns()
 	}
 	
 	// 更新各列的值，进行补0、格式化等操作
@@ -482,6 +500,17 @@
 		setTimeout(() => {
 		updateIndexs(value)
 		}, 0);
+	}
+
+	function syncColumnsAfterChange(value: any) {
+		const nextColumns = buildColumns()
+		if (!columnsEqual(columns.value, nextColumns)) {
+			columns.value = nextColumns
+			// 延迟执行,等待up-picker组件列数据更新完后再设置选中值索引
+			setTimeout(() => {
+				updateIndexs(value)
+			}, 0)
+		}
 	}
 	
 	// 得出合法的时间
@@ -679,7 +708,7 @@
 		// 取出准确的合法值，防止超越边界的情况
 		let selectValueFormat: any = correctValue(selectValue)
 		innerValue.value = selectValueFormat
-		updateColumnValue(selectValueFormat)
+		syncColumnsAfterChange(selectValueFormat)
 		// 发出change时间，value为当前选中的时间戳
 		emit('change', {
 			value: selectValueFormat,

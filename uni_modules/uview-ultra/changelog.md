@@ -1,3 +1,14 @@
+## 4.3.16（2026-04-24）
+fix: 优化 datetime-picker 同步逻辑并补充多组件类型定义
+
+- 重构 up-datetime-picker 列构建逻辑，抽离 buildColumns 方法
+- 新增 columnsEqual 对比函数，避免列数据未变化时重复渲染
+- 引入 syncColumnsAfterChange 延迟更新选中索引，修复列数据变更时的索引错位问题
+- 补充 album 组件 onPreview 事件与 stop 属性类型
+- 修正 radio 组件插槽定义，区分 icon 与 label 插槽
+- 新增 subsection 组件动态颜色字段键名及 disabled 属性类型
+- 补充 swiper 组件 vertical 纵向滑动属性类型
+
 ## 4.3.15（2026-04-24）
 feat: 日历组件新增单月切换模式并修复日期计算逻辑
 

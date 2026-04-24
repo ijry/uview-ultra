@@ -155,6 +155,18 @@
 				const value = column[index]
 				return value == null ? fallback : value
 			},
+			columnsEqual(left = [], right = []) {
+				if (left.length !== right.length) return false
+				for (let i = 0; i < left.length; i++) {
+					const leftColumn = left[i] || []
+					const rightColumn = right[i] || []
+					if (leftColumn.length !== rightColumn.length) return false
+					for (let j = 0; j < leftColumn.length; j++) {
+						if (leftColumn[j] !== rightColumn[j]) return false
+					}
+				}
+				return true
+			},
 			getInputValue(newValue) {
 				if (newValue == '' || !newValue || newValue == undefined) {
 					this.inputValue = ''
@@ -312,7 +324,7 @@
 				// 取出准确的合法值，防止超越边界的情况
 				selectValue = this.correctValue(selectValue)
 				this.innerValue = selectValue
-				this.updateColumnValue(selectValue)
+				this.syncColumnsAfterChange(selectValue)
 				// 发出change时间，value为当前选中的时间戳
 				this.$emit('change', {
 					value: selectValue,
@@ -331,6 +343,16 @@
 				setTimeout(() => {
 				this.updateIndexs(value)
 				}, 0);
+			},
+			syncColumnsAfterChange(value) {
+				const columns = this.buildColumns()
+				if (!this.columnsEqual(this.columns, columns)) {
+					this.columns = columns
+					// 延迟执行,等待up-picker组件列数据更新完后再设置选中值索引
+					setTimeout(() => {
+						this.updateIndexs(value)
+					}, 0)
+				}
 			},
 			// 更新索引
 			updateIndexs(value) {
@@ -367,10 +389,12 @@
 			},
 			// 更新各列的值
 			updateColumns() {
+				this.columns = this.buildColumns()
+			},
+			buildColumns() {
 			    const formatter = this.formatter || this.innerFormatter
 				// 获取各列的值，并且map后，对各列的具体值进行补0操作
-			    const results = this.getOriginColumns().map((column) => column.values.map((value) => formatter(column.type, value)))
-				this.columns = results
+			    return this.getOriginColumns().map((column) => column.values.map((value) => formatter(column.type, value)))
 			},
 			getOriginColumns() {
 			    // 生成各列的值
