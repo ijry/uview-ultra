@@ -1,3 +1,13 @@
+## 4.3.18（2026-04-27）
+refactor: 重构评分组件逻辑并增强数值与边界处理
+
+- 统一 Vue2/Vue3 的 activeIndex 初始化与监听逻辑，移除条件编译分支
+- 新增 normalizeActiveIndex 等辅助方法，安全解析 props 并限制数值范围
+- 引入 ensureRateMetrics 校验布局尺寸，避免 rateWidth 为 NaN 导致计算异常
+- 在触摸与点击事件处理前增加边界守卫，拦截无效坐标与未初始化状态
+- 规范化 emitEvent 输出值，确保 change 事件与双向绑定数据一致性
+- 调整示例页标题 DOM 结构，优化样式兼容性
+
 ## 4.3.17（2026-04-26）
 feat: 新增 up-table2 高级表格组件及路由配置
 
