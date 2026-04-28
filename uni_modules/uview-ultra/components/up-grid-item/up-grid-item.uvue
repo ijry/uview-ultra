@@ -145,9 +145,9 @@
 	const init = () => {
 		// 用于在父组件up-grid的children中被添加入子组件时，
 		// 重新计算item的边框
-		uni.$on('$upGridItem', () => {
-			gridItemClasses();
-		});
+		// uni.$on('$upGridItem', () => {
+		// 	gridItemClasses();
+		// });
 		
 		// 父组件的实例
 		// @ts-ignore

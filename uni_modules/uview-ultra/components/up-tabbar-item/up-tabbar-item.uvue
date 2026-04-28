@@ -74,6 +74,8 @@
 		data() {
 			return {
 				isActive: false, // 是否处于激活状态
+				routeSyncTimer: 0 as number,
+				routeSyncLast: '',
 				parentData: {
 					value: null as string | number | null,
 					activeColor: '',
@@ -94,22 +96,68 @@
 		created() {
 			this.init()
 		},
+		mounted() {
+			this.startRouteSync()
+		},
+		beforeUnmount() {
+			this.clearRouteSync()
+		},
 		emits: ["click", "change"],
 		methods: {
 			addStyle(val: any): any {
 				return addStyle(val)
 			},
-			init() {
-				// 支付宝小程序不支持provide/inject，所以使用这个方法获取整个父组件，在created定义，避免循环引用
+			clearRouteSync() {
+				if (this.routeSyncTimer != null) {
+					clearInterval(this.routeSyncTimer)
+					this.routeSyncTimer = 0
+				}
+			},
+			getCurrentRoutePath(): string {
+				// @ts-ignore
+				const pages = getCurrentPages()
+				if (pages == null || pages.length == 0) return ''
+				const currentPage = pages[pages.length - 1]
+				// @ts-ignore
+				const route = (currentPage != null && currentPage.route != null) ? currentPage.route.toString() : ''
+				if (route == '') return ''
+				return route.startsWith('/') ? route : `/${route}`
+			},
+			normalizeRoutePath(path: string): string {
+				return path.replace(/^[#\\/]+/, '')
+			},
+			syncActiveByRouteOrValue() {
 				this.updateParentData()
+				// @ts-ignore
+				const index = this.getChildIndex(this)
+				const name = this.name != null ? this.name : index
+				const routePath = this.getCurrentRoutePath()
+				if (typeof name === 'string' && routePath != '') {
+					const isRouteMatch = this.normalizeRoutePath(name) == this.normalizeRoutePath(routePath)
+					if (isRouteMatch) {
+						this.isActive = true
+						return
+					}
+				}
+				this.isActive = name === this.parentData['value']
+			},
+			startRouteSync() {
+				this.clearRouteSync()
+				if (!(typeof this.name === 'string' && this.name.indexOf('/') > -1)) return
+				this.routeSyncLast = this.getCurrentRoutePath()
+				this.routeSyncTimer = setInterval(() => {
+					const current = this.getCurrentRoutePath()
+					if (current != this.routeSyncLast) {
+						this.routeSyncLast = current
+						this.syncActiveByRouteOrValue()
+					}
+				}, 200) as number
+			},
+			init() {
 				if (this.parent == null) {
 					error('up-tabbar-item必须搭配up-tabbar组件使用')
 				}
-				// 本子组件在up-tabbar的children数组中的索引
-				// @ts-ignore
-				const index = this.getChildIndex(this)
-				// 判断本组件的name(如果没有定义name，就用index索引)是否等于父组件的value参数
-				this.isActive = (this.name != null ? this.name : index) === this.parentData['value']
+				this.syncActiveByRouteOrValue()
 			},
 			updateParentData() {
 				// 此方法在mixin中

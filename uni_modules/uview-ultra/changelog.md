@@ -1,3 +1,12 @@
+## 4.3.19（2026-04-28）
+refactor: 重构 empty 组件并增强 tabbar-item 路由同步
+
+- 将 up-empty 迁移至 `<script setup>` 语法，使用 `computed` 与 `defineProps` 重构响应式逻辑
+- up-empty 图标提示文案全面接入 `t()` 国际化函数，移除硬编码文本并修正模板样式合并方式
+- up-tabbar-item 新增基于页面路由的激活状态同步机制，支持通过 `name` 路径自动匹配高亮
+- up-tabbar-item 引入定时器轮询路由变化，并完善组件挂载与卸载时的生命周期清理逻辑
+- up-grid-item 注释废弃的 `$upGridItem` 全局事件监听代码，移除冗余逻辑
+
 ## 4.3.18（2026-04-27）
 refactor: 重构评分组件逻辑并增强数值与边界处理
 
