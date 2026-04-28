@@ -166,7 +166,9 @@
                 // 这里是组件内获取布局状态，不能用uni.createIntersectionObserver，而必须用this.createIntersectionObserver
                 // this.disconnectObserver('contentObserver');
                 // nvue 里不支持
-                const contentObserver = uni.createIntersectionObserver(this);
+                // 在微信小程序中传入组件代理实例可能触发 Vue 的 keys 枚举告警，优先使用 $scope
+                const observerContext = (this.$scope != null ? this.$scope : this)
+                const contentObserver = uni.createIntersectionObserver(observerContext);
                 // 要理解这里怎么计算的，请看这个：
                 // https://blog.csdn.net/qq_25324335/article/details/83687695
                 contentObserver.relativeToViewport({
