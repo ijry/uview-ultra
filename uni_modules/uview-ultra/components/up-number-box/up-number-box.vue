@@ -298,6 +298,8 @@
 			onBlur(event) {
 				// 对输入值进行格式化
 				const value = this.format(event.detail.value)
+				// 失焦时再执行边界修正，避免最小值场景下无法先清空再输入
+				this.emitChange(value)
 				// 发出blur事件
 				this.$emit(
 					'blur',{
@@ -313,8 +315,8 @@
 				} = e.detail || {}
 				// 为空返回
 				if (value === '') {
-					// 为空自动设为最小值
-					this.emitChange(this.min)
+					// 允许输入过程中临时清空，失焦后在onBlur统一修正
+					this.currentValue = ''
 					return
 				}
 				let formatted = this.filter(value)
