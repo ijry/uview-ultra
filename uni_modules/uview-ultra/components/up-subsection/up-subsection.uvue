@@ -18,26 +18,28 @@
         ></view>
         <view
             class="up-subsection__item cursor-pointer"
-            :class="[
-                `up-subsection__item--${index.toString()}`,
-                index < list.length - 1 ? 
-                    'up-subsection__item--no-border-right' : '',
-                index === 0 ? 'up-subsection__item--first' : '',
-                index === list.length - 1 ? 'up-subsection__item--last' : ''
-            ]"
+	            :class="[
+	                `up-subsection__item--${index.toString()}`,
+	                index < list.length - 1 ? 
+	                    'up-subsection__item--no-border-right' : '',
+	                index === 0 ? 'up-subsection__item--first' : '',
+	                index === list.length - 1 ? 'up-subsection__item--last' : '',
+					disabled ? 'up-subsection__item--disabled' : ''
+	            ]"
             :ref="`up-subsection__item--${index.toString()}`"
             :style="[itemStyle(index)]"
             @tap="clickHandler(index)"
             v-for="(item, index) in list"
             :key="index"
         >
-			<slot name="item" :item="item" :index="index">
-				<text
-				    class="up-subsection__item__text"
-				    :style="[textStyle(index)]"
-				    >{{ getText(item) }}</text
-				>
-			</slot>
+				<slot name="item" :item="item" :index="index">
+					<text
+					    class="up-subsection__item__text"
+						:class="[disabled ? 'up-subsection__item__text--disabled' : '']"
+					    :style="[textStyle(index)]"
+					    >{{ getText(item) }}</text
+					>
+				</slot>
         </view>
     </view>
 </template>
@@ -160,24 +162,39 @@ export default {
 			}
 			return style;
 		},
-		textStyle(index: number) {
-			const style = {};
-			style['fontWeight'] =
-				this.bold && this.innerCurrent === index ? "bold" : "normal";
-			style['fontSize'] = addUnit(this.fontSize);
-			// subsection模式下，激活时默认为白色的文字
-			if (this.mode === "subsection") {
-				style['color'] =
-					this.innerCurrent === index ? "#fff" : this.inactiveColor;
-			} else {
-				// button模式下，激活时文字颜色默认为activeColor
-				style['color'] =
-					this.innerCurrent === index
-						? this.activeColor
-						: this.inactiveColor;
-			}
-			return style;
-		},
+			textStyle(index: number) {
+				const style = {};
+				if (this.disabled) {
+					style['fontWeight'] = 'normal';
+					style['fontSize'] = addUnit(this.fontSize);
+					style['color'] = '#c8c9cc';
+					return style;
+				}
+				style['fontWeight'] =
+					this.bold && this.innerCurrent === index ? "bold" : "normal";
+				style['fontSize'] = addUnit(this.fontSize);
+				const item = this.list[index];
+				const activeColorTemp =
+					typeof item == 'object' && item != null
+						? ((item as UTSJSONObject)[this.activeColorKeyName] as string)
+						: '';
+				const inactiveColorTemp =
+					typeof item === 'object' && item != null
+						? ((item as UTSJSONObject)[this.inactiveColorKeyName] as string)
+						: '';
+				// subsection模式下，激活时默认为白色的文字
+				if (this.mode === "subsection") {
+					style['color'] =
+						this.innerCurrent === index ? (activeColorTemp != '' ? activeColorTemp : "#fff") : (inactiveColorTemp != '' ? inactiveColorTemp : this.inactiveColor);
+				} else {
+					// button模式下，激活时文字颜色默认为activeColor
+					style['color'] =
+						this.innerCurrent == index
+							? (activeColorTemp != '' ? activeColorTemp :  this.activeColor)
+							: (inactiveColorTemp != '' ? inactiveColorTemp : this.inactiveColor);
+				}
+				return style;
+			},
 		// 判断展示文本
 		getText(item: any|null): string|null {
 			if (typeof item === 'string') {
@@ -199,10 +216,11 @@ export default {
             });
             // #endif
         },
-        clickHandler(index: number) {
-            this.innerCurrent = index
-            this.$emit("change", index);
-        }
+	        clickHandler(index: number) {
+				if (this.disabled) return
+	            this.innerCurrent = index
+	            this.$emit("change", index);
+	        }
     },
 };
 </script>
@@ -283,19 +301,27 @@ export default {
             border-bottom-left-radius: 4px;
         }
 
-        &--last {
-            border-top-right-radius: 4px;
-            border-bottom-right-radius: 4px;
-        }
+	        &--last {
+	            border-top-right-radius: 4px;
+	            border-bottom-right-radius: 4px;
+	        }
 
-        &__text {
-            font-size: 12px;
-            line-height: 14px;
-            // @include flex;
-            // align-items: center;
-            transition-property: color;
-            transition-duration: 0.3s;
-        }
-    }
-}
+			&--disabled {
+				cursor: no-drop;
+			}
+
+	        &__text {
+	            font-size: 12px;
+	            line-height: 14px;
+	            // @include flex;
+	            // align-items: center;
+	            transition-property: color;
+	            transition-duration: 0.3s;
+
+				&--disabled {
+					color: #c8c9cc !important;
+				}
+	        }
+	    }
+	}
 </style>

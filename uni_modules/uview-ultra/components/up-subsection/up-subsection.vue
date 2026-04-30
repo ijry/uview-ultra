@@ -31,6 +31,7 @@
                     'up-subsection__item--no-border-right',
                 index === 0 && 'up-subsection__item--first',
                 index === list.length - 1 && 'up-subsection__item--last',
+                disabled && 'up-subsection__item--disabled',
             ]"
             :ref="`up-subsection__item--${index}`"
             :style="[itemStyle(index)]"
@@ -40,6 +41,7 @@
         >
             <text
                 class="up-subsection__item__text"
+                :class="[disabled && 'up-subsection__item__text--disabled']"
                 :style="[textStyle(index)]"
                 >{{ getText(item) }}</text
             >
@@ -161,19 +163,36 @@ export default {
         textStyle(index) {
             return (index) => {
                 const style = {};
+                if (this.disabled) {
+                    style.fontWeight = "normal";
+                    style.fontSize = addUnit(this.fontSize);
+                    style.color = "#c8c9cc";
+                    return style;
+                }
                 style.fontWeight =
                     this.bold && this.innerCurrent === index ? "bold" : "normal";
                 style.fontSize = addUnit(this.fontSize);
+                const item = this.list[index];
+                const activeColorTemp =
+                    typeof item === "object" && item
+                        ? item[this.activeColorKeyName]
+                        : null;
+                const inactiveColorTemp =
+                    typeof item === "object" && item
+                        ? item[this.inactiveColorKeyName]
+                        : null;
                 // subsection模式下，激活时默认为白色的文字
                 if (this.mode === "subsection") {
                     style.color =
-                        this.innerCurrent === index ? "#fff" : this.inactiveColor;
+                        this.innerCurrent === index
+                            ? activeColorTemp || "#fff"
+                            : inactiveColorTemp || this.inactiveColor;
                 } else {
                     // button模式下，激活时文字颜色默认为activeColor
                     style.color =
                         this.innerCurrent === index
-                            ? this.activeColor
-                            : this.inactiveColor;
+                            ? activeColorTemp || this.activeColor
+                            : inactiveColorTemp || this.inactiveColor;
                 }
                 return style;
             };
@@ -217,6 +236,7 @@ export default {
             // #endif
         },
         clickHandler(index) {
+            if (this.disabled) return;
             this.innerCurrent = index
             this.$emit("change", index);
         },
@@ -305,6 +325,10 @@ export default {
             border-bottom-right-radius: 4px;
         }
 
+        &--disabled {
+            cursor: no-drop;
+        }
+
         &__text {
             font-size: 12px;
             line-height: 14px;
@@ -312,6 +336,10 @@ export default {
             align-items: center;
             transition-property: color;
             transition-duration: 0.3s;
+
+            &--disabled {
+                color: #c8c9cc !important;
+            }
         }
     }
 }

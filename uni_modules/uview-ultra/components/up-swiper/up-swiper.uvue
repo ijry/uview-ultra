@@ -26,6 +26,7 @@
 			:duration="duration"
 			:autoplay="autoplay"
 			:current="current"
+			:vertical="vertical"
 		>
 			<swiper-item
 				class="up-swiper__wrapper__item"

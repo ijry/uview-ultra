@@ -27,6 +27,7 @@
 			:autoplay="autoplay"
 			:current="current"
 			:currentItemId="currentItemId"
+			:vertical="vertical"
 			:previousMargin="addUnit(previousMargin)"
 			:nextMargin="addUnit(nextMargin)"
 			:acceleration="acceleration"

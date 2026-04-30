@@ -1,3 +1,11 @@
+## 4.3.22（2026-04-30）
+feat: 新增 subsection 禁用与动态颜色及 swiper 纵向滑动支持
+
+- up-subsection 新增 disabled 属性，禁用时拦截点击事件并应用置灰样式
+- up-subsection 新增 activeColorKeyName 与 inactiveColorKeyName，支持从列表数据动态读取颜色
+- up-swiper 新增 vertical 属性，支持配置轮播图滑动方向为纵向
+- up-transition 移除根节点 touchmove 事件监听，优化页面滚动交互体验
+
 ## 4.3.21（2026-04-29）
 fix: 优化数字输入框清空与失焦边界校验逻辑
 

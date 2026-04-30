@@ -46,6 +46,21 @@ export const props = defineMixin({
 		keyName: {
 			type: String,
 			default: () => defProps.subsection.keyName
+		},
+		// 从list元素对象中读取激活时的颜色  如果存在字段 优先级大于 activeColor
+		activeColorKeyName: {
+			type: String,
+			default: () => defProps.subsection.activeColorKeyName
+		},
+		// 从list元素对象中读取未激活时的颜色 如果存在字段 优先级大于 inactiveColor
+		inactiveColorKeyName: {
+			type: String,
+			default: () => defProps.subsection.inactiveColorKeyName
+		},
+		// 是否禁用
+		disabled: {
+			type: Boolean,
+			default: () => defProps.subsection.disabled
 		}
     }
 })
