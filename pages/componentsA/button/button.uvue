@@ -4,7 +4,9 @@
 	<!-- #endif -->
 	<view class="u-page">
 		<view class="u-demo-block">
-			<text class="u-demo-block__title">按钮类型</text>
+			<view class="u-demo-block__title">
+				<text class="text">按钮类型</text>
+			</view>
 			<view class="u-demo-block__content">
 				<view class="u-page__button-item">
 					<up-button
@@ -45,7 +47,9 @@
 			</view>
 		</view>
 		<view class="u-demo-block">
-			<text class="u-demo-block__title">镂空按钮</text>
+			<view class="u-demo-block__title">
+				<text class="text">镂空按钮</text>
+			</view>
 			<view class="u-demo-block__content">
 				<view class="u-page__button-item">
 					<up-button
@@ -90,104 +94,110 @@
 			</view>
 		</view>
 		<view class="u-demo-block">
-			<text class="u-demo-block__title">细边按钮</text>
-			<view class="u-demo-block__content">
-				<view class="u-page__button-item">
-					<up-button
-					    text="细边按钮"
-					    size="normal"
-					    type="info"
-					    plain
-					    hairline
-					></up-button>
-				</view>
-				<view class="u-page__button-item">
-					<up-button
-					    text="细边按钮"
-					    size="normal"
-					    type="success"
-					    plain
-					    hairline
-					></up-button>
-				</view>
-				<view class="u-page__button-item">
-					<up-button
-					    text="细边按钮"
-					    size="normal"
-					    type="error"
-					    plain
-					    hairline
-					></up-button>
-				</view>
-				<view class="u-page__button-item">
-					<up-button
-					    text="细边按钮"
-					    size="normal"
-					    type="primary"
-					    plain
-					    hairline
-					></up-button>
-				</view>
-				<view class="u-page__button-item">
-					<up-button
-					    text="细边按钮"
-					    size="normal"
-					    type="warning"
-					    plain
-					    hairline
-					></up-button>
-				</view>
+			<view class="u-demo-block__title">
+				<text class="text">细边按钮</text>
 			</view>
-		</view>
-
-		<view class="u-demo-block">
-			<text class="u-demo-block__title">禁用按钮</text>
 			<view class="u-demo-block__content">
 				<view class="u-page__button-item">
 					<up-button
-					    disabled
-					    text="禁用按钮"
+					    text="细边按钮"
 					    size="normal"
 					    type="info"
+					    plain
+					    hairline
 					></up-button>
 				</view>
 				<view class="u-page__button-item">
 					<up-button
-					    disabled
-					    text="禁用按钮"
+					    text="细边按钮"
 					    size="normal"
 					    type="success"
+					    plain
+					    hairline
 					></up-button>
 				</view>
 				<view class="u-page__button-item">
 					<up-button
-					    disabled
-					    text="禁用按钮"
+					    text="细边按钮"
 					    size="normal"
 					    type="error"
+					    plain
+					    hairline
 					></up-button>
 				</view>
 				<view class="u-page__button-item">
 					<up-button
-					    disabled
-					    text="禁用按钮"
+					    text="细边按钮"
 					    size="normal"
 					    type="primary"
+					    plain
+					    hairline
 					></up-button>
 				</view>
 				<view class="u-page__button-item">
 					<up-button
-					    disabled
-					    text="禁用按钮"
+					    text="细边按钮"
 					    size="normal"
 					    type="warning"
+					    plain
+					    hairline
 					></up-button>
 				</view>
 			</view>
 		</view>
 
 		<view class="u-demo-block">
-			<text class="u-demo-block__title">加载中</text>
+			<view class="u-demo-block__title">
+				<text class="text">禁用按钮</text>
+			</view>
+			<view class="u-demo-block__content">
+				<view class="u-page__button-item">
+					<up-button
+					    disabled
+					    text="禁用按钮"
+					    size="normal"
+					    type="info"
+					></up-button>
+				</view>
+				<view class="u-page__button-item">
+					<up-button
+					    disabled
+					    text="禁用按钮"
+					    size="normal"
+					    type="success"
+					></up-button>
+				</view>
+				<view class="u-page__button-item">
+					<up-button
+					    disabled
+					    text="禁用按钮"
+					    size="normal"
+					    type="error"
+					></up-button>
+				</view>
+				<view class="u-page__button-item">
+					<up-button
+					    disabled
+					    text="禁用按钮"
+					    size="normal"
+					    type="primary"
+					></up-button>
+				</view>
+				<view class="u-page__button-item">
+					<up-button
+					    disabled
+					    text="禁用按钮"
+					    size="normal"
+					    type="warning"
+					></up-button>
+				</view>
+			</view>
+		</view>
+
+		<view class="u-demo-block">
+			<view class="u-demo-block__title">
+				<text class="text">加载中</text>
+			</view>
 			<view class="u-demo-block__content">
 				<view class="u-page__button-item">
 					<up-button
@@ -210,7 +220,9 @@
 			</view>
 		</view>
 		<view class="u-demo-block">
-			<text class="u-demo-block__title">按钮图标&按钮形状</text>
+			<view class="u-demo-block__title">
+				<text class="text">按钮图标&按钮形状</text>
+			</view>
 			<view class="u-demo-block__content">
 				<view class="u-page__button-item">
 					<up-button
@@ -233,7 +245,9 @@
 			</view>
 		</view>
 		<view class="u-demo-block">
-			<text class="u-demo-block__title">自定义颜色</text>
+			<view class="u-demo-block__title">
+				<text class="text">自定义颜色</text>
+			</view>
 			<view class="u-demo-block__content">
 				<view class="u-page__button-item">
 					<up-button
@@ -260,7 +274,9 @@
 		</view>
 
 		<view class="u-demo-block">
-			<text class="u-demo-block__title">自定义大小</text>
+			<view class="u-demo-block__title">
+				<text class="text">自定义大小</text>
+			</view>
 			<view class="u-demo-block__content" style="padding-bottom: 15px; flex-direction: column;align-items: stretch;flex-wrap: nowrap;">
 				<up-button
 				    text="超大尺寸"

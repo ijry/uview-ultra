@@ -4,7 +4,9 @@
 	<!-- #endif -->
 	<view class="u-page">
 		<view class="u-demo-block">
-			<text class="u-demo-block__title">基本案例</text>
+			<view class="u-demo-block__title">
+				<text class="text">基本案例</text>
+			</view>
 			<text class="u-block__title">苹果、香蕉和橙子哪个最甜？</text>
 			<view class="u-demo-block__content">
 				<view class="u-page__checkbox-item">
@@ -17,7 +19,7 @@
 							:customStyle="{marginBottom: '8px'}"
 							v-for="(item, index) in checkboxList1"
 							:key="index"
-							:label="item['']"
+							:label="item['name']"
 							:name="item['name']"
 						>
 						</up-checkbox>
@@ -26,7 +28,9 @@
 			</view>
 		</view>
 		<view class="u-demo-block">
-			<text class="u-demo-block__title">自定义形状</text>
+			<view class="u-demo-block__title">
+				<text class="text">自定义形状</text>
+			</view>
 			<text class="u-block__title">中国四大名著是？{{checkboxValue2}}</text>
 			<view class="u-demo-block__content">
 				<view class="u-page__checkbox-item">
@@ -49,7 +53,9 @@
 			</view>
 		</view>
 		<view class="u-demo-block">
-			<text class="u-demo-block__title">是否禁用</text>
+			<view class="u-demo-block__title">
+				<text class="text">是否禁用</text>
+			</view>
 			<text class="u-block__title">下面什么东西不能吃？{{checkboxValue3}}</text>
 			<view class="u-demo-block__content">
 				<view class="u-page__checkbox-item">
@@ -72,7 +78,9 @@
 			</view>
 		</view>
 		<view class="u-demo-block">
-			<text class="u-demo-block__title">是否禁止点击提示语选中复选框</text>
+			<view class="u-demo-block__title">
+				<text class="text">是否禁止点击提示语选中复选框</text>
+			</view>
 			<text class="u-block__title">北宋四大家是谁？</text>
 			<view class="u-demo-block__content">
 				<view class="u-page__checkbox-item">
@@ -95,7 +103,9 @@
 			</view>
 		</view>
 		<view class="u-demo-block">
-			<text class="u-demo-block__title">自定义颜色</text>
+			<view class="u-demo-block__title">
+				<text class="text">自定义颜色</text>
+			</view>
 			<text class="u-block__title">哪个颜色最好看？</text>
 			<view class="u-demo-block__content">
 				<view class="u-page__checkbox-item">
@@ -118,7 +128,9 @@
 			</view>
 		</view>
 		<view class="u-demo-block">
-			<text class="u-demo-block__title">横向排列形式</text>
+			<view class="u-demo-block__title">
+				<text class="text">横向排列形式</text>
+			</view>
 			<text class="u-block__title">什么东西不能飞？</text>
 			<view class="u-demo-block__content">
 				<view class="u-page__checkbox-item">
@@ -139,7 +151,9 @@
 			</view>
 		</view>
 		<view class="u-demo-block">
-			<text class="u-demo-block__title">横向两端排列形式</text>
+			<view class="u-demo-block__title">
+				<text class="text">横向两端排列形式</text>
+			</view>
 			<text class="u-block__title">什么东西不能吃？</text>
 			<view>
 				<view class="u-page__checkbox-item">
@@ -323,8 +337,8 @@
 			}
 		},
 		methods: {
-			checkboxChange(n: any) {
-				// console.log('change', n);
+			checkboxChange(n: any, name: any) {
+				console.log('change', n, name);
 			}
 		}
 	}

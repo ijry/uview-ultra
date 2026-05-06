@@ -1,6 +1,7 @@
 /unpackage/dist/*
 /unpackage/cache/*
 /unpackage/release/*
+/unpackage/resources/*
 /node_modules/*
 /.idea/*
 /dist/
