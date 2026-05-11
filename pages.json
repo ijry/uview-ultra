@@ -556,6 +556,12 @@
 				"style": {
 					"navigationBarTitleText": "PullRefresh下拉刷新"
 				}
+			},
+			{
+				"path": "cityLocate/cityLocate",
+				"style": {
+					"navigationBarTitleText": "CityLocate城市定位"
+				}
 			}
 		]
 	},

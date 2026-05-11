@@ -533,6 +533,11 @@ export default [{
         icon: 'pullRefresh',
         title: 'PullRefresh 下拉刷新',
         title_en: 'PullRefresh'
+    }, {
+        path: '/pages/componentsD/cityLocate/cityLocate',
+        icon: 'cityLocate',
+        title: 'CityLocate 城市定位',
+        title_en: 'CityLocate'
     }]
 }
 ]
