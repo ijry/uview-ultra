@@ -453,6 +453,11 @@ export default [{
         icon: 'qrcode',
         title: 'qrcode 二维码',
         title_en: '二维码'
+    }, {
+        path: '/pages/componentsD/pagination/pagination',
+        icon: 'pagination',
+        title: 'Pagination 分页',
+        title_en: 'Pagination'
     }]
 }
 ]

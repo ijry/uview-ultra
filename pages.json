@@ -460,6 +460,12 @@
 				"style" : {
 					"navigationBarTitleText" : "盒子"
 				}
+			},
+			{
+				"path": "pagination/pagination",
+				"style": {
+					"navigationBarTitleText": "Pagination分页"
+				}
 			}
 		]
 	},
