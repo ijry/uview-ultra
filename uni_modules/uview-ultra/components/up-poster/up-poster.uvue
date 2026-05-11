@@ -1,0 +1,385 @@
+<template>
+	<view class="up-poster">
+		<canvas
+			v-if="showCanvas"
+			class="up-poster__canvas"
+			:id="canvasId"
+			:canvas-id="canvasId"
+			:style="canvasStyle"
+		></canvas>
+	</view>
+</template>
+
+<script lang="uts">
+type PosterItem = {
+	type: string,
+	text: string,
+	src: string,
+	css: UTSJSONObject
+}
+
+function toObject(value: any | null): UTSJSONObject {
+	if (value == null) {
+		return {} as UTSJSONObject
+	}
+	return value as UTSJSONObject
+}
+
+function stringValue(value: any | null, fallback: string = ''): string {
+	return value == null ? fallback : value.toString()
+}
+
+function numberValue(value: any | null, fallback: number = 0): number {
+	if (typeof value === 'number') {
+		return value
+	}
+	if (value == null) {
+		return fallback
+	}
+	const text = value.toString()
+	if (text.endsWith('rpx')) {
+		const parsed = parseFloat(text.substring(0, text.length - 3))
+		return isNaN(parsed) ? fallback : parsed * uni.getWindowInfo().windowWidth / 750
+	}
+	if (text.endsWith('px')) {
+		const parsed = parseFloat(text.substring(0, text.length - 2))
+		return isNaN(parsed) ? fallback : parsed
+	}
+	const parsed = parseFloat(text)
+	return isNaN(parsed) ? fallback : parsed
+}
+
+function colorValue(value: any | null, fallback: string): string {
+	const text = stringValue(value, fallback)
+	if (text.indexOf('gradient') >= 0) {
+		return '#f6d365'
+	}
+	return text.length > 0 ? text : fallback
+}
+
+function createItem(raw: any | null): PosterItem {
+	const obj = toObject(raw)
+	return {
+		type: stringValue(obj['type']),
+		text: stringValue(obj['text']),
+		src: stringValue(obj['src']),
+		css: toObject(obj['css'])
+	} as PosterItem
+}
+
+function makeId(): string {
+	return 'up-poster-canvas-' + Date.now().toString()
+}
+
+export default {
+	name: 'up-poster',
+	props: {
+		json: {
+			type: Object,
+			default(): UTSJSONObject {
+				return {} as UTSJSONObject
+			}
+		}
+	},
+	emits: ['export', 'error'],
+	data() {
+		return {
+			canvasId: makeId(),
+			showCanvas: false,
+			canvasWidth: 375,
+			canvasHeight: 557,
+			canvasContext: null as CanvasContext | null,
+			ctx: null as CanvasRenderingContext2D | null
+		}
+	},
+	computed: {
+		canvasStyle(): UTSJSONObject {
+			return {
+				width: this.canvasWidth.toString() + 'px',
+				height: this.canvasHeight.toString() + 'px'
+			} as UTSJSONObject
+		}
+	},
+	methods: {
+		getJson(): UTSJSONObject {
+			return toObject(this.json)
+		},
+		getPosterCss(): UTSJSONObject {
+			return toObject(this.getJson()['css'])
+		},
+		getViews(): Array<any> {
+			const views = this.getJson()['views']
+			if (views == null) {
+				return [] as Array<any>
+			}
+			return views as Array<any>
+		},
+		prepareSize(): void {
+			const css = this.getPosterCss()
+			this.canvasWidth = numberValue(css['width'], 375)
+			this.canvasHeight = numberValue(css['height'], 557)
+		},
+		initCanvas(): Promise<void> {
+			return new Promise((resolve, reject) => {
+				uni.createCanvasContextAsync({
+					id: this.canvasId.toString() as string.IDString,
+					component: this,
+					success: (context: CanvasContext) => {
+						this.canvasContext = context
+						this.ctx = context.getContext('2d')
+						resolve()
+					},
+					fail: (error: UniError) => {
+						reject(error)
+					}
+				})
+			})
+		},
+		exportImage(): Promise<UTSJSONObject> {
+			return new Promise((resolve, reject) => {
+				this.generatePoster().then((path: string) => {
+					const result = {
+						width: this.canvasWidth,
+						height: this.canvasHeight,
+						path
+					} as UTSJSONObject
+					this.$emit('export', result)
+					resolve(result)
+				}).catch((error: any | null) => {
+					this.$emit('error', error)
+					reject(error)
+				})
+			})
+		},
+		generatePoster(): Promise<string> {
+			return new Promise((resolve, reject) => {
+				this.prepareSize()
+				this.showCanvas = true
+				this.$nextTick(() => {
+					this.initCanvas().then(() => {
+						this.drawPoster().then(() => {
+							const canvas = this.canvasContext
+							if (canvas == null) {
+								reject(new Error('Canvas is not ready'))
+								return
+							}
+							const dataUrl = canvas.toDataURL('image/png', 1)
+							this.showCanvas = false
+							resolve(dataUrl)
+						})
+					}).catch((error: any | null) => {
+						this.showCanvas = false
+						reject(error)
+					})
+				})
+			})
+		},
+		drawPoster(): Promise<void> {
+			return new Promise((resolve) => {
+				this.drawPosterSync().then(() => {
+					const context = this.ctx
+					if (context != null) {
+						context.draw()
+					}
+					resolve()
+				})
+			})
+		},
+		drawPosterSync(): Promise<void> {
+			return new Promise((resolve) => {
+				const context = this.ctx
+				if (context == null) {
+					resolve()
+					return
+				}
+				const css = this.getPosterCss()
+				context.clearRect(0, 0, this.canvasWidth, this.canvasHeight)
+				context.fillStyle = colorValue(css['background'], '#ffffff')
+				context.fillRect(0, 0, this.canvasWidth, this.canvasHeight)
+				const views = this.getViews()
+				this.drawItems(views, 0).then(() => {
+					resolve()
+				})
+			})
+		},
+		drawItems(views: Array<any>, index: number): Promise<void> {
+			return new Promise((resolve) => {
+				if (index >= views.length) {
+					resolve()
+					return
+				}
+				this.drawItem(createItem(views[index])).then(() => {
+					this.drawItems(views, index + 1).then(() => {
+						resolve()
+					})
+				})
+			})
+		},
+		drawItem(item: PosterItem): Promise<void> {
+			return new Promise((resolve) => {
+				if (item.type == 'view') {
+					this.drawView(item)
+					resolve()
+				} else if (item.type == 'text') {
+					this.drawText(item)
+					resolve()
+				} else if (item.type == 'image') {
+					this.drawImageBox(item).then(() => {
+						resolve()
+					})
+			} else {
+				resolve()
+			}
+			})
+		},
+		drawView(item: PosterItem): void {
+			const context = this.ctx
+			if (context == null) {
+				return
+			}
+			const css = item.css
+			const x = numberValue(css['left'], 0)
+			const y = numberValue(css['top'], 0)
+			const width = numberValue(css['width'], 0)
+			const height = numberValue(css['height'], 0)
+			context.fillStyle = colorValue(css['background'], '#ffffff')
+			this.fillRoundRect(x, y, width, height, numberValue(css['radius'], 0))
+		},
+		drawText(item: PosterItem): void {
+			const context = this.ctx
+			if (context == null) {
+				return
+			}
+			const css = item.css
+			const x = numberValue(css['left'], 0)
+			const y = numberValue(css['top'], 0)
+			const width = numberValue(css['width'], this.canvasWidth - x)
+			const fontSize = numberValue(css['fontSize'], 14)
+			const lineHeight = numberValue(css['lineHeight'], fontSize + 6)
+			const lineClamp = numberValue(css['lineClamp'], 1)
+			context.fillStyle = colorValue(css['color'], '#333333')
+			context.font = stringValue(css['fontWeight']) == 'bold' ? 'bold ' + fontSize.toString() + 'px sans-serif' : fontSize.toString() + 'px sans-serif'
+			const lines = this.wrapText(item.text, width, lineClamp)
+			for (let i = 0; i < lines.length; i++) {
+				context.fillText(lines[i], x, y + fontSize + i * lineHeight)
+			}
+		},
+		wrapText(text: string, maxWidth: number, maxLines: number): Array<string> {
+			const context = this.ctx
+			const lines = [] as Array<string>
+			if (context == null || text.length == 0) {
+				return lines
+			}
+			let current = ''
+			for (let i = 0; i < text.length; i++) {
+				const next = current + text.substring(i, i + 1)
+				if (context.measureText(next).width > maxWidth && current.length > 0) {
+					lines.push(current)
+					current = text.substring(i, i + 1)
+					if (lines.length >= maxLines) {
+						break
+					}
+				} else {
+					current = next
+				}
+			}
+			if (lines.length < maxLines && current.length > 0) {
+				lines.push(current)
+			}
+			if (lines.length == maxLines && text.length > lines.join('').length) {
+				let last = lines[maxLines - 1]
+				while (last.length > 0 && context.measureText(last + '...').width > maxWidth) {
+					last = last.substring(0, last.length - 1)
+				}
+				lines[maxLines - 1] = last + '...'
+			}
+			return lines
+		},
+		drawImageBox(item: PosterItem): Promise<void> {
+			return new Promise((resolve) => {
+				const context = this.ctx
+				if (context == null) {
+					resolve()
+					return
+				}
+				const css = item.css
+				const x = numberValue(css['left'], 0)
+				const y = numberValue(css['top'], 0)
+				const width = numberValue(css['width'], 0)
+				const height = numberValue(css['height'], 0)
+				uni.getImageInfo({
+					src: item.src,
+					success: (res: GetImageInfoSuccess) => {
+						const canvas = this.canvasContext
+						if (canvas == null) {
+							this.drawImageFallback(x, y, width, height, numberValue(css['radius'], 0))
+							resolve()
+							return
+						}
+						const image = canvas.createImage()
+						image.onload = () => {
+							context.drawImage(image, x, y, width, height)
+							resolve()
+						}
+						image.onerror = () => {
+							this.drawImageFallback(x, y, width, height, numberValue(css['radius'], 0))
+							resolve()
+						}
+						image.src = res.path
+					},
+					fail: () => {
+						this.drawImageFallback(x, y, width, height, numberValue(css['radius'], 0))
+						resolve()
+					}
+				})
+			})
+		},
+		drawImageFallback(x: number, y: number, width: number, height: number, radius: number): void {
+			const context = this.ctx
+			if (context == null) {
+				return
+			}
+			context.fillStyle = '#eef2f7'
+			this.fillRoundRect(x, y, width, height, radius)
+		},
+		fillRoundRect(x: number, y: number, width: number, height: number, radius: number): void {
+			const context = this.ctx
+			if (context == null) {
+				return
+			}
+			if (radius <= 0) {
+				context.fillRect(x, y, width, height)
+				return
+			}
+			const r = Math.min(radius, Math.min(width, height) / 2)
+			context.beginPath()
+			context.moveTo(x + r, y)
+			context.lineTo(x + width - r, y)
+			context.quadraticCurveTo(x + width, y, x + width, y + r)
+			context.lineTo(x + width, y + height - r)
+			context.quadraticCurveTo(x + width, y + height, x + width - r, y + height)
+			context.lineTo(x + r, y + height)
+			context.quadraticCurveTo(x, y + height, x, y + height - r)
+			context.lineTo(x, y + r)
+			context.quadraticCurveTo(x, y, x + r, y)
+			context.closePath()
+			context.fill()
+		}
+	}
+}
+</script>
+
+<style lang="scss" scoped>
+	.up-poster {
+		position: fixed;
+		left: -9999px;
+		top: -9999px;
+		width: 1px;
+		height: 1px;
+		overflow: hidden;
+	}
+
+	.up-poster__canvas {
+		display: flex;
+	}
+</style>

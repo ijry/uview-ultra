@@ -593,6 +593,12 @@
 				"style": {
 					"navigationBarTitleText": "Barcode条形码"
 				}
+			},
+			{
+				"path": "poster/poster",
+				"style": {
+					"navigationBarTitleText": "Poster海报生成"
+				}
 			}
 		]
 	},

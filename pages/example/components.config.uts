@@ -563,6 +563,11 @@ export default [{
         icon: 'barcode',
         title: 'Barcode 条形码',
         title_en: 'Barcode'
+    }, {
+        path: '/pages/componentsD/poster/poster',
+        icon: 'poster',
+        title: 'Poster 海报生成',
+        title_en: 'Poster'
     }]
 }
 ]
