@@ -568,6 +568,12 @@
 				"style": {
 					"navigationBarTitleText": "GoodsSku商品SKU"
 				}
+			},
+			{
+				"path": "pdfReader/pdfReader",
+				"style": {
+					"navigationBarTitleText": "PdfReader PDF阅读器"
+				}
 			}
 		]
 	},

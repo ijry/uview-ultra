@@ -543,6 +543,11 @@ export default [{
         icon: 'goodsSku',
         title: 'GoodsSku 商品SKU',
         title_en: 'GoodsSku'
+    }, {
+        path: '/pages/componentsD/pdfReader/pdfReader',
+        icon: 'pdfReader',
+        title: 'PdfReader PDF阅读器',
+        title_en: 'PdfReader'
     }]
 }
 ]
