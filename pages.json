@@ -490,6 +490,12 @@
 				"style": {
 					"navigationBarTitleText": "Copy复制"
 				}
+			},
+			{
+				"path": "coupon/coupon",
+				"style": {
+					"navigationBarTitleText": "Coupon优惠券"
+				}
 			}
 		]
 	},

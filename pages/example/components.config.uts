@@ -478,6 +478,11 @@ export default [{
         icon: 'copy',
         title: 'Copy 复制',
         title_en: 'Copy'
+    }, {
+        path: '/pages/componentsD/coupon/coupon',
+        icon: 'coupon',
+        title: 'Coupon 优惠券',
+        title_en: 'Coupon'
     }]
 }
 ]
