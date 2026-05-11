@@ -1,5 +1,8 @@
 <template>
 	<view class="u-page">
+		<!-- #ifdef APP -->
+		<scroll-view style="flex:1">
+		<!-- #endif -->
 		<view class="u-demo-block">
 			<view class="u-demo-block__title">
 				<text class="text">基础使用</text>
@@ -57,6 +60,9 @@
 				></up-tooltip>
 			</view>
 		</view>
+		<!-- #ifdef APP -->
+		</scroll-view>
+		<!-- #endif -->
 	</view>
 </template>
 
