@@ -322,6 +322,12 @@
 			}
 		},
 		{
+			"path": "messageInput/messageInput",
+			"style": {
+				"navigationBarTitleText": "验证码输入兼容"
+			}
+		},
+		{
 			"path": "layout/layout",
 			"style": {
 				"navigationBarTitleText": "布局"
