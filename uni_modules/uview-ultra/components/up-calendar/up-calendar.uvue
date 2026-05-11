@@ -678,7 +678,7 @@ export default {
 				month = padZero(month)
 				return `${year}-${month}` === selected
 			})
-			if (_index !== -1) {
+			if (_index != -1) {
 				// #ifndef MP-WEIXIN
 				// @ts-ignore
 				this.$nextTick(() => {

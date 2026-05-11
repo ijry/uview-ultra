@@ -2,7 +2,7 @@
 	<view class="up-calendar-month-wrapper" ref="up-calendar-month-wrapper">
 		<view v-for="(item, index) in monthsInner" :key="index" :class="[`up-calendar-month-` + index.toString()]"
 			:ref="`up-calendar-month-` + index.toString()" :id="`month-` + index.toString()">
-			<text v-if="index !== 0" class="up-calendar-month__title">{{ item['year'] }}年{{ item['month'] }}月</text>
+			<text v-if="index != 0" class="up-calendar-month__title">{{ item['year'] }}年{{ item['month'] }}月</text>
 			<view class="up-calendar-month__days">
 				<view v-if="showMark" class="up-calendar-month__days__month-mark-wrapper">
 					<text class="up-calendar-month__days__month-mark-wrapper__text">{{ item['month'] }}</text>
