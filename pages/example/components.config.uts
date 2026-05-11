@@ -518,6 +518,11 @@ export default [{
         icon: 'cateTab',
         title: 'CateTab 分类标签',
         title_en: 'CateTab'
+    }, {
+        path: '/pages/componentsD/choose/choose',
+        icon: 'choose',
+        title: 'Choose 选择',
+        title_en: 'Choose'
     }]
 }
 ]

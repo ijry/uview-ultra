@@ -538,6 +538,12 @@
 				"style": {
 					"navigationBarTitleText": "CateTab分类标签"
 				}
+			},
+			{
+				"path": "choose/choose",
+				"style": {
+					"navigationBarTitleText": "Choose选择"
+				}
 			}
 		]
 	},
