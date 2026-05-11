@@ -484,6 +484,12 @@
 				"style": {
 					"navigationBarTitleText": "FloatButton悬浮按钮"
 				}
+			},
+			{
+				"path": "copy/copy",
+				"style": {
+					"navigationBarTitleText": "Copy复制"
+				}
 			}
 		]
 	},

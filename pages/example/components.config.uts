@@ -473,6 +473,11 @@ export default [{
         icon: 'button',
         title: 'FloatButton 悬浮按钮',
         title_en: 'FloatButton'
+    }, {
+        path: '/pages/componentsD/copy/copy',
+        icon: 'copy',
+        title: 'Copy 复制',
+        title_en: 'Copy'
     }]
 }
 ]
