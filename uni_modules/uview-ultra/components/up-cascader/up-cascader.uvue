@@ -1,0 +1,202 @@
+<template>
+	<up-popup
+		:show="popupShow"
+		mode="bottom"
+		:popup="false"
+		:mask="true"
+		:closeable="closeable"
+		:safe-area-inset-bottom="true"
+		close-icon-color="#ffffff"
+		:z-index="uZIndex"
+		:maskCloseAble="maskCloseAble"
+		@close="close"
+	>
+		<view class="area-box">
+			<scroll-view :scroll-y="true" style="height: 100%">
+				<up-cell-group>
+					<up-cell
+						v-for="(item,index) in getDataList()"
+						:key="index"
+						:title="getItemLabel(item)"
+						:arrow="false"
+						:index="index"
+						@click="levelChange(0, index)"
+					>
+						<template v-slot:right-icon>
+							<up-icon v-if="isSelected(index)" size="17" name="checkbox-mark"></up-icon>
+						</template>
+					</up-cell>
+				</up-cell-group>
+			</scroll-view>
+		</view>
+		<view class="up-cascader-action up-flex up-flex-between">
+			<view class="up-padding-20 up-flex-fill">
+				<up-button @click="handleCancel" type="default">取消</up-button>
+			</view>
+			<view class="up-padding-20 up-flex-fill">
+				<up-button @click="handleConfirm" type="primary">确定</up-button>
+			</view>
+		</view>
+	</up-popup>
+</template>
+
+<script>
+import { t } from '../../libs/i18n'
+
+export default {
+	name: 'up-cascader',
+	props: {
+		show: {
+			type: Boolean,
+			default: false
+		},
+		data: {
+			type: Array,
+			default() {
+				return []
+			}
+		},
+		modelValue: {
+			type: Array,
+			default() {
+				return []
+			}
+		},
+		valueKey: {
+			type: String,
+			default: 'value'
+		},
+		labelKey: {
+			type: String,
+			default: 'label'
+		},
+		childrenKey: {
+			type: String,
+			default: 'children'
+		},
+		maskCloseAble: {
+			type: Boolean,
+			default: true
+		},
+		zIndex: {
+			type: [String, Number],
+			default: 0
+		},
+		autoClose: {
+			type: Boolean,
+			default: false
+		},
+		headerDirection: {
+			type: String,
+			default: 'row'
+		},
+		optionsCols: {
+			type: [Number],
+			default: 2
+		},
+		closeable: {
+			type: Boolean,
+			default: true
+		}
+	},
+	emits: ['update:modelValue', 'update:show', 'change', 'confirm', 'cancel'],
+	data() {
+		return {
+			tabsIndex: 0,
+			popupShow: false,
+			selectedIndex: -1,
+			confirmValues: [] as any[]
+		}
+	},
+	watch: {
+		show() {
+			this.popupShow = this.show
+		},
+		modelValue: {
+			handler() {
+				this.setDefaultValue()
+			},
+			immediate: true
+		}
+	},
+	computed: {
+		uZIndex(): number {
+			if (typeof this.zIndex == 'number' && this.zIndex > 0) {
+				return this.zIndex
+			}
+			return 1075
+		}
+	},
+	methods: {
+		t,
+		getDataList(): UTSJSONObject[] {
+			return this.data as UTSJSONObject[]
+		},
+		getItemLabel(item: UTSJSONObject): string {
+			const value = item[this.labelKey]
+			return value == null ? '' : value.toString()
+		},
+		getItemValue(item: UTSJSONObject): any | null {
+			return item[this.valueKey]
+		},
+		isSelected(index: number): boolean {
+			return this.selectedIndex == index
+		},
+		setDefaultValue(): void {
+			this.confirmValues = this.modelValue as any[]
+			this.selectedIndex = -1
+			const values = this.confirmValues
+			if (values.length == 0) return
+			const firstValue = values[0]
+			const list = this.getDataList()
+			for (let i = 0; i < list.length; i++) {
+				if (this.getItemValue(list[i]) == firstValue) {
+					this.selectedIndex = i
+					return
+				}
+			}
+		},
+		close(): void {
+			this.$emit('cancel')
+			this.$emit('update:show', false)
+		},
+		handleCancel(): void {
+			this.close()
+		},
+		handleConfirm(): void {
+			this.$emit('update:modelValue', this.confirmValues)
+			this.$emit('confirm', {
+				value: this.confirmValues,
+				index: this.selectedIndex
+			})
+			this.$emit('update:show', false)
+		},
+		tabsChange(item: UTSJSONObject): void {},
+		levelChange(levelIndex: number, index: number): void {
+			const list = this.getDataList()
+			if (index < 0 || index >= list.length) return
+			this.selectedIndex = index
+			const value = this.getItemValue(list[index])
+			this.confirmValues = value == null ? [] as any[] : [value] as any[]
+			this.$emit('change', {
+				value: this.confirmValues,
+				index: index,
+				item: list[index]
+			})
+			if (this.autoClose) {
+				this.handleConfirm()
+			}
+		}
+	}
+}
+</script>
+
+<style lang="scss" scoped>
+.area-box {
+	height: 60%;
+}
+
+.up-cascader-action {
+	border-top: 1px solid #f0f0f0;
+}
+</style>

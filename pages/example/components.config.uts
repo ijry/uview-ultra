@@ -503,6 +503,11 @@ export default [{
         icon: 'colorPicker',
         title: 'ColorPicker 颜色选择器',
         title_en: 'ColorPicker'
+    }, {
+        path: '/pages/componentsD/cascader/cascader',
+        icon: 'cascader',
+        title: 'Cascader 级联选择',
+        title_en: 'Cascader'
     }]
 }
 ]

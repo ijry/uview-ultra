@@ -520,6 +520,12 @@
 				"style": {
 					"navigationBarTitleText": "ColorPicker颜色选择器"
 				}
+			},
+			{
+				"path": "cascader/cascader",
+				"style": {
+					"navigationBarTitleText": "Cascader级联选择"
+				}
 			}
 		]
 	},
