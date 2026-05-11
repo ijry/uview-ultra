@@ -472,6 +472,12 @@
 				"style": {
 					"navigationBarTitleText": "Agreement协议"
 				}
+			},
+			{
+				"path": "title/title",
+				"style": {
+					"navigationBarTitleText": "Title标题"
+				}
 			}
 		]
 	},

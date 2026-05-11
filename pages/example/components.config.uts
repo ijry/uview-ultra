@@ -463,6 +463,11 @@ export default [{
         icon: 'agreement',
         title: 'Agreement 协议',
         title_en: 'Agreement'
+    }, {
+        path: '/pages/componentsD/title/title',
+        icon: 'title',
+        title: 'Title 标题',
+        title_en: 'Title'
     }]
 }
 ]
