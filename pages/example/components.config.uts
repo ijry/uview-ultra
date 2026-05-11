@@ -528,6 +528,11 @@ export default [{
         icon: 'virtualList',
         title: 'VirtualList 虚拟列表',
         title_en: 'VirtualList'
+    }, {
+        path: '/pages/componentsD/pullRefresh/pullRefresh',
+        icon: 'pullRefresh',
+        title: 'PullRefresh 下拉刷新',
+        title_en: 'PullRefresh'
     }]
 }
 ]

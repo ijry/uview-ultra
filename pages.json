@@ -550,6 +550,12 @@
 				"style": {
 					"navigationBarTitleText": "VirtualList虚拟列表"
 				}
+			},
+			{
+				"path": "pullRefresh/pullRefresh",
+				"style": {
+					"navigationBarTitleText": "PullRefresh下拉刷新"
+				}
 			}
 		]
 	},
