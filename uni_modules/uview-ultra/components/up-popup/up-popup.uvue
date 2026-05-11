@@ -88,7 +88,7 @@
 		},
 		watch: {
 			show(newValue, oldValue) {
-				if (newValue === true) {
+				if (newValue == true) {
 					// #ifdef MP-WEIXIN
 					// const children = this.$children
 					// this.retryComputedComponentRect(children)
