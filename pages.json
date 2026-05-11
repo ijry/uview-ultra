@@ -133,6 +133,12 @@
 				"style": {
 					"navigationBarTitleText": "分割线"
 				}
+			},
+			{
+				"path": "lazyLoad/lazyLoad",
+				"style": {
+					"navigationBarTitleText": "图片懒加载"
+				}
 			}
 		]
 	}, {

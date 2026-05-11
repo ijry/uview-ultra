@@ -427,12 +427,12 @@ export default [{
         title: 'ReadMore 展开阅读更多',
         title_en: 'ReadMore'
     },
-    // {
-    // 	path: '/pages/componentsA/lazyLoad/lazyLoad',
-    // 	icon: 'lazyLoad',
-    // 	title: 'LazyLoad 懒加载（暂无）',
-    // 	title_en: 'LazyLoad',
-    // },
+    {
+    	path: '/pages/componentsA/lazyLoad/lazyLoad',
+    	icon: 'lazyLoad',
+    	title: 'LazyLoad 懒加载',
+    	title_en: 'LazyLoad',
+    },
     {
         path: '/pages/componentsA/gap/gap',
         icon: 'gap',
