@@ -580,6 +580,13 @@
 				"style": {
 					"navigationBarTitleText": "Markdown解析器"
 				}
+			},
+			{
+				"path": "shortVideo/shortVideo",
+				"style": {
+					"navigationBarTitleText": "ShortVideo短视频切换",
+					"navigationStyle": "custom"
+				}
 			}
 		]
 	},

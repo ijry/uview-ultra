@@ -553,6 +553,11 @@ export default [{
         icon: 'markdown',
         title: 'Markdown 解析器',
         title_en: 'Markdown'
+    }, {
+        path: '/pages/componentsD/shortVideo/shortVideo',
+        icon: 'shortVideo',
+        title: 'ShortVideo 短视频切换',
+        title_en: 'ShortVideo'
     }]
 }
 ]
