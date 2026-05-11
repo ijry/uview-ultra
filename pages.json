@@ -466,6 +466,12 @@
 				"style": {
 					"navigationBarTitleText": "Pagination分页"
 				}
+			},
+			{
+				"path": "agreement/agreement",
+				"style": {
+					"navigationBarTitleText": "Agreement协议"
+				}
 			}
 		]
 	},

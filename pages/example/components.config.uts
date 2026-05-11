@@ -458,6 +458,11 @@ export default [{
         icon: 'pagination',
         title: 'Pagination 分页',
         title_en: 'Pagination'
+    }, {
+        path: '/pages/componentsD/agreement/agreement',
+        icon: 'agreement',
+        title: 'Agreement 协议',
+        title_en: 'Agreement'
     }]
 }
 ]
