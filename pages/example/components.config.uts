@@ -558,6 +558,11 @@ export default [{
         icon: 'shortVideo',
         title: 'ShortVideo 短视频切换',
         title_en: 'ShortVideo'
+    }, {
+        path: '/pages/componentsD/barcode/barcode',
+        icon: 'barcode',
+        title: 'Barcode 条形码',
+        title_en: 'Barcode'
     }]
 }
 ]

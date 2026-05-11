@@ -587,6 +587,12 @@
 					"navigationBarTitleText": "ShortVideo短视频切换",
 					"navigationStyle": "custom"
 				}
+			},
+			{
+				"path": "barcode/barcode",
+				"style": {
+					"navigationBarTitleText": "Barcode条形码"
+				}
 			}
 		]
 	},
