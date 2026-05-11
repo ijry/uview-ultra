@@ -1,0 +1,36 @@
+<template>
+    <view class="up-parse" :style="containerStyle">
+        <text class="up-parse__text">{{ plainContent }}</text>
+    </view>
+</template>
+
+<script>
+import { props } from './props'
+
+function stripTags(value: string): string {
+    return value.replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ')
+}
+
+export default {
+    name: 'up-parse',
+    mixins: [props],
+    computed: {
+        plainContent(): string {
+            return stripTags(this.content)
+        }
+    }
+}
+</script>
+
+<style lang="scss" scoped>
+.up-parse {
+    display: flex;
+    flex-direction: column;
+}
+
+.up-parse__text {
+    font-size: 14px;
+    line-height: 22px;
+    color: #303133;
+}
+</style>

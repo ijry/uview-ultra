@@ -574,6 +574,12 @@
 				"style": {
 					"navigationBarTitleText": "PdfReader PDF阅读器"
 				}
+			},
+			{
+				"path": "markdown/markdown",
+				"style": {
+					"navigationBarTitleText": "Markdown解析器"
+				}
 			}
 		]
 	},
