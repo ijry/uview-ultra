@@ -1,0 +1,189 @@
+<template>
+	<view class="up-color-picker">
+		<view class="up-color-picker__trigger" :style="triggerStyle" @click="open">
+			<slot></slot>
+		</view>
+		<up-popup :show="show" mode="bottom" round="10" @close="close" :closeOnClickOverlay="true">
+			<view class="up-color-picker__content">
+				<view class="up-color-picker__header">
+					<text class="up-color-picker__title">选择颜色</text>
+				</view>
+				<view class="up-color-picker__preview">
+					<view class="up-color-picker__preview-color" :style="previewStyle"></view>
+					<text class="up-color-picker__preview-text">{{ currentColor }}</text>
+				</view>
+				<view class="up-color-picker__common">
+					<view
+						v-for="(color, index) in normalizedCommonColors"
+						:key="index"
+						class="up-color-picker__common-item"
+						:style="getColorStyle(color)"
+						@click="selectCommonColor(color)"
+					></view>
+				</view>
+				<view class="up-color-picker__actions">
+					<up-button type="primary" size="small" class="up-color-picker__btn" @click="confirm">确定</up-button>
+					<up-button type="info" size="small" class="up-color-picker__btn" @click="close">取消</up-button>
+				</view>
+			</view>
+		</up-popup>
+	</view>
+</template>
+
+<script>
+import type { PropType } from 'vue'
+
+function defaultColors(): string[] {
+	return [
+		'#ff0000',
+		'#ff9900',
+		'#ffff00',
+		'#00ff00',
+		'#00ffff',
+		'#0000ff',
+		'#9900ff',
+		'#ffffff',
+		'#000000'
+	] as string[]
+}
+
+export default {
+	name: 'up-color-picker',
+	props: {
+		modelValue: {
+			type: String,
+			default: '#ff0000'
+		},
+		commonColors: {
+			type: Array as PropType<string[]>,
+			default(): string[] {
+				return [] as string[]
+			}
+		}
+	},
+	data() {
+		return {
+			show: false,
+			currentColor: this.modelValue
+		}
+	},
+	computed: {
+		normalizedCommonColors(): string[] {
+			const colors = this.commonColors as string[] | null
+			if (colors != null && colors.length > 0) {
+				return colors
+			}
+			return defaultColors()
+		},
+		triggerStyle(): UTSJSONObject {
+			return {
+				backgroundColor: this.modelValue
+			} as UTSJSONObject
+		},
+		previewStyle(): UTSJSONObject {
+			return {
+				backgroundColor: this.currentColor
+			} as UTSJSONObject
+		}
+	},
+	watch: {
+		modelValue(newVal: string) {
+			this.currentColor = newVal
+		}
+	},
+	emits: ['update:modelValue', 'confirm', 'close'],
+	methods: {
+		open(): void {
+			this.currentColor = this.modelValue
+			this.show = true
+		},
+		close(): void {
+			this.show = false
+			this.$emit('close')
+		},
+		confirm(): void {
+			this.$emit('update:modelValue', this.currentColor)
+			this.$emit('confirm', this.currentColor)
+			this.show = false
+		},
+		selectCommonColor(color: string): void {
+			this.currentColor = color
+		},
+		getColorStyle(color: string): UTSJSONObject {
+			return {
+				backgroundColor: color
+			} as UTSJSONObject
+		}
+	}
+}
+</script>
+
+<style lang="scss" scoped>
+.up-color-picker__trigger {
+	width: 32px;
+	height: 32px;
+	border-radius: 4px;
+	border: 1px solid #e5e5e5;
+}
+
+.up-color-picker__content {
+	padding: 16px;
+	background-color: #ffffff;
+}
+
+.up-color-picker__header {
+	padding-bottom: 12px;
+}
+
+.up-color-picker__title {
+	font-size: 16px;
+	font-weight: 600;
+	color: #303133;
+}
+
+.up-color-picker__preview {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	margin-bottom: 16px;
+}
+
+.up-color-picker__preview-color {
+	width: 42px;
+	height: 42px;
+	border-radius: 4px;
+	border: 1px solid #e5e5e5;
+	margin-right: 12px;
+}
+
+.up-color-picker__preview-text {
+	font-size: 14px;
+	color: #606266;
+}
+
+.up-color-picker__common {
+	display: flex;
+	flex-direction: row;
+	flex-wrap: wrap;
+	margin-bottom: 16px;
+}
+
+.up-color-picker__common-item {
+	width: 36px;
+	height: 36px;
+	border-radius: 4px;
+	border: 1px solid #e5e5e5;
+	margin-right: 10px;
+	margin-bottom: 10px;
+}
+
+.up-color-picker__actions {
+	display: flex;
+	flex-direction: row;
+	justify-content: flex-end;
+}
+
+.up-color-picker__btn {
+	margin-left: 10px;
+}
+</style>

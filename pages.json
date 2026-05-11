@@ -514,6 +514,12 @@
 				"style": {
 					"navigationBarTitleText": "Signature签名"
 				}
+			},
+			{
+				"path": "colorPicker/colorPicker",
+				"style": {
+					"navigationBarTitleText": "ColorPicker颜色选择器"
+				}
 			}
 		]
 	},

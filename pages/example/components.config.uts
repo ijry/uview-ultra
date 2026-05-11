@@ -498,6 +498,11 @@ export default [{
         icon: 'signature',
         title: 'Signature 签名',
         title_en: 'Signature'
+    }, {
+        path: '/pages/componentsD/colorPicker/colorPicker',
+        icon: 'colorPicker',
+        title: 'ColorPicker 颜色选择器',
+        title_en: 'ColorPicker'
     }]
 }
 ]
