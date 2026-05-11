@@ -483,6 +483,11 @@ export default [{
         icon: 'coupon',
         title: 'Coupon 优惠券',
         title_en: 'Coupon'
+    }, {
+        path: '/pages/componentsD/select/select',
+        icon: 'select',
+        title: 'Select 选择器',
+        title_en: 'Select'
     }]
 }
 ]

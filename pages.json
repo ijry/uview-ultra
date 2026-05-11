@@ -496,6 +496,12 @@
 				"style": {
 					"navigationBarTitleText": "Coupon优惠券"
 				}
+			},
+			{
+				"path": "select/select",
+				"style": {
+					"navigationBarTitleText": "Select选择器"
+				}
 			}
 		]
 	},
