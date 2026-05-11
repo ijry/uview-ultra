@@ -185,16 +185,16 @@
 </template>
 
 <script>
+	import type { PropType } from 'vue';
 	import {
 		chooseFile
-	} from './utils';
-	import { mixinUpload } from './mixin';
-	import { props } from './props';
-	import { mpMixin } from '../../libs/mixin/mpMixin';
-	import { mixin } from '../../libs/mixin/mixin';
-	import { addStyle, addUnit, toast } from '../../libs/function/index';
+	} from './utils.uts';
+	import { mixinUpload } from './mixin.uts';
+	import { mpMixin } from '../../libs/mixin/mpMixin.uts';
+	import { mixin } from '../../libs/mixin/mixin.uts';
+	import { addStyle, addUnit, toast } from '../../libs/function/index.uts';
 	import { func as testFunc, promise as testPromise,
-		image as testImage, video as testVideo } from '../../libs/function/test';
+		image as testImage, video as testVideo } from '../../libs/function/test.uts';
 	import { t } from '../../libs/i18n'
 	/**
 	 * upload 上传
@@ -231,9 +231,169 @@
 	 * @example <up-upload :action="action" :fileList="fileList" ></up-upload>
 	 */
 	import { UPUploadListItem, UPUploadFileChoosed, UPUploadChooseFileOptions } from './types.uts'
+	function createStringList(values: Array<string> = [] as Array<string>): Array<string> {
+		return values
+	}
+	function createCaptureList(): Array<string> {
+		return ['album', 'camera'] as Array<string>
+	}
+	function createFileList(): Array<UTSJSONObject> {
+		return [] as Array<UTSJSONObject>
+	}
+	function createHeader(): UTSJSONObject {
+		return {} as UTSJSONObject
+	}
 	export default {
 		name: "up-upload",
-		mixins: [mpMixin, mixin, mixinUpload, props],
+		mixins: [mpMixin, mixin, mixinUpload],
+		props: {
+			accept: {
+				type: String,
+				default: 'image'
+			},
+			extension: {
+				type: Array as PropType<Array<string>>,
+				default(): Array<string> {
+					return createStringList()
+				}
+			},
+			capture: {
+				type: [Array, String],
+				default(): Array<string> {
+					return createCaptureList()
+				}
+			},
+			compressed: {
+				type: Boolean,
+				default: true
+			},
+			camera: {
+				type: String,
+				default: 'back'
+			},
+			maxDuration: {
+				type: Number,
+				default: 60
+			},
+			uploadIcon: {
+				type: String,
+				default: 'camera-fill'
+			},
+			uploadIconColor: {
+				type: String,
+				default: '#D3D4D6'
+			},
+			useBeforeRead: {
+				type: Boolean,
+				default: false
+			},
+			afterRead: {
+				type: Function,
+				default: null
+			},
+			beforeRead: {
+				type: Function,
+				default: null
+			},
+			previewFullImage: {
+				type: Boolean,
+				default: true
+			},
+			maxCount: {
+				type: [String, Number],
+				default: 52
+			},
+			disabled: {
+				type: Boolean,
+				default: false
+			},
+			imageMode: {
+				type: String,
+				default: 'aspectFill'
+			},
+			name: {
+				type: String,
+				default: ''
+			},
+			sizeType: {
+				type: Array as PropType<Array<string>>,
+				default(): Array<string> {
+					return createStringList(['original', 'compressed'] as Array<string>)
+				}
+			},
+			multiple: {
+				type: Boolean,
+				default: false
+			},
+			deletable: {
+				type: Boolean,
+				default: true
+			},
+			maxSize: {
+				type: [String, Number],
+				default: Number.MAX_VALUE
+			},
+			fileList: {
+				type: Array as PropType<Array<UTSJSONObject>>,
+				default(): Array<UTSJSONObject> {
+					return createFileList()
+				}
+			},
+			uploadText: {
+				type: String,
+				default: ''
+			},
+			width: {
+				type: [String, Number],
+				default: 80
+			},
+			height: {
+				type: [String, Number],
+				default: 80
+			},
+			previewImage: {
+				type: Boolean,
+				default: true
+			},
+			autoDelete: {
+				type: Boolean,
+				default: false
+			},
+			autoUpload: {
+				type: Boolean,
+				default: false
+			},
+			autoUploadApi: {
+				type: String,
+				default: ''
+			},
+			autoUploadDriver: {
+				type: String,
+				default: ''
+			},
+			autoUploadAuthUrl: {
+				type: String,
+				default: ''
+			},
+			autoUploadHeader: {
+				type: Object as PropType<UTSJSONObject>,
+				default(): UTSJSONObject {
+					return createHeader()
+				}
+			},
+			getVideoThumb: {
+				type: Boolean,
+				default: false
+			},
+			customAfterAutoUpload: {
+				type: Boolean,
+				default: false
+			},
+			videoPreviewObjectFit: {
+				type: String,
+				default: 'cover'
+			}
+		},
 		data() {
 			return {
 				// #ifdef APP-NVUE
@@ -427,15 +587,17 @@
 				}
 			},
 			getDetail(index: number|null = null) {
+				const fileList = this.fileList as Array<UTSJSONObject>
 				return {
 					name: this.name,
 					// @ts-ignore
-					index: index == null ? this.fileList.length : index,
+					index: index == null ? fileList.length : index,
 				};
 			},
 			async onAfterRead(file: Array<UPUploadFileChoosed|null>) {
 				let maxSize = this.maxSize as number
 				let afterRead = this.afterRead
+				const fileList = this.fileList as Array<UTSJSONObject>
 				// const oversize = Array.isArray(file) ?
 				// 	file.some((item) => item.size > maxSize) :
 				// 	file.size > maxSize;
@@ -454,15 +616,15 @@
 					return;
 				}
 				// @ts-ignore
-				let len = this.fileList.length;
+				let len = fileList.length;
 				if (this.autoUpload) {
 					// 当设置 mutiple 为 true 时, file 为数组格式，否则为对象格式
 					let lists = ([] as UPUploadFileChoosed[]).concat(file);
 					// @ts-ignore
-					let fileListLen = this.fileList.length;
+					let fileListLen = fileList.length;
 					lists.map((item: UPUploadFileChoosed) => {
 						// @ts-ignore
-						this.fileList.push({
+						fileList.push({
 							...item as UTSJSONObject,
 							status: 'uploading',
 							message: t("up.upload.uploading"),
@@ -470,7 +632,7 @@
 						});
 					});
 					let that = this;
-					this.$emit('update:fileList', this.fileList);
+					this.$emit('update:fileList', fileList);
 					for (let i = 0; i < lists.length; i++) {
 						let j = i;
 						let result = '';
@@ -616,21 +778,23 @@
 				}
 			},
 			updateUpload(index: number, param: UTSJSONObject) {
-				let item = this.fileList[index];
+				const fileList = this.fileList as Array<UTSJSONObject>
+				let item = fileList[index];
 				// @ts-ignore
-				this.fileList.splice(index, 1, {
+				fileList.splice(index, 1, {
 					...item as UTSJSONObject,
 					// 注意这里不判断会出现succcessUpload先执行又被覆盖的问题
 					status: param['progress'] as number == 100 ? 'success' : 'uploading',
 					message: '',
 					progress: param['progress'] as number
 				});
-				this.$emit('update:fileList', this.fileList);
+				this.$emit('update:fileList', fileList);
 			},
 			succcessUpload(index: number, url: string, thumb: string = '') {
-				let item = this.fileList[index];
+				const fileList = this.fileList as Array<UTSJSONObject>
+				let item = fileList[index];
 				// @ts-ignore
-				this.fileList.splice(index, 1, {
+				fileList.splice(index, 1, {
 					...item as UTSJSONObject,
 					status: 'success',
 					message: '',
@@ -638,18 +802,19 @@
 					progress: 100,
 					thumb: thumb
 				});
-				this.$emit('update:fileList', this.fileList);
+				this.$emit('update:fileList', fileList);
 			},
 			deleteItem(index: number) {
+				const fileList = this.fileList as Array<UTSJSONObject>
 				if (this.autoDelete) {
 					// @ts-ignore
-					this.fileList.splice(index, 1);
-					this.$emit('update:fileList', this.fileList);
+					fileList.splice(index, 1);
+					this.$emit('update:fileList', fileList);
 				} else {
 					this.$emit(
 						'delete',
 						UTSJSONObject.assign(UTSJSONObject.assign({}, this.getDetail(index)), {
-							file: this.fileList[index],
+							file: fileList[index],
 						})
 					);
 				}
