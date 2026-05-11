@@ -599,6 +599,12 @@
 				"style": {
 					"navigationBarTitleText": "Poster海报生成"
 				}
+			},
+			{
+				"path": "cropper/cropper",
+				"style": {
+					"navigationBarTitleText": "Cropper图片裁剪"
+				}
 			}
 		]
 	},

@@ -568,6 +568,11 @@ export default [{
         icon: 'poster',
         title: 'Poster 海报生成',
         title_en: 'Poster'
+    }, {
+        path: '/pages/componentsD/cropper/cropper',
+        icon: 'cropper',
+        title: 'Cropper 图片裁剪',
+        title_en: 'Cropper'
     }]
 }
 ]

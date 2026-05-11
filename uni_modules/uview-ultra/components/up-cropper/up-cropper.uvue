@@ -1,0 +1,445 @@
+<template>
+	<view class="up-cropper">
+		<view v-if="visible" class="up-cropper__panel">
+			<canvas
+				class="up-cropper__canvas"
+				:id="canvasId"
+				:canvas-id="canvasId"
+				:style="canvasStyle"
+				@touchstart="touchStart"
+				@touchmove="touchMove"
+				@touchend="touchEnd"
+				@touchcancel="touchEnd"
+			></canvas>
+			<canvas
+				class="up-cropper__export"
+				:id="exportCanvasId"
+				:canvas-id="exportCanvasId"
+				:style="exportCanvasStyle"
+			></canvas>
+			<view class="up-cropper__toolbar">
+				<text class="up-cropper__button" @click="select">重选</text>
+				<text class="up-cropper__button" @click="close">关闭</text>
+				<text class="up-cropper__button" @click="preview">预览</text>
+				<text class="up-cropper__button" @click="confirm">确定</text>
+			</view>
+		</view>
+		<view v-else @click="openDefault">
+			<slot></slot>
+		</view>
+	</view>
+</template>
+
+<script lang="uts">
+type CropTouch = {
+	x: number,
+	y: number
+}
+
+function makeId(prefix: string): string {
+	return prefix + Date.now().toString()
+}
+
+function toObject(value: any | null): UTSJSONObject {
+	return value == null ? ({} as UTSJSONObject) : value as UTSJSONObject
+}
+
+function normalizeString(value: any | null, fallback: string = ''): string {
+	return value == null ? fallback : value.toString()
+}
+
+function rpxToPx(value: any | null, fallback: number): number {
+	if (typeof value === 'number') {
+		return value
+	}
+	if (value == null) {
+		return fallback
+	}
+	const text = value.toString()
+	if (text.endsWith('rpx')) {
+		const parsed = parseFloat(text.substring(0, text.length - 3))
+		return isNaN(parsed) ? fallback : parsed * uni.getWindowInfo().windowWidth / 750
+	}
+	if (text.endsWith('px')) {
+		const parsed = parseFloat(text.substring(0, text.length - 2))
+		return isNaN(parsed) ? fallback : parsed
+	}
+	const parsed = parseFloat(text)
+	return isNaN(parsed) ? fallback : parsed
+}
+
+function numberValue(value: any | null, fallback: number = 0): number {
+	if (typeof value === 'number') {
+		return value
+	}
+	if (value == null) {
+		return fallback
+	}
+	const parsed = parseFloat(value.toString())
+	return isNaN(parsed) ? fallback : parsed
+}
+
+function touchPoint(e: UniTouchEvent): CropTouch {
+	let x = 0
+	let y = 0
+	if (e.touches.length > 0) {
+		x = e.touches[0].pageX
+		y = e.touches[0].pageY
+	} else if (e.changedTouches.length > 0) {
+		x = e.changedTouches[0].pageX
+		y = e.changedTouches[0].pageY
+	}
+	return { x, y } as CropTouch
+}
+
+export default {
+	name: 'up-cropper',
+	props: {
+		canChangeSize: {
+			type: Boolean,
+			default: false
+		},
+		areaWidth: {
+			type: String,
+			default: '300rpx'
+		},
+		areaHeight: {
+			type: String,
+			default: '300rpx'
+		},
+		exportWidth: {
+			type: String,
+			default: '260rpx'
+		},
+		exportHeight: {
+			type: String,
+			default: '260rpx'
+		},
+		fillColor: {
+			type: String,
+			default: '#ffffff'
+		},
+		index: {
+			type: [String, Number],
+			default: 0
+		}
+	},
+	emits: ['confirm', 'cancel', 'error'],
+	data() {
+		return {
+			canvasId: makeId('up-cropper-'),
+			exportCanvasId: makeId('up-cropper-export-'),
+			canvasContext: null as CanvasContext | null,
+			exportCanvasContext: null as CanvasContext | null,
+			ctx: null as CanvasRenderingContext2D | null,
+			exportCtx: null as CanvasRenderingContext2D | null,
+			imageElement: null as UniImageElementImpl | null,
+			imagePath: '',
+			imageWidth: 0,
+			imageHeight: 0,
+			visible: false,
+			canvasWidth: uni.getWindowInfo().windowWidth,
+			canvasHeight: uni.getWindowInfo().windowHeight - 70,
+			cropWidth: rpxToPx(this.areaWidth, 300),
+			cropHeight: rpxToPx(this.areaHeight, 300),
+			outputWidth: rpxToPx(this.exportWidth, 260),
+			outputHeight: rpxToPx(this.exportHeight, 260),
+			imageX: 0,
+			imageY: 0,
+			displayWidth: 0,
+			displayHeight: 0,
+			activeTouch: null as CropTouch | null,
+			currentIndex: 0
+		}
+	},
+	computed: {
+		canvasStyle(): UTSJSONObject {
+			return {
+				width: this.canvasWidth.toString() + 'px',
+				height: this.canvasHeight.toString() + 'px'
+			} as UTSJSONObject
+		},
+		exportCanvasStyle(): UTSJSONObject {
+			return {
+				width: this.outputWidth.toString() + 'px',
+				height: this.outputHeight.toString() + 'px'
+			} as UTSJSONObject
+		},
+		cropLeft(): number {
+			return (numberValue(this.canvasWidth, 0) - numberValue(this.cropWidth, 0)) / 2
+		},
+		cropTop(): number {
+			return (numberValue(this.canvasHeight, 0) - numberValue(this.cropHeight, 0)) / 2
+		}
+	},
+	methods: {
+		openDefault(): void {
+			this.chooseImage(0, {} as UTSJSONObject)
+		},
+		initCanvas(): Promise<void> {
+			return new Promise((resolve, reject) => {
+				uni.createCanvasContextAsync({
+					id: this.canvasId.toString() as string.IDString,
+					component: this,
+					success: (context: CanvasContext) => {
+						this.canvasContext = context
+						this.ctx = context.getContext('2d')
+						uni.createCanvasContextAsync({
+							id: this.exportCanvasId.toString() as string.IDString,
+							component: this,
+							success: (exportContext: CanvasContext) => {
+								this.exportCanvasContext = exportContext
+								this.exportCtx = exportContext.getContext('2d')
+								resolve()
+							},
+							fail: (error: UniError) => {
+								reject(error)
+							}
+						})
+					},
+					fail: (error: UniError) => {
+						reject(error)
+					}
+				})
+			})
+		},
+		chooseImage(index: any | null = 0, params: UTSJSONObject = {} as UTSJSONObject): void {
+			const options = toObject(params)
+			this.currentIndex = typeof index === 'number' ? index : 0
+			this.cropWidth = rpxToPx(options['areaWidth'], rpxToPx(this.areaWidth, 300))
+			this.cropHeight = rpxToPx(options['areaHeight'], rpxToPx(this.areaHeight, 300))
+			this.outputWidth = rpxToPx(options['exportWidth'], rpxToPx(this.exportWidth, 260))
+			this.outputHeight = rpxToPx(options['exportHeight'], rpxToPx(this.exportHeight, 260))
+			uni.chooseImage({
+				count: 1,
+				success: (res: ChooseImageSuccess) => {
+					if (res.tempFilePaths.length == 0) {
+						return
+					}
+					this.loadImage(res.tempFilePaths[0])
+				},
+				fail: () => {
+					this.$emit('error', '选择图片失败')
+				}
+			})
+		},
+		select(): void {
+			this.chooseImage(this.currentIndex, {} as UTSJSONObject)
+		},
+		loadImage(path: string): void {
+			uni.getImageInfo({
+				src: path,
+				success: (info: GetImageInfoSuccess) => {
+					this.imagePath = path
+					this.imageWidth = info.width
+					this.imageHeight = info.height
+					this.visible = true
+					this.$nextTick(() => {
+						this.initCanvas().then(() => {
+							this.createCanvasImage(info.path)
+						}).catch((error: any | null) => {
+							this.$emit('error', error)
+						})
+					})
+				},
+				fail: () => {
+					this.$emit('error', '读取图片失败')
+				}
+			})
+		},
+		createCanvasImage(path: string): void {
+			const canvas = this.canvasContext
+			if (canvas == null) {
+				this.$emit('error', new Error('Canvas is not ready'))
+				return
+			}
+			const image = canvas.createImage()
+			image.onload = () => {
+				this.imageElement = image
+				this.fitImage()
+				this.draw()
+			}
+			image.onerror = () => {
+				this.$emit('error', new Error('Image load failed'))
+			}
+			image.src = path
+		},
+		fitImage(): void {
+			const cropW = numberValue(this.cropWidth, 300)
+			const cropH = numberValue(this.cropHeight, 300)
+			const imgW = Math.max(1, numberValue(this.imageWidth, 1))
+			const imgH = Math.max(1, numberValue(this.imageHeight, 1))
+			const scale = Math.max(cropW / imgW, cropH / imgH)
+			const displayW = imgW * scale
+			const displayH = imgH * scale
+			this.displayWidth = displayW
+			this.displayHeight = displayH
+			this.imageX = this.cropLeft + (cropW - displayW) / 2
+			this.imageY = this.cropTop + (cropH - displayH) / 2
+		},
+		draw(): void {
+			const context = this.ctx
+			const image = this.imageElement
+			if (context == null || image == null) {
+				return
+			}
+			const canvasW = numberValue(this.canvasWidth, 0)
+			const canvasH = numberValue(this.canvasHeight, 0)
+			const cropL = this.cropLeft
+			const cropT = this.cropTop
+			const cropW = numberValue(this.cropWidth, 0)
+			const cropH = numberValue(this.cropHeight, 0)
+			const imageX = numberValue(this.imageX, 0)
+			const imageY = numberValue(this.imageY, 0)
+			const displayW = numberValue(this.displayWidth, 0)
+			const displayH = numberValue(this.displayHeight, 0)
+			context.clearRect(0, 0, canvasW, canvasH)
+			context.fillStyle = 'rgba(0,0,0,0.72)'
+			context.fillRect(0, 0, canvasW, canvasH)
+			context.save()
+			context.beginPath()
+			context.rect(cropL, cropT, cropW, cropH)
+			context.clip()
+			context.fillStyle = this.fillColor
+			context.fillRect(cropL, cropT, cropW, cropH)
+			context.drawImage(image, imageX, imageY, displayW, displayH)
+			context.restore()
+			context.strokeStyle = '#ffffff'
+			context.lineWidth = 2
+			context.strokeRect(cropL, cropT, cropW, cropH)
+			context.draw()
+		},
+		touchStart(e: UniTouchEvent): void {
+			this.activeTouch = touchPoint(e)
+		},
+		touchMove(e: UniTouchEvent): void {
+			const last = this.activeTouch
+			if (last == null) {
+				return
+			}
+			const point = touchPoint(e)
+			this.imageX += point.x - last.x
+			this.imageY += point.y - last.y
+			this.activeTouch = point
+			this.keepImageInCrop()
+			this.draw()
+		},
+		touchEnd(): void {
+			this.activeTouch = null
+		},
+		keepImageInCrop(): void {
+			const cropL = this.cropLeft
+			const cropT = this.cropTop
+			const cropW = numberValue(this.cropWidth, 0)
+			const cropH = numberValue(this.cropHeight, 0)
+			const displayW = numberValue(this.displayWidth, 0)
+			const displayH = numberValue(this.displayHeight, 0)
+			if (displayW <= cropW) {
+				this.imageX = cropL + (cropW - displayW) / 2
+			} else {
+				if (numberValue(this.imageX, 0) > cropL) {
+					this.imageX = cropL
+				}
+				if (numberValue(this.imageX, 0) + displayW < cropL + cropW) {
+					this.imageX = cropL + cropW - displayW
+				}
+			}
+			if (displayH <= cropH) {
+				this.imageY = cropT + (cropH - displayH) / 2
+			} else {
+				if (numberValue(this.imageY, 0) > cropT) {
+					this.imageY = cropT
+				}
+				if (numberValue(this.imageY, 0) + displayH < cropT + cropH) {
+					this.imageY = cropT + cropH - displayH
+				}
+			}
+		},
+		preview(): void {
+			this.confirm()
+		},
+		confirm(): void {
+			const context = this.exportCtx
+			const canvas = this.exportCanvasContext
+			const image = this.imageElement
+			if (context == null || canvas == null || image == null) {
+				this.$emit('error', new Error('Canvas is not ready'))
+				return
+			}
+			const outputW = numberValue(this.outputWidth, 0)
+			const outputH = numberValue(this.outputHeight, 0)
+			const imgW = Math.max(1, numberValue(this.imageWidth, 1))
+			const imgH = Math.max(1, numberValue(this.imageHeight, 1))
+			const displayW = Math.max(1, numberValue(this.displayWidth, 1))
+			const displayH = Math.max(1, numberValue(this.displayHeight, 1))
+			const cropW = numberValue(this.cropWidth, 0)
+			const cropH = numberValue(this.cropHeight, 0)
+			const cropL = this.cropLeft
+			const cropT = this.cropTop
+			const imageX = numberValue(this.imageX, 0)
+			const imageY = numberValue(this.imageY, 0)
+			context.clearRect(0, 0, outputW, outputH)
+			context.fillStyle = this.fillColor
+			context.fillRect(0, 0, outputW, outputH)
+			const sourceX = (cropL - imageX) * imgW / displayW
+			const sourceY = (cropT - imageY) * imgH / displayH
+			const sourceWidth = cropW * imgW / displayW
+			const sourceHeight = cropH * imgH / displayH
+			context.drawImage(image, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, outputW, outputH)
+			context.draw()
+			const path = canvas.toDataURL('image/png', 1)
+			this.visible = false
+			this.$emit('confirm', {
+				path,
+				index: this.currentIndex
+			} as UTSJSONObject)
+		},
+		close(): void {
+			this.visible = false
+			this.$emit('cancel')
+		}
+	}
+}
+</script>
+
+<style lang="scss" scoped>
+	.up-cropper {
+		display: flex;
+		flex-direction: column;
+	}
+
+	.up-cropper__panel {
+		position: fixed;
+		left: 0;
+		top: 0;
+		right: 0;
+		bottom: 0;
+		z-index: 999;
+		background-color: #000000;
+	}
+
+	.up-cropper__canvas {
+		display: flex;
+	}
+
+	.up-cropper__export {
+		position: fixed;
+		left: -9999px;
+		top: -9999px;
+	}
+
+	.up-cropper__toolbar {
+		height: 70px;
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		justify-content: space-around;
+		background-color: #111111;
+	}
+
+	.up-cropper__button {
+		color: #ffffff;
+		font-size: 15px;
+		padding: 10px;
+	}
+</style>
