@@ -508,6 +508,11 @@ export default [{
         icon: 'cascader',
         title: 'Cascader 级联选择',
         title_en: 'Cascader'
+    }, {
+        path: '/pages/componentsD/tree/tree',
+        icon: 'tree',
+        title: 'Tree 树形控件',
+        title_en: 'Tree'
     }]
 }
 ]

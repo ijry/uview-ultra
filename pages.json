@@ -526,6 +526,12 @@
 				"style": {
 					"navigationBarTitleText": "Cascader级联选择"
 				}
+			},
+			{
+				"path": "tree/tree",
+				"style": {
+					"navigationBarTitleText": "Tree树形控件"
+				}
 			}
 		]
 	},
