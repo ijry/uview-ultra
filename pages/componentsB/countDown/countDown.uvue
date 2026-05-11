@@ -1,7 +1,9 @@
 <template>
 	<view class="u-page">
 		<view class="u-demo-block">
-			<text class="u-demo-block__title">基础用法</text>
+			<view class="u-demo-block__title">
+				<text class="text">基础用法</text>
+			</view>
 			<view class="u-demo-block__content">
 				<up-count-down
 				    :time="30 * 60 * 60 * 1000"
@@ -14,7 +16,9 @@
 			</view>
 		</view>
 		<view class="u-demo-block">
-			<text class="u-demo-block__title">自定义格式</text>
+			<view class="u-demo-block__title">
+				<text class="text">自定义格式</text>
+			</view>
 			<view class="u-demo-block__content">
 				<up-count-down
 				    :time="30 * 60 * 60 * 1000"
@@ -33,7 +37,9 @@
 			</view>
 		</view>
 		<view class="u-demo-block">
-			<text class="u-demo-block__title">毫秒级渲染</text>
+			<view class="u-demo-block__title">
+				<text class="text">毫秒级渲染</text>
+			</view>
 			<view class="u-demo-block__content">
 				<up-count-down
 				    :time="30 * 60 * 60 * 1000"
@@ -45,7 +51,9 @@
 			</view>
 		</view>
 		<view class="u-demo-block">
-			<text class="u-demo-block__title">自定义样式</text>
+			<view class="u-demo-block__title">
+				<text class="text">自定义样式</text>
+			</view>
 			<view class="u-demo-block__content">
 				<up-count-down
 				    :time="30 * 60 * 60 * 1000"
@@ -71,7 +79,9 @@
 			</view>
 		</view>
 		<view class="u-demo-block">
-			<text class="u-demo-block__title">手动控制</text>
+			<view class="u-demo-block__title">
+				<text class="text">手动控制</text>
+			</view>
 			<view class="u-demo-block__content">
 				<up-count-down
 				    ref="countDownRef"
@@ -134,15 +144,15 @@
 		methods: {
 			//开始
 			start() {
-				//this.$refs.countDownRef.start();
+				(this.$refs['countDownRef'] as ComponentPublicInstance)?.$callMethod('start')
 			},
 			// 暂停
 			pause() {
-				//this.$refs.countDownRef.pause();
+				(this.$refs['countDownRef'] as ComponentPublicInstance)?.$callMethod('pause')
 			},
 			// 重置
 			reset() {
-				//this.$refs.countDownRef.reset();
+				(this.$refs['countDownRef'] as ComponentPublicInstance)?.$callMethod('reset')
 			},
 			onChange(e: UTSJSONObject) {
 				this.timeData = e

@@ -82,6 +82,38 @@
 			mode="multiple"
 			:defaultDate="defaultDateMultiple"
 		></up-calendar>
+		<up-calendar
+			:show="show9"
+			@confirm="confirm"
+			@close="close"
+			defaultDate="2023-06-15"
+			:minDate="switchMinDate"
+			:maxDate="switchMaxDate"
+			:monthNum="36"
+			monthSwitch
+		></up-calendar>
+		<up-calendar
+			:show="show10"
+			@confirm="confirm"
+			@close="close"
+			mode="range"
+			:minDate="switchMinDate"
+			:maxDate="switchMaxDate"
+			:defaultDate="switchRangeDefaultDate"
+			:monthNum="36"
+			monthSwitch
+		></up-calendar>
+		<up-calendar
+			:show="show11"
+			@confirm="confirm"
+			@close="close"
+			mode="multiple"
+			:minDate="switchMinDate"
+			:maxDate="switchMaxDate"
+			:defaultDate="switchMultipleDefaultDate"
+			:monthNum="36"
+			monthSwitch
+		></up-calendar>
 	</view>
 </template>
 <script>
@@ -102,11 +134,18 @@
 				show6: false,
 				show7: false,
 				show8: false,
-				values: ['','','','','','','',''],
+				show9: false,
+				show10: false,
+				show11: false,
+				values: ['','','','','','','','','','',''],
 				customThemeDefaultDate: [`${year}-${monthStr}-${date}`, `${year}-${monthStr}-${(date + 5).toString()}`], 
 				customTextDefaultDate: [`${year}-${monthStr}-${date}`],
 				maxDate: `${year}-${monthStr}-${date + 10}`,
 				defaultDateMultiple: [`${year}-${monthStr}-${date}`, `${year}-${monthStr}-${date + 1}`, `${year}-${monthStr}-${date + 2}`],
+				switchMinDate: '2022-01-01',
+				switchMaxDate: '2024-12-31',
+				switchRangeDefaultDate: ['2023-06-15', '2023-06-20'],
+				switchMultipleDefaultDate: ['2023-06-15', '2023-07-15', '2024-06-15'],
 				list: [{
 						title: '单个日期',
 						iconUrl: 'https://cdn.uviewui.com/uview/demo/calendar/7.png'
@@ -134,6 +173,15 @@
 					},{
 						title: '默认日期',
 						iconUrl: 'https://cdn.uviewui.com/uview/demo/calendar/10.png'
+					},{
+						title: '单月切换-单选',
+						iconUrl: 'https://cdn.uviewui.com/uview/demo/calendar/7.png'
+					},{
+						title: '单月切换-日期区间',
+						iconUrl: 'https://cdn.uviewui.com/uview/demo/calendar/9.png'
+					},{
+						title: '单月切换-多选',
+						iconUrl: 'https://cdn.uviewui.com/uview/demo/calendar/8.png'
 					}
 				]
 			}
@@ -181,6 +229,19 @@
 						this.values[this.index - 1] = e[0];
 						break;
 					case 7:
+						e.forEach((value, index: number) => {
+							// @ts-ignore
+							index == 0 ? this.values[this.index - 1] = value : this.values[this.index - 1] += ';' + value
+						})
+						break;
+					case 8:
+						// @ts-ignore
+						this.values[this.index - 1] = e[0];
+						break;
+					case 9:
+						this.values[this.index - 1] = e[0] + '~' + e[e.length - 1];
+						break;
+					case 10:
 						e.forEach((value, index: number) => {
 							// @ts-ignore
 							index == 0 ? this.values[this.index - 1] = value : this.values[this.index - 1] += ';' + value

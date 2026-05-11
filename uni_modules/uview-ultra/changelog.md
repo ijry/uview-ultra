@@ -1,3 +1,13 @@
+## 4.3.27（2026-05-11）
+refactor: 迁移示例页至组合式API并新增表格演示
+
+- 将 card、form、countDown 等示例页的 Options API 迁移至 <script setup> 组合式语法
+- 统一替换 $refs 方法调用为 $callMethod 配合类型断言，适配 UTS/TS 强类型环境
+- 新增 table2 组件演示页，覆盖基础渲染、排序筛选、固定列、树形结构及单元格合并等场景
+- calendar 示例页补充单月切换模式下的单选、区间与多选日期用例
+- 调整 grid、skeleton 等页面的标题 DOM 结构，统一外层包裹 view 容器
+- 修正 card 示例页的样式类名前缀并更新部分静态资源链接
+
 ## 4.3.26（2026-05-09）
 style: 调整 gap 示例页标题 DOM 结构
 

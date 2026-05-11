@@ -1,7 +1,9 @@
 <template>
 	<view class="u-page">
 		<view class="u-demo-block">
-			<text class="u-demo-block__title">基础功能</text>
+			<view class="u-demo-block__title">
+				<text class="text">基础功能</text>
+			</view>
 			<view class="u-demo-block__content">
 				<view class="u-page__tag-item">
 					<up-count-to
@@ -12,7 +14,9 @@
 			</view>
 		</view>
 		<view class="u-demo-block">
-			<text class="u-demo-block__title">倒计数</text>
+			<view class="u-demo-block__title">
+				<text class="text">倒计数</text>
+			</view>
 			<view class="u-demo-block__content">
 				<view class="u-page__tag-item">
 					<up-count-to :startVal="startVal1"></up-count-to>
@@ -20,7 +24,9 @@
 			</view>
 		</view>
 		<view class="u-demo-block">
-			<text class="u-demo-block__title">显示小数位</text>
+			<view class="u-demo-block__title">
+				<text class="text">显示小数位</text>
+			</view>
 			<view class="u-demo-block__content">
 				<view class="u-page__tag-item">
 					<up-count-to
@@ -32,7 +38,9 @@
 			</view>
 		</view>
 		<view class="u-demo-block">
-			<text class="u-demo-block__title">千分位分隔符</text>
+			<view class="u-demo-block__title">
+				<text class="text">千分位分隔符</text>
+			</view>
 			<view class="u-demo-block__content">
 				<view class="u-page__tag-item">
 					<up-count-to
@@ -45,7 +53,9 @@
 			</view>
 		</view>
 		<view class="u-demo-block">
-			<text class="u-demo-block__title">自定义控制</text>
+			<view class="u-demo-block__title">
+				<text class="text">自定义控制</text>
+			</view>
 			<view class="u-demo-block__content">
 				<view class="u-page__tag-item">
 					<up-count-to
@@ -91,7 +101,9 @@
 			</view>
 		</view>
 		<view class="u-demo-block">
-			<text class="u-demo-block__title">自定义</text>
+			<view class="u-demo-block__title">
+				<text class="text">自定义</text>
+			</view>
 			<view class="u-demo-block__content">
 				<view class="u-page__tag-item">
 					<up-count-to
@@ -130,13 +142,13 @@
 		},
 		methods: {
 			start() {
-				// this.$refs['uCountToRef'].start();
+				(this.$refs['uCountToRef'] as ComponentPublicInstance)?.$callMethod('start')
 			},
 			paused() {
-				// this.$refs['uCountToRef'].$callMethod('stop');
+				(this.$refs['uCountToRef'] as ComponentPublicInstance)?.$callMethod('stop')
 			},
 			resume() {
-				// this.$refs['uCountToRef'].$callMethod('resume');
+				(this.$refs['uCountToRef'] as ComponentPublicInstance)?.$callMethod('resume')
 			},
 			end() {
 				console.log('end');
