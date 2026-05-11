@@ -468,6 +468,11 @@ export default [{
         icon: 'title',
         title: 'Title 标题',
         title_en: 'Title'
+    }, {
+        path: '/pages/componentsD/floatButton/floatButton',
+        icon: 'button',
+        title: 'FloatButton 悬浮按钮',
+        title_en: 'FloatButton'
     }]
 }
 ]

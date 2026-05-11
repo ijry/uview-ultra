@@ -478,6 +478,12 @@
 				"style": {
 					"navigationBarTitleText": "Title标题"
 				}
+			},
+			{
+				"path": "floatButton/floatButton",
+				"style": {
+					"navigationBarTitleText": "FloatButton悬浮按钮"
+				}
 			}
 		]
 	},
