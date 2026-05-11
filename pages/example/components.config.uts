@@ -523,6 +523,11 @@ export default [{
         icon: 'choose',
         title: 'Choose 选择',
         title_en: 'Choose'
+    }, {
+        path: '/pages/componentsD/virtualList/virtualList',
+        icon: 'virtualList',
+        title: 'VirtualList 虚拟列表',
+        title_en: 'VirtualList'
     }]
 }
 ]

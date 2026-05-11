@@ -544,6 +544,12 @@
 				"style": {
 					"navigationBarTitleText": "Choose选择"
 				}
+			},
+			{
+				"path": "virtualList/virtualList",
+				"style": {
+					"navigationBarTitleText": "VirtualList虚拟列表"
+				}
 			}
 		]
 	},
