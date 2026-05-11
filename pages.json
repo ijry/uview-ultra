@@ -508,6 +508,12 @@
 				"style": {
 					"navigationBarTitleText": "Dragsort拖拽排序"
 				}
+			},
+			{
+				"path": "signature/signature",
+				"style": {
+					"navigationBarTitleText": "Signature签名"
+				}
 			}
 		]
 	},

@@ -493,6 +493,11 @@ export default [{
         icon: 'dragsort',
         title: 'Dragsort 拖拽排序',
         title_en: 'Dragsort'
+    }, {
+        path: '/pages/componentsD/signature/signature',
+        icon: 'signature',
+        title: 'Signature 签名',
+        title_en: 'Signature'
     }]
 }
 ]
