@@ -562,6 +562,12 @@
 				"style": {
 					"navigationBarTitleText": "CityLocate城市定位"
 				}
+			},
+			{
+				"path": "goodsSku/goodsSku",
+				"style": {
+					"navigationBarTitleText": "GoodsSku商品SKU"
+				}
 			}
 		]
 	},
