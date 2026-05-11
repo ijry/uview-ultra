@@ -1,0 +1,46 @@
+<template>
+    <view class="u-page">
+        <!-- #ifdef APP -->
+        <scroll-view style="flex:1">
+        <!-- #endif -->
+        <view style="height: 68px;background-color: #fce38a;margin-bottom: 10px;"></view>
+		<up-cate-tab class="cate-tab" mode="follow" :height="height" :tabList="tabList"
+			tabKeyName="title" itemKeyName="title"></up-cate-tab>
+        <!-- #ifdef APP -->
+        </scroll-view>
+        <!-- #endif -->
+    </view>
+ </template>
+
+<script>
+export default {
+  data() {
+    return {
+      height: 'calc(100vh - 150px)',
+      tabList: [] as UTSJSONObject[]
+    };
+  },
+  created() {
+    setTimeout(() => {
+      this.tabList = [
+        { title: '热销', children: [{ title: '招牌套餐', icon: 'https://uview-plus.jiangruyi.com/uview/ext/59c256f85a8c3757.jpg', price: 88 }] },
+        { title: '新品', children: [{ title: '时令新品', icon: 'https://uview-plus.jiangruyi.com/uview/ext/59c256f85a8c3757.jpg', price: 99 }] },
+        { title: '饮品', children: [{ title: '经典饮品', icon: 'https://uview-plus.jiangruyi.com/uview/ext/59c256f85a8c3757.jpg', price: 18 }] },
+        { title: '甜点', children: [{ title: '人气甜点', icon: 'https://uview-plus.jiangruyi.com/uview/ext/59c256f85a8c3757.jpg', price: 28 }] }
+      ] as UTSJSONObject[];
+    }, 1000);
+  }
+}
+</script>
+
+<style lang='scss' scoped>
+.cate-tab {
+    height: 100%;
+    /* #ifdef H5 */
+    height: 100%;
+    /* #endif */
+	.text-red {
+		color: red;
+	}
+}
+</style>

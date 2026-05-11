@@ -532,6 +532,12 @@
 				"style": {
 					"navigationBarTitleText": "Tree树形控件"
 				}
+			},
+			{
+				"path": "cateTab/cateTab",
+				"style": {
+					"navigationBarTitleText": "CateTab分类标签"
+				}
 			}
 		]
 	},

@@ -513,6 +513,11 @@ export default [{
         icon: 'tree',
         title: 'Tree 树形控件',
         title_en: 'Tree'
+    }, {
+        path: '/pages/componentsD/cateTab/cateTab',
+        icon: 'cateTab',
+        title: 'CateTab 分类标签',
+        title_en: 'CateTab'
     }]
 }
 ]
