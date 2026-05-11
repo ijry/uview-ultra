@@ -488,6 +488,11 @@ export default [{
         icon: 'select',
         title: 'Select 选择器',
         title_en: 'Select'
+    }, {
+        path: '/pages/componentsD/dragsort/dragsort',
+        icon: 'dragsort',
+        title: 'Dragsort 拖拽排序',
+        title_en: 'Dragsort'
     }]
 }
 ]

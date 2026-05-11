@@ -502,6 +502,12 @@
 				"style": {
 					"navigationBarTitleText": "Select选择器"
 				}
+			},
+			{
+				"path": "dragsort/dragsort",
+				"style": {
+					"navigationBarTitleText": "Dragsort拖拽排序"
+				}
 			}
 		]
 	},
