@@ -1,0 +1,54 @@
+<template>
+	<view class="u-demo">
+		<view class="u-demo-wrap">
+			<view class="u-demo-title">演示效果</view>
+			<view class="u-demo-area">
+				<city-select v-model="value" @city-change="cityChange"></city-select>
+				<view class="u-demo-result-line">{{ getInputText() }}</view>
+			</view>
+		</view>
+		<view class="u-config-wrap">
+			<view class="u-config-title u-border-bottom">参数配置</view>
+			<view class="u-config-item">
+				<view class="u-item-title">状态</view>
+				<up-button @click="value = true">打开Picker</up-button>
+			</view>
+		</view>
+	</view>
+</template>
+
+<script>
+import citySelect from './u-city-select.uvue';
+export default {
+	components: {
+		citySelect
+	},
+	data() {
+		return {
+			height: 30,
+			bgColor: '#f3f4f6',
+			marginTop: 30,
+			marginBottom: 30,
+			value: false,
+			input: '',
+		};
+	},
+	methods: {
+		getInputText(): string {
+			return this.input != '' ? this.input : 'Picker值';
+		},
+		cityChange(e: UTSJSONObject) {
+			const province = e['province'] as UTSJSONObject;
+			const city = e['city'] as UTSJSONObject;
+			const area = e['area'] as UTSJSONObject;
+			this.input = province['label'].toString() + '-' + city['label'].toString() + '-' + area['label'].toString();
+		}
+	}
+};
+</script>
+
+<style scoped>
+	.btn-wrap {
+		margin: 100rpx 30rpx;
+	}
+</style>
