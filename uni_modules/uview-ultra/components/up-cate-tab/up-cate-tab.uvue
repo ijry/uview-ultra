@@ -1,37 +1,77 @@
 <template>
 	<view class="up-cate-tab" :style="cateStyle">
 		<view class="up-cate-tab__wrap">
-			<scroll-view class="up-cate-tab__view" scroll-y>
+			<scroll-view
+				class="up-cate-tab__view up-cate-tab__menu-scroll-view"
+				scroll-y
+				scroll-with-animation
+				:scroll-top="scrollTop"
+				:scroll-into-view="itemId"
+			>
 				<view
 					v-for="(item, index) in getTabList()"
 					:key="index"
+					:id="'tab' + index.toString()"
 					class="up-cate-tab__item"
 					:class="[innerCurrent == index ? 'up-cate-tab__item-active' : '']"
 					@tap.stop="swichMenu(index)"
 				>
+					<slot name="tabItem" :item="item"></slot>
 					<text class="up-line-1">{{ getTabLabel(item) }}</text>
 				</view>
 			</scroll-view>
-			<scroll-view scroll-y class="up-cate-tab__right-box">
+			<scroll-view
+				scroll-y
+				scroll-with-animation
+				class="up-cate-tab__right-box"
+				:scroll-top="scrollRightTop"
+				:scroll-into-view="scrollIntoView"
+				@scroll="rightScroll"
+			>
+				<view class="up-cate-tab__right-top">
+					<slot name="rightTop" :tabList="getTabList()"></slot>
+				</view>
 				<view class="up-cate-tab__page-view">
-					<view class="up-cate-tab__page-item">
-						<view class="item-title">
-							<text>{{ getTabLabel(getCurrentTab()) }}</text>
-						</view>
-						<view class="item-container">
-							<view class="thumb-box" v-for="(item1, index1) in getChildren(getCurrentTab())" :key="index1">
-								<image class="item-menu-image" :src="getItemIcon(item1)" mode=""></image>
-								<view class="item-menu-name">{{ getItemLabel(item1) }}</view>
+					<template v-for="(item, index) in getTabList()" :key="index">
+						<view
+							v-if="mode == 'follow' || (mode == 'tab' && index == innerCurrent)"
+							class="up-cate-tab__page-item"
+							:id="'item' + index.toString()"
+						>
+							<slot name="itemList" :item="item"></slot>
+							<view class="item-title">
+								<text>{{ getTabLabel(item) }}</text>
+							</view>
+							<view class="item-container">
+								<template v-for="(item1, index1) in getChildren(item)" :key="index1">
+									<slot name="pageItem" :pageItem="item1"></slot>
+									<view class="thumb-box">
+										<image class="item-menu-image" :src="getItemIcon(item1)" mode=""></image>
+										<text class="item-menu-name">{{ getItemLabel(item1) }}</text>
+									</view>
+								</template>
 							</view>
 						</view>
-					</view>
+					</template>
 				</view>
 			</scroll-view>
 		</view>
 	</view>
 </template>
 
-<script>
+<script lang="uts">
+function toText(value: any | null): string {
+	return value == null ? '' : value.toString()
+}
+
+function addUnit(value: string): string {
+	if (value.length == 0) return '0px'
+	if (value.endsWith('%') || value.endsWith('px') || value.endsWith('rpx') || value.endsWith('vh')) {
+		return value
+	}
+	return value + 'px'
+}
+
 export default {
 	name: 'up-cate-tab',
 	props: {
@@ -65,51 +105,176 @@ export default {
 	emits: ['update:current'],
 	data() {
 		return {
-			innerCurrent: 0
+			scrollTop: 0,
+			scrollIntoView: '',
+			oldScrollTop: 0,
+			innerCurrent: 0,
+			menuHeight: 0,
+			menuItemHeight: 0,
+			itemId: '',
+			menuItemPos: [] as Array<number>,
+			rects: [] as Array<UTSJSONObject>,
+			arr: [] as Array<number>,
+			scrollRightTop: 0,
+			timerActive: false
 		}
 	},
 	watch: {
+		tabList: {
+			handler() {
+				this.deferRefresh()
+			},
+			immediate: true
+		},
 		current(nval: number) {
 			this.innerCurrent = nval
+			this.leftMenuStatus(nval)
+			this.deferSwitch(nval)
+		},
+		height() {
+			this.deferRefresh()
 		}
 	},
 	computed: {
 		cateStyle(): UTSJSONObject {
-			return { height: this.height } as UTSJSONObject
+			return { height: addUnit(this.height) } as UTSJSONObject
 		}
 	},
 	mounted(): void {
 		this.innerCurrent = this.current
+		this.leftMenuStatus(this.innerCurrent)
+		this.deferRefresh()
+		this.deferSwitch(this.innerCurrent)
 	},
 	methods: {
-		getTabList(): UTSJSONObject[] {
-			return this.tabList as UTSJSONObject[]
-		},
-		getCurrentTab(): UTSJSONObject {
-			const list = this.getTabList()
-			if (list.length == 0) return {} as UTSJSONObject
-			const index = this.innerCurrent >= 0 && this.innerCurrent < list.length ? this.innerCurrent : 0
-			return list[index]
+		getTabList(): Array<UTSJSONObject> {
+			return this.tabList as Array<UTSJSONObject>
 		},
 		getTabLabel(item: UTSJSONObject): string {
-			const value = item[this.tabKeyName]
-			return value == null ? '' : value.toString()
+			return toText(item[this.tabKeyName])
 		},
-		getChildren(item: UTSJSONObject): UTSJSONObject[] {
+		getChildren(item: UTSJSONObject): Array<UTSJSONObject> {
 			const value = item['children']
-			return value == null ? [] as UTSJSONObject[] : value as UTSJSONObject[]
+			return value == null ? [] as Array<UTSJSONObject> : value as Array<UTSJSONObject>
 		},
 		getItemLabel(item: UTSJSONObject): string {
-			const value = item[this.itemKeyName]
-			return value == null ? '' : value.toString()
+			return toText(item[this.itemKeyName])
 		},
 		getItemIcon(item: UTSJSONObject): string {
-			const value = item['icon']
-			return value == null ? '' : value.toString()
+			return toText(item['icon'])
+		},
+		deferRefresh(): void {
+			setTimeout(() => {
+				this.getMenuItemTop()
+				this.leftMenuStatus(this.innerCurrent)
+			}, 50)
+		},
+		deferSwitch(index: number): void {
+			setTimeout(() => {
+				this.swichMenu(index)
+			}, 50)
 		},
 		swichMenu(index: number): void {
+			if (index < 0 || index >= this.getTabList().length) return
+			if (this.mode == 'follow') {
+				if (this.arr.length == 0) {
+					this.getMenuItemTop()
+				}
+				const target = 'item' + index.toString()
+				if (this.scrollIntoView != target) {
+					this.scrollIntoView = target
+				}
+			} else {
+				this.scrollRightTop = 0
+			}
+			if (index == this.innerCurrent) return
 			this.innerCurrent = index
+			this.leftMenuStatus(index)
 			this.$emit('update:current', index)
+		},
+		getElRect(className: string, dataVal: string): void {
+			uni.createSelectorQuery()
+				.in(this)
+				.select('.' + className)
+				.boundingClientRect()
+				.exec((res: Array<any>) => {
+					if (res.length == 0 || res[0] == null) {
+						setTimeout(() => {
+							this.getElRect(className, dataVal)
+						}, 30)
+						return
+					}
+					const rect = res[0] as UTSJSONObject
+					const height = rect['height'] as number
+					if (dataVal == 'menuHeight') {
+						this.menuHeight = height
+					} else if (dataVal == 'menuItemHeight') {
+						this.menuItemHeight = height
+					}
+				})
+		},
+		leftMenuStatus(index: number): void {
+			const list = this.getTabList()
+			if (list.length == 0) return
+			const nextIndex = Math.max(0, Math.min(index, list.length - 1))
+			this.innerCurrent = nextIndex
+			this.$emit('update:current', nextIndex)
+			if (this.menuHeight == 0) {
+				this.getElRect('up-cate-tab__menu-scroll-view', 'menuHeight')
+			}
+			if (this.menuItemHeight == 0) {
+				this.getElRect('up-cate-tab__item', 'menuItemHeight')
+			}
+			if (this.menuHeight > 0 && this.menuItemHeight > 0) {
+				this.scrollTop = nextIndex * this.menuItemHeight + this.menuItemHeight / 2 - this.menuHeight / 2
+				this.itemId = 'tab' + nextIndex.toString()
+			}
+		},
+		getMenuItemTop(): void {
+			uni.createSelectorQuery()
+				.in(this)
+				.selectAll('.up-cate-tab__page-item')
+				.boundingClientRect()
+				.exec((res: Array<any>) => {
+					if (res.length == 0 || res[0] == null) {
+						setTimeout(() => {
+							this.getMenuItemTop()
+						}, 100)
+						return
+					}
+					const rects = res[0] as Array<UTSJSONObject>
+					if (rects.length == 0) return
+					this.rects = rects
+					this.arr = [] as Array<number>
+					const firstTop = rects[0]['top'] as number
+					for (let i = 0; i < rects.length; i++) {
+						const top = rects[i]['top'] as number
+						this.arr.push(top - firstTop)
+					}
+				})
+		},
+		rightScroll(e: UniScrollEvent): void {
+			if (this.mode != 'follow') return
+			const detail = e.detail as UTSJSONObject
+			const scrollTop = detail['scrollTop'] as number
+			this.oldScrollTop = scrollTop
+			if (this.arr.length == 0) {
+				this.getMenuItemTop()
+			}
+			if (this.timerActive) return
+			this.timerActive = true
+			setTimeout(() => {
+				this.timerActive = false
+				const scrollHeight = scrollTop + 1
+				for (let i = 0; i < this.arr.length; i++) {
+					const height1 = this.arr[i]
+					const height2 = i + 1 < this.arr.length ? this.arr[i + 1] : -1
+					if (height2 == -1 || (scrollHeight >= height1 && scrollHeight <= height2)) {
+						this.leftMenuStatus(i)
+						return
+					}
+				}
+			}, 100)
 		}
 	}
 }
@@ -124,6 +289,7 @@ export default {
 .up-cate-tab__wrap {
 	flex: 1;
 	display: flex;
+	flex-direction: row;
 	overflow: hidden;
 }
 
@@ -140,14 +306,17 @@ export default {
 	align-items: center;
 	justify-content: center;
 	font-size: 26rpx;
-	color: #444;
+	color: #444444;
+	font-weight: 400;
+	line-height: 1;
 }
 
 .up-cate-tab__item-active {
-	color: #000;
+	color: #000000;
 	font-size: 30rpx;
 	font-weight: 600;
-	background: #fff;
+	background: #ffffff;
+	border-left: 4px solid #2979ff;
 }
 
 .up-cate-tab__right-box {
@@ -155,23 +324,30 @@ export default {
 	background-color: rgb(250, 250, 250);
 }
 
+.up-cate-tab__right-top {
+	display: flex;
+}
+
 .up-cate-tab__page-view {
 	padding: 16rpx;
 }
 
 .up-cate-tab__page-item {
-	background-color: #fff;
+	margin-bottom: 30rpx;
+	background-color: #ffffff;
 	padding: 16rpx;
 	border-radius: 8rpx;
 }
 
 .item-title {
 	font-size: 26rpx;
+	color: #303133;
 	font-weight: bold;
 }
 
 .item-container {
 	display: flex;
+	flex-direction: row;
 	flex-wrap: wrap;
 }
 
@@ -190,6 +366,8 @@ export default {
 }
 
 .item-menu-name {
+	font-weight: normal;
 	font-size: 24rpx;
+	color: #303133;
 }
 </style>
