@@ -1,18 +1,33 @@
 <template>
   <view class="up-barcode" :style="rootStyle">
-    <text v-if="showTopText" class="up-barcode__text" :style="textStyle">{{ displayText }}</text>
-    <view v-if="error.length > 0" class="up-barcode__error" :style="barcodeStyle">
-      <text class="up-barcode__error-text">{{ error }}</text>
-    </view>
-    <view v-else class="up-barcode__bars" :style="barcodeStyle">
-      <view
-        v-for="(bar, index) in bars"
-        :key="index"
-        class="up-barcode__bar"
-        :style="getBarStyle(bar)"
-      ></view>
-    </view>
-    <text v-if="showBottomText" class="up-barcode__text" :style="textStyle">{{ displayText }}</text>
+    <canvas
+      v-if="showCanvas"
+      class="up-barcode__canvas"
+      :id="canvasId"
+      :canvas-id="canvasId"
+      :style="canvasStyle"
+    ></canvas>
+    <image
+      v-if="showImage"
+      :src="barcodeImage"
+      :style="imageStyle"
+      mode="aspectFit"
+    ></image>
+    <template v-else>
+      <text v-if="showTopText" class="up-barcode__text" :style="textStyle">{{ displayText }}</text>
+      <view v-if="error.length > 0" class="up-barcode__error" :style="barcodeStyle">
+        <text class="up-barcode__error-text">{{ error }}</text>
+      </view>
+      <view v-else class="up-barcode__bars" :style="barcodeStyle">
+        <view
+          v-for="(bar, index) in bars"
+          :key="index"
+          class="up-barcode__bar"
+          :style="getBarStyle(bar)"
+        ></view>
+      </view>
+      <text v-if="showBottomText" class="up-barcode__text" :style="textStyle">{{ displayText }}</text>
+    </template>
   </view>
 </template>
 
@@ -225,6 +240,11 @@ export default {
   emits: ['rendered', 'error'],
   data() {
     return {
+      canvasId: 'up-barcode-' + Date.now().toString(),
+      barcodeImage: '',
+      showCanvas: false,
+      canvasContext: null as CanvasContext | null,
+      ctx: null as CanvasRenderingContext2D | null,
       bars: [] as Array<UTSJSONObject>,
       canvasWidth: 200,
       canvasHeight: 80,
@@ -253,6 +273,9 @@ export default {
     showBottomText(): boolean {
       return this.displayValue && this.textPosition != 'top' && this.error.length == 0
     },
+    showImage(): boolean {
+      return this.useCanvas == false && this.barcodeImage.length > 0 && this.error.length == 0
+    },
     rootStyle(): UTSJSONObject {
       return {
         width: this.canvasWidth.toString() + 'px',
@@ -269,6 +292,18 @@ export default {
         width: this.width.toString() + 'px',
         height: this.height.toString() + 'px',
         backgroundColor: this.background
+      } as UTSJSONObject
+    },
+    canvasStyle(): UTSJSONObject {
+      return {
+        width: this.canvasWidth.toString() + 'px',
+        height: this.canvasHeight.toString() + 'px'
+      } as UTSJSONObject
+    },
+    imageStyle(): UTSJSONObject {
+      return {
+        width: this.canvasWidth.toString() + 'px',
+        height: this.canvasHeight.toString() + 'px'
       } as UTSJSONObject
     },
     textStyle(): UTSJSONObject {
@@ -314,10 +349,22 @@ export default {
         const textHeight = this.displayValue ? this.fontSize + this.textMargin : 0
         this.canvasWidth = this.width + this.marginLeftValue + this.marginRightValue
         this.canvasHeight = this.height + this.marginTopValue + this.marginBottomValue + textHeight
+        if (this.useCanvas == false) {
+          this.$nextTick(() => {
+            this.exportImage().then((path: string) => {
+              this.barcodeImage = path
+            }).catch((error: any | null) => {
+              this.$emit('error', error)
+            })
+          })
+        } else {
+          this.barcodeImage = ''
+        }
         this.$emit('rendered', {
-          type: 'view',
+          type: this.useCanvas == false ? 'image' : 'view',
           value: this.value,
-          format: this.format
+          format: this.format,
+          path: this.barcodeImage
         } as UTSJSONObject)
       } catch (error) {
         const message = this.getErrorMessage(error)
@@ -329,6 +376,118 @@ export default {
           format: this.format
         } as UTSJSONObject)
       }
+    },
+    toTempFilePath(options: UTSJSONObject = {} as UTSJSONObject): void {
+      const success = options['success'] as ((res: UTSJSONObject) => void) | null
+      const fail = options['fail'] as ((err: any | null) => void) | null
+      this.exportImage().then((path: string) => {
+        if (success != null) {
+          success({ tempFilePath: path, path } as UTSJSONObject)
+        }
+      }).catch((error: any | null) => {
+        if (fail != null) {
+          fail(error)
+        } else {
+          this.$emit('error', error)
+        }
+      })
+    },
+    exportImage(): Promise<string> {
+      return new Promise((resolve, reject) => {
+        this.showCanvas = true
+        this.$nextTick(() => {
+          this.initCanvas().then(() => {
+            this.drawCanvasBarcode().then(() => {
+              const canvas = this.canvasContext
+              if (canvas == null) {
+                this.showCanvas = false
+                reject(new Error('Canvas is not ready'))
+                return
+              }
+              const dataUrl = canvas.toDataURL('image/png', 1)
+              this.showCanvas = false
+              this.$emit('rendered', { type: 'image', value: this.value, path: dataUrl } as UTSJSONObject)
+              resolve(dataUrl)
+            }).catch((error: any | null) => {
+              this.showCanvas = false
+              reject(error)
+            })
+          }).catch((error: any | null) => {
+            this.showCanvas = false
+            reject(error)
+          })
+        })
+      })
+    },
+    initCanvas(): Promise<void> {
+      return new Promise((resolve, reject) => {
+        uni.createCanvasContextAsync({
+          id: this.canvasId.toString() as string.IDString,
+          component: this,
+          success: (context: CanvasContext) => {
+            this.canvasContext = context
+            this.ctx = context.getContext('2d')
+            resolve()
+          },
+          fail: (error: UniError) => {
+            reject(error)
+          }
+        })
+      })
+    },
+    drawCanvasBarcode(): Promise<void> {
+      return new Promise((resolve, reject) => {
+        const context = this.ctx
+        if (context == null) {
+          reject(new Error('Canvas is not ready'))
+          return
+        }
+        try {
+          const bits = this.encodeBarcode(stringValue(this.value), this.format)
+          context.clearRect(0, 0, this.canvasWidth, this.canvasHeight)
+          context.fillStyle = this.background
+          context.fillRect(0, 0, this.canvasWidth, this.canvasHeight)
+          let barcodeY = this.marginTopValue
+          const textHeight = this.displayValue ? this.fontSize + this.textMargin : 0
+          if (this.displayValue && this.textPosition == 'top') {
+            barcodeY += textHeight
+          }
+          const moduleWidth = this.width / Math.max(1, bits.length)
+          context.fillStyle = this.lineColor
+          let x = this.marginLeftValue
+          for (let i = 0; i < bits.length; i++) {
+            if (bits.substring(i, i + 1) == '1') {
+              context.fillRect(x, barcodeY, moduleWidth + 0.5, this.height)
+            }
+            x += moduleWidth
+          }
+          if (this.displayValue) {
+            this.drawCanvasText(context, barcodeY, textHeight)
+          }
+          context.draw()
+          resolve()
+        } catch (error) {
+          reject(error)
+        }
+      })
+    },
+    drawCanvasText(context: CanvasRenderingContext2D, barcodeY: number, textHeight: number): void {
+      const text = this.displayText
+      const textX = this.textAlign == 'left'
+        ? this.marginLeftValue
+        : (this.textAlign == 'right' ? this.canvasWidth - this.marginRightValue : this.canvasWidth / 2)
+      let textY = this.textPosition == 'top'
+        ? this.marginTopValue + this.fontSize
+        : barcodeY + this.height + this.textMargin + this.fontSize
+      if (textY > this.canvasHeight - this.marginBottomValue) {
+        textY = this.canvasHeight - this.marginBottomValue - 2
+      }
+      context.fillStyle = this.lineColor
+      context.font = this.fontOptions.length > 0
+        ? this.fontOptions + ' ' + this.fontSize.toString() + 'px ' + this.font
+        : this.fontSize.toString() + 'px ' + this.font
+      context.textAlign = this.textAlign
+      context.fillText(text, textX, textY)
     },
     getErrorMessage(error: any | null): string {
       if (error == null) {
@@ -561,6 +720,12 @@ export default {
 
 .up-barcode__bar {
   flex-shrink: 0;
+}
+
+.up-barcode__canvas {
+  position: fixed;
+  left: -9999px;
+  top: -9999px;
 }
 
 .up-barcode__text {
