@@ -618,6 +618,12 @@
 				}
 			},
 			{
+				"path": "qrcode/qrcode",
+				"style": {
+					"navigationBarTitleText": "Qrcode二维码"
+				}
+			},
+			{
 				"path": "poster/poster",
 				"style": {
 					"navigationBarTitleText": "Poster海报生成"

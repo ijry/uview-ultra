@@ -1,0 +1,282 @@
+<template>
+    <view class="up-qrcode" :style="rootStyle" @longpress="longpress" @click="preview">
+        <view v-if="error.length > 0" class="up-qrcode__error" :style="matrixStyle">
+            <text class="up-qrcode__error-text">{{ error }}</text>
+        </view>
+        <view v-else class="up-qrcode__matrix" :style="matrixStyle">
+            <view
+                v-for="(cell, index) in cells"
+                :key="index"
+                class="up-qrcode__cell"
+                :style="getCellStyle(cell)"
+            ></view>
+            <image
+                v-if="icon.length > 0"
+                class="up-qrcode__icon"
+                :src="icon"
+                mode="aspectFill"
+                :style="iconStyle"
+            ></image>
+            <view v-if="showLoading && loading" class="up-qrcode__loading">
+                <up-loading-icon vertical :text="loadingText" textSize="14px"></up-loading-icon>
+            </view>
+        </view>
+    </view>
+</template>
+
+<script lang="uts">
+import { createQrCells, getQrRenderCount } from './qrcode.uts'
+
+function makeId(prefix: string): string {
+    return prefix + Date.now().toString()
+}
+
+function isEmpty(value: any | null): boolean {
+    if (value == null) {
+        return true
+    }
+    const text = value.toString()
+    return text.length == 0 || text == 'undefined' || text == 'null' || text == '{}' || text == '[]'
+}
+
+export default {
+    name: 'up-qrcode',
+    props: {
+        cid: {
+            type: String,
+            default(): string {
+                return makeId('up-qrcode-')
+            }
+        },
+        size: {
+            type: Number,
+            default: 200
+        },
+        unit: {
+            type: String,
+            default: 'px'
+        },
+        show: {
+            type: Boolean,
+            default: true
+        },
+        val: {
+            type: String,
+            default: ''
+        },
+        background: {
+            type: String,
+            default: '#ffffff'
+        },
+        foreground: {
+            type: String,
+            default: '#000000'
+        },
+        pdground: {
+            type: String,
+            default: '#000000'
+        },
+        icon: {
+            type: String,
+            default: ''
+        },
+        iconSize: {
+            type: Number,
+            default: 40
+        },
+        lv: {
+            type: Number,
+            default: 3
+        },
+        onval: {
+            type: Boolean,
+            default: true
+        },
+        loadMake: {
+            type: Boolean,
+            default: true
+        },
+        usingComponents: {
+            type: Boolean,
+            default: true
+        },
+        showLoading: {
+            type: Boolean,
+            default: true
+        },
+        loadingText: {
+            type: String,
+            default: '生成中'
+        },
+        allowPreview: {
+            type: Boolean,
+            default: false
+        },
+        useRootHeightAndWidth: {
+            type: Boolean,
+            default: false
+        }
+    },
+    emits: ['result', 'longpressCallback', 'preview', 'error'],
+    data() {
+        return {
+            rootId: makeId('rootId-'),
+            cells: [] as Array<UTSJSONObject>,
+            loading: false,
+            result: '',
+            error: ''
+        }
+    },
+    computed: {
+        sizeLocal(): number {
+            return this.size
+        },
+        rootStyle(): UTSJSONObject {
+            return {
+                width: this.useRootHeightAndWidth ? '100%' : this.sizeLocal.toString() + this.unit,
+                height: this.useRootHeightAndWidth ? '100%' : this.sizeLocal.toString() + this.unit
+            } as UTSJSONObject
+        },
+        matrixStyle(): UTSJSONObject {
+            return {
+                width: this.sizeLocal.toString() + this.unit,
+                height: this.sizeLocal.toString() + this.unit,
+                backgroundColor: this.background
+            } as UTSJSONObject
+        },
+        iconStyle(): UTSJSONObject {
+            const size = this.iconSize.toString() + this.unit
+            return {
+                width: size,
+                height: size,
+                left: ((this.sizeLocal - this.iconSize) / 2).toString() + this.unit,
+                top: ((this.sizeLocal - this.iconSize) / 2).toString() + this.unit
+            } as UTSJSONObject
+        },
+        cellSize(): number {
+            return this.sizeLocal / getQrRenderCount(this.val, this.lv)
+        }
+    },
+    watch: {
+        val() {
+            if (this.onval) {
+                this.makeCode()
+            }
+        },
+        size() { this.makeCode() },
+        background() { this.makeCode() },
+        foreground() { this.makeCode() },
+        pdground() { this.makeCode() }
+    },
+    mounted(): void {
+        if (this.loadMake) {
+            this.makeCode()
+        }
+    },
+    methods: {
+        getCellStyle(cell: UTSJSONObject): UTSJSONObject {
+            const size = this.cellSize.toString() + this.unit
+            return {
+                width: size,
+                height: size,
+                backgroundColor: cell['color'] == null ? this.background : cell['color'].toString()
+            } as UTSJSONObject
+        },
+        makeCode(): void {
+            if (isEmpty(this.val)) {
+                this.error = '二维码内容不能为空'
+                this.cells = [] as Array<UTSJSONObject>
+                this.$emit('error', { message: this.error } as UTSJSONObject)
+                return
+            }
+            try {
+                this.loading = true
+                this.error = ''
+                this.cells = createQrCells(this.val, this.foreground, this.background, this.pdground, this.lv)
+                this.result = this.val
+                this.loading = false
+                this.$emit('result', this.result)
+            } catch (error) {
+                this.loading = false
+                const err = error as UTSJSONObject
+                const message = err['message']
+                this.error = message == null ? error.toString() : message.toString()
+                this.cells = [] as Array<UTSJSONObject>
+                this.$emit('error', { message: this.error } as UTSJSONObject)
+            }
+        },
+        _makeCode(): void {
+            this.makeCode()
+        },
+        _clearCode(): void {
+            this.cells = [] as Array<UTSJSONObject>
+            this.result = ''
+        },
+        preview(e: UniPointerEvent): void {
+            this.$emit('preview', {
+                url: this.result
+            } as UTSJSONObject, e)
+        },
+        longpress(): void {
+            this.$emit('longpressCallback', this.result)
+        },
+        toTempFilePath(options: UTSJSONObject): void {
+            const fail = options['fail']
+            if (fail != null) {
+                ;(fail as (error: UTSJSONObject) => void)({
+                    errMsg: 'up-qrcode UTS view renderer does not support toTempFilePath'
+                } as UTSJSONObject)
+            }
+        }
+    }
+}
+</script>
+
+<style scoped lang="scss">
+.up-qrcode {
+    display: flex;
+    position: relative;
+}
+
+.up-qrcode__matrix {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    position: relative;
+    overflow: hidden;
+}
+
+.up-qrcode__cell {
+    flex-shrink: 0;
+}
+
+.up-qrcode__icon {
+    position: absolute;
+    border-radius: 4px;
+    background-color: #ffffff;
+}
+
+.up-qrcode__loading {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(255, 255, 255, 0.8);
+}
+
+.up-qrcode__error {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f8f8f8;
+}
+
+.up-qrcode__error-text {
+    color: #fa3534;
+    font-size: 14px;
+}
+</style>
