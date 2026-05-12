@@ -35,7 +35,7 @@
 
 			<view v-if="showBrushSettings" class="up-signature__brush-settings">
 				<view class="up-signature__progress">
-					<text class="up-signature__progress-label">笔画粗细:</text>
+					<text class="up-signature__progress-label">{{ penSizeLabel }}:</text>
 					<up-slider
 						v-model="lineWidth"
 						:min="1"
@@ -48,7 +48,7 @@
 
 			<view v-if="showColorSettings" class="up-signature__color-settings">
 				<view class="up-signature__color-picker">
-					<text class="up-signature__color-label">笔画颜色:</text>
+					<text class="up-signature__color-label">{{ penColorLabel }}:</text>
 					<view class="up-signature__colors">
 						<view
 							v-for="(color, index) in colorItems"
@@ -66,6 +66,8 @@
 </template>
 
 <script lang="uts">
+import { t } from '../../libs/i18n/index.uts'
+
 type SignaturePoint = {
 	x: number,
 	y: number,
@@ -214,6 +216,12 @@ export default {
 			style['height'] = this.canvasHeight.toString() + 'px'
 			style['background'] = this.bgColor
 			return style
+		},
+		penSizeLabel(): string {
+			return t('up.signature.penSize')
+		},
+		penColorLabel(): string {
+			return t('up.signature.penColor')
 		}
 	},
 	methods: {
