@@ -7,6 +7,7 @@
             :ref="`up-column-${index}`"
             :id="`up-column-${index}`"
             class="up-column"
+            :style="getColumnStyle(index)"
         >
             <slot name="column"
                 :colIndex="index" 
@@ -147,23 +148,33 @@
             },
             
             // 窗口大小变化处理函数
-            fhandleWindowResize(res: any) {
-				// todo2026 wait uni-app-x
-                // this.windowWidth = res.size.windowWidth
-                // this.windowHeight = res.size.windowHeight
-                // // 防抖处理，避免频繁触发
-                // if (this.resizeTimer) {
-                //     clearTimeout(this.resizeTimer);
-                // }
-                // this.resizeTimer = setTimeout(() => {
-                //     const newColumnsCount = this.getColumnsCount();
-                //     const oldColumnsCount = this.columnList.length;
-                    
-                //     // 只有列数发生变化时才重新分配数据
-                //     if (newColumnsCount !== oldColumnsCount) {
-                //         this.redistributeData();
-                //     }
-                // }, 300);
+            getColumnStyle(index: number): UTSJSONObject {
+                const style = {} as UTSJSONObject
+                if (index > 0) {
+                    style['marginLeft'] = '10rpx'
+                }
+                return style
+            },
+
+            handleWindowResize(res: UTSJSONObject): void {
+                const size = res['size'] as UTSJSONObject | null
+                if (size != null) {
+                    const width = size['windowWidth']
+                    const height = size['windowHeight']
+                    if (width != null) {
+                        this.windowWidth = parseInt(width.toString())
+                    }
+                    if (height != null) {
+                        this.windowHeight = parseInt(height.toString())
+                    }
+                } else {
+                    this.windowWidth = uni.getSystemInfoSync().windowWidth
+                }
+                const newColumnsCount = this.getColumnsCount()
+                const oldColumnsCount = this.columnList.length
+                if (newColumnsCount != oldColumnsCount) {
+                    this.redistributeData()
+                }
             },
             
             // 重新分配所有数据
@@ -329,11 +340,6 @@
         /* #ifndef APP-NVUE */
         height: 100%;
         /* #endif */
-        // 添加列之间的间距
-		// wait uni-app-x
-        // &:not(:first-child) {
-        //     margin-left: 10rpx;
-        // }
     }
 
     .up-image {
