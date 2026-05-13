@@ -186,12 +186,12 @@
 					"navigationBarTitleText": "警告"
 				}
 			}
-			// , {
-			// 	"path": "progress/progress",
-			// 	"style": {
-			// 		"navigationBarTitleText": "进度条"
-			// 	}
-			// }
+			, {
+				"path": "progress/progress",
+				"style": {
+					"navigationBarTitleText": "进度条"
+				}
+			}
 			,{
 				"path": "dropdown/dropdown",
 				"style": {
