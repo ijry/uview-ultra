@@ -17,7 +17,7 @@
 			<up-overlay :show="isOpen" @click="overlayClick" v-if="overlay" :zIndex="zIndex" :duration="duration + 50"
 				:customStyle="overlayStyle" :opacity="overlayOpacity" @touchmove.stop.prevent="noop"></up-overlay>
 			<view class="up-select__options__wrap"
-				:style="{ overflowY: 'auto', zIndex: zIndex + 1, left: optionsWrapLeft, right: optionsWrapRight, maxHeight: maxHeight}">
+				:style="optionsWrapStyle">
 				<view class="up-select__options" v-if="isOpen">
 					<slot name="options">
 						<view class="up-select__options_item" :class="getOptionClass(item)"
@@ -51,6 +51,17 @@ function createEmptyObject(): UTSJSONObject {
 
 function valueToString(value: any | null): string {
 	return value == null ? '' : value.toString();
+}
+
+function normalizeNumber(value: any | null, fallback: number = 0): number {
+	if (typeof value === 'number') {
+		return value;
+	}
+	if (value == null) {
+		return fallback;
+	}
+	const parsed = parseFloat(value.toString());
+	return isNaN(parsed) ? fallback : parsed;
 }
 
 export default {
@@ -131,7 +142,10 @@ export default {
 		return {
 			isOpen: false,
 			optionsWrapLeft: 'auto',
-			optionsWrapRight: 'auto'
+			optionsWrapRight: 'auto',
+			optionsWrapTop: '0px',
+			optionsWrapMinWidth: '100px',
+			optionsWrapMaxHeight: this.maxHeight
 		}
 	},
 	computed: {
@@ -144,6 +158,18 @@ export default {
 				}
 			}
 			return '';
+		},
+		optionsWrapStyle(): UTSJSONObject {
+			return {
+				overflowY: 'auto',
+				position: 'fixed',
+				zIndex: this.zIndex + 1,
+				left: this.optionsWrapLeft,
+				right: this.optionsWrapRight,
+				top: this.optionsWrapTop,
+				minWidth: this.optionsWrapMinWidth,
+				maxHeight: this.optionsWrapMaxHeight
+			} as UTSJSONObject
 		}
 	},
 	methods: {
@@ -178,10 +204,23 @@ export default {
 		adjustOptionsWrapPosition(): void {
 			const wi = getWindowInfo();
 			const windowWidth = wi.windowWidth;
-			this.$uGetRect('.up-select__options__wrap').then((rect: NodeInfo) => {
-				if (rect != null && rect.left != null && rect.width != null && rect.left + rect.width > windowWidth) {
+			const windowHeight = wi.windowHeight;
+			this.$uGetRect('.up-select__label').then((rect: NodeInfo) => {
+				const left = normalizeNumber(rect.left, 0);
+				const top = normalizeNumber(rect.top, 0);
+				const width = Math.max(100, normalizeNumber(rect.width, 100));
+				const height = normalizeNumber(rect.height, 0);
+				const dropdownTop = top + height;
+				const availableHeight = Math.max(80, windowHeight - dropdownTop - 8);
+				this.optionsWrapTop = dropdownTop.toString() + 'px';
+				this.optionsWrapMinWidth = width.toString() + 'px';
+				this.optionsWrapMaxHeight = availableHeight.toString() + 'px';
+				if (left + width > windowWidth) {
 					this.optionsWrapLeft = 'auto';
 					this.optionsWrapRight = '0px';
+				} else {
+					this.optionsWrapLeft = left.toString() + 'px';
+					this.optionsWrapRight = 'auto';
 				}
 			});
 		}
@@ -215,9 +254,8 @@ export default {
 		}
 
 		.up-select__options__wrap {
-			margin-bottom: 46px;
-			position: absolute;
-			top: 20px;
+			position: fixed;
+			top: 0;
 			left: 0;
 		}
 
