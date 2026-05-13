@@ -1,5 +1,8 @@
 <template>
 	<view class="u-page">
+		<!-- #ifdef APP -->
+		<scroll-view style="flex:1">
+		<!-- #endif -->
 		<view class="u-page__item">
 			<text class="u-page__item__title">基础功能</text>
 			<view class="p-4 bg-white">
@@ -42,6 +45,9 @@
 			</up-box>
 		</view>
 		<up-gap height="50"></up-gap>
+		<!-- #ifdef APP -->
+		</scroll-view>
+		<!-- #endif -->
 	</view>
 </template>
 
