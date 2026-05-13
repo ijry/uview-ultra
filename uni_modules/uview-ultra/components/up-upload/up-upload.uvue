@@ -565,23 +565,26 @@
 					res = (beforeRead as UPUploadReadCallback)(file, this.getDetail(null));
 				}
 				if (useBeforeRead) {
-					// todo2026
-					// res = new Promise((resolve, reject) => {
-					// 	this.$emit(
-					// 		'beforeRead',
-					// 		UTSJSONObject.assign(UTSJSONObject.assign({
-					// 			file
-					// 		}, this.getDetail()), {
-					// 			callback: (ok) => {
-					// 				ok ? resolve() : reject();
-					// 			},
-					// 		})
-					// 	);
-					// });
+					this.$emit(
+						'beforeRead',
+						UTSJSONObject.assign(UTSJSONObject.assign({
+							file
+						}, this.getDetail(null)), {
+							callback: (ok: boolean) => {
+								if (ok) {
+									this.onAfterRead(file)
+								}
+							},
+						})
+					);
+					return
 				}
 				if (testPromise(res)) {
 					// res.then((data) => this.onAfterRead(data != null ? data : file));
 				} else {
+					if (typeof res == 'boolean' && !(res as boolean)) {
+						return
+					}
 					const readFile = (res != null ? res : file) as Array<UPUploadFileChoosed | null>
 					this.onAfterRead(readFile);
 				}
