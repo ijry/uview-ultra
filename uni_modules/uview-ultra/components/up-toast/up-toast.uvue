@@ -198,8 +198,11 @@
 					this.timer = setTimeout(() => {
 						// 倒计时结束，清除定时器，隐藏toast组件
 						this.clearTimer()
-						// todo2026判断是否存在callback方法，如果存在就执行
-						// typeof(this.tmpConfig['complete']) === 'function' && this.tmpConfig.complete()
+						// 判断是否存在callback方法，如果存在就执行
+						const complete = this.tmpConfig['complete']
+						if (typeof complete === 'function') {
+							;(complete as () => void)()
+						}
 					}, this.tmpConfig['duration'] as number)
 				}
 			},
