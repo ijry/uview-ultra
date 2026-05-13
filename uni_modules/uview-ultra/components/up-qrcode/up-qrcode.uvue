@@ -39,6 +39,15 @@ function isEmpty(value: any | null): boolean {
     return text.length == 0 || text == 'undefined' || text == 'null' || text == '{}' || text == '[]'
 }
 
+function getPixelRatio(): number {
+    const info = uni.getSystemInfoSync()
+    const ratio = (info as UTSJSONObject)['pixelRatio']
+    if (typeof ratio === 'number' && ratio > 0) {
+        return ratio
+    }
+    return 1
+}
+
 export default {
     name: 'up-qrcode',
     props: {
@@ -312,19 +321,20 @@ export default {
             if (context == null) {
                 return
             }
-            context.clearRect(0, 0, this.sizeLocal, this.sizeLocal)
+            const drawSize = this.sizeLocal * getPixelRatio()
+            context.clearRect(0, 0, drawSize, drawSize)
             context.fillStyle = this.background
-            context.fillRect(0, 0, this.sizeLocal, this.sizeLocal)
+            context.fillRect(0, 0, drawSize, drawSize)
             const count = getQrRenderCount(this.val, this.lv)
             for (let i = 0; i < this.cells.length; i++) {
                 const cell = this.cells[i]
                 const color = cell['color'] == null ? this.background : cell['color'].toString()
                 const row = Math.floor(i / count)
                 const col = i % count
-                const left = Math.floor(col * this.sizeLocal / count)
-                const top = Math.floor(row * this.sizeLocal / count)
-                const right = Math.ceil((col + 1) * this.sizeLocal / count)
-                const bottom = Math.ceil((row + 1) * this.sizeLocal / count)
+                const left = Math.floor(col * drawSize / count)
+                const top = Math.floor(row * drawSize / count)
+                const right = Math.ceil((col + 1) * drawSize / count)
+                const bottom = Math.ceil((row + 1) * drawSize / count)
                 context.fillStyle = color
                 context.fillRect(left, top, right - left, bottom - top)
             }
