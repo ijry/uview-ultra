@@ -682,28 +682,14 @@
 												formData: formData,
 												success: (uploadFileRes: UploadFileSuccess) => {
 													let thumb = '';
-													let afterPromise = '';
-													if (that.customAfterAutoUpload) {
-														// todo2026
-														// afterPromise = new Promise((resolve, reject) => {
-														// 	that.$emit(
-														// 		'afterAutoUpload',
-														// 		Object.assign(res0, {
-														// 			callback: (r) => {
-														// 				r.url ? resolve(r) : reject();
-														// 			},
-														// 		})
-														// 	);
-														// });
+													let uploadRes = JSON.parseObject(uploadFileRes.data);
+													result = res0!!.getString("data.params.host") + '/' + res0!!.getString("data.params.key");
+													if (that.accept === 'video' || testVideo(result)) {
+														thumb = result + '?x-oss-process=video/snapshot,t_10000,m_fast';
 													}
-													let res0 = JSON.parseObject(uploadFileRes.data);
-													if (testPromise(afterPromise)) {
-														// afterPromise.then((data) => that.succcessUpload(len + j, data.url, data.thumb));
+													if (that.customAfterAutoUpload) {
+														that.emitAfterAutoUpload(uploadRes, len + j, result, thumb)
 													} else {
-														result = res0!!.getString("data.params.host") + '/' + res0!!.getString("data.params.key");
-														if (that.accept === 'video' || testVideo(result)) {
-															thumb = result + '?x-oss-process=video/snapshot,t_10000,m_fast';
-														}
 														that.succcessUpload(len + j, result, thumb);
 													}
 												}
@@ -731,22 +717,8 @@
 									header: this.autoUploadHeader,
 									success: (uploadFileRes: UploadFileSuccess) => {
 										let res0 = JSON.parseObject(uploadFileRes.data);
-										let afterPromise = '';
 										if (that.customAfterAutoUpload) {
-											// todo2026
-											// afterPromise = new Promise((resolve, reject) => {
-											// 	that.$emit(
-											// 		'afterAutoUpload',
-											// 		UTSJSONObject.assign(res0, {
-											// 			callback: (r) => {
-											// 				r.url ? resolve(r) : reject();
-											// 			}
-											// 		})
-											// 	);
-											// });
-										}
-										if (testPromise(afterPromise)) {
-											// afterPromise.then((data) => that.succcessUpload(len + j, data.url));
+											that.emitAfterAutoUpload(res0, len + j)
 										} else {
 											if (res0!!['code'] as number != 200) {
 												uni.showToast({
@@ -778,6 +750,21 @@
 						file
 					}, this.getDetail(null)));
 				}
+			},
+			emitAfterAutoUpload(res: UTSJSONObject | null, index: number, defaultUrl: string = '', defaultThumb: string = '') {
+				const payload = UTSJSONObject.assign(res != null ? res : {} as UTSJSONObject, {
+					url: defaultUrl,
+					thumb: defaultThumb,
+					callback: (r: UTSJSONObject) => {
+						const url = r.getString('url') ?? defaultUrl
+						if (url == '') {
+							return
+						}
+						const thumb = r.getString('thumb') ?? defaultThumb
+						this.succcessUpload(index, url, thumb)
+					}
+				})
+				this.$emit('afterAutoUpload', payload)
 			},
 			updateUpload(index: number, param: UTSJSONObject) {
 				const fileList = this.fileList as Array<UTSJSONObject>
