@@ -108,9 +108,13 @@
 			default: defProps.getString('indexList.activeColor')
 		},
 		indexList: {
-			type: Array as PropType<string[]>,
-			default: () : Array<string> => {
-			    return defProps.getArray<string>('indexList.indexList')!!
+			type: Array as PropType<Array<any>>,
+			default: () : Array<any> => {
+				const list = [] as Array<any>
+				defProps.getArray<string>('indexList.indexList')!!.forEach((item: string) => {
+					list.push(item)
+				})
+			    return list
 			}
 		},
 		sticky: {
@@ -151,11 +155,15 @@
 	const scrolling = ref(false)
 	
 	// 如果有传入外部的indexList锚点数组则使用，否则使用内部生成A-Z字母
-	const uIndexList = computed(() => {
+	const uIndexList = computed((): Array<any> => {
 		if(props.indexList.length > 0) {
-			return props.indexList as Array<string>
+			return props.indexList as Array<any>
 		} else {
-			return indexList()
+			const list = [] as Array<any>
+			indexList().forEach((item: string) => {
+				list.push(item)
+			})
+			return list
 		}
 	})
 
@@ -223,7 +231,7 @@
 	})
 	
 	// 监听字母索引的变化，重新设置尺寸
-	watch((): string[] => uIndexList.value, () => {
+	watch((): Array<any> => uIndexList.value, () => {
 		sleep(30).then(() => {
 			setIndexListLetterInfo()
 		})
@@ -231,13 +239,22 @@
 		immediate: false
 	})
 	
-	const keyVal = (item: UTSJSONObject | string) => {
-		if (typeof item != 'string') {
-			// todo2026
-			return item
-		} else {
+	const keyVal = (item: any): string => {
+		if (item == null) {
+			return ''
+		}
+		if (typeof item == 'string') {
 			return item
 		}
+		const itemObj = item as UTSJSONObject
+		const keyNames = ['key', 'name', 'value', 'label', 'text'] as string[]
+		for (let i = 0; i < keyNames.length; i++) {
+			const value = itemObj[keyNames[i]]
+			if (value != null) {
+				return value.toString()
+			}
+		}
+		return item.toString()
 	}
 	
 	// 获取整个列表的尺寸信息
@@ -284,15 +301,11 @@
 		if (currentIndex !== activeIndex.value) {
 			activeIndex.value = currentIndex
 			// 指示器显示的字符
-			if (typeof uIndexList.value[currentIndex] == 'string') {
-				indicatorText.value = uIndexList.value[currentIndex].toString()
-			} else {
-				
-			}
+			indicatorText.value = keyVal(uIndexList.value[currentIndex])
 			// #ifndef MP-WEIXIN
 			// 在非微信小程序下，scrollIntoView生效，而在微信小程序下，需要通过scrollTop来滚动到指定位置
 			// 元素id不能包含特殊字符会导致H5下点击索引滚动失效
-			let tmpId = uIndexList.value[currentIndex].toString().charCodeAt(0).toString()
+			let tmpId = keyVal(uIndexList.value[currentIndex]).charCodeAt(0).toString()
 			scrollIntoView.value = `up-index-item-${tmpId}`
 			console.log(scrollIntoView.value)
 			// #endif
