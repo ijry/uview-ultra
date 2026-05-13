@@ -231,6 +231,7 @@
 	 * @example <up-upload :action="action" :fileList="fileList" ></up-upload>
 	 */
 	import { UPUploadListItem, UPUploadFileChoosed, UPUploadChooseFileOptions } from './types.uts'
+	type UPUploadReadCallback = (file: Array<UPUploadFileChoosed | null>, detail: UTSJSONObject) => any
 	function createStringList(values: Array<string> = [] as Array<string>): Array<string> {
 		return values
 	}
@@ -557,12 +558,11 @@
 			onBeforeRead(file: Array<UPUploadFileChoosed|null>) {
 				let beforeRead = this.beforeRead
 				let useBeforeRead = this.useBeforeRead
-				let res = file
+				let res: any = file
 				// beforeRead是否为一个方法
 				if (beforeRead != null && testFunc(beforeRead)) {
 					// 如果用户定义了此方法，则去执行此方法，并传入读取的文件回调
-					// TODO2026
-					// res = beforeRead(file, this.getDetail());
+					res = (beforeRead as UPUploadReadCallback)(file, this.getDetail(null));
 				}
 				if (useBeforeRead) {
 					// todo2026
@@ -582,8 +582,8 @@
 				if (testPromise(res)) {
 					// res.then((data) => this.onAfterRead(data != null ? data : file));
 				} else {
-					// @ts-ignore
-					this.onAfterRead(res != null ? res : file);
+					const readFile = (res != null ? res : file) as Array<UPUploadFileChoosed | null>
+					this.onAfterRead(readFile);
 				}
 			},
 			getDetail(index: number|null = null) {
@@ -769,8 +769,7 @@
 					}
 				} else {
 					if (typeof afterRead === 'function') {
-						// todo2026
-						// afterRead(file, this.getDetail());
+						;(afterRead as UPUploadReadCallback)(file, this.getDetail(null));
 					}
 					this.$emit('afterRead', UTSJSONObject.assign({
 						file
