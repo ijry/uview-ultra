@@ -1,4 +1,4 @@
-const QUIET_ZONE = 4
+const DEFAULT_QUIET_ZONE = 0
 const PAD0 = 0xec
 const PAD1 = 0x11
 const MAX_VERSION = 40
@@ -67,6 +67,13 @@ function normalizeLevel(level: number): number {
     if (level < 0) return 0
     if (level > 3) return 3
     return level
+}
+
+function normalizeQuietZone(quietZone: number): number {
+    if (quietZone < 0) {
+        return 0
+    }
+    return Math.floor(quietZone)
 }
 
 function moduleCount(version: number): number {
@@ -428,15 +435,16 @@ function buildMatrix(value: string, level: number): Array<Array<number>> {
     return matrix
 }
 
-export function createQrCells(value: string, foreground: string, background: string, pdground: string, level: number = 3): Array<UTSJSONObject> {
+export function createQrCells(value: string, foreground: string, background: string, pdground: string, level: number = 3, quietZone: number = DEFAULT_QUIET_ZONE): Array<UTSJSONObject> {
     const matrix = buildMatrix(value, level)
     const cells = [] as Array<UTSJSONObject>
     const size = matrix.length
-    const total = size + QUIET_ZONE * 2
+    const zone = normalizeQuietZone(quietZone)
+    const total = size + zone * 2
     for (let row = 0; row < total; row++) {
         for (let col = 0; col < total; col++) {
-            const qrRow = row - QUIET_ZONE
-            const qrCol = col - QUIET_ZONE
+            const qrRow = row - zone
+            const qrCol = col - zone
             let dark = false
             let color = background
             if (qrRow >= 0 && qrCol >= 0 && qrRow < size && qrCol < size) {
@@ -456,12 +464,17 @@ export function createQrCells(value: string, foreground: string, background: str
 }
 
 export function getQrRenderCount(value: string = '', level: number = 3): number {
+    return getQrRenderCountWithQuietZone(value, level, DEFAULT_QUIET_ZONE)
+}
+
+export function getQrRenderCountWithQuietZone(value: string = '', level: number = 3, quietZone: number = DEFAULT_QUIET_ZONE): number {
+    const zone = normalizeQuietZone(quietZone)
     if (value.length == 0) {
-        return moduleCount(1) + QUIET_ZONE * 2
+        return moduleCount(1) + zone * 2
     }
     try {
-        return moduleCount(chooseVersion(utf8Bytes(value), level)) + QUIET_ZONE * 2
+        return moduleCount(chooseVersion(utf8Bytes(value), level)) + zone * 2
     } catch (_: any) {
-        return moduleCount(MAX_VERSION) + QUIET_ZONE * 2
+        return moduleCount(MAX_VERSION) + zone * 2
     }
 }

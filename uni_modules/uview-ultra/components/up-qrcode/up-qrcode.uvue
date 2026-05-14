@@ -8,7 +8,6 @@
                 class="up-qrcode__canvas"
                 :id="canvasId"
                 :canvas-id="canvasId"
-                type="2d"
                 :style="canvasStyle"
             ></canvas>
             <image
@@ -26,10 +25,10 @@
 </template>
 
 <script lang="uts">
-import { createQrCells, getQrRenderCount } from './qrcode.uts'
+import { createQrCells, getQrRenderCountWithQuietZone } from './qrcode.uts'
 
 function makeId(prefix: string): string {
-    return prefix + Date.now().toString() + '-' + Math.floor(Math.random() * 1000000).toString()
+    return prefix + Date.now().toString()
 }
 
 function isEmpty(value: any | null): boolean {
@@ -38,6 +37,14 @@ function isEmpty(value: any | null): boolean {
     }
     const text = value.toString()
     return text.length == 0 || text == 'undefined' || text == 'null' || text == '{}' || text == '[]'
+}
+
+function getPixelRatio(): number {
+    const info = uni.getSystemInfoSync()
+    if (info.pixelRatio > 0) {
+        return info.pixelRatio
+    }
+    return 1
 }
 
 export default {
@@ -89,6 +96,10 @@ export default {
             type: Number,
             default: 3
         },
+        quietZone: {
+            type: Number,
+            default: 0
+        },
         onval: {
             type: Boolean,
             default: true
@@ -126,7 +137,7 @@ export default {
             loading: false,
             result: '',
             error: '',
-            canvasId: this.cid,
+            canvasId: makeId('up-qrcode-canvas-'),
             canvasContext: null as CanvasContext | null,
             ctx: null as CanvasRenderingContext2D | null
         }
@@ -158,7 +169,7 @@ export default {
             } as UTSJSONObject
         },
         cellSize(): number {
-            return this.sizeLocal / getQrRenderCount(this.val, this.lv)
+            return this.sizeLocal / getQrRenderCountWithQuietZone(this.val, this.lv, this.quietZone)
         },
         canvasStyle(): UTSJSONObject {
             return {
@@ -194,7 +205,7 @@ export default {
             try {
                 this.loading = true
                 this.error = ''
-                this.cells = createQrCells(this.val, this.foreground, this.background, this.pdground, this.lv)
+                this.cells = createQrCells(this.val, this.foreground, this.background, this.pdground, this.lv, this.quietZone)
                 this.result = this.val
                 this.loading = false
                 this.$nextTick(() => {
@@ -299,7 +310,17 @@ export default {
                     component: this,
                     success: (context: CanvasContext) => {
                         this.canvasContext = context
-                        this.ctx = context.getContext('2d')
+                        const ctx = context.getContext('2d')
+                        if (ctx == null) {
+                            reject(new Error('Canvas context is not ready'))
+                            return
+                        }
+                        const canvas = ctx.canvas
+                        const pixelRatio = getPixelRatio()
+                        canvas.width = this.sizeLocal * pixelRatio
+                        canvas.height = this.sizeLocal * pixelRatio
+                        ctx.scale(pixelRatio, pixelRatio)
+                        this.ctx = ctx
                         resolve()
                     },
                     fail: (error: UniError) => {
@@ -317,10 +338,13 @@ export default {
             context.clearRect(0, 0, drawSize, drawSize)
             context.fillStyle = this.background
             context.fillRect(0, 0, drawSize, drawSize)
-            const count = getQrRenderCount(this.val, this.lv)
+            const count = getQrRenderCountWithQuietZone(this.val, this.lv, this.quietZone)
             for (let i = 0; i < this.cells.length; i++) {
                 const cell = this.cells[i]
-                const color = cell['color'] == null ? this.background : cell['color'].toString()
+                if (!cell.getBoolean('dark', false)) {
+                    continue
+                }
+                const color = cell.getString('color', this.foreground)
                 const row = Math.floor(i / count)
                 const col = i % count
                 const left = Math.floor(col * drawSize / count)
@@ -348,7 +372,9 @@ export default {
 }
 
 .up-qrcode__canvas {
-    display: flex;
+    position: absolute;
+    left: 0;
+    top: 0;
 }
 
 .up-qrcode__icon {
