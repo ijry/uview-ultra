@@ -40,7 +40,9 @@
 			</up-scroll-list>
 		</view>
 		<view class="u-demo-block">
-			<text class="u-demo-block__title">多菜单扩展</text>
+			<view class="u-demo-block__title">
+				<text class="text">多菜单扩展</text>
+			</view>
 			<up-scroll-list>
 				<view class="scroll-list">
 					<view
