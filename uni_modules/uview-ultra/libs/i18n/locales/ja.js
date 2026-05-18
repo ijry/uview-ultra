@@ -34,6 +34,7 @@ export default {
     "up_calendar_chooseDates": "日付選択",
     "up_calendar_disabled": "この日付は無効です",
     "up_calendar_daysExceed": "選択日数は{days}日を超えることはできません",
+    "up_calendar_today": "今日",
     "up_cityLocate_locateCity": "都市を特定",
     "up_cityLocate_fail": "位置情報の取得に失敗しました。クリックして再試行してください。",
     "up_cityLocate_locating": "位置情報を取得中",

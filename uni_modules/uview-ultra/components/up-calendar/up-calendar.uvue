@@ -14,6 +14,9 @@
 				:showSubtitle="showSubtitle"
 				:showTitle="showTitle"
 				:showSwitch="monthSwitch"
+				:showToday="showToday"
+				:todayText="todayText"
+				:todayDisabled="todayDisabled"
 				:prevDisabled="switchPrevDisabled"
 				:nextDisabled="switchNextDisabled"
 				:prevYearDisabled="switchPrevYearDisabled"
@@ -22,6 +25,7 @@
 				@next="nextMonth"
 				@prevYear="prevYear"
 				@nextYear="nextYear"
+				@today="jumpToToday"
 			></uHeader>
 			<scroll-view
 				v-if="!monthSwitch"
@@ -49,6 +53,7 @@
 					:rangePrompt="rangePrompt"
 					:showRangePrompt="showRangePrompt"
 					:allowSameDay="allowSameDay"
+					:todayDate="todayDate"
 					ref="month"
 					@monthSelected="monthSelectedM"
 					@updateMonthTop="onUpdateMonthTopM"
@@ -76,6 +81,7 @@
 					:rangePrompt="rangePrompt"
 					:showRangePrompt="showRangePrompt"
 					:allowSameDay="allowSameDay"
+					:todayDate="todayDate"
 					ref="month"
 					@monthSelected="monthSelectedM"
 					@updateMonthTop="onUpdateMonthTopM"
@@ -105,6 +111,7 @@ import uMonth, { monthsItem } from './month.uvue'
 import { propsCalendar } from './props'
 import util from './util'
 import {dayuts} from '@/uni_modules/lime-dayuts';
+import { t } from '../../libs/i18n/index.uts'
 // import Calendar from '../../libs/util/calendar'
 import { mpMixin } from '../../libs/mixin/mpMixin'
 import { mixin } from '../../libs/mixin/mixin'
@@ -306,6 +313,11 @@ export default {
 		monthSwitch: {
 			type: Boolean,
 			default: calendarProp['monthSwitch']
+		},
+		// 是否显示今天按钮
+		showToday: {
+			type: Boolean,
+			default: calendarProp['showToday']
 		}
 	},
 	data() {
@@ -382,6 +394,24 @@ export default {
 				? (this.minDate as number).toString()
 				// @ts-ignore
 				: this.minDate.toString()
+		},
+		todayDate(): string {
+			return dayuts().format('YYYY-MM-DD')
+		},
+		todayText(): string {
+			return t('up.calendar.today')
+		},
+		todayDisabled(): boolean {
+			let today = dayuts(this.todayDate as string)
+			let innerMinDate = this.innerMinDate as string
+			let innerMaxDate = this.innerMaxDate as string
+			if (innerMinDate != '' && innerMinDate != '0' && today.isBefore(dayuts(innerMinDate), 'day')) {
+				return true
+			}
+			if (innerMaxDate != '' && innerMaxDate != '0' && today.isAfter(dayuts(innerMaxDate), 'day')) {
+				return true
+			}
+			return false
 		},
 		// 多个条件的变化，会引起选中日期的变化，这里统一管理监听
 		selectedChange(): Array<string> {
@@ -667,6 +697,28 @@ export default {
 				this.monthIndex += 12
 			}
 		},
+		jumpToToday() {
+			// @ts-ignore
+			if (this.todayDisabled) {
+				return
+			}
+			// @ts-ignore
+			const targetMonth = dayuts(this.todayDate).format('YYYY-MM')
+			// @ts-ignore
+			if (this.monthSwitch) {
+				// @ts-ignore
+				const todayMonthIndex = this.months.findIndex(({ year, month }): boolean => {
+					month = padZero(month)
+					return `${year}-${month}` == targetMonth
+				})
+				if (todayMonthIndex != -1) {
+					// @ts-ignore
+					this.monthIndex = todayMonthIndex
+				}
+				return
+			}
+			this.scrollIntoDefaultMonth(targetMonth)
+		},
 		// 滚动到默认设置的月份
 		scrollIntoDefaultMonth(selected: string) {
 			// 查询默认日期在可选列表的下标
@@ -682,6 +734,8 @@ export default {
 				// #ifndef MP-WEIXIN
 				// @ts-ignore
 				this.$nextTick(() => {
+					// @ts-ignore
+					this.scrollIntoView = ''
 					// @ts-ignore
 					this.scrollIntoView = `month-${_index}`
 					// @ts-ignore

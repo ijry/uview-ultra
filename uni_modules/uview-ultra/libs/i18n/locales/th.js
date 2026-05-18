@@ -34,6 +34,7 @@ export default {
     "up_calendar_chooseDates": "เลือกวันที่",
     "up_calendar_disabled": "วันที่นี้ถูกปิดใช้งาน",
     "up_calendar_daysExceed": "จำนวนวันที่เลือกต้องไม่เกิน {days} วัน",
+    "up_calendar_today": "วันนี้",
     "up_cityLocate_locateCity": "ระบุตำแหน่งเมือง",
     "up_cityLocate_fail": "การระบุตำแหน่งล้มเหลว กรุณาคลิกเพื่อลองใหม่",
     "up_cityLocate_locating": "กำลังระบุตำแหน่ง",

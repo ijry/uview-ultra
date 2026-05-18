@@ -38,6 +38,7 @@ export default {
         allowSameDay: false,
 		round: 0,
 		monthNum: 3,
-		monthSwitch: false
+		monthSwitch: false,
+		showToday: true
     }
 }

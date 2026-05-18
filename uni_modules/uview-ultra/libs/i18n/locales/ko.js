@@ -34,6 +34,7 @@ export default {
     "up_calendar_chooseDates": "날짜 선택",
     "up_calendar_disabled": "이 날짜는 비활성화되었습니다",
     "up_calendar_daysExceed": "선택한 일 수는 {days}일을 초과할 수 없습니다",
+    "up_calendar_today": "오늘",
     "up_cityLocate_locateCity": "도시 위치 찾기",
     "up_cityLocate_fail": "위치 찾기 실패, 클릭하여 재시도하세요.",
     "up_cityLocate_locating": "위치 찾는 중",

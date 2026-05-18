@@ -34,6 +34,7 @@ export default {
     "up_calendar_chooseDates": "Datum auswählen",
     "up_calendar_disabled": "Dieses Datum ist deaktiviert",
     "up_calendar_daysExceed": "Die Anzahl der ausgewählten Tage darf {days} Tage nicht überschreiten",
+    "up_calendar_today": "Heute",
     "up_cityLocate_locateCity": "Stadt lokalisieren",
     "up_cityLocate_fail": "Lokalisierung fehlgeschlagen, bitte klicken Sie, um es erneut zu versuchen.",
     "up_cityLocate_locating": "Lokalisierung läuft",

@@ -34,6 +34,7 @@ export default {
     "up_calendar_chooseDates": "Выбор даты",
     "up_calendar_disabled": "Эта дата отключена",
     "up_calendar_daysExceed": "Количество выбранных дней не может превышать {days} дней",
+    "up_calendar_today": "Сегодня",
     "up_cityLocate_locateCity": "Определить город",
     "up_cityLocate_fail": "Ошибка определения местоположения, нажмите, чтобы повторить попытку.",
     "up_cityLocate_locating": "Определение местоположения",

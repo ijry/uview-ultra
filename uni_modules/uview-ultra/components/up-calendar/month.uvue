@@ -134,6 +134,11 @@
 			allowSameDay: {
 				type: Boolean,
 				default: false
+			},
+			// 今天日期，用于独立高亮
+			todayDate: {
+				type: String,
+				default: ''
 			}
 		},
 		data() {
@@ -195,6 +200,10 @@
 					const sameDate = (element: string): boolean => this.dateSame(element, date)
 					if (this.selected.some(sameDate)) {
 						style['backgroundColor'] = this.color
+					}
+					if (this.todayDate != '' && this.dateSame(date, this.todayDate) && !this.selected.some(sameDate)) {
+						style['border'] = `1px solid ${this.color}`
+						style['boxSizing'] = 'border-box'
 					}
 					if (this.mode == 'single') {
 						if (date == this.selected[0]) {

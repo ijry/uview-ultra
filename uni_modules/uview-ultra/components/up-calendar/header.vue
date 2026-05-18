@@ -33,6 +33,12 @@
 				:class="{ 'up-calendar-header__switch--disabled': nextYearDisabled }"
 				@click="nextYear"
 			>»</text>
+			<text
+				v-if="showToday"
+				class="up-calendar-header__today"
+				:class="{ 'up-calendar-header__today--disabled': todayDisabled }"
+				@click="today"
+			>{{ todayText }}</text>
 		</view>
 		<view class="up-calendar-header__weekdays">
 			<text class="up-calendar-header__weekdays__weekday">一</text>
@@ -93,6 +99,18 @@
 				type: Boolean,
 				default: false
 			},
+			showToday: {
+				type: Boolean,
+				default: true
+			},
+			todayText: {
+				type: String,
+				default: '今天'
+			},
+			todayDisabled: {
+				type: Boolean,
+				default: false
+			},
 		},
 		data() {
 			return {
@@ -118,6 +136,11 @@
 			nextYear() {
 				if (!this.nextYearDisabled) {
 					this.$emit('nextYear')
+				}
+			},
+			today() {
+				if (!this.todayDisabled) {
+					this.$emit('today')
 				}
 			}
 		},
@@ -181,6 +204,22 @@
 				line-height: 30px;
 				flex: 1;
 				text-align: center;
+			}
+		}
+
+		&__today {
+			margin-left: 4px;
+			height: 28px;
+			line-height: 28px;
+			padding: 0 10px;
+			border-radius: 14px;
+			font-size: 13px;
+			color: $up-primary;
+			border: 1px solid $up-primary;
+			flex-shrink: 0;
+
+			&--disabled {
+				opacity: 0.35;
 			}
 		}
 	}

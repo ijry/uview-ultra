@@ -34,6 +34,7 @@ export default {
     "up_calendar_chooseDates": "Selección de fecha",
     "up_calendar_disabled": "Esta fecha está deshabilitada",
     "up_calendar_daysExceed": "El número de días seleccionados no puede exceder {days} días",
+    "up_calendar_today": "Hoy",
     "up_cityLocate_locateCity": "Ubicar ciudad",
     "up_cityLocate_fail": "Error de ubicación, haga clic para reintentar.",
     "up_cityLocate_locating": "Ubicando",

@@ -147,6 +147,11 @@ export const props = defineMixin({
 		monthSwitch: {
 			type: Boolean,
 			default: () => defProps.calendar.monthSwitch
+		},
+		// 是否显示今天按钮
+		showToday: {
+			type: Boolean,
+			default: () => defProps.calendar.showToday
 		}
     }
 })

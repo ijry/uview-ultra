@@ -34,6 +34,7 @@ export default {
     "up_calendar_chooseDates": "日期选择",
     "up_calendar_disabled": "该日期已禁用",
     "up_calendar_daysExceed": "选择天数不能超过{days}天",
+    "up_calendar_today": "今天",
     "up_cityLocate_locateCity": "定位城市",
     "up_cityLocate_fail": "定位失败，请点击重试。",
     "up_cityLocate_locating": "定位中",

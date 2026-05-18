@@ -126,6 +126,11 @@
 			allowSameDay: {
 				type: Boolean,
 				default: false
+			},
+			// 今天日期，用于独立高亮
+			todayDate: {
+				type: String,
+				default: ''
 			}
 		},
 		data() {
@@ -183,6 +188,10 @@
 					// 判断date是否在selected数组中，因为月份可能会需要补0，所以使用dateSame判断，而不用数组的includes判断
 					if (this.selected.some(item => this.dateSame(item, date))) {
 						style.backgroundColor = this.color
+					}
+					if (this.todayDate && this.dateSame(date, this.todayDate) && !this.selected.some(item => this.dateSame(item, date))) {
+						style.border = `1px solid ${this.color}`
+						style.boxSizing = 'border-box'
 					}
 					if (this.mode === 'single') {
 						if (date === this.selected[0]) {
