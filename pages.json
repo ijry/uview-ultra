@@ -139,6 +139,12 @@
 				"style": {
 					"navigationBarTitleText": "图片懒加载"
 				}
+			},
+			{
+				"path": "swipeAction/swipeAction",
+				"style": {
+					"navigationBarTitleText": "滑动操作"
+				}
 			}
 		]
 	}, {
@@ -464,6 +470,12 @@
 			"path": "tabs/tabs",
 			"style": {
 				"navigationBarTitleText": "标签"
+			}
+		},
+		{
+			"path": "tooltip/tooltip",
+			"style": {
+				"navigationBarTitleText": "工具提示"
 			}
 		}
 		]
