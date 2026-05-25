@@ -106,8 +106,8 @@
         </view>
     </view>
     <!-- 递归渲染更深层的子级 -->
-        <template v-if="isExpanded(row) && row[treeProps.children] && row[treeProps.children].length">
-            <template v-for="(rowChild, childIndex) in row[treeProps.children]" :key="rowChild[rowKey] || childIndex">
+        <template v-if="isExpanded(row) && row[treeProps.children] && row[treeProps.children].length > 0">
+            <template v-for="(rowChild, childIndex) in row[treeProps.children]" :key="rowChild[rowKey] != null ? rowChild[rowKey] : childIndex">
                 <table-row 
                     :row="rowChild" 
                     :rowIndex="childIndex"
@@ -274,7 +274,8 @@ export default {
             if (Array.isArray(result)) {
                 const [rowspan, colspan] = result;
                 return { rowspan: rowspan != null ? rowspan : 1, colspan: colspan != null ? colspan : 1 };
-            } else if (typeof result === 'object') {
+            } else if (result && typeof result === 'object') {
+                const { rowspan, colspan } = result;
                 return {
                     rowspan: rowspan != null ? rowspan : 1,
                     colspan: colspan != null ? colspan : 1

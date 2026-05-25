@@ -9,7 +9,7 @@
 </template>
 
 <script lang="uts">
-import { useMarked } from '../../libs/marked-uts/utssdk/app-android'
+import { useMarked } from '../../libs/marked-uts/common/marked'
 
 const marked = useMarked()
 

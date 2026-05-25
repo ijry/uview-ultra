@@ -17,7 +17,7 @@
 					@tap.stop="swichMenu(index)"
 				>
 					<slot name="tabItem" :item="item"></slot>
-					<text class="up-line-1">{{ getTabLabel(item) }}</text>
+					<text class="up-cate-tab__item-text" :class="[innerCurrent == index ? 'up-cate-tab__item-text-active' : '']">{{ getTabLabel(item) }}</text>
 				</view>
 			</scroll-view>
 			<scroll-view
@@ -113,7 +113,7 @@ export default {
 			menuItemHeight: 0,
 			itemId: '',
 			menuItemPos: [] as Array<number>,
-			rects: [] as Array<UTSJSONObject>,
+			rects: [] as Array<NodeInfo>,
 			arr: [] as Array<number>,
 			scrollRightTop: 0,
 			timerActive: false
@@ -204,8 +204,8 @@ export default {
 						}, 30)
 						return
 					}
-					const rect = res[0] as UTSJSONObject
-					const height = rect['height'] as number
+					const rect = res[0] as NodeInfo
+					const height = rect.height ?? 0
 					if (dataVal == 'menuHeight') {
 						this.menuHeight = height
 					} else if (dataVal == 'menuItemHeight') {
@@ -242,13 +242,13 @@ export default {
 						}, 100)
 						return
 					}
-					const rects = res[0] as Array<UTSJSONObject>
+					const rects = res[0] as Array<NodeInfo>
 					if (rects.length == 0) return
 					this.rects = rects
 					this.arr = [] as Array<number>
-					const firstTop = rects[0]['top'] as number
+					const firstTop = rects[0].top ?? 0
 					for (let i = 0; i < rects.length; i++) {
-						const top = rects[i]['top'] as number
+						const top = rects[i].top ?? 0
 						this.arr.push(top - firstTop)
 					}
 				})
@@ -305,18 +305,24 @@ export default {
 	display: flex;
 	align-items: center;
 	justify-content: center;
+}
+
+.up-cate-tab__item-active {
+	background: #ffffff;
+	border-left: 4px solid #2979ff;
+}
+
+.up-cate-tab__item-text {
 	font-size: 26rpx;
 	color: #444444;
 	font-weight: 400;
 	line-height: 1;
 }
 
-.up-cate-tab__item-active {
+.up-cate-tab__item-text-active {
 	color: #000000;
 	font-size: 30rpx;
 	font-weight: 600;
-	background: #ffffff;
-	border-left: 4px solid #2979ff;
 }
 
 .up-cate-tab__right-box {
