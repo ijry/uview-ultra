@@ -145,7 +145,12 @@ export default {
 			optionsWrapRight: 'auto',
 			optionsWrapTop: '0px',
 			optionsWrapMinWidth: '100px',
-			optionsWrapMaxHeight: this.maxHeight
+			optionsWrapMaxHeight: '90vh'
+		}
+	},
+	mounted() {
+		if (this.maxHeight != null && this.maxHeight != '') {
+			this.optionsWrapMaxHeight = this.maxHeight
 		}
 	},
 	computed: {
