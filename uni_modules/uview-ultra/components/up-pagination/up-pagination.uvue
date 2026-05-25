@@ -16,8 +16,10 @@
     </view>
 
     <!-- 页码列表 -->
-    <block v-for="(page, index) in displayedPages" :key="index" v-if="showPager">
+    <template v-if="showPager">
       <view
+        v-for="(page, index) in displayedPages"
+        :key="index"
         :class="[
           'up-pagination-item',
           { active: page === currentPage }
@@ -26,7 +28,7 @@
       >
         {{ page }}
       </view>
-    </block>
+    </template>
 
     <!-- 总数显示 -->
     <view v-if="total > 0 && showTotal" class="up-pagination-total">
@@ -107,7 +109,8 @@ function normalizeNumber(value: any | null, defaultValue: number = 0): number {
   return isNaN(parsed) ? defaultValue : parsed
 }
 
-function hasLayoutItem(layout: string, name: string): boolean {
+function hasLayoutItem(layout: string | null, name: string): boolean {
+  if (layout == null || layout == '') return false
   const items = layout.split(',')
   for (let i = 0; i < items.length; i++) {
     if (items[i].trim() == name) {
