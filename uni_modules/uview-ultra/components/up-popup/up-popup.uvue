@@ -100,7 +100,7 @@
 			transitionStyle():any {
 				const style = {
 					// @ts-ignore
-					zIndex: parseInt(this.zIndex!!.toString()),
+					zIndex: parseInt(this.zIndex!!.toString()) + 1,
 					position: 'fixed',
 					display: 'flex',
 				}
