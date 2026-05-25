@@ -191,7 +191,7 @@
 		methods: {
 			init() {
 				// #ifdef VUE3
-				this.currentValue = this.format(this.modelValue as string)
+				this.currentValue = this.format(this.modelValue != null ? this.modelValue.toString() : '0')
 				// #endif
 			},
 			// 按钮的样式
