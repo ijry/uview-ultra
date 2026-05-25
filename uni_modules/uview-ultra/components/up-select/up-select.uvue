@@ -239,6 +239,8 @@ export default {
 
 		.up-select__label {
 			display: flex;
+			flex-direction: row;
+			align-items: center;
 			justify-content: space-between;
 
 			/* #ifdef H5 */
