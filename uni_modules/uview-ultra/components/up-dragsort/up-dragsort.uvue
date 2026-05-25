@@ -19,7 +19,7 @@
                 :x="getItemX(item)"
                 :y="getItemY(item)"
                 :inertia="false"
-                :disabled="!draggable || dragIndex == -1 || isItemDisabled(item)"
+                :disabled="!draggable || (dragIndex != -1 && dragIndex != index) || isItemDisabled(item)"
                 @change="onChange(index, $event)"
                 @touchstart="onTouchStart(index, $event)"
                 @touchend="onTouchEnd"

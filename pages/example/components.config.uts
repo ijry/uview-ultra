@@ -404,11 +404,6 @@ export default [{
         icon: 'messageInput',
         title: 'CodeInput 验证码输入',
         title_en: 'CodeInput'
-    }, {
-        path: '/pages/componentsC/messageInput/messageInput',
-        icon: 'messageInput',
-        title: 'MessageInput 验证码输入',
-        title_en: 'MessageInput'
     },
     // {
     // 	path: '/pages/componentsC/avatarCropper/avatarCropper',

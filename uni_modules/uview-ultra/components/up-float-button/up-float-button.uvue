@@ -22,18 +22,20 @@
                 height: height,
                 borderRadius: '50%',
                 borderColor: borderColor,
+                overflow: 'visible',
             }"
         >
             <slot :showList="showList">
                 <up-icon class="cursor-pointer" :class="{ 'show-list': showList }" name="plus" :color="color"></up-icon>
             </slot>
-            <view
-                v-if="showList"
-                class="up-float-button__list"
-                :style="{
-                    bottom: height
-                }"
-            >
+        </view>
+        <view
+            v-if="showList"
+            class="up-float-button__list"
+            :style="{
+                bottom: height
+            }"
+        >
                 <slot name="list">
                     <template :key="index" v-for="(item, index) in list">
                         <view
@@ -45,7 +47,6 @@
                         </view>
                     </template>
                 </slot>
-            </view>
         </view>
     </view>
 </template>
@@ -181,8 +182,11 @@ export default {
     &__list {
         position: absolute;
         bottom: 0px;
+        left: 0;
         display: flex;
         flex-direction: column;
-}
+        z-index: 999;
+        align-items: center;
+    }
 }
 </style>
