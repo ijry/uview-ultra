@@ -221,7 +221,7 @@
 				return (
 					this.disabled ||
 					this.disableMinus ||
-					parseFloat(this.currentValue.toString()) <= parseFloat(this.min as string)
+					parseFloat(this.currentValue.toString()) <= parseFloat(this.min.toString())
 				)
 			},
 			// 格式化整理数据，限制范围
@@ -231,7 +231,7 @@
 				let valueNum: number = value == '' ? 0 : parseFloat(value)
 				// 对比最大最小值，取在min和max之间的值
 				// @ts-ignore
-				valueNum = Math.max(Math.min(parseFloat(this.max as string), parseFloat(value.toString())), parseFloat(this.min.toString()))
+				valueNum = Math.max(Math.min(parseFloat(this.max.toString()), parseFloat(value.toString())), parseFloat(this.min.toString()))
 				// 如果设定了最大的小数位数，使用toFixed去进行格式化
 				// @ts-ignore
 				let decimalLength = parseInt(this.decimalLength.toString())
