@@ -583,7 +583,7 @@ export default {
       return barcode + '0' + stringValue(codes['*'])
     },
     encodeEAN13(data: string): string {
-      if (!/^\\d{13}$/.test(data)) {
+      if (!/^\d{13}$/.test(data)) {
         throw new Error('EAN13 must be 13 digits')
       }
       let sum = 0
@@ -617,7 +617,7 @@ export default {
       return barcode + '101'
     },
     encodeEAN8(data: string): string {
-      if (!/^\\d{8}$/.test(data)) {
+      if (!/^\d{8}$/.test(data)) {
         throw new Error('EAN8 must be 8 digits')
       }
       let sum = 0
@@ -643,7 +643,7 @@ export default {
     },
     encodeEAN52(data: string, format: string): string {
       const length = format == 'EAN5' ? 5 : 2
-      if (data.length != length || !/^\\d+$/.test(data)) {
+      if (data.length != length || !/^\d+$/.test(data)) {
         throw new Error(format + ' must be ' + length.toString() + ' digits')
       }
       const codes = leftOddCodes()
@@ -658,7 +658,7 @@ export default {
     },
     encodeUPCA(data: string): string {
       let value = data
-      if (/^\\d{11}$/.test(value)) {
+      if (/^\d{11}$/.test(value)) {
         let sum = 0
         for (let i = 0; i < 11; i++) {
           const digit = digitAt(value, i)
@@ -666,14 +666,14 @@ export default {
         }
         value += ((10 - (sum % 10)) % 10).toString()
       }
-      if (!/^\\d{12}$/.test(value)) {
+      if (!/^\d{12}$/.test(value)) {
         throw new Error('UPC-A must be 11 or 12 digits')
       }
       return this.encodeEAN13('0' + value)
     },
     encodeUPCE(data: string): string {
       let value = data
-      if (/^\\d{7}$/.test(value)) {
+      if (/^\d{7}$/.test(value)) {
         let sum = 0
         for (let i = 0; i < 7; i++) {
           const digit = digitAt(value, i)
@@ -681,7 +681,7 @@ export default {
         }
         value += ((10 - (sum % 10)) % 10).toString()
       }
-      if (!/^\\d{8}$/.test(value)) {
+      if (!/^\d{8}$/.test(value)) {
         throw new Error('UPC-E must be 7 or 8 digits')
       }
       const odd = leftOddCodes()
