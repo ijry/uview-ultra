@@ -6,15 +6,15 @@
 			aclass="[ center && 'up-cell--center', size === 'large' && 'up-cell__body--large']">
 			<view class="up-cell__body__content">
 				<view class="up-cell__left-icon-wrap"
-					v-if="$slots['icon'] !== null || icon != ''">
-					<slot name="icon" v-if="$slots['icon'] !== null">
+					v-if="$slots['icon'] != null || icon != ''">
+					<slot name="icon" v-if="$slots['icon'] != null">
 					</slot>
 					<up-icon v-else :name="icon"
 						:custom-style="iconStyle"
 						:size="size === 'large' ? '22px' : '18px'"></up-icon>
 				</view>
 				<view class="up-cell__title">
-					<slot name="title" v-if="$slots['title'] !== null && title == ''">
+					<slot name="title" v-if="$slots['title'] != null && title == ''">
 					</slot>
 					<text v-else class="up-cell__title-text"
 						:style="[titleTextStyle]"
@@ -35,7 +35,7 @@
 					v-if="testEmpty(value) == false">{{ value }}</text>
 			</slot>
 			<view class="up-cell__right-icon-wrap"
-				v-if="$slots['right-icon'] !== null || isLink"
+				v-if="$slots['right-icon'] != null || isLink"
 				:class="[`up-cell__right-icon-wrap--${arrowDirection}`]">
 				<slot name="right-icon">
 					<up-icon v-if="rightIcon" :name="rightIcon"
@@ -43,7 +43,7 @@
 						:size="size === 'large' ? '18px' : '16px'"></up-icon>
 				</slot>
 			</view>
-			<view class="up-cell__right-icon-wrap" v-if="$slots['righticon'] !== null"
+			<view class="up-cell__right-icon-wrap" v-if="$slots['righticon'] != null"
 				:class="[`up-cell__right-icon-wrap--${arrowDirection}`]">
 				<slot name="righticon">
 				</slot>
