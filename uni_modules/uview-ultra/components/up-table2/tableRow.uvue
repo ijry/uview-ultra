@@ -165,6 +165,10 @@ function createSpan(rowspan: number = 1, colspan: number = 1): UTSJSONObject {
     } as UTSJSONObject;
 }
 
+function createSpanArray(): number[] {
+    return [1, 1] as number[];
+}
+
 function valueToString(value: any): string {
     return value == null ? '' : value.toString();
 }
@@ -267,7 +271,7 @@ export default {
             required: true
         },
         spanMethod: {
-            type: Function,
+            type: Function as PropType<UTSCallback | null>,
             default: null
         }
     },
@@ -306,26 +310,23 @@ export default {
             if (typeof this.spanMethod !== 'function') {
                 return createSpan();
             }
+            const spanMethod = this.spanMethod as UTSCallback | null;
+            if (spanMethod == null) {
+                return createSpan();
+            }
             const row = this.row as UTSJSONObject;
             const column = (this.columns as UTSJSONObject[])[columnIndex] as UTSJSONObject;
-            const result = this.spanMethod({
+            const result = spanMethod.invoke({
                 row: row,
                 column: column,
                 rowIndex: rowIndex,
                 columnIndex: columnIndex
             } as UTSJSONObject);
             if (Array.isArray(result)) {
-                const arr = result as any[];
+                const arr = result as number[];
                 const rowspan = arr.length > 0 ? this.getSpanValue(arr[0], 1) : 1;
                 const colspan = arr.length > 1 ? this.getSpanValue(arr[1], 1) : 1;
                 return createSpan(rowspan, colspan);
-            }
-            if (result != null && typeof result === 'object') {
-                const resultObj = result as UTSJSONObject;
-                return createSpan(
-                    this.getSpanValue(resultObj['rowspan'], 1),
-                    this.getSpanValue(resultObj['colspan'], 1)
-                );
             }
             return createSpan();
         },

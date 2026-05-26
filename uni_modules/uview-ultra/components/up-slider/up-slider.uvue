@@ -46,12 +46,12 @@
 				</view>
 				<text v-if="isRange && showValue"
 					class="up-slider__show-range-value"
-					:style="{left: (getPx(barStyle0.width) +  parseFloat(getPx(blockSize))/2) + 'px'}">
+					:style="{left: (parseFloat(getPx(barStyle0.width)) + parseFloat(getPx(blockSize))/2) + 'px'}">
 					{{ this.rangeValue[0] ?? '' }}
 				</text>
 				<text v-if="isRange && showValue"
 					class="up-slider__show-range-value"
-					:style="{left: (getPx(barStyle.width) +  parseFloat(getPx(blockSize))/2) + 'px'}">
+					:style="{left: (parseFloat(getPx(barStyle.width)) + parseFloat(getPx(blockSize))/2) + 'px'}">
 					{{ this.rangeValue[1] ?? '' }}
 				</text>
 				<template v-if="isRange">
@@ -191,9 +191,9 @@
 		computed: {
 			innerStyleCpu() {
 				let style: UTSJSONObject = this.innerStyle;
-				
-				style['height'] = (this.isRange && this.showValue) 
-					? (parseFloat(getPx(this.blockSize)) + 24).toString() + 'px' 
+
+				style['height'] = (this.isRange && this.showValue)
+					? (parseFloat(getPx(this.blockSize)) + 24).toString() + 'px'
 					: (getPx(this.blockSize)) + 'px';
 				return style;
 			}
@@ -527,9 +527,15 @@
 			width: 24px;
 			height: 24px;
 			border-radius: 999px;
+			/* #ifndef APP */
 			box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+			/* #endif */
+			/* #ifdef APP */
+			border-width: 1px;
+			border-style: solid;
+			border-color: #d0d0d0;
+			/* #endif */
 			background-color: #fff;
-			transform: scale(0.9);
 			/* #ifdef H5 */
 			cursor: pointer;
 			/* #endif */
@@ -537,7 +543,6 @@
 
 		&__button-wrap {
 			position: absolute;
-			// transform: translate3d(50%, -50%, 0);
 		}
 
 		&--disabled {

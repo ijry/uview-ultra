@@ -2,6 +2,7 @@
 	<view
 		class="up-loading-icon"
 		:style="[addStyle(customStyle)]"
+		:class="[vertical ? 'up-loading-icon--vertical' : '']"
 		v-if="show"
 	>
 		<view
@@ -26,7 +27,7 @@
 					v-for="(item, index) in array12"
 					:key="index"
 					class="up-loading-icon__dot"
-					:style="spinnerStyle[index]"
+					:style="[spinnerStyle[index], getSpinnerDotStyle(index)]"
 				>
 				</view>
 			</template>
@@ -103,14 +104,19 @@
 			}
 		},
 		watch: {
-			show() {
+			show(nVal: boolean) {
+				if (nVal) {
+					this.startRotate()
+				} else {
+					this.stopRotate()
+				}
 			}
 		},
 		mounted() {
 			this.init()
 		},
-		beforeMount() {
-			clearInterval(this.animationFrame)
+		beforeUnmount() {
+			this.stopRotate()
 		},
 		methods: {
 			addStyle(val: any): any {
@@ -119,16 +125,42 @@
 			addUnit(val: any): string {
 				return addUnit(val)
 			},
-			rotateLoader(): void {  
-				this.degree = (this.degree + 3) % 360; // 每次增加3度，循环回到0度  
-				this.transform = `rotate(${this.degree.toString()}deg)`;  
+			getSpinnerDotStyle(index: number): UTSJSONObject {
+				const style = {} as UTSJSONObject
+				style['backgroundColor'] = this.color
+				style['transform'] = `rotate(${((index + 1) * 30).toString()}deg)`
+				style['opacity'] = 1 - 0.0625 * index
+				return style
+			},
+			rotateLoader(): void {
+				this.degree = (this.degree + this.getRotateStep()) % 360
+				this.transform = `rotate(${this.degree.toString()}deg)`
 			},
 			init(): void {
 				this.calcSpinnerTopAndLeft()
-				// this.animationFrame = setInterval(() =>{
-				// 	this.degree = (this.degree + 3) % 360; // 每次增加3度，循环回到0度
-				// 	this.transform = `rotate(${this.degree.toString()}deg)`;  
-				// }, 100); // 递归调用以保持动画
+				this.startRotate()
+			},
+			getRotateDuration(): number {
+				const durationValue = this.$props['duration']
+				const durationNumber = parseInt(durationValue.toString())
+				return durationNumber > 0 ? durationNumber : 1200
+			},
+			getRotateStep(): number {
+				return 360 * 16 / this.getRotateDuration()
+			},
+			startRotate(): void {
+				if (!this.show || this.animationFrame > 0) {
+					return
+				}
+				this.animationFrame = setInterval(() => {
+					this.rotateLoader()
+				}, 16)
+			},
+			stopRotate(): void {
+				if (this.animationFrame > 0) {
+					clearInterval(this.animationFrame)
+					this.animationFrame = 0
+				}
 			},
 			calculateSquareRadius(sideLength: number): number {  
 				// 计算正方形的对角线长度  

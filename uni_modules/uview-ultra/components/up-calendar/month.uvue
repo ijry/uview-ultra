@@ -2,7 +2,7 @@
 	<view class="up-calendar-month-wrapper" ref="up-calendar-month-wrapper">
 		<view v-for="(item, index) in monthsInner" :key="index" :class="[`up-calendar-month-` + index.toString()]"
 			:ref="`up-calendar-month-` + index.toString()" :id="`month-` + index.toString()">
-			<text v-if="index !== 0" class="up-calendar-month__title">{{ item['year'] }}年{{ item['month'] }}月</text>
+			<text v-if="index != 0" class="up-calendar-month__title">{{ item['year'] }}年{{ item['month'] }}月</text>
 			<view class="up-calendar-month__days">
 				<view v-if="showMark" class="up-calendar-month__days__month-mark-wrapper">
 					<text class="up-calendar-month__days__month-mark-wrapper__text">{{ item['month'] }}</text>
@@ -194,7 +194,7 @@
 			},
 			daySelectStyle() {
 				return (index1: number, index2: number, item: UPCalendarMonthsItemDate) => {
-					let date = dayuts(item['date']).format("YYYY-MM-DD"),
+					let date = (item['dateStr'] != null ? item['dateStr'] as string : dayuts(item['date']).format("YYYY-MM-DD")),
 						style = {}
 					// 判断date是否在selected数组中，因为月份可能会需要补0，所以使用dateSame判断，而不用数组的includes判断
 					const sameDate = (element: string): boolean => this.dateSame(element, date)
@@ -206,7 +206,7 @@
 						style['boxSizing'] = 'border-box'
 					}
 					if (this.mode == 'single') {
-						if (date == this.selected[0]) {
+						if (this.selected.length > 0 && date == this.selected[0]) {
 							// 因为需要对nvue的兼容，只能这么写，无法缩写，也无法通过类名控制等等
 							style['borderRadius'] = '3px'
 						}
@@ -248,7 +248,7 @@
 			// 某个日期是否被选中
 			textStyle() {
 				return (item: UPCalendarMonthsItemDate) => {
-					const date = dayuts(item['date']).format("YYYY-MM-DD"),
+					const date = (item['dateStr'] != null ? item['dateStr'] as string : dayuts(item['date']).format("YYYY-MM-DD")),
 						style = {}
 					// 选中的日期，提示文字设置白色
 					const sameDate = (element: string): boolean => this.dateSame(element, date)
@@ -269,7 +269,7 @@
 			// 获取底部的提示文字
 			getBottomInfo() {
 				return (index1: number, index2: number, item: UPCalendarMonthsItemDate): string  => {
-					const date = dayuts(item['date']).format("YYYY-MM-DD")
+					const date = (item['dateStr'] != null ? item['dateStr'] as string : dayuts(item['date']).format("YYYY-MM-DD"))
 					let bottomInfo = ''
 					if (item['bottomInfo'] != null) {
 						bottomInfo = item['bottomInfo'].toString()
@@ -365,7 +365,7 @@
 					return;
 				}
 				this.item = item
-				const date = dayuts(item['date']).format("YYYY-MM-DD")
+				const date = (item['dateStr'] != null ? item['dateStr'] as string : dayuts(item['date']).format("YYYY-MM-DD"))
 				let disabled = item.disabled ?? false
 				if (disabled) return
 				// 对上一次选择的日期数组进行深度克隆
@@ -521,10 +521,13 @@
 			&__day {
 				@include flex;
 				padding: 2px;
-				/* #ifndef APP-NVUE */
+				/* #ifndef APP */
 				// vue下使用css进行宽度计算，因为某些安卓机会无法进行js获取父元素宽度进行计算得出，会有偏移
 				width: calc(100% / 7);
 				box-sizing: border-box;
+				/* #endif */
+				/* #ifdef APP */
+				width: 14.285%;
 				/* #endif */
 
 				&__select {

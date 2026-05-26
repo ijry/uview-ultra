@@ -8,7 +8,7 @@
 		    class="up-icon__img"
 		    v-if="isImg"
 		    :src="name"
-		    :mode="imgMode"
+		    :mode="imgMode != '' ? imgMode : 'aspectFit'"
 		    :style="[imgStyle, $up.addStyle(customStyle)]"
 		></image>
 		<text
@@ -93,7 +93,7 @@
 		// label的大小
 		labelSize: {
 			type: [String, Number],
-			default: () => defProps.getArray('icon.labelSize')
+			default: () => defProps.getString('icon.labelSize')
 		},
 		// label的颜色
 		labelColor: {
@@ -103,7 +103,7 @@
 		// label与图标的距离
 		space: {
 			type: [String, Number],
-			default: () => defProps.getArray('icon.space')
+			default: () => defProps.getString('icon.space')
 		},
 		// 图片的mode
 		imgMode: {
@@ -113,17 +113,17 @@
 		// 用于显示图片小图标时，图片的宽度
 		width: {
 			type: [String, Number],
-			default: () => defProps.getArray('icon.width')
+			default: () => defProps.getString('icon.width')
 		},
 		// 用于显示图片小图标时，图片的高度
 		height: {
 			type: [String, Number],
-			default: () => defProps.getArray('icon.height')
+			default: () => defProps.getString('icon.height')
 		},
 		// 用于解决某些情况下，让图标垂直居中的用途
 		top: {
 			type: [String, Number],
-			default: () => defProps.getArray('icon.top')
+			default: () => defProps.getString('icon.top')
 		},
 		// 是否阻止事件传播
 		stop: {
@@ -268,7 +268,9 @@
 		}
 
 		&__img {
-			height: auto;
+			/* #ifndef APP */
+			display: inline-block;
+			/* #endif */
 		}
 
 		&__label {

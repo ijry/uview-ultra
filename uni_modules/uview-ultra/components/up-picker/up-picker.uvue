@@ -151,7 +151,10 @@ export default {
         inputLabel(): string[] {
 			let items: Array<any> = []
 			this.innerColumns.map((item, index) => {
-				items.push(item[this.innerIndex[index]])
+				const idx = index < this.innerIndex.length ? this.innerIndex[index] : 0
+				if (idx < item.length) {
+					items.push(item[idx])
+				}
 			})
             let res: string[] = []
             items.forEach(element => {
@@ -169,7 +172,10 @@ export default {
 			// items里面可能是字符串也可能是对象
             let items: Array<any> = []
 			this.innerColumns.map((item, index) => {
-				items.push(item[this.innerIndex[index]])
+				const idx = index < this.innerIndex.length ? this.innerIndex[index] : 0
+				if (idx < item.length) {
+					items.push(item[idx])
+				}
 			})
             let res: any[] = []
             items.forEach(element => {
@@ -244,7 +250,7 @@ export default {
 			// 通过对比前后两次的列索引，得出当前变化的是哪一列
 			for (let i = 0; i < value.length; i++) {
 				let item = value[i]
-				if (item !== (this.lastIndex?.[i] != null ? this.lastIndex?.[i] : 0)) { // 把undefined转为合法假值0
+				if (item !== (i < this.lastIndex.length ? this.lastIndex[i] : 0)) {
 					// 设置columnIndex为当前变化列的索引
 					columnIndex = i
 					// index则为变化列中的变化项的索引
@@ -263,7 +269,10 @@ export default {
 			// 获取原始值
 			let valueOrigin: Array<any> = [];
 			this.innerColumns.map((item, index) => {
-				valueOrigin.push(item[value[index]])
+				const idx = index < value.length ? value[index] : 0
+				if (idx < item.length) {
+					valueOrigin.push(item[idx])
+				}
 			})
 			this.$emit('change', {
 				value: valueOrigin,
@@ -347,6 +356,7 @@ export default {
 
 	.up-picker {
 		position: relative;
+		background-color: #ffffff;
 
 		&__view {
 

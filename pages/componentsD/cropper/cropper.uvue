@@ -1,0 +1,102 @@
+<template>
+	<view class="u-page">
+		<!-- #ifdef APP -->
+		<scroll-view style="flex:1">
+		<!-- #endif -->
+		<view class="u-page__item">
+			<text class="u-page__item__title">头像裁剪</text>
+			<view class="u-page__item__content">
+				<up-cropper
+					ref="avatarRef0"
+					:can-change-size="false"
+					area-width="300rpx"
+					area-height="300rpx"
+					export-width="260rpx"
+					export-height="260rpx"
+					@confirm="cutImage"
+				>
+					<view class="avatar-wrapper">
+						<up-avatar :src="avatarUrl" size="120px"></up-avatar>
+					</view>
+				</up-cropper>
+			</view>
+		</view>
+		<view class="u-page__item">
+			<text class="u-page__item__title">横向裁剪</text>
+			<view class="u-page__item__content">
+				<view class="image-wrapper" @click="chooseWideImage">
+					<image v-if="wideUrl.length > 0" :src="wideUrl" class="preview-image" mode="widthFix"></image>
+					<text v-else class="empty-text">选择图片</text>
+				</view>
+				<up-cropper ref="wideRef" @confirm="cutImage"></up-cropper>
+			</view>
+		</view>
+		<!-- #ifdef APP -->
+		</scroll-view>
+		<!-- #endif -->
+	</view>
+</template>
+
+<script lang="uts">
+export default {
+	data() {
+		return {
+			avatarUrl: '',
+			wideUrl: ''
+		}
+	},
+	methods: {
+		chooseWideImage(): void {
+			const cropper = this.$refs['wideRef'] as ComponentPublicInstance | null
+			if (cropper == null) {
+				return
+			}
+			cropper.$callMethod('chooseImage', 1, {
+				canChangeSize: true,
+				areaWidth: '300rpx',
+				areaHeight: '180rpx',
+				exportWidth: '260rpx',
+				exportHeight: '160rpx'
+			} as UTSJSONObject)
+		},
+		cutImage(result: UTSJSONObject): void {
+			const path = result['path'] == null ? '' : result['path'].toString()
+			const index = result['index'] == null ? 0 : parseInt(result['index'].toString())
+			if (index == 1) {
+				this.wideUrl = path
+			} else {
+				this.avatarUrl = path
+			}
+		}
+	}
+}
+</script>
+
+<style lang="scss" scoped>
+	.avatar-wrapper {
+		width: 120px;
+		height: 120px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.image-wrapper {
+		min-height: 120px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		border: 1px solid #e5e5e5;
+		border-radius: 8px;
+		background-color: #ffffff;
+	}
+
+	.preview-image {
+		width: 100%;
+	}
+
+	.empty-text {
+		font-size: 14px;
+		color: #666666;
+	}
+</style>

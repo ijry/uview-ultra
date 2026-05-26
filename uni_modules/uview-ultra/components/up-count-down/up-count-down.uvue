@@ -54,7 +54,7 @@
 
 	// 清空定时器
 	const clearTimeoutFn = () => {
-		if (timer.value !== -1) {
+		if (timer.value != -1) {
 			clearTimeout(timer.value)
 		}
 		timer.value = -1
@@ -113,7 +113,7 @@
 		clearTimeoutFn()
 		timer.value = setTimeout(() => {
 			setRemainTime(getRemainTime())
-			if (remainTime.value !== 0) {
+			if (remainTime.value != 0) {
 				microTick()
 			}
 		}, 50)

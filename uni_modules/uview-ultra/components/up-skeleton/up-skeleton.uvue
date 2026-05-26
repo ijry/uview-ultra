@@ -126,9 +126,9 @@
 					
 					// 如果有title占位图，第一个段落占位图的外边距需要大一些，如果没有title占位图，第一个段落占位图则无需外边距
 					// 之所以需要这么做，是因为weex的无能，以提升性能为借口不支持css的一些伪类
-					if (!this.title && i === 0) {
+					if (!this.title && i == 0) {
 						item['marginTop'] = '0px'
-					} else if (this.title && i === 0) {
+					} else if (this.title && i == 0) {
 						item['marginTop'] = '20px'
 					} else {
 						item['marginTop'] = '12px'

@@ -107,10 +107,13 @@
 	const init = (): void => {
 		// 支付宝小程序不支持provide/inject，所以使用这个方法获取整个父组件，在created定义，避免循环引用
 		updateParentData()
-		// console.log(parent.value)
-		let widthTmp = parent.value?.$callMethod('getComponentWidth') as number|null
-		if (widthTmp != null) {
-			width.value = parseInt(widthTmp.toString())
+		let promise = parent.value?.$callMethod('getComponentWidth')
+		if (promise != null) {
+			(promise as Promise<number|null>).then((widthTmp: number|null) => {
+				if (widthTmp != null) {
+					width.value = parseInt(widthTmp.toString())
+				}
+			})
 		}
 	}
 	

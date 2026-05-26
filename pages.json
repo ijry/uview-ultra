@@ -133,6 +133,18 @@
 				"style": {
 					"navigationBarTitleText": "分割线"
 				}
+			},
+			{
+				"path": "lazyLoad/lazyLoad",
+				"style": {
+					"navigationBarTitleText": "图片懒加载"
+				}
+			},
+			{
+				"path": "swipeAction/swipeAction",
+				"style": {
+					"navigationBarTitleText": "滑动操作"
+				}
 			}
 		]
 	}, {
@@ -180,12 +192,12 @@
 					"navigationBarTitleText": "警告"
 				}
 			}
-			// , {
-			// 	"path": "progress/progress",
-			// 	"style": {
-			// 		"navigationBarTitleText": "进度条"
-			// 	}
-			// }
+			, {
+				"path": "progress/progress",
+				"style": {
+					"navigationBarTitleText": "进度条"
+				}
+			}
 			,{
 				"path": "dropdown/dropdown",
 				"style": {
@@ -261,6 +273,12 @@
 				}
 			}
 			, {
+				"path": "tabbar/tabbar2",
+				"style": {
+					"navigationBarTitleText": "Tabbar"
+				}
+			}
+			, {
 				"path": "table/table",
 				"style": {
 					"navigationBarTitleText": "表格"
@@ -322,6 +340,12 @@
 			}
 		},
 		{
+			"path": "messageInput/messageInput",
+			"style": {
+				"navigationBarTitleText": "验证码输入兼容"
+			}
+		},
+		{
 			"path": "layout/layout",
 			"style": {
 				"navigationBarTitleText": "布局"
@@ -343,6 +367,13 @@
 			"path": "calendar/calendar",
 			"style": {
 				"navigationBarTitleText": "日历",
+				"navigationStyle": "custom"
+			}
+		},
+		{
+			"path": "navbar/navbar",
+			"style": {
+				"navigationBarTitleText": "导航栏",
 				"navigationStyle": "custom"
 			}
 		},
@@ -385,6 +416,11 @@
 				"navigationBarTitleText": "索引列表"
 			}
 		}, {
+			"path": "indexList/indexList2",
+			"style": {
+				"navigationBarTitleText": "索引列表弹窗"
+			}
+		}, {
 			"path": "list/list",
 			"style": {
 				"navigationBarTitleText": "列表"
@@ -421,6 +457,11 @@
 			"style": {
 				"navigationBarTitleText": "骨架屏"
 			}
+		}, {
+			"path": "popover/popover",
+			"style": {
+				"navigationBarTitleText": "Popover弹窗"
+			}
 		},
 		{
 			"path": "steps/steps",
@@ -436,6 +477,12 @@
 			"path": "tabs/tabs",
 			"style": {
 				"navigationBarTitleText": "标签"
+			}
+		},
+		{
+			"path": "tooltip/tooltip",
+			"style": {
+				"navigationBarTitleText": "工具提示"
 			}
 		}
 		]
@@ -455,6 +502,157 @@
 				"style" : {
 					"navigationBarTitleText" : "盒子"
 				}
+			},
+			{
+				"path": "pagination/pagination",
+				"style": {
+					"navigationBarTitleText": "Pagination分页"
+				}
+			},
+			{
+				"path": "agreement/agreement",
+				"style": {
+					"navigationBarTitleText": "Agreement协议"
+				}
+			},
+			{
+				"path": "title/title",
+				"style": {
+					"navigationBarTitleText": "Title标题"
+				}
+			},
+			{
+				"path": "floatButton/floatButton",
+				"style": {
+					"navigationBarTitleText": "FloatButton悬浮按钮"
+				}
+			},
+			{
+				"path": "copy/copy",
+				"style": {
+					"navigationBarTitleText": "Copy复制"
+				}
+			},
+			{
+				"path": "coupon/coupon",
+				"style": {
+					"navigationBarTitleText": "Coupon优惠券"
+				}
+			},
+			{
+				"path": "select/select",
+				"style": {
+					"navigationBarTitleText": "Select选择器"
+				}
+			},
+			{
+				"path": "dragsort/dragsort",
+				"style": {
+					"navigationBarTitleText": "Dragsort拖拽排序"
+				}
+			},
+			{
+				"path": "signature/signature",
+				"style": {
+					"navigationBarTitleText": "Signature签名"
+				}
+			},
+			{
+				"path": "colorPicker/colorPicker",
+				"style": {
+					"navigationBarTitleText": "ColorPicker颜色选择器"
+				}
+			},
+			{
+				"path": "cascader/cascader",
+				"style": {
+					"navigationBarTitleText": "Cascader级联选择"
+				}
+			},
+			{
+				"path": "tree/tree",
+				"style": {
+					"navigationBarTitleText": "Tree树形控件"
+				}
+			},
+			{
+				"path": "cateTab/cateTab",
+				"style": {
+					"navigationBarTitleText": "CateTab分类标签"
+				}
+			},
+			{
+				"path": "choose/choose",
+				"style": {
+					"navigationBarTitleText": "Choose选择"
+				}
+			},
+			{
+				"path": "virtualList/virtualList",
+				"style": {
+					"navigationBarTitleText": "VirtualList虚拟列表"
+				}
+			},
+			{
+				"path": "pullRefresh/pullRefresh",
+				"style": {
+					"navigationBarTitleText": "PullRefresh下拉刷新"
+				}
+			},
+			{
+				"path": "cityLocate/cityLocate",
+				"style": {
+					"navigationBarTitleText": "CityLocate城市定位"
+				}
+			},
+			{
+				"path": "goodsSku/goodsSku",
+				"style": {
+					"navigationBarTitleText": "GoodsSku商品SKU"
+				}
+			},
+			{
+				"path": "pdfReader/pdfReader",
+				"style": {
+					"navigationBarTitleText": "PdfReader PDF阅读器"
+				}
+			},
+			{
+				"path": "markdown/markdown",
+				"style": {
+					"navigationBarTitleText": "Markdown解析器"
+				}
+			},
+			{
+				"path": "shortVideo/shortVideo",
+				"style": {
+					"navigationBarTitleText": "ShortVideo短视频切换",
+					"navigationStyle": "custom"
+				}
+			},
+			{
+				"path": "barcode/barcode",
+				"style": {
+					"navigationBarTitleText": "Barcode条形码"
+				}
+			},
+			{
+				"path": "qrcode/qrcode",
+				"style": {
+					"navigationBarTitleText": "Qrcode二维码"
+				}
+			},
+			{
+				"path": "poster/poster",
+				"style": {
+					"navigationBarTitleText": "Poster海报生成"
+				}
+			},
+			{
+				"path": "cropper/cropper",
+				"style": {
+					"navigationBarTitleText": "Cropper图片裁剪"
+				}
 			}
 		]
 	},
@@ -472,7 +670,7 @@
 	"easycom": {
 		// 注意一定要放在custom里，否则无效，https://ask.dcloud.net.cn/question/131175
 		"custom": {
-			"^up-(.*)": "@/uni_modules/uview-plus/components/up-$1/up-$1.uvue"
+			"^up-(.*)": "@/uni_modules/uview-ultra/components/up-$1/up-$1.uvue"
 		}
 	},
 	"globalStyle": {

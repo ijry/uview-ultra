@@ -17,15 +17,15 @@
 					fontWeight: bold ? 'bold' : 'normal',
 					color: color
 				}"
-			>{{codeArray[index]}}</text>
+			>{{getCodeValue(index)}}</text>
 			<view
 				class="up-code-input__item__line"
 				v-if="mode == 'line'"
 				:style="[lineStyle]"
 			></view>
 			<!-- #ifndef APP-NVUE -->
-			<view v-if="isFocus && codeArray.length === index"
-				:style="{backgroundColor: color}" class="up-code-input__item__cursor"></view>
+			<view v-if="isFocus && inputLength === index"
+				:style="{backgroundColor: color, opacity: cursorOpacity}" class="up-code-input__item__cursor"></view>
 			<!-- #endif -->
 		</view>
 		<input
@@ -48,7 +48,7 @@
 
 <script setup lang="uts">
 	import type { PropType } from 'vue'
-	import { ref, computed, watch, nextTick } from 'vue'
+	import { ref, computed, watch, nextTick, onBeforeUnmount } from 'vue'
 	import defProps from './codeInput.uts'
 	import { addUnit, getPx } from '../../libs/function/index';
 	
@@ -137,8 +137,8 @@
 	// 响应式数据
 	const inputValue = ref('')
 	const isFocus = ref(false)
-	const timer = ref(null)
-	const opacity = ref(1)
+	const timer = ref(0)
+	const cursorOpacity = ref(1)
 	
 	// 根据长度，循环输入框的个数，因为头条小程序数值不能用于v-for
 	const codeLength = computed(() => {
@@ -152,11 +152,12 @@
 	
 	// 将输入的值，转为数组，给item历遍时，根据当前的索引显示数组的元素
 	const codeArray = computed(() => {
-		let codes =  props.modelValue.toString().split('')
-		while (codes.length < codeLength.value.length) {
-		  codes.push('') // 用空字符串补齐
-		}
-		return codes
+		return inputValue.value.split('')
+	})
+
+	const inputLength = computed(() => {
+		const length = inputValue.value.length
+		return Math.min(length, codeLength.value.length)
 	})
 	
 	// 下划线模式下，横线的样式
@@ -187,6 +188,28 @@
 		if (value.length >= (props.maxlength as number)) {
 			emit('finish', value)
 		}
+	}
+
+	const getCodeValue = (index: number): string => {
+		if (index < codeArray.value.length) {
+			return codeArray.value[index]
+		}
+		return ''
+	}
+
+	const clearCursorTimer = () => {
+		if (timer.value > 0) {
+			clearInterval(timer.value)
+			timer.value = 0
+		}
+	}
+
+	const startCursorTimer = () => {
+		clearCursorTimer()
+		cursorOpacity.value = 1
+		timer.value = setInterval(() => {
+			cursorOpacity.value = cursorOpacity.value == 1 ? 0 : 1
+		}, 600)
 	}
 	
 	// 根据索引获取对应项的样式
@@ -229,6 +252,10 @@
 	
 	// 初始化焦点状态
 	isFocus.value = props.focus
+
+	if (isFocus.value) {
+		startCursorTimer()
+	}
 	
 	watch(
 		(): string|number => props.modelValue,
@@ -238,6 +265,19 @@
 		}, 
 		{immediate: true}
 	)
+
+	watch(isFocus, (val: boolean) => {
+		if (val) {
+			startCursorTimer()
+		} else {
+			clearCursorTimer()
+			cursorOpacity.value = 1
+		}
+	})
+
+	onBeforeUnmount(() => {
+		clearCursorTimer()
+	})
 </script>
 
 <style lang="scss" scoped>

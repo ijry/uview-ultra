@@ -284,7 +284,8 @@ export default {
       columnsFixed: [{
         title: '名称',
         key: 'name',
-        width: '50px'
+        width: '50px',
+        fixed: 'left'
       }, {
         title: '年龄',
         key: 'age',

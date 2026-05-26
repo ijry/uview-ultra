@@ -79,11 +79,11 @@ function formatMedia(res: ChooseMediaSuccess): Array<UPUploadFileChoosed|null> {
 			name: item.tempFilePath.split('/').pop() + (res.type === 'video' ? '.mp4': '.png'),
 			// #endif
 		}
-		JSON.parseObject<UPUploadFileChoosed>(JSON.stringify(tmp))
+		return JSON.parseObject<UPUploadFileChoosed>(JSON.stringify(tmp))
 	})
 }
 
-function formatFile(res: ChooseFileSuccess[]): Array<UPUploadFileChoosed|null> {
+function formatFile(res: ChooseFileSuccess): Array<UPUploadFileChoosed|null> {
 	// @ts-ignore
     return res.tempFiles.map((item: ChooseFileTempFile) => {
 		let tmp ={
@@ -96,7 +96,7 @@ function formatFile(res: ChooseFileSuccess[]): Array<UPUploadFileChoosed|null> {
 			file: item
 			// #endif 
 		}
-		JSON.parseObject<UPUploadFileChoosed>(JSON.stringify(tmp))
+		return JSON.parseObject<UPUploadFileChoosed>(JSON.stringify(tmp))
 	})
 }
 export function chooseFile({

@@ -97,7 +97,9 @@
 		computed: {
 			containerStyle() {
 				let top = 0
-				if (this.tmpConfig['top'] === 0) {
+				const topValue = this.tmpConfig['top']
+				const isTopZero = topValue != null && parseFloat(topValue.toString()) == 0
+				if (isTopZero) {
 					// #ifdef H5
 					// H5端，导航栏为普通元素，需要将组件移动到导航栏的下边沿
 					// H5的导航栏高度为44px
@@ -105,7 +107,7 @@
 					// #endif
 				}
 				const style = {
-					top: addUnit(this.tmpConfig['top'] === 0 ? top : this.tmpConfig['top']),
+					top: addUnit(isTopZero ? top : topValue),
 					// 因为组件底层为up-transition组件，必须将其设置为fixed定位
 					// 让其出现在导航栏底部
 					position: 'fixed',
@@ -184,9 +186,9 @@
 						// 倒计时结束，清除定时器，隐藏toast组件
 						this.clearTimer()
 						// 判断是否存在callback方法，如果存在就执行
-						if (typeof(this.tmpConfig['complete']) === 'function') {
-							// todo2026
-							// this.tmpConfig.complete()
+						const complete = this.tmpConfig['complete']
+						if (typeof complete === 'function') {
+							;(complete as () => void)()
 						}
 					}, parseInt(this.tmpConfig['duration'].toString()))
 				}

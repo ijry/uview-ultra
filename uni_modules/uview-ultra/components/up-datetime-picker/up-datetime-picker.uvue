@@ -552,7 +552,7 @@
 		}
 		// 时间类型
 		if (!isDateMode) {
-			if ((value.toString()).indexOf(':') === -1)  {
+			if ((value.toString()).indexOf(':') == -1)  {
 				error('时间错误，请传递如12:24的格式')
 				return ''
 			}

@@ -193,6 +193,11 @@ export default [{
         title: 'Tooltip 长按提示',
         title_en: 'ActionSheet'
     }, {
+        path: '/pages/componentsC/popover/popover',
+        icon: 'popover',
+        title: 'Popover 弹窗提示',
+        title_en: 'Popover'
+    }, {
         path: '/pages/componentsB/actionSheet/actionSheet',
         icon: 'actionSheet',
         title: 'ActionSheet 上拉菜单',
@@ -417,12 +422,12 @@ export default [{
         title: 'ReadMore 展开阅读更多',
         title_en: 'ReadMore'
     },
-    // {
-    // 	path: '/pages/componentsA/lazyLoad/lazyLoad',
-    // 	icon: 'lazyLoad',
-    // 	title: 'LazyLoad 懒加载（暂无）',
-    // 	title_en: 'LazyLoad',
-    // },
+    {
+    	path: '/pages/componentsA/lazyLoad/lazyLoad',
+    	icon: 'lazyLoad',
+    	title: 'LazyLoad 懒加载',
+    	title_en: 'LazyLoad',
+    },
     {
         path: '/pages/componentsA/gap/gap',
         icon: 'gap',
@@ -448,6 +453,126 @@ export default [{
         icon: 'qrcode',
         title: 'qrcode 二维码',
         title_en: '二维码'
+    }, {
+        path: '/pages/componentsD/pagination/pagination',
+        icon: 'pagination',
+        title: 'Pagination 分页',
+        title_en: 'Pagination'
+    }, {
+        path: '/pages/componentsD/agreement/agreement',
+        icon: 'agreement',
+        title: 'Agreement 协议',
+        title_en: 'Agreement'
+    }, {
+        path: '/pages/componentsD/title/title',
+        icon: 'title',
+        title: 'Title 标题',
+        title_en: 'Title'
+    }, {
+        path: '/pages/componentsD/floatButton/floatButton',
+        icon: 'button',
+        title: 'FloatButton 悬浮按钮',
+        title_en: 'FloatButton'
+    }, {
+        path: '/pages/componentsD/copy/copy',
+        icon: 'copy',
+        title: 'Copy 复制',
+        title_en: 'Copy'
+    }, {
+        path: '/pages/componentsD/coupon/coupon',
+        icon: 'coupon',
+        title: 'Coupon 优惠券',
+        title_en: 'Coupon'
+    }, {
+        path: '/pages/componentsD/select/select',
+        icon: 'select',
+        title: 'Select 选择器',
+        title_en: 'Select'
+    }, {
+        path: '/pages/componentsD/dragsort/dragsort',
+        icon: 'dragsort',
+        title: 'Dragsort 拖拽排序',
+        title_en: 'Dragsort'
+    }, {
+        path: '/pages/componentsD/signature/signature',
+        icon: 'signature',
+        title: 'Signature 签名',
+        title_en: 'Signature'
+    }, {
+        path: '/pages/componentsD/colorPicker/colorPicker',
+        icon: 'colorPicker',
+        title: 'ColorPicker 颜色选择器',
+        title_en: 'ColorPicker'
+    }, {
+        path: '/pages/componentsD/cascader/cascader',
+        icon: 'cascader',
+        title: 'Cascader 级联选择',
+        title_en: 'Cascader'
+    }, {
+        path: '/pages/componentsD/tree/tree',
+        icon: 'tree',
+        title: 'Tree 树形控件',
+        title_en: 'Tree'
+    }, {
+        path: '/pages/componentsD/cateTab/cateTab',
+        icon: 'cateTab',
+        title: 'CateTab 分类标签',
+        title_en: 'CateTab'
+    }, {
+        path: '/pages/componentsD/choose/choose',
+        icon: 'choose',
+        title: 'Choose 选择',
+        title_en: 'Choose'
+    }, {
+        path: '/pages/componentsD/virtualList/virtualList',
+        icon: 'virtualList',
+        title: 'VirtualList 虚拟列表',
+        title_en: 'VirtualList'
+    }, {
+        path: '/pages/componentsD/pullRefresh/pullRefresh',
+        icon: 'pullRefresh',
+        title: 'PullRefresh 下拉刷新',
+        title_en: 'PullRefresh'
+    }, {
+        path: '/pages/componentsD/cityLocate/cityLocate',
+        icon: 'cityLocate',
+        title: 'CityLocate 城市定位',
+        title_en: 'CityLocate'
+    }, {
+        path: '/pages/componentsD/goodsSku/goodsSku',
+        icon: 'goodsSku',
+        title: 'GoodsSku 商品SKU',
+        title_en: 'GoodsSku'
+    }, {
+        path: '/pages/componentsD/pdfReader/pdfReader',
+        icon: 'pdfReader',
+        title: 'PdfReader PDF阅读器',
+        title_en: 'PdfReader'
+    }, {
+        path: '/pages/componentsD/markdown/markdown',
+        icon: 'markdown',
+        title: 'Markdown 解析器',
+        title_en: 'Markdown'
+    }, {
+        path: '/pages/componentsD/shortVideo/shortVideo',
+        icon: 'shortVideo',
+        title: 'ShortVideo 短视频切换',
+        title_en: 'ShortVideo'
+    }, {
+        path: '/pages/componentsD/barcode/barcode',
+        icon: 'barcode',
+        title: 'Barcode 条形码',
+        title_en: 'Barcode'
+    }, {
+        path: '/pages/componentsD/poster/poster',
+        icon: 'poster',
+        title: 'Poster 海报生成',
+        title_en: 'Poster'
+    }, {
+        path: '/pages/componentsD/cropper/cropper',
+        icon: 'cropper',
+        title: 'Cropper 图片裁剪',
+        title_en: 'Cropper'
     }]
 }
 ]

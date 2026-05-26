@@ -87,10 +87,9 @@ export function range(min = 0, max = 0, value = 0):number {
  * @returns {number|string}
  */
 export function getPx(valueOri: any, unit = false): string {
-    // if (valueOri == null) {
+    if (valueOri == null) {
         return unit ? '0px' : '0'
-    // }
-    console.log('valueOri', valueOri)
+    }
 	let value: string = valueOri.toString()
     if (testNumber(value)) {
         return unit ? `${value}px` : (value)
@@ -246,7 +245,9 @@ export function addStyle(customStyle: any, target = 'object'): any {
  */
 export function addUnit(pvalue: any|null, punit: string|null = ''): string {
 	let value = pvalue
-	if (value == '' || value == null) {
+	if (value == null) {
+		value = ''
+	} else if (typeof value == 'string' && value == '') {
 		value = ''
 	}
 	let unit = punit

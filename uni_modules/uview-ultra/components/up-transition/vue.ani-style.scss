@@ -49,25 +49,25 @@ $up-zoom-scale: scale(0.95);
 
 .up-fade-up-enter,
 .up-fade-up-leave-to {
-	transform: translate3d(0, 100%, 0);
+	transform: translateY(100%);
 	opacity: 0
 }
 
 .up-fade-down-enter,
 .up-fade-down-leave-to {
-	transform: translate3d(0, -100%, 0);
+	transform: translateY(-100%);
 	opacity: 0
 }
 
 .up-fade-left-enter,
 .up-fade-left-leave-to {
-	transform: translate3d(-100%, 0, 0);
+	transform: translateX(-100%);
 	opacity: 0
 }
 
 .up-fade-right-enter,
 .up-fade-right-leave-to {
-	transform: translate3d(100%, 0, 0);
+	transform: translateX(100%);
 	opacity: 0
 }
 
@@ -84,22 +84,22 @@ $up-zoom-scale: scale(0.95);
 
 .up-slide-up-enter,
 .up-slide-up-leave-to {
-	transform: translate3d(0, 100%, 0)
+	transform: translateY(100%)
 }
 
 .up-slide-down-enter,
 .up-slide-down-leave-to {
-	transform: translate3d(0, -100%, 0)
+	transform: translateY(-100%)
 }
 
 .up-slide-left-enter,
 .up-slide-left-leave-to {
-	transform: translate3d(-100%, 0, 0)
+	transform: translateX(-100%)
 }
 
 .up-slide-right-enter,
 .up-slide-right-leave-to {
-	transform: translate3d(100%, 0, 0)
+	transform: translateX(100%)
 }
 
 .up-zoom-enter-active,

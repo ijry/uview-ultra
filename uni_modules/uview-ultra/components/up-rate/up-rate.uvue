@@ -103,19 +103,22 @@
 		name: "up-rate",
 		mixins: [mpMixin, mixin, propsRate],
 		data() {
-			const modelVal: number = this.modelValue == null ? 0 : parseFloat(this.modelValue.toString())
-			const minCount: number = this.minCount == null ? 0 : parseFloat(this.minCount.toString())
-			const defaultActive = isNaN(minCount) ? 0 : minCount
 			return {
 				// 生成一个唯一id，否则一个页面多个评分组件，会造成冲突
 				elId: guid(),
 				elClass: guid(),
 				rateBoxLeft: 0, // 评分盒子左边到屏幕左边的距离，用于滑动选择时计算距离
-				activeIndex: (modelVal == null ? defaultActive : modelVal) as number,
+				activeIndex: 0 as number,
 				rateWidth: 0, // 每个星星的宽度
 				// 标识是否正在滑动，由于iOS事件上touch比click先触发，导致快速滑动结束后，接着触发click，导致事件混乱而出错
 				moving: false,
 			};
+		},
+		mounted() {
+			const modelVal: number = this.modelValue == null ? 0 : parseFloat(this.modelValue.toString())
+			const minCount: number = this.minCount == null ? 0 : parseFloat(this.minCount.toString())
+			const defaultActive = isNaN(minCount) ? 0 : minCount
+			this.activeIndex = isNaN(modelVal) ? defaultActive : (modelVal == 0 ? defaultActive : modelVal)
 		},
 		watch: {
 			modelValue(val: number) {

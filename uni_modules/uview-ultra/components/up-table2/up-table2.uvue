@@ -1,25 +1,103 @@
 <template>
     <view class="up-table2" :class="border ? 'up-table-border' : ''">
         <!-- #ifdef APP -->
-        <scroll-view scroll-x class="up-table2-scroll" :style="getScrollStyle()">
+        <scroll-view :scroll-x="true" :scroll-y="false" enable-flex class="up-table2-scroll" :style="getScrollStyle()" @scroll="onScroll">
         <!-- #endif -->
         <!-- #ifndef APP -->
-        <scroll-view scroll-x scroll-y class="up-table2-scroll" :style="getScrollStyle()">
+        <view class="up-table2-scroll up-table2-scroll-h5" :style="getScrollStyle()" @scroll="onScrollRaw">
         <!-- #endif -->
+            <view class="up-table2-content" :style="getTableContentStyle()">
+                <view v-if="showHeader" class="up-table-row up-table-header-row">
+                    <view
+                        v-for="(col, colIndex) in columns"
+                        :key="getColumnKey(col, colIndex)"
+                        class="up-table-cell up-table-header-cell"
+                        :class="[getHeaderAlignClass(col)]"
+                        :style="getHeaderCellStyle(col)"
+                        @click="handleHeaderClick(col)"
+                    >
+                        <view v-if="isSelectionColumn(col)">
+                            <checkbox :checked="isAllSelected()" @click.stop="toggleSelectAll" />
+                        </view>
+                        <template v-else>
+                            <text class="up-table-header-text">{{ getColumnTitle(col) }}</text>
+                            <text v-if="isSortableColumn(col)" class="up-table-sort-icon">{{ getSortIcon(col) }}</text>
+                        </template>
+                    </view>
+                </view>
+
+                <view v-if="hasData" class="up-table-body" :style="getBodyStyle()">
+                    <view
+                        v-for="(item, flatIndex) in flatRows"
+                        :key="getRowKey(item['row'] as UTSJSONObject, flatIndex)"
+                        class="up-table-row up-table-body-row"
+                        :class="getRowClass(item['row'] as UTSJSONObject, flatIndex)"
+                        :style="{ height: rowHeightValue }"
+                        @click="handleRowClick(item['row'] as UTSJSONObject)"
+                    >
+                        <view
+                            v-for="(cell, idx) in getRowCells(item['row'] as UTSJSONObject, safeToNumber(item['rowIndex']))"
+                            :key="getColumnKey(cell['col'] as UTSJSONObject, safeToNumber(cell['colIndex']))"
+                            class="up-table-cell"
+                            :class="[getCellAlignClass(cell['col'] as UTSJSONObject), getCellClassName(item['row'] as UTSJSONObject, cell['col'] as UTSJSONObject), getCellSpanClass(item['row'] as UTSJSONObject, cell['col'] as UTSJSONObject, safeToNumber(item['rowIndex']), safeToNumber(cell['colIndex']))]"
+                            :style="getCellStyle(item['row'] as UTSJSONObject, cell['col'] as UTSJSONObject, safeToNumber(item['rowIndex']), safeToNumber(cell['colIndex']), safeToNumber(item['level'], 1))"
+                        >
+                            <view v-if="isSelectionColumn(cell['col'] as UTSJSONObject)">
+                                <checkbox :checked="isSelected(item['row'] as UTSJSONObject)" @click.stop="toggleSelect(item['row'] as UTSJSONObject)" />
+                            </view>
+                            <template v-else>
+                                <view
+                                    v-if="showTreeIcon(cell['col'] as UTSJSONObject, item['row'] as UTSJSONObject)"
+                                    class="up-table-tree-toggle"
+                                    :style="{ width: expandWidthValue }"
+                                    @click.stop="toggleExpand(item['row'] as UTSJSONObject)"
+                                >
+                                    <text>{{ isExpanded(item['row'] as UTSJSONObject) ? '-' : '+' }}</text>
+                                </view>
+                                <slot
+                                    name="cell"
+                                    :row="item['row'] as UTSJSONObject"
+                                    :column="cell['col'] as UTSJSONObject"
+                                    :prow="item['parentRow'] as UTSJSONObject | null"
+                                    :rowIndex="safeToNumber(item['rowIndex'])"
+                                    :columnIndex="safeToNumber(cell['colIndex'])"
+                                    :level="safeToNumber(item['level'], 1)"
+                                >
+                                    <text class="up-table-cell-text">{{ getCellText(item['row'] as UTSJSONObject, cell['col'] as UTSJSONObject) }}</text>
+                                </slot>
+                            </template>
+                        </view>
+                    </view>
+                </view>
+
+                <view v-else class="up-table-empty">
+                    <slot name="empty">
+                        <text>{{ emptyText }}</text>
+                    </slot>
+                </view>
+            </view>
+        <!-- #ifdef APP -->
+        </scroll-view>
+        <!-- #endif -->
+        <!-- #ifndef APP -->
+        </view>
+        <!-- #endif -->
+
+        <view v-if="showFixedShadow" class="up-table-fixed-shadow" :style="getFixedShadowStyle()">
             <view v-if="showHeader" class="up-table-row up-table-header-row">
                 <view
-                    v-for="(col, colIndex) in columns"
-                    :key="getColumnKey(col, colIndex)"
+                    v-for="(col, fixedIndex) in fixedLeftColumns"
+                    :key="getColumnKey(col, fixedIndex)"
                     class="up-table-cell up-table-header-cell"
-                    :class="[getHeaderAlignClass(col), getFixedClass(col)]"
-                    :style="getHeaderCellStyle(col)"
+                    :class="[getHeaderAlignClass(col)]"
+                    :style="getFixedHeaderCellStyle(col)"
                     @click="handleHeaderClick(col)"
                 >
                     <view v-if="isSelectionColumn(col)">
                         <checkbox :checked="isAllSelected()" @click.stop="toggleSelectAll" />
                     </view>
                     <template v-else>
-                        <text>{{ getColumnTitle(col) }}</text>
+                        <text class="up-table-header-text">{{ getColumnTitle(col) }}</text>
                         <text v-if="isSortableColumn(col)" class="up-table-sort-icon">{{ getSortIcon(col) }}</text>
                     </template>
                 </view>
@@ -28,25 +106,25 @@
             <view v-if="hasData" class="up-table-body" :style="getBodyStyle()">
                 <view
                     v-for="(item, flatIndex) in flatRows"
-                    :key="getRowKey(item['row'] as UTSJSONObject, flatIndex)"
+                    :key="'fixed_' + getRowKey(item['row'] as UTSJSONObject, flatIndex)"
                     class="up-table-row up-table-body-row"
                     :class="getRowClass(item['row'] as UTSJSONObject, flatIndex)"
                     :style="{ height: rowHeightValue }"
                     @click="handleRowClick(item['row'] as UTSJSONObject)"
                 >
                     <view
-                        v-for="(col, colIndex) in columns"
-                        :key="getColumnKey(col, colIndex)"
+                        v-for="(cell, idx) in getFixedRowCells(item['row'] as UTSJSONObject, safeToNumber(item['rowIndex']))"
+                        :key="'fixed_' + getColumnKey(cell['col'] as UTSJSONObject, safeToNumber(cell['colIndex']))"
                         class="up-table-cell"
-                        :class="[getCellAlignClass(col), getFixedClass(col)]"
-                        :style="getCellStyle(item['row'] as UTSJSONObject, col, safeToNumber(item['rowIndex']), colIndex, safeToNumber(item['level'], 1))"
+                        :class="[getCellAlignClass(cell['col'] as UTSJSONObject), getCellClassName(item['row'] as UTSJSONObject, cell['col'] as UTSJSONObject), getCellSpanClass(item['row'] as UTSJSONObject, cell['col'] as UTSJSONObject, safeToNumber(item['rowIndex']), safeToNumber(cell['colIndex']))]"
+                        :style="getFixedCellStyle(item['row'] as UTSJSONObject, cell['col'] as UTSJSONObject, safeToNumber(item['rowIndex']), safeToNumber(cell['colIndex']), safeToNumber(item['level'], 1))"
                     >
-                        <view v-if="isSelectionColumn(col)">
+                        <view v-if="isSelectionColumn(cell['col'] as UTSJSONObject)">
                             <checkbox :checked="isSelected(item['row'] as UTSJSONObject)" @click.stop="toggleSelect(item['row'] as UTSJSONObject)" />
                         </view>
                         <template v-else>
                             <view
-                                v-if="showTreeIcon(col, item['row'] as UTSJSONObject)"
+                                v-if="showTreeIcon(cell['col'] as UTSJSONObject, item['row'] as UTSJSONObject)"
                                 class="up-table-tree-toggle"
                                 :style="{ width: expandWidthValue }"
                                 @click.stop="toggleExpand(item['row'] as UTSJSONObject)"
@@ -56,25 +134,19 @@
                             <slot
                                 name="cell"
                                 :row="item['row'] as UTSJSONObject"
-                                :column="col"
+                                :column="cell['col'] as UTSJSONObject"
                                 :prow="item['parentRow'] as UTSJSONObject | null"
                                 :rowIndex="safeToNumber(item['rowIndex'])"
-                                :columnIndex="colIndex"
+                                :columnIndex="safeToNumber(cell['colIndex'])"
                                 :level="safeToNumber(item['level'], 1)"
                             >
-                                <text class="up-table-cell-text">{{ getCellText(item['row'] as UTSJSONObject, col) }}</text>
+                                <text class="up-table-cell-text">{{ getCellText(item['row'] as UTSJSONObject, cell['col'] as UTSJSONObject) }}</text>
                             </slot>
                         </template>
                     </view>
                 </view>
             </view>
-
-            <view v-else class="up-table-empty">
-                <slot name="empty">
-                    <text>{{ emptyText }}</text>
-                </slot>
-            </view>
-        </scroll-view>
+        </view>
     </view>
 </template>
 
@@ -100,6 +172,17 @@ function createTreeProps(): UTSJSONObject {
     } as UTSJSONObject;
 }
 
+function createSpan(rowspan: number = 1, colspan: number = 1): UTSJSONObject {
+    return {
+        rowspan: rowspan,
+        colspan: colspan
+    } as UTSJSONObject;
+}
+
+function createSpanArray(): number[] {
+    return [1, 1] as number[];
+}
+
 function valueToString(value: any | null): string {
     return value == null ? '' : value.toString();
 }
@@ -116,6 +199,11 @@ function toNumber(value: any | null, fallback: number = 0): number {
     return isNaN(parsed) ? fallback : parsed;
 }
 
+function normalizeColumnWidth(value: any | null): number {
+    const width = toNumber(value, 80);
+    return width < 80 ? 80 : width;
+}
+
 function addUnitLocal(value: any | null): string {
     if (value == null) {
         return 'auto';
@@ -130,6 +218,16 @@ function addUnitLocal(value: any | null): string {
     const numeric = /^-?\d+(\.\d+)?$/.test(text);
     return numeric ? (text + 'px') : text;
 }
+
+function getTableMinWidthPx(): number {
+    return 375;
+}
+
+type SpanMethodCallback = (scope: UTSJSONObject) => any;
+type CellStyleCallback = (scope: UTSJSONObject) => UTSJSONObject | null;
+type CellClassNameCallback = (row: UTSJSONObject, col: UTSJSONObject) => string;
+type RowClassNameCallback = (row: UTSJSONObject, rowIndex: number) => string;
+type HeaderCellClassNameCallback = (col: UTSJSONObject) => string;
 
 export default {
     name: 'up-table2',
@@ -227,23 +325,23 @@ export default {
             default: false
         },
         spanMethod: {
-            type: Function,
+            type: Function as PropType<SpanMethodCallback | null>,
             default: null
         },
         cellStyle: {
-            type: Function,
+            type: Function as PropType<CellStyleCallback | null>,
             default: null
         },
         cellClassName: {
-            type: Function,
+            type: Function as PropType<CellClassNameCallback | null>,
             default: null
         },
         rowClassName: {
-            type: Function,
+            type: Function as PropType<RowClassNameCallback | null>,
             default: null
         },
         headerCellClassName: {
-            type: Function,
+            type: Function as PropType<HeaderCellClassNameCallback | null>,
             default: null
         }
     },
@@ -264,7 +362,8 @@ export default {
             selectedKeys: createStringList(),
             sortKey: '',
             sortOrder: '',
-            currentRowValue: ''
+            currentRowValue: '',
+            scrollLeftValue: 0
         };
     },
     mounted() {
@@ -318,6 +417,24 @@ export default {
                 }
             }
             return false;
+        },
+        fixedLeftColumns(): UTSJSONObject[] {
+            const result = createRowList();
+            const cols = this.columns as UTSJSONObject[];
+            let started = false;
+            for (let i = 0; i < cols.length; i++) {
+                const col = cols[i] as UTSJSONObject;
+                if (valueToString(col['fixed']) == 'left') {
+                    result.push(col);
+                    started = true;
+                } else if (started) {
+                    break;
+                }
+            }
+            return result;
+        },
+        showFixedShadow(): boolean {
+            return this.scrollLeftValue > 0 && (this.fixedLeftColumns as UTSJSONObject[]).length > 0;
         }
     },
     watch: {
@@ -351,6 +468,47 @@ export default {
     methods: {
         normalizeKey(value: any | null): string {
             return valueToString(value);
+        },
+        getTableContentStyle(): UTSJSONObject {
+            const style = createEmptyObject();
+            const contentWidth = this.getTableContentWidth();
+            // #ifdef APP
+            style['width'] = '100%';
+            style['minWidth'] = contentWidth;
+            // #endif
+            // #ifndef APP
+            style['width'] = contentWidth;
+            style['minWidth'] = contentWidth;
+            // #endif
+            return style;
+        },
+        getTableContentWidth(): string {
+            return this.getTableContentWidthValue().toString() + 'px';
+        },
+        getTableContentWidthValue(): number {
+            const cols = this.columns as UTSJSONObject[];
+            let total = 0;
+            for (let i = 0; i < cols.length; i++) {
+                total += normalizeColumnWidth((cols[i] as UTSJSONObject)['width']);
+            }
+            const minWidth = getTableMinWidthPx();
+            return total > 0 ? Math.max(total, minWidth) : minWidth;
+        },
+        getColumnWidthNumber(col: UTSJSONObject): number {
+            const cols = this.columns as UTSJSONObject[];
+            let total = 0;
+            for (let i = 0; i < cols.length; i++) {
+                total += normalizeColumnWidth((cols[i] as UTSJSONObject)['width']);
+            }
+            const width = normalizeColumnWidth(col['width']);
+            if (total <= 0) {
+                return width;
+            }
+            const contentWidth = Math.max(total, getTableMinWidthPx());
+            return Math.floor(width * contentWidth / total);
+        },
+        getColumnWidth(col: UTSJSONObject): string {
+            return this.getColumnWidthNumber(col).toString() + 'px';
         },
         collectFlatRows(rows: UTSJSONObject[], parentRow: UTSJSONObject | null, level: number, result: UTSJSONObject[]): void {
             if (!Array.isArray(rows) || rows.length == 0) {
@@ -410,6 +568,15 @@ export default {
             const typeText = valueToString(col['type']);
             return typeText == '' ? ('col_' + index.toString()) : (typeText + '_' + index.toString());
         },
+        getColumnIndex(col: UTSJSONObject): number {
+            const cols = this.columns as UTSJSONObject[];
+            for (let i = 0; i < cols.length; i++) {
+                if ((cols[i] as UTSJSONObject) === col) {
+                    return i;
+                }
+            }
+            return 0;
+        },
         getColumnTitle(col: UTSJSONObject): string {
             return valueToString(col['title']);
         },
@@ -444,22 +611,47 @@ export default {
             }
             return 'up-text-left';
         },
-        getFixedClass(col: UTSJSONObject): string {
-            return valueToString(col['fixed']) == 'left' ? 'up-table-fixed-left' : '';
+        getCellClassName(row: UTSJSONObject, col: UTSJSONObject): string {
+            if (this.cellClassName == null) {
+                return '';
+            }
+            const callback = this.cellClassName as CellClassNameCallback;
+            const result = callback(row, col);
+            return valueToString(result);
+        },
+        getFixedLeftOffset(col: UTSJSONObject): number {
+            if (valueToString(col['fixed']) != 'left') {
+                return 0;
+            }
+            const cols = this.columns as UTSJSONObject[];
+            let left = 0;
+            for (let i = 0; i < cols.length; i++) {
+                const current = cols[i] as UTSJSONObject;
+                if (current === col) {
+                    break;
+                }
+                if (valueToString(current['fixed']) == 'left') {
+                    left += this.getColumnWidthNumber(current);
+                }
+            }
+            return left;
         },
         getHeaderCellStyle(col: UTSJSONObject): UTSJSONObject {
             const style = createEmptyObject();
-            const widthText = addUnitLocal(col['width']);
-            if (widthText != 'auto') {
-                style['width'] = widthText;
-            }
+            style['width'] = this.getColumnWidth(col);
             return style;
         },
-        getCellStyle(row: UTSJSONObject, col: UTSJSONObject, rowIndex: number, columnIndex: number, level: number): UTSJSONObject {
+        getFixedHeaderCellStyle(col: UTSJSONObject): UTSJSONObject {
+            const style = this.getHeaderCellStyle(col);
+            style['backgroundColor'] = '#f5f7fa';
+            return style;
+        },
+        getBaseCellStyle(row: UTSJSONObject, col: UTSJSONObject, rowIndex: number, columnIndex: number, level: number): UTSJSONObject {
             const style = createEmptyObject();
-            const widthText = addUnitLocal(col['width']);
-            if (widthText != 'auto') {
-                style['width'] = widthText;
+            const spanStyle = this.getCellSpanStyle(row, col, rowIndex, columnIndex);
+            const spanKeys = UTSJSONObject.keys(spanStyle);
+            if (spanKeys.indexOf('width') == -1) {
+                style['width'] = this.getColumnWidth(col);
             }
             if (this.hasTree && this.isMainColumn(col) && level > 1) {
                 style['paddingLeft'] = ((level - 1) * 16).toString() + 'px';
@@ -474,6 +666,137 @@ export default {
                     }
                     style[key] = colStyle[key];
                 }
+            }
+            for (let i = 0; i < spanKeys.length; i++) {
+                const key = spanKeys[i];
+                style[key] = spanStyle[key];
+            }
+            return style;
+        },
+        getCellStyle(row: UTSJSONObject, col: UTSJSONObject, rowIndex: number, columnIndex: number, level: number): UTSJSONObject {
+            return this.getBaseCellStyle(row, col, rowIndex, columnIndex, level);
+        },
+        getFixedCellStyle(row: UTSJSONObject, col: UTSJSONObject, rowIndex: number, columnIndex: number, level: number): UTSJSONObject {
+            const style = this.getBaseCellStyle(row, col, rowIndex, columnIndex, level);
+            style['backgroundColor'] = '#ffffff';
+            return style;
+        },
+        getSpanValue(value: any | null, fallback: number = 1): number {
+            if (value == null || valueToString(value) == '') {
+                return fallback;
+            }
+            const parsed = parseInt(value.toString());
+            return isNaN(parsed) ? fallback : parsed;
+        },
+        getCellSpanArray(row: UTSJSONObject, column: UTSJSONObject, rowIndex: number, columnIndex: number): number[] {
+            if (typeof this.spanMethod !== 'function' || this.spanMethod == null) {
+                return createSpanArray();
+            }
+            const callback = this.spanMethod as SpanMethodCallback;
+            const result = callback({
+                row: row,
+                column: column,
+                rowIndex: rowIndex,
+                columnIndex: columnIndex
+            } as UTSJSONObject);
+            if (Array.isArray(result)) {
+                const arr = result as number[];
+                const rowspan = arr.length > 0 ? this.getSpanValue(arr[0], 1) : 1;
+                const colspan = arr.length > 1 ? this.getSpanValue(arr[1], 1) : 1;
+                return [rowspan, colspan] as number[];
+            }
+            const spanObject = result as UTSJSONObject | null;
+            if (spanObject != null) {
+                const rowspan = this.getSpanValue(spanObject['rowspan'], 1);
+                const colspan = this.getSpanValue(spanObject['colspan'], 1);
+                return [rowspan, colspan] as number[];
+            }
+            return createSpanArray();
+        },
+        getCellSpan(row: UTSJSONObject, column: UTSJSONObject, rowIndex: number, columnIndex: number): UTSJSONObject {
+            const span = this.getCellSpanArray(row, column, rowIndex, columnIndex);
+            const rowspan = span.length > 0 ? span[0] : 1;
+            const colspan = span.length > 1 ? span[1] : 1;
+            return createSpan(rowspan, colspan);
+        },
+        getCellSpanClass(row: UTSJSONObject, column: UTSJSONObject, rowIndex: number, columnIndex: number): string {
+            const span = this.getCellSpan(row, column, rowIndex, columnIndex);
+            if ((span['rowspan'] as number) == 0 || (span['colspan'] as number) == 0) {
+                return 'up-table-cell-hidden';
+            }
+            if ((span['rowspan'] as number) > 1 || (span['colspan'] as number) > 1) {
+                return 'up-table-cell-merged';
+            }
+            return '';
+        },
+        isHiddenBySameRowColspan(row: UTSJSONObject, rowIndex: number, columnIndex: number): boolean {
+            const cols = this.columns as UTSJSONObject[];
+            for (let i = 0; i < columnIndex && i < cols.length; i++) {
+                const span = this.getCellSpan(row, cols[i] as UTSJSONObject, rowIndex, i);
+                const rowspan = span['rowspan'] as number;
+                const colspan = span['colspan'] as number;
+                if (rowspan > 0 && colspan > 1 && i + colspan > columnIndex) {
+                    return true;
+                }
+            }
+            return false;
+        },
+        isCellRendered(row: UTSJSONObject, rowIndex: number, columnIndex: number): boolean {
+            const col = (this.columns as UTSJSONObject[])[columnIndex] as UTSJSONObject;
+            const span = this.getCellSpan(row, col, rowIndex, columnIndex);
+            const rowspan = span['rowspan'] as number;
+            const colspan = span['colspan'] as number;
+            if (rowspan == 0 || colspan == 0) {
+                return !this.isHiddenBySameRowColspan(row, rowIndex, columnIndex);
+            }
+            return true;
+        },
+        getRowCells(row: UTSJSONObject, rowIndex: number): UTSJSONObject[] {
+            const result = createRowList();
+            const cols = this.columns as UTSJSONObject[];
+            for (let i = 0; i < cols.length; i++) {
+                if (this.isCellRendered(row, rowIndex, i)) {
+                    result.push({
+                        col: cols[i],
+                        colIndex: i
+                    } as UTSJSONObject);
+                }
+            }
+            return result;
+        },
+        getFixedRowCells(row: UTSJSONObject, rowIndex: number): UTSJSONObject[] {
+            const result = createRowList();
+            const cols = this.fixedLeftColumns as UTSJSONObject[];
+            for (let i = 0; i < cols.length; i++) {
+                const colIndex = this.getColumnIndex(cols[i] as UTSJSONObject);
+                if (this.isCellRendered(row, rowIndex, colIndex)) {
+                    result.push({
+                        col: cols[i],
+                        colIndex: colIndex
+                    } as UTSJSONObject);
+                }
+            }
+            return result;
+        },
+        getCellSpanStyle(row: UTSJSONObject, column: UTSJSONObject, rowIndex: number, columnIndex: number): UTSJSONObject {
+            const span = this.getCellSpan(row, column, rowIndex, columnIndex);
+            const style = createEmptyObject();
+            const rowspan = span['rowspan'] as number;
+            const colspan = span['colspan'] as number;
+            if (rowspan == 0 || colspan == 0) {
+                return style;
+            }
+            if (rowspan > 1) {
+                const rowHeight = toNumber(this.rowHeight, 44);
+                style['height'] = (rowspan * rowHeight).toString() + 'px';
+            }
+            if (colspan > 1) {
+                const cols = this.columns as UTSJSONObject[];
+                let width = 0;
+                for (let i = columnIndex; i < columnIndex + colspan && i < cols.length; i++) {
+                    width += this.getColumnWidthNumber(cols[i] as UTSJSONObject);
+                }
+                style['width'] = width.toString() + 'px';
             }
             return style;
         },
@@ -548,36 +871,61 @@ export default {
             const selectedKeys = this.selectedKeys as string[];
             const index = selectedKeys.indexOf(key);
             if (index > -1) {
-                selectedKeys.splice(index, 1);
+                this.removeSelectedRowAndChildren(row, selectedKeys);
             } else {
-                selectedKeys.push(key);
+                this.addSelectedRowAndChildren(row, selectedKeys);
             }
             this.selectedKeys = selectedKeys;
             this.$emit('select', row, this.isSelected(row));
             this.$emit('selection-change', this.getSelectedRows());
         },
+        addSelectedRowAndChildren(row: UTSJSONObject, selectedKeys: string[]): void {
+            const key = this.getRowKeyValue(row);
+            if (key != '' && selectedKeys.indexOf(key) == -1) {
+                selectedKeys.push(key);
+            }
+            const children = row[this.getChildrenKey()] as UTSJSONObject[] | null;
+            if (children == null || !Array.isArray(children)) {
+                return;
+            }
+            for (let i = 0; i < children.length; i++) {
+                this.addSelectedRowAndChildren(children[i] as UTSJSONObject, selectedKeys);
+            }
+        },
+        removeSelectedRowAndChildren(row: UTSJSONObject, selectedKeys: string[]): void {
+            const key = this.getRowKeyValue(row);
+            const index = selectedKeys.indexOf(key);
+            if (index > -1) {
+                selectedKeys.splice(index, 1);
+            }
+            const children = row[this.getChildrenKey()] as UTSJSONObject[] | null;
+            if (children == null || !Array.isArray(children)) {
+                return;
+            }
+            for (let i = 0; i < children.length; i++) {
+                this.removeSelectedRowAndChildren(children[i] as UTSJSONObject, selectedKeys);
+            }
+        },
         isAllSelected(): boolean {
-            const rows = this.flatRows as UTSJSONObject[];
+            const rows = this.getAllRows();
             if (rows.length == 0) {
                 return false;
             }
             for (let i = 0; i < rows.length; i++) {
-                const row = rows[i]['row'] as UTSJSONObject;
-                if (!this.isSelected(row)) {
+                if (!this.isSelected(rows[i] as UTSJSONObject)) {
                     return false;
                 }
             }
             return true;
         },
         toggleSelectAll(): void {
-            const rows = this.flatRows as UTSJSONObject[];
+            const rows = this.getAllRows();
             if (this.isAllSelected()) {
                 this.selectedKeys = createStringList();
             } else {
                 const next = createStringList();
                 for (let i = 0; i < rows.length; i++) {
-                    const row = rows[i]['row'] as UTSJSONObject;
-                    const key = this.getRowKeyValue(row);
+                    const key = this.getRowKeyValue(rows[i] as UTSJSONObject);
                     if (key != '') {
                         next.push(key);
                     }
@@ -590,9 +938,9 @@ export default {
         },
         getSelectedRows(): UTSJSONObject[] {
             const result = createRowList();
-            const rows = this.flatRows as UTSJSONObject[];
+            const rows = this.getAllRows();
             for (let i = 0; i < rows.length; i++) {
-                const row = rows[i]['row'] as UTSJSONObject;
+                const row = rows[i] as UTSJSONObject;
                 if (this.isSelected(row)) {
                     result.push(row);
                 }
@@ -601,9 +949,9 @@ export default {
         },
         pruneSelection(): void {
             const valid = createStringList();
-            const rows = this.flatRows as UTSJSONObject[];
+            const rows = this.getAllRows();
             for (let i = 0; i < rows.length; i++) {
-                const key = this.getRowKeyValue(rows[i]['row'] as UTSJSONObject);
+                const key = this.getRowKeyValue(rows[i] as UTSJSONObject);
                 if (key != '') {
                     valid.push(key);
                 }
@@ -617,6 +965,25 @@ export default {
                 }
             }
             this.selectedKeys = next;
+        },
+        getAllRows(): UTSJSONObject[] {
+            const result = createRowList();
+            this.collectAllRows(this.processedData as UTSJSONObject[], result);
+            return result;
+        },
+        collectAllRows(rows: UTSJSONObject[], result: UTSJSONObject[]): void {
+            if (!Array.isArray(rows) || rows.length == 0) {
+                return;
+            }
+            const childrenKey = this.getChildrenKey();
+            for (let i = 0; i < rows.length; i++) {
+                const row = rows[i] as UTSJSONObject;
+                result.push(row);
+                const children = row[childrenKey] as UTSJSONObject[] | null;
+                if (children != null && Array.isArray(children) && children.length > 0) {
+                    this.collectAllRows(children, result);
+                }
+            }
         },
         handleRowClick(row: UTSJSONObject): void {
             if (this.highlightCurrentRow) {
@@ -632,6 +999,13 @@ export default {
             }
             if (this.stripe && flatIndex % 2 == 1) {
                 className += ' up-table-row-zebra';
+            }
+            if (this.rowClassName != null) {
+                const callback = this.rowClassName as RowClassNameCallback;
+                const customClass = valueToString(callback(row, flatIndex));
+                if (customClass != null && customClass != '') {
+                    className += ' ' + customClass;
+                }
             }
             return className;
         },
@@ -727,10 +1101,8 @@ export default {
             if (key == '') {
                 return 0;
             }
-            const valueA = a[key];
-            const valueB = b[key];
-            const textA = valueToString(valueA);
-            const textB = valueToString(valueB);
+            const textA = valueToString(a[key]);
+            const textB = valueToString(b[key]);
             let result = 0;
             const numberA = parseFloat(textA);
             const numberB = parseFloat(textB);
@@ -748,9 +1120,15 @@ export default {
             if (heightText != 'auto') {
                 style['height'] = heightText;
             } else {
-                style['height'] = 'auto';
+                style['height'] = this.getNaturalTableHeight();
             }
             return style;
+        },
+        getNaturalTableHeight(): string {
+            const headerHeight = this.showHeader ? 44 : 0;
+            const rowHeight = toNumber(this.rowHeight, 44);
+            const rows = this.hasData ? (this.flatRows as UTSJSONObject[]).length : 1;
+            return (headerHeight + rowHeight * rows).toString() + 'px';
         },
         getBodyStyle(): UTSJSONObject {
             const style = createEmptyObject();
@@ -760,6 +1138,38 @@ export default {
             }
             return style;
         },
+        getFixedShadowStyle(): UTSJSONObject {
+            const style = createEmptyObject();
+            style['height'] = this.getNaturalTableHeight();
+            style['width'] = this.getFixedShadowWidth().toString() + 'px';
+            return style;
+        },
+        getFixedShadowWidth(): number {
+            const cols = this.fixedLeftColumns as UTSJSONObject[];
+            let total = 0;
+            const parts = createStringList();
+            for (let i = 0; i < cols.length; i++) {
+                const col = cols[i] as UTSJSONObject;
+                const width = this.getColumnWidthNumber(col);
+                total += width;
+                if (this.border) {
+                    total += 1;
+                }
+                parts.push(this.getColumnField(col) + ':' + width.toString());
+            }
+            return total;
+        },
+        onScroll(e: UniScrollEvent): void {
+            this.scrollLeftValue = e.detail.scrollLeft;
+        },
+        // #ifndef APP
+        onScrollRaw(e: Event): void {
+            const target = e.target as HTMLElement | null;
+            if (target != null) {
+                this.scrollLeftValue = (target as any).scrollLeft as number;
+            }
+        },
+        // #endif
         toNumber
     }
 };
@@ -767,16 +1177,33 @@ export default {
 
 <style lang="scss" scoped>
 .up-table2 {
-    width: auto;
+    width: 100%;
+    position: relative;
+    overflow: hidden;
 }
 
 .up-table2-scroll {
     width: 100%;
 }
 
+/* #ifndef APP */
+.up-table2-scroll-h5 {
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+}
+/* #endif */
+
+.up-table2-content {
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+}
+
 .up-table-row {
     display: flex;
     flex-direction: row;
+    overflow: visible;
 }
 
 .up-table-header-row {
@@ -787,18 +1214,33 @@ export default {
     width: 100%;
 }
 
+.up-table-body .up-table-cell {
+    font-size: 12px;
+    padding-top: 4px;
+    padding-bottom: 4px;
+}
+
 .up-table-cell {
-    min-width: 80px;
+    min-width: 0;
     display: flex;
     flex-direction: row;
     flex-shrink: 0;
+    box-sizing: border-box;
     align-items: center;
-    padding: 10px 8px;
+    font-size: 13px;
+    padding: 6px 6px;
     border-bottom: 1px solid #ebeef5;
 }
 
 .up-table-header-cell {
     border-bottom: 1px solid #dcdfe6;
+}
+
+.up-table-header-text {
+    width: 100%;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
 }
 
 .up-table-cell-text {
@@ -858,5 +1300,32 @@ export default {
 
 .up-table-border .up-table-cell:last-child {
     border-right: none;
+}
+
+.up-table-cell-hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.up-table-cell-merged {
+    position: relative;
+    z-index: 2;
+    align-items: center;
+    overflow: visible;
+}
+
+.up-table-cell-merged .up-table-cell-text {
+    overflow: visible;
+    text-overflow: clip;
+}
+
+.up-table-fixed-shadow {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 20;
+    overflow: hidden;
+    background-color: #ffffff;
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.15);
 }
 </style>

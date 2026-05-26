@@ -340,8 +340,7 @@
 		}
 		// 尝试调用up-form的验证方法，进行一定延迟，否则微信小程序更新可能会不及时
 		setTimeout(() => {
-			// todo2026
-			// formValidate(instance, 'change')
+			formValidate(instance, 'change')
 		}, 10);
 	}
 	
