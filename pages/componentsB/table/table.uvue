@@ -1,7 +1,9 @@
 <template>
 	<view class="u-page">
 		<view class="u-demo-block">
-			<view class="u-demo-block__title">演示效果</view>
+			<view class="u-demo-block__title">
+				<text class="text">演示效果</text>
+			</view>
 			<view class="u-demo-block__content">
 				
 				<up-table :align="align" :borderColor="borderColor">
@@ -34,13 +36,17 @@
 		</view>
 		<view class="u-demo-block">
 			<view class="u-demo-block__content">
-				<view class="u-demo-block__title">边框颜色</view>   
+				<view class="u-demo-block__title">
+					<text class="text">边框颜色</text>
+				</view>   
 				<up-subsection :list="['gray', 'primary', 'warning']" @change="borderColorChange"></up-subsection>
 			</view>
 		</view>
 		<view class="u-demo-block">
 			<view class="u-demo-block__content">
-				<view class="u-demo-block__title">对齐方式</view>
+				<view class="u-demo-block__title">
+					<text class="text">对齐方式</text>
+				</view>
 				<up-subsection current="1" :list="['左', '中', '右']" @change="alignChange"></up-subsection>
 			</view>
 		</view>

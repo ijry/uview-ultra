@@ -4,7 +4,9 @@
 	<!-- #endif -->
 	<view class="u-page">
 		<view class="u-demo-block">
-			<text class="u-demo-block__title">基本案例</text>
+			<view class="u-demo-block__title">
+				<text class="text">基本案例</text>
+			</view>
 				<view class="u-page__slide-item">
 				<up-slider
 					:useNative="useNative"
@@ -14,7 +16,9 @@
 			<up-button text="前进" @click="() => {value1 = value1 + 1}"></up-button>
 		</view>
 			<view class="u-demo-block">
-			<text class="u-demo-block__title">自定义范围(10—50)</text>
+			<view class="u-demo-block__title">
+				<text class="text">自定义范围(10—50)</text>
+			</view>
 			<view class="u-page__slide-item">
 				<up-slider
 					:useNative="useNative"
@@ -26,7 +30,9 @@
 			</view>
 		</view>
 		<view class="u-demo-block">
-			<text class="u-demo-block__title">指定步长(每次步进5)</text>
+			<view class="u-demo-block__title">
+				<text class="text">指定步长(每次步进5)</text>
+			</view>
 			<view class="u-page__slide-item">
 				<up-slider
 					:useNative="useNative"
@@ -36,7 +42,9 @@
 			</view>
 		</view>
 		<view class="u-demo-block">
-			<text class="u-demo-block__title">自定义样式</text>
+			<view class="u-demo-block__title">
+				<text class="text">自定义样式</text>
+			</view>
 			<view class="u-page__slide-item">
 				<up-slider
 				    v-model="value5"
@@ -47,7 +55,9 @@
 			</view>
 		</view>
 		<view class="u-demo-block">
-			<text class="u-demo-block__title">自定义样式(图片)</text>
+			<view class="u-demo-block__title">
+				<text class="text">自定义样式(图片)</text>
+			</view>
 			<view class="u-page__slide-item">
 				<up-slider
 				    v-model="value5"
@@ -64,7 +74,9 @@
 			</view>
 		</view>
 		<view class="u-demo-block">
-			<text class="u-demo-block__title">区间选择(双滑块)</text>
+			<view class="u-demo-block__title">
+				<text class="text">区间选择(双滑块)</text>
+			</view>
 			<view class="u-page__slide-item">
 				<up-slider
 					isRange
@@ -76,7 +88,9 @@
 			</view>
 		</view>
 		<view class="u-demo-block">
-			<text class="u-demo-block__title">在Modal弹窗中使用</text>
+			<view class="u-demo-block__title">
+				<text class="text">在Modal弹窗中使用</text>
+			</view>
 			<view class="u-page__slide-item">
 				<up-text @click="modelShow = true" text="打开弹窗"></up-text>
 				<up-modal v-model:show="modelShow">
@@ -87,7 +101,9 @@
 			</view>
 		</view>
 		<view class="u-demo-block">
-			<text class="u-demo-block__title">在popup弹窗中使用</text>
+			<view class="u-demo-block__title">
+				<text class="text">在popup弹窗中使用</text>
+			</view>
 			<view class="u-page__slide-item">
 				<up-text @click="popupShow = true" text="打开弹窗"></up-text>
 				<up-popup v-model:show="popupShow">

@@ -4,7 +4,9 @@
 	<!-- #endif -->
 	<view class="u-page">
 		<view class="u-demo-block">
-			<text class="u-demo-block__title">基础功能</text>
+			<view class="u-demo-block__title">
+				<text class="text">基础功能</text>
+			</view>
 			<view class="u-demo-block__content">
 				<view class="u-page__tag-item">
 					<up-tag
@@ -18,7 +20,9 @@
 			</view>
 		</view>
 		<view class="u-demo-block">
-			<text class="u-demo-block__title">自定义主题</text>
+			<view class="u-demo-block__title">
+				<text class="text">自定义主题</text>
+			</view>
 			<view class="u-demo-block__content">
 				<view class="u-page__tag-item">
 					<up-tag text="标签">
@@ -48,7 +52,9 @@
 			</view>
 		</view>
 		<view class="u-demo-block">
-			<text class="u-demo-block__title">圆形标签</text>
+			<view class="u-demo-block__title">
+				<text class="text">圆形标签</text>
+			</view>
 			<view class="u-demo-block__content">
 				<view class="u-page__tag-item">
 					<up-tag
@@ -69,7 +75,9 @@
 			</view>
 		</view>
 		<view class="u-demo-block">
-			<text class="u-demo-block__title">镂空标签</text>
+			<view class="u-demo-block__title">
+				<text class="text">镂空标签</text>
+			</view>
 			<view class="u-demo-block__content">
 				<view class="u-page__tag-item">
 					<up-tag
@@ -105,7 +113,9 @@
 			</view>
 		</view>
 		<view class="u-demo-block">
-			<text class="u-demo-block__title">镂空带背景色</text>
+			<view class="u-demo-block__title">
+				<text class="text">镂空带背景色</text>
+			</view>
 			<view class="u-demo-block__content">
 				<view class="u-page__tag-item">
 					<up-tag
@@ -145,7 +155,9 @@
 			</view>
 		</view>
 		<view class="u-demo-block">
-			<text class="u-demo-block__title">自定义尺寸</text>
+			<view class="u-demo-block__title">
+				<text class="text">自定义尺寸</text>
+			</view>
 			<view class="u-demo-block__content">
 				<view class="u-page__tag-item">
 					<up-tag
@@ -174,7 +186,9 @@
 			</view>
 		</view>
 		<view class="u-demo-block">
-			<text class="u-demo-block__title">可关闭标签</text>
+			<view class="u-demo-block__title">
+				<text class="text">可关闭标签</text>
+			</view>
 			<view class="u-demo-block__content">
 				<view class="u-page__tag-item">
 					<up-tag
@@ -211,7 +225,9 @@
 			</view>
 		</view>
 		<view class="u-demo-block">
-			<text class="u-demo-block__title">带图片和图标</text>
+			<view class="u-demo-block__title">
+				<text class="text">带图片和图标</text>
+			</view>
 			<view class="u-demo-block__content">
 				<view class="u-page__tag-item">
 					<up-tag
@@ -243,7 +259,9 @@
 			</view>
 		</view>
 		<view class="u-demo-block">
-			<text class="u-demo-block__title">单选标签</text>
+			<view class="u-demo-block__title">
+				<text class="text">单选标签</text>
+			</view>
 			<view class="u-demo-block__content">
 				<view
 				    class="u-page__tag-item"
@@ -262,7 +280,9 @@
 			</view>
 		</view>
 		<view class="u-demo-block">
-			<text class="u-demo-block__title">多选标签</text>
+			<view class="u-demo-block__title">
+				<text class="text">多选标签</text>
+			</view>
 			<view class="u-demo-block__content">
 				<view
 				    class="u-page__tag-item"
