@@ -1,3 +1,61 @@
+## 4.4.0（2026-05-27）
+feat: 新增更多组件与示例页，修复多平台兼容问题
+
+新增安卓演示组件（25 个）：
+- up-popover, up-pagination, up-agreement, up-float-button
+- up-coupon, up-select, up-dragsort, up-signature, up-color-picker
+- up-cascader, up-tree, up-choose, up-virtual-list, up-pull-refresh
+- up-refresh-virtual-list, up-city-locate, up-goods-sku, up-pdf-reader
+- up-markdown, up-short-video, up-barcode, up-poster, up-cropper
+- up-lazy-load, up-qrcode
+
+新增安卓基础/兼容组件（4 个）：
+- up-canvas, up-cate-tab, up-view, up-message-input
+
+新增数据组件（2 个）：
+- up-action-sheet-data, up-picker-data
+
+恢复/补齐安卓端功能（18 处）：
+- up-cascader 多级联动、up-color-picker 调色、up-cate-tab 联动滚动
+- up-poster 二维码和渐变绘制、up-cropper 裁剪交互
+- up-signature 多语言文案、up-barcode/up-qrcode 图片导出
+- up-waterfall 列间距和自适应列数、up-loading-icon 旋转动画
+- up-code-input 光标闪烁、up-checkbox 表单校验联动
+- up-notify/up-toast 完成回调、up-index-list 对象索引项支持
+- up-upload 读取回调/确认事件/自动上传/文件选择结果返回
+- up-line-progress 安卓实现
+
+修复安卓端崩溃与异常（12 处）：
+- up-col Promise 强转 number 导致 ClassCastException
+- up-rate NullPointerException
+- up-number-box Integer 强转 String 的 ClassCastException（2 处）
+- up-pagination NPE 及 block 组件不识别
+- up-select data() 中访问 props 导致 NPE
+- up-picker 数组越界 IndexOutOfBoundsException
+- up-calendar selected 数组越界
+- up-popup 内容被遮罩层遮挡
+- up-count-down/up-datetime-picker/up-skeleton/up-subsection 数值比较
+- up-notify 顶部判断、up-popup 布尔比较
+
+修复跨平台与 UI 问题（10 处）：
+- up-cell 自定义图标 H5 不显示及安卓图片过大
+- up-calendar 默认显示 2000-01、打开卡顿（延迟初始化优化）
+- up-select 箭头跑到文字下方
+- up-slider 滑块无法显示及区间数值重叠
+- up-table2 合并单元格文字遮挡及 H5 横向滚动
+- up-barcode EAN/UPC 格式无法显示
+- up-parse 安卓富文本渲染、up-markdown 安卓渲染能力
+- up-qrcode 安卓画布绘制尺寸与显示、新增静区配置
+- navbar/messageInput/readMore/floatButton/dragsort 多个问题
+- 过渡组件方向动画
+
+补充示例与资源：
+- up-tooltip/up-title/up-copy/up-tabbar/up-index-list 演示入口
+- up-section 默认配置、组件 D 示例页滚动容器
+- swipeAction/tooltip 注册到 pages.json
+- 模板示例页、公共数据、静态资源、pdfjs 资源
+
+
 ## 4.3.33（2026-05-26）
 style: 统一剩余组件示例页标题 DOM 结构并发布
 
