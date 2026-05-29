@@ -165,12 +165,10 @@
                                             {{ isExpanded(item.row) ? '▼' : '▶' }}
                                         </view>
                                     </view>
-                                    <slot name="cell" :row="item.row" :column="col" :prow="item.parentRow"
-                                        :rowIndex="item.rowIndex" :columnIndex="colIndex" :level="item.level">
-                                        <view class="up-table-cell_content">
-                                            {{ item.row[col.key] }}
-                                        </view>
-                                    </slot>
+                                    <!-- 固定列浮动视图直接内联渲染，避免与主表体 slot name="cell" 重名（微信小程序不允许同组件多个同名 slot） -->
+                                    <view class="up-table-cell_content">
+                                        {{ item.row[col.key] }}
+                                    </view>
                                 </template>
                             </view>
                         </view>
@@ -179,8 +177,8 @@
                     <!-- #ifndef MP-WEIXIN -->
                     <template v-for="(row, rowIndex) in sortedData" :key="row[rowKey] || rowIndex">
                         <!-- 子级渲染 (递归组件) -->
-                        <table-row 
-                            :row="row" 
+                        <table-row
+                            :row="row"
                             :rowIndex="rowIndex"
                             :parent-row="null"
                             :columns="visibleFixedLeftColumns"
