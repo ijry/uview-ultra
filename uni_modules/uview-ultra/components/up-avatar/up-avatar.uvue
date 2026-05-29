@@ -183,9 +183,13 @@ const errorHandler = () => {
 
 // 监听头像src的变化
 watch(():string => props.src, (newVal: string) => {
-    avatarUrl.value = newVal;
-    // 如果没有传src，则主动触发error事件，用于显示默认的头像
-    errorHandler();
+    if (newVal == null || newVal.trim() === '') {
+        // src为空时才显示默认头像
+        avatarUrl.value = '';
+        errorHandler();
+    } else {
+        avatarUrl.value = newVal;
+    }
 }, { immediate: true });
 
 // 初始化
@@ -196,7 +200,6 @@ onMounted(() => {
     // #ifdef MP-WEIXIN || MP-QQ || MP-BAIDU
     allowMp.value = true;
     // #endif
-    avatarUrl.value = props.src;
 });
 
 // 点击处理

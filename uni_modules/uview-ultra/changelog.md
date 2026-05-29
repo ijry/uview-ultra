@@ -1,3 +1,9 @@
+## 4.4.1（2026-05-29）
+fix(avatar): 修复 uvue 头像 src 监听导致默认图覆盖问题
+
+- up-avatar.uvue: 仅在 src 为空/空白时触发 errorHandler
+- up-avatar.uvue: 移除 onMounted 中对 avatarUrl 的二次重置，避免覆盖回退结果
+
 ## 4.4.0（2026-05-27）
 feat: 新增更多组件与示例页，修复多平台兼容问题
 
