@@ -36,6 +36,7 @@ export default {
         rangePrompt: '',
         showRangePrompt: true,
         allowSameDay: false,
+		rangeResultMode: 'all',
 		round: 0,
 		monthNum: 3,
 		monthSwitch: false,
