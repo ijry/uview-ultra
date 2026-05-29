@@ -1,18 +1,18 @@
 <template>
 	<view class="up-popup"  :class="[customClass]">
 		<up-overlay
-			:show="show"
+			:show="show && !pageInline"
 			@click="overlayClick"
-			v-if="overlay"
+			v-if="overlay && !pageInline"
 			:zIndex="zIndex"
 			:duration="overlayDuration"
 			:customStyle="overlayStyle"
 			:opacity="overlayOpacity"
 		></up-overlay>
 		<up-transition
-			:show="show"
+			:show="pageInline ? true : show"
 			:customStyle="transitionStyle"
-			:mode="position"
+			:mode="pageInline ? 'none' : position"
 			:duration="duration"
 			@afterEnter="afterEnter"
 			@click="clickHandler"
@@ -99,10 +99,12 @@
 		computed: {
 			transitionStyle():any {
 				const style = {
-					// @ts-ignore
-					zIndex: parseInt(this.zIndex!!.toString()) + 1,
-					position: 'fixed',
 					display: 'flex',
+				}
+				if (!this.pageInline) {
+					// @ts-ignore
+					style['zIndex'] = parseInt(this.zIndex!!.toString()) + 1
+					style['position'] = 'fixed'
 				}
 				style[this.mode] = 0
 				if (this.mode === 'left') {

@@ -12,7 +12,8 @@
         </view>
         <up-picker
             ref="picker"
-            :show="show || (hasInput && showByClickInput)"
+            :show="pageInline || show || (hasInput && showByClickInput)"
+            :pageInline="pageInline"
             :popupMode="popupMode"
             :closeOnClickOverlay="closeOnClickOverlay"
             :columns="columns"
@@ -46,7 +47,7 @@
 <script setup lang="uts">
 	// 导入ref
 	import type { PropType } from 'vue'
-	import { ref, watch } from 'vue';
+	import { ref, watch, nextTick, onMounted } from 'vue';
 	import {dayuts} from '@/uni_modules/lime-dayuts';
 	import { range, error, padZero } from '../../libs/function/index.uts';
 	import { date as testDate } from '../../libs/function/test.uts';
@@ -69,6 +70,10 @@
 		show: {
 			type: Boolean,
 			default: defProps.getBoolean('datetimePicker.show')
+		},
+		pageInline: {
+			type: Boolean,
+			default: defProps.getBoolean('datetimePicker.pageInline')
 		},
 		popupMode: {
 			type: String,
@@ -496,20 +501,25 @@
 	function updateColumnValue(value: any) {
 		innerValue.value = value
 		updateColumns()
-		// 延迟执行,等待up-picker组件列数据更新完后再设置选中值索引
-		setTimeout(() => {
-		updateIndexs(value)
-		}, 0);
+		// 延迟执行，等待up-picker组件列数据更新完后再设置选中值索引
+		// 用nextTick包裹确保columns已更新到DOM后再设置索引
+		nextTick(() => {
+			setTimeout(() => {
+				updateIndexs(value)
+			}, 0)
+		})
 	}
 
 	function syncColumnsAfterChange(value: any) {
 		const nextColumns = buildColumns()
 		if (!columnsEqual(columns.value, nextColumns)) {
 			columns.value = nextColumns
-			// 延迟执行,等待up-picker组件列数据更新完后再设置选中值索引
-			setTimeout(() => {
-				updateIndexs(value)
-			}, 0)
+			// 延迟执行，等待up-picker组件列数据更新完后再设置选中值索引
+			nextTick(() => {
+				setTimeout(() => {
+					updateIndexs(value)
+				}, 0)
+			})
 		}
 	}
 	
@@ -735,6 +745,11 @@
 			}
 			if (newValue) {
 				updateColumnValue(innerValue.value)
+				// 弹窗打开时，原生picker-view需要一定时间完成渲染，在Android/HarmonyOS端
+				// 仅靠updateColumnValue中的nextTick不足以保证索引设置成功，需额外兜底
+				setTimeout(() => {
+					updateIndexs(innerValue.value)
+				}, 150)
 			}
 		})
 		// watch((): any => props.modelValue, () => {
@@ -758,6 +773,16 @@
 		
 		// 初始化
 		init();
+
+		// 在Android/HarmonyOS原生端，picker-view初始化时原生组件渲染需要时间，
+		// 首次init()中的nextTick可能仍早于原生组件就绪，需额外延时兜底
+		onMounted(() => {
+			if (props.pageInline) {
+				setTimeout(() => {
+					updateIndexs(innerValue.value)
+				}, 200)
+			}
+		})
 	</script>
 
 <style lang="scss" scoped>

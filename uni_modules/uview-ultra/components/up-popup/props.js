@@ -76,6 +76,11 @@ export const props = defineMixin({
         overlayOpacity: {
             type: [Number, String],
             default: () => defProps.popup.overlayOpacity
+        },
+        // 是否内联在页面中（不使用弹窗形式）
+        pageInline: {
+            type: Boolean,
+            default: () => defProps.popup.pageInline
         }
     }
 })

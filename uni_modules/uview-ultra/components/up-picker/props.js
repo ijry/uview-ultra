@@ -99,5 +99,10 @@ export const props = defineMixin({
 			type: Boolean,
 			default: false
 		},
+        // 是否内联在页面中（不使用弹窗形式）
+        pageInline: {
+            type: Boolean,
+            default: () => defProps.picker.pageInline
+        }
     }
 })

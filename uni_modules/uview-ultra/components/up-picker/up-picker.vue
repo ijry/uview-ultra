@@ -10,8 +10,9 @@
             </slot>
         </view>
 		<up-popup
-			:show="show || (hasInput && showByClickInput)"
+			:show="pageInline || show || (hasInput && showByClickInput)"
 			:mode="popupMode"
+			:pageInline="pageInline"
 			@close="closeHandler"
 		>
 			<view class="up-picker">

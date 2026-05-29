@@ -25,6 +25,7 @@ export default {
         keyName: 'text',
         closeOnClickOverlay: false,
         defaultIndex: [] as number[],
-		immediateChange: true
+		immediateChange: true,
+        pageInline: false
     }
 } as UTSJSONObject
