@@ -140,6 +140,21 @@ export const propsCalendar = defineMixin({
 			type: String,
 			default: calendarProp['rangeResultMode']
 		},
+		// 是否开启时分秒选择
+		enableTime: {
+			type: Boolean,
+			default: calendarProp['enableTime']
+		},
+		// 时间精度：hour-仅时，minute-时分，second-时分秒
+		timePrecision: {
+			type: String,
+			default: calendarProp['timePrecision']
+		},
+		// 默认时间，格式支持 HH / HH:mm / HH:mm:ss
+		defaultTime: {
+			type: String,
+			default: calendarProp['defaultTime']
+		},
 		// 圆角值
 		round: {
 		    type: [Boolean, String, Number],

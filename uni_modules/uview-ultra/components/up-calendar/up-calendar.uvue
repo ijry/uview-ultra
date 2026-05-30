@@ -27,6 +27,28 @@
 				@nextYear="nextYear"
 				@today="jumpToToday"
 			></uHeader>
+			<view v-if="showTimePanel" class="up-calendar__time-panel">
+				<view v-if="mode == 'single'" class="up-calendar__time-row">
+					<text class="up-calendar__time-date">{{ singleDateLabel }}</text>
+					<view class="up-calendar__time-trigger" @click="openTimePicker('single')">
+						<text class="up-calendar__time-text">{{ singleTime }}</text>
+					</view>
+				</view>
+				<view v-else-if="mode == 'range' && rangeResultMode == 'boundary'">
+					<view class="up-calendar__time-row">
+						<text class="up-calendar__time-date">{{ rangeStartDateLabel }}</text>
+						<view class="up-calendar__time-trigger" @click="openTimePicker('start')">
+							<text class="up-calendar__time-text">{{ rangeStartTime }}</text>
+						</view>
+					</view>
+					<view class="up-calendar__time-row">
+						<text class="up-calendar__time-date">{{ rangeEndDateLabel }}</text>
+						<view class="up-calendar__time-trigger" @click="openTimePicker('end')">
+							<text class="up-calendar__time-text">{{ rangeEndTime }}</text>
+						</view>
+					</view>
+				</view>
+			</view>
 			<scroll-view
 				v-if="!monthSwitch"
 				:style="{height: addUnit(listHeight)}"
@@ -102,6 +124,32 @@
 			</slot>
 		</view>
 	</up-popup>
+	<up-popup
+		:show="timePickerShow"
+		mode="center"
+		:round="8"
+		:closeOnClickOverlay="true"
+		@close="closeTimePicker"
+	>
+		<view class="up-calendar__time-picker">
+			<view class="up-calendar__time-picker__header">
+				<text class="up-calendar__time-picker__cancel" @click="closeTimePicker">取消</text>
+				<text class="up-calendar__time-picker__title">选择时间</text>
+				<text class="up-calendar__time-picker__confirm" @click="confirmTimePicker">确定</text>
+			</view>
+			<picker-view class="up-calendar__time-picker__body" :value="timePickerValue" @change="onTimePickerChange">
+				<picker-view-column>
+					<view v-for="(item, index) in hourOptions" :key="'h-' + index" class="up-calendar__time-picker__item">{{ item }}</view>
+				</picker-view-column>
+				<picker-view-column v-if="timePrecision != 'hour'">
+					<view v-for="(item, index) in minuteOptions" :key="'m-' + index" class="up-calendar__time-picker__item">{{ item }}</view>
+				</picker-view-column>
+				<picker-view-column v-if="timePrecision == 'second'">
+					<view v-for="(item, index) in secondOptions" :key="'s-' + index" class="up-calendar__time-picker__item">{{ item }}</view>
+				</picker-view-column>
+			</picker-view>
+		</view>
+	</up-popup>
 </template>
 
 <script>
@@ -148,6 +196,9 @@ import { number as testNumber, array as testArray } from '../../libs/function/te
  * @property {Boolean}				showRangePrompt	    范围选择超过最多可选天数时，是否展示提示文案，mode = range时有效 (默认 true )
  * @property {Boolean}				allowSameDay	    是否允许日期范围的起止时间为同一天，mode = range时有效 (默认 false )
  * @property {String}				rangeResultMode	    区间模式下确认返回值格式，all-返回区间内所有日期，boundary-仅返回起止日期 (默认 'all' )
+ * @property {Boolean}				enableTime			是否开启时分秒选择 (默认 false )
+ * @property {String}				timePrecision		时间精度，hour-仅时，minute-时分，second-时分秒 (默认 'minute' )
+ * @property {String}				defaultTime			默认时间，支持HH/HH:mm/HH:mm:ss，不传则按00:00补齐
  * @property {Number|String}	    round				圆角值，默认无圆角  (默认 0 )
  * @property {Number|String}	    monthNum			最多展示的月份数量  (默认 3 )
  * @property {Boolean}	            monthSwitch			是否启用非滚动的单月切换模式  (默认 false )
@@ -305,6 +356,21 @@ export default {
 			type: String,
 			default: calendarProp['rangeResultMode']
 		},
+		// 是否开启时分秒选择
+		enableTime: {
+			type: Boolean,
+			default: calendarProp['enableTime']
+		},
+		// 时间精度：hour-仅时，minute-时分，second-时分秒
+		timePrecision: {
+			type: String,
+			default: calendarProp['timePrecision']
+		},
+		// 默认时间，格式支持 HH / HH:mm / HH:mm:ss
+		defaultTime: {
+			type: String,
+			default: calendarProp['defaultTime']
+		},
 		// 圆角值
 		round: {
 		    type: [Boolean, String, Number],
@@ -341,6 +407,15 @@ export default {
 			scrollIntoView: '',
 			scrollIntoViewScroll: '',
 			scrollTop:0,
+			timePickerShow: false,
+			timePickerTarget: 'single',
+			timePickerValue: [0, 0, 0] as Array<number>,
+			hourOptions: [] as Array<string>,
+			minuteOptions: [] as Array<string>,
+			secondOptions: [] as Array<string>,
+			singleTime: '00:00',
+			rangeStartTime: '00:00',
+			rangeEndTime: '00:00',
 			// 过滤处理方法
 			innerFormatter: (value: UPCalendarMonthsItemDate):UPCalendarMonthsItemDate => value
 		}
@@ -357,6 +432,20 @@ export default {
 			handler() {
 				// @ts-ignore
 				if (this.inited) this.setMonth()
+			}
+		},
+		timePrecision: {
+			handler() {
+				// @ts-ignore
+				this.initTimeOptions()
+				// @ts-ignore
+				this.initTimeValues()
+			}
+		},
+		defaultTime: {
+			handler() {
+				// @ts-ignore
+				this.initTimeValues()
 			}
 		},
 		// 打开弹窗时，设置月份数据
@@ -456,6 +545,27 @@ export default {
 			// @ts-ignore
 			return this.monthIndex + 12 > this.months.length - 1
 		},
+		showTimePanel(): boolean {
+			// @ts-ignore
+			if (!this.enableTime) return false
+			// @ts-ignore
+			if (this.mode == 'single') return true
+			// @ts-ignore
+			if (this.mode == 'range' && this.rangeResultMode == 'boundary') return true
+			return false
+		},
+		singleDateLabel(): string {
+			// @ts-ignore
+			return this.selected.length > 0 ? this.selected[0] : '--'
+		},
+		rangeStartDateLabel(): string {
+			// @ts-ignore
+			return this.selected.length > 0 ? this.selected[0] : '--'
+		},
+		rangeEndDateLabel(): string {
+			// @ts-ignore
+			return this.selected.length > 1 ? this.selected[this.selected.length - 1] : '--'
+		},
 		buttonDisabled() {
 			// 如果为range类型，且选择的日期个数不足1个时，让底部的按钮出于disabled状态
 			// @ts-ignore
@@ -480,13 +590,173 @@ export default {
 		addUnit(e: any) {
 			return addUnit(e)
 		},
+		padTime(num: number): string {
+			let str = num.toString()
+			return str.length < 2 ? ('0' + str) : str
+		},
+		initTimeOptions() {
+			// @ts-ignore
+			this.hourOptions = [] as Array<string>
+			// @ts-ignore
+			this.minuteOptions = [] as Array<string>
+			// @ts-ignore
+			this.secondOptions = [] as Array<string>
+			for (let i = 0; i < 24; i++) {
+				// @ts-ignore
+				this.hourOptions.push(this.padTime(i))
+			}
+			for (let i = 0; i < 60; i++) {
+				// @ts-ignore
+				this.minuteOptions.push(this.padTime(i))
+				// @ts-ignore
+				this.secondOptions.push(this.padTime(i))
+			}
+		},
+		parseTimeValue(value: string): Array<number> {
+			let raw = value == null ? '' : value.toString()
+			let parts = raw.length > 0 ? raw.split(':') : []
+			let hour = parts.length > 0 ? Number(parts[0]) : 0
+			let minute = parts.length > 1 ? Number(parts[1]) : 0
+			let second = parts.length > 2 ? Number(parts[2]) : 0
+			if (Number.isNaN(hour)) hour = 0
+			if (Number.isNaN(minute)) minute = 0
+			if (Number.isNaN(second)) second = 0
+			hour = Math.max(0, Math.min(23, hour))
+			minute = Math.max(0, Math.min(59, minute))
+			second = Math.max(0, Math.min(59, second))
+			return [hour, minute, second]
+		},
+		getDefaultTimeValue(): string {
+			// @ts-ignore
+			let parsed = this.parseTimeValue(this.defaultTime as string)
+			let hour = parsed[0]
+			let minute = parsed[1]
+			let second = parsed[2]
+			// @ts-ignore
+			if (this.timePrecision == 'hour') {
+				return this.padTime(hour)
+			}
+			// @ts-ignore
+			if (this.timePrecision == 'second') {
+				return `${this.padTime(hour)}:${this.padTime(minute)}:${this.padTime(second)}`
+			}
+			return `${this.padTime(hour)}:${this.padTime(minute)}`
+		},
+		initTimeValues() {
+			let value = this.getDefaultTimeValue()
+			// @ts-ignore
+			this.singleTime = value
+			// @ts-ignore
+			this.rangeStartTime = value
+			// @ts-ignore
+			this.rangeEndTime = value
+		},
+		timeToPickerValue(value: string): Array<number> {
+			return this.parseTimeValue(value)
+		},
+		pickerValueToTime(value: Array<number>): string {
+			let hour = value.length > 0 ? Number(value[0]) : 0
+			let minute = value.length > 1 ? Number(value[1]) : 0
+			let second = value.length > 2 ? Number(value[2]) : 0
+			// @ts-ignore
+			if (this.timePrecision == 'hour') {
+				return this.padTime(hour)
+			}
+			// @ts-ignore
+			if (this.timePrecision == 'second') {
+				return `${this.padTime(hour)}:${this.padTime(minute)}:${this.padTime(second)}`
+			}
+			return `${this.padTime(hour)}:${this.padTime(minute)}`
+		},
+		openTimePicker(target: string) {
+			// @ts-ignore
+			this.timePickerTarget = target
+			let currentValue = ''
+			// @ts-ignore
+			if (target == 'single') currentValue = this.singleTime as string
+			// @ts-ignore
+			if (target == 'start') currentValue = this.rangeStartTime as string
+			// @ts-ignore
+			if (target == 'end') currentValue = this.rangeEndTime as string
+			// @ts-ignore
+			this.timePickerValue = this.timeToPickerValue(currentValue.length > 0 ? currentValue : this.getDefaultTimeValue())
+			// @ts-ignore
+			this.timePickerShow = true
+		},
+		onTimePickerChange(event: UniPickerViewChangeEvent) {
+			// @ts-ignore
+			this.timePickerValue = event.detail.value as Array<number>
+		},
+		closeTimePicker() {
+			// @ts-ignore
+			this.timePickerShow = false
+		},
+		confirmTimePicker() {
+			// @ts-ignore
+			let value = this.pickerValueToTime(this.timePickerValue as Array<number>)
+			// @ts-ignore
+			if (this.timePickerTarget == 'single') this.singleTime = value
+			// @ts-ignore
+			if (this.timePickerTarget == 'start') this.rangeStartTime = value
+			// @ts-ignore
+			if (this.timePickerTarget == 'end') this.rangeEndTime = value
+			// @ts-ignore
+			this.timePickerShow = false
+		},
+		timeToSecond(value: string): number {
+			let parsed = this.parseTimeValue(value)
+			return parsed[0] * 3600 + parsed[1] * 60 + parsed[2]
+		},
+		validateSameDayRangeTime(): boolean {
+			// @ts-ignore
+			if (!this.enableTime || this.mode != 'range' || this.rangeResultMode != 'boundary') {
+				return true
+			}
+			// @ts-ignore
+			if (this.selected.length < 2) return true
+			// @ts-ignore
+			let startDate = this.selected[0] as string
+			// @ts-ignore
+			let endDate = this.selected[this.selected.length - 1] as string
+			if (startDate != endDate) return true
+			// @ts-ignore
+			let startSeconds = this.timeToSecond(this.rangeStartTime as string)
+			// @ts-ignore
+			let endSeconds = this.timeToSecond(this.rangeEndTime as string)
+			if (endSeconds < startSeconds) {
+				uni.showToast({
+					title: '结束时间不能早于开始时间',
+					icon: 'none'
+				})
+				return false
+			}
+			return true
+		},
+		appendTime(dateText: string, timeText: string): string {
+			return `${dateText} ${timeText}`
+		},
 		getConfirmValue(selected: Array<string> = this.selected as Array<string>): Array<string> {
+			let result = selected
 			// @ts-ignore
 			if (this.mode == 'range' && this.rangeResultMode == 'boundary' && selected.length >= 2) {
 				let len = selected.length - 1
-				return [selected[0], selected[len]]
+				result = [selected[0], selected[len]]
 			}
-			return selected
+			// @ts-ignore
+			if (!this.showTimePanel || !this.enableTime) {
+				return result
+			}
+			// @ts-ignore
+			if (this.mode == 'single' && result.length >= 1) {
+				// @ts-ignore
+				return [this.appendTime(result[0], this.singleTime as string)]
+			}
+			// @ts-ignore
+			if (this.mode == 'range' && this.rangeResultMode == 'boundary' && result.length >= 2) {
+				// @ts-ignore
+				return [this.appendTime(result[0], this.rangeStartTime as string), this.appendTime(result[1], this.rangeEndTime as string)]
+			}
+			return result
 		},
 		// 在微信小程序中，不支持将函数当做props参数，故只能通过ref形式调用
 		setFormatter(e: object)  {
@@ -513,6 +783,8 @@ export default {
 				   }
 				   if( scene === 'tap') {
 					   // @ts-ignore
+					   if (!this.validateSameDayRangeTime()) return
+					   // @ts-ignore
 					 this.$emit('confirm', this.getConfirmValue())
 				   }
 				}
@@ -535,6 +807,10 @@ export default {
 			// 滚动区域的高度
 			// @ts-ignore
 			this.listHeight = (this.rowHeight as number) * (this.monthSwitch ? 6 : 5) + 30
+			// @ts-ignore
+			this.initTimeOptions()
+			// @ts-ignore
+			this.initTimeValues()
 			this.setMonth()
 			// @ts-ignore
 			this.inited = true
@@ -547,6 +823,8 @@ export default {
 		confirm() {
 			// @ts-ignore
 			if (!this.buttonDisabled) {
+				// @ts-ignore
+				if (!this.validateSameDayRangeTime()) return
 				// @ts-ignore
 				this.$emit('confirm', this.getConfirmValue())
 			}
@@ -783,6 +1061,84 @@ export default {
 @import '../../libs/css/components.scss';
 
 .up-calendar {
+	&__time-panel {
+		padding: 8px 16px 0;
+	}
+
+	&__time-row {
+		height: 34px;
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		margin-bottom: 6px;
+	}
+
+	&__time-date {
+		font-size: 13px;
+		color: #303133;
+	}
+
+	&__time-trigger {
+		min-width: 92px;
+		height: 30px;
+		padding: 0 10px;
+		border-radius: 15px;
+		border: 1px solid #dcdfe6;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	&__time-text {
+		font-size: 14px;
+		color: #303133;
+	}
+
+	&__time-picker {
+		width: 320px;
+		background-color: #ffffff;
+		border-radius: 8px;
+		overflow: hidden;
+	}
+
+	&__time-picker__header {
+		height: 44px;
+		padding: 0 14px;
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		border-bottom: 1px solid #f0f0f0;
+	}
+
+	&__time-picker__cancel {
+		font-size: 14px;
+		color: #909399;
+	}
+
+	&__time-picker__title {
+		font-size: 15px;
+		color: #303133;
+		font-weight: 600;
+	}
+
+	&__time-picker__confirm {
+		font-size: 14px;
+		color: #3c9cff;
+	}
+
+	&__time-picker__body {
+		width: 320px;
+		height: 200px;
+	}
+
+	&__time-picker__item {
+		height: 40px;
+		line-height: 40px;
+		text-align: center;
+		font-size: 16px;
+		color: #303133;
+	}
+
 	&__confirm {
 		padding: 7px 18px;
 	}
