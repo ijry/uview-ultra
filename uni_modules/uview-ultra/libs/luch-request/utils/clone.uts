@@ -1,0 +1,52 @@
+/**
+ * Simplified clone function for UTS
+ * Clones plain objects and arrays, copies functions by reference
+ * No support for Buffer, Map, Set, RegExp as they're not needed for config objects
+ */
+
+function clone(obj: any, depth: number = Infinity): any {
+    // Handle null and non-objects
+    if (obj === null || typeof obj !== 'object') {
+        return obj
+    }
+
+    // Depth limit
+    if (depth === 0) {
+        return obj
+    }
+
+    // Handle Date
+    if (obj instanceof Date) {
+        return new Date(obj.getTime())
+    }
+
+    // Handle Array
+    if (Array.isArray(obj)) {
+        const arr: any[] = []
+        for (let i = 0; i < obj.length; i++) {
+            arr.push(clone(obj[i], depth - 1))
+        }
+        return arr
+    }
+
+    // Handle plain objects
+    const result: any = {}
+    const keys = Object.keys(obj)
+    for (let i = 0; i < keys.length; i++) {
+        const key = keys[i]
+        const val = obj[key]
+
+        // Copy functions by reference (don't clone them)
+        if (typeof val === 'function') {
+            result[key] = val
+        } else if (val !== null && typeof val === 'object') {
+            result[key] = clone(val, depth - 1)
+        } else {
+            result[key] = val
+        }
+    }
+
+    return result
+}
+
+export default clone
