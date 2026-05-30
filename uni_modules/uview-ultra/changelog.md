@@ -1,3 +1,11 @@
+## 4.4.2（2026-05-30）
+feat: add pageInline prop to up-popup, up-picker, up-datetime-picker
+
+When pageInline=true the picker renders inline on the page rather than
+as a floating popup — fixes scroll-to-default-value issue on Android/
+HarmonyOS (issue #941 equivalent) and enables always-visible inline
+datetime/picker use cases.
+
 ## 4.4.1（2026-05-29）
 fix(avatar): 修复 uvue 头像 src 监听导致默认图覆盖问题
 
