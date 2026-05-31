@@ -123,6 +123,14 @@
 			type: Number,
 			default: defProps.getNumber('datetimePicker.maxMinute')
 		},
+		minSecond: {
+			type: Number,
+			default: defProps.getNumber('datetimePicker.minSecond')
+		},
+		maxSecond: {
+			type: Number,
+			default: defProps.getNumber('datetimePicker.maxSecond')
+		},
 		filter: {
 			type: Function,
 			default: null
@@ -224,7 +232,7 @@
 			inputValue.value = ''
 			return
 		}
-		if (props.mode == 'time') {
+		if (props.mode == 'time' || props.mode == 'timesecond') {
 			inputValue.value = newValue
 		} else {
 			if (props.format != '') {
@@ -241,8 +249,17 @@
 					case 'datetime':
 						format = 'YYYY-MM-DD HH:mm'
 						break;
+					case 'datehour':
+						format = 'YYYY-MM-DD HH'
+						break;
+					case 'datetimesecond':
+						format = 'YYYY-MM-DD HH:mm:ss'
+						break;
 					case 'time':
 						format = 'HH:mm'
+						break;
+					case 'timesecond':
+						format = 'HH:mm:ss'
 						break;
 					default:
 						break;
@@ -271,11 +288,14 @@
 		let values: string[] = []
 		let formatterFunc = (type: string, value: string) => {return value}
 		formatterFunc = getFormatFunc()
-		if (props.mode === 'time') {
+		if (props.mode === 'time' || props.mode === 'timesecond') {
 			// 将time模式的时间用:分隔成数组
 			const timeArr: string[] = value.toString().split(':')
 			// 使用formatter格式化方法进行管道处理
 			values = [formatterFunc('hour', timeArr[0]), formatterFunc('minute', timeArr[1])]
+			if (props.mode === 'timesecond') {
+				values.push(formatterFunc('second', timeArr[2]))
+			}
 		} else {
 			const date = new Date(value.toString())
 			values = [
@@ -283,13 +303,18 @@
 				// 月份补0
 				formatterFunc('month', padZero(dayuts(value).month() + 1))
 			]
-			if (props.mode === 'date') {
+			if (props.mode === 'date' || props.mode === 'datehour' || props.mode === 'datetime' || props.mode === 'datetimesecond') {
 				// date模式，需要添加天列
 				values.push(formatterFunc('day', padZero(dayuts(value).date())))
 			}
-			if (props.mode === 'datetime') {
-				// 数组的push方法，可以写入多个参数
-				values.push(formatterFunc('day', padZero(dayuts(value).date())), formatterFunc('hour', padZero(dayuts(value).hour())), formatterFunc('minute', padZero(dayuts(value).minute())))
+			if (props.mode === 'datehour' || props.mode === 'datetime' || props.mode === 'datetimesecond') {
+				values.push(formatterFunc('hour', padZero(dayuts(value).hour())))
+			}
+			if (props.mode === 'datetime' || props.mode === 'datetimesecond') {
+				values.push(formatterFunc('minute', padZero(dayuts(value).minute())))
+			}
+			if (props.mode === 'datetimesecond') {
+				values.push(formatterFunc('second', padZero(dayuts(value).second())))
 			}
 		}
 	
@@ -327,12 +352,14 @@
 		let date = 1
 		let hour = 0
 		let minute = 0
+		let second = 0
 		if (type === 'max') {
 			month = 12
 			// 月份的天数 - 应该使用boundary的月份，而不是value的月份
 			date = dayuts(boundary).daysInMonth()
 			hour = 23
 			minute = 59
+			second = 59
 		}
 		// 获取边界值，逻辑是：当年达到了边界值(最大或最小年)，就检查月允许的最大和最小值，以此类推
 		if (dayuts(value).year() === year) {
@@ -343,6 +370,9 @@
 					hour = dayuts(boundary).hour()
 					if (dayuts(value).hour() === hour) {
 						minute = dayuts(boundary).minute()
+						if (dayuts(value).minute() === minute) {
+							second = dayuts(boundary).second()
+						}
 					}
 				}
 			}
@@ -353,13 +383,14 @@
 		result[`${type}Date`] = date
 		result[`${type}Hour`] = hour
 		result[`${type}Minute`] = minute
+		result[`${type}Second`] = second
 		return result
 	}
 	
 	// 获取每列的最大和最小值
 	function getRanges(): Array<UTSJSONObject> {
-		if (props.mode === 'time') {
-			return [
+		if (props.mode === 'time' || props.mode === 'timesecond') {
+			const timeColumns = [
 				{
 					type: 'hour',
 					ranges: [props.minHour, props.maxHour],
@@ -368,7 +399,14 @@
 					type: 'minute',
 					ranges: [props.minMinute, props.maxMinute],
 				},
-			];
+			]
+			if (props.mode === 'timesecond') {
+				timeColumns.push({
+					type: 'second',
+					ranges: [props.minSecond, props.maxSecond],
+				} as UTSJSONObject)
+			}
+			return timeColumns as Array<UTSJSONObject>
 		}
 		const maxObj = getBoundary('max', innerValue.value);
 		const minObj = getBoundary('min', innerValue.value);
@@ -377,11 +415,13 @@
 		const maxMonth = maxObj['maxMonth'];
 		const maxHour = maxObj['maxHour'];
 		const maxMinute = maxObj['maxMinute'];
+		const maxSecond = maxObj['maxSecond'];
 		const minYear = minObj['minYear'];
 		const minDate = minObj['minDate'];
 		const minMonth = minObj['minMonth'];
 		const minHour = minObj['minHour'];
 		const minMinute = minObj['minMinute'];
+		const minSecond = minObj['minSecond'];
 		const result = [
 			{
 				type: 'year',
@@ -403,6 +443,10 @@
 				type: 'minute',
 				ranges: [minMinute, maxMinute],
 			},
+			{
+				type: 'second',
+				ranges: [minSecond, maxSecond],
+			},
 		];
 		// 兜底：防止边界计算异常导致日列出现空范围（快速滚动场景）
 		if (result.length > 2) {
@@ -419,9 +463,13 @@
 			}
 		}
 		if (props.mode === 'date')
-			result.splice(3, 2);
+			result.splice(3, 3);
+		if (props.mode === 'datehour')
+			result.splice(4, 2);
+		if (props.mode === 'datetime')
+			result.splice(5, 1);
 		if (props.mode === 'year-month')
-			result.splice(2, 3);
+			result.splice(2, 4);
 		return result;
 	}
 
@@ -529,7 +577,7 @@
 		if (val != null && val != '') {
 			value = val
 		}
-		const isDateMode = props.mode !== 'time'
+		const isDateMode = props.mode !== 'time' && props.mode !== 'timesecond'
 		if (isDateMode && (value == null || value == '')) {
 			// 如果是日期类型，但是又没有设置值的话，使用当前时间为默认时间
 			value = new Date().getTime()
@@ -558,7 +606,9 @@
 		} else if (!isDateMode && (value == null || value == '')) {
 			// 如果是时间类型，而又没有默认值的话，就用当前时间的时分秒
 			const now = new Date()
-			value = `${padZero(now.getHours())}:${padZero(now.getMinutes())}`
+			value = props.mode === 'timesecond'
+				? `${padZero(now.getHours())}:${padZero(now.getMinutes())}:${padZero(now.getSeconds())}`
+				: `${padZero(now.getHours())}:${padZero(now.getMinutes())}`
 		}
 		// 时间类型
 		if (!isDateMode) {
@@ -566,11 +616,21 @@
 				error('时间错误，请传递如12:24的格式')
 				return ''
 			}
-			let [hour, minute] = value.toString().split(':')
+			const timeArr = value.toString().split(':')
+			let hour = timeArr[0]
+			let minute = timeArr[1]
+			let second = timeArr[2]
 			// 对时间补零，同时控制在最小值和最大值之间
-			hour = padZero(range(props.minHour, props.maxHour, parseInt(hour)))
-			minute = padZero(range(props.minMinute, props.maxMinute, parseInt(minute)))
-			return `${ hour }:${ minute }`
+			const hourNum = parseInt(hour)
+			const minuteNum = parseInt(minute)
+			hour = padZero(range(props.minHour, props.maxHour, isNaN(hourNum) ? props.minHour : hourNum))
+			minute = padZero(range(props.minMinute, props.maxMinute, isNaN(minuteNum) ? props.minMinute : minuteNum))
+			if (props.mode === 'timesecond') {
+				const secondNum = parseInt(second)
+				second = padZero(range(props.minSecond, props.maxSecond, isNaN(secondNum) ? props.minSecond : secondNum))
+				return `${hour}:${minute}:${second}`
+			}
+			return `${hour}:${minute}`
 		} else {
 			// 如果是日期格式，控制在最小日期和最大日期之间
 			// @ts-ignore
@@ -669,15 +729,21 @@
 		let values = e['values'] as Array<any[]>
 		if (values == null) values = []
 		let selectValue: any = ''
-		if(props.mode === 'time') {
+		if(props.mode === 'time' || props.mode === 'timesecond') {
 			// 根据value各列索引，从各列数组中，取出当前时间的选中值
 			const hourText = safeColumnValue(values, 0, indexs[0], padZero(props.minHour))
 			const minuteText = safeColumnValue(values, 1, indexs[1], padZero(props.minMinute))
+			const secondText = safeColumnValue(values, 2, indexs[2], padZero(props.minSecond))
 			let hour = toInt(intercept(hourText), props.minHour)
 			let minute = toInt(intercept(minuteText), props.minMinute)
+			let second = toInt(intercept(secondText), props.minSecond)
 			hour = range(props.minHour, props.maxHour, hour)
 			minute = range(props.minMinute, props.maxMinute, minute)
+			second = range(props.minSecond, props.maxSecond, second)
 			selectValue = `${padZero(hour)}:${padZero(minute)}`
+			if (props.mode === 'timesecond') {
+				selectValue = `${selectValue}:${padZero(second)}`
+			}
 		} else {
 			const validCurrent = dayuts(innerValue.value).isValid() ? dayuts(innerValue.value) : dayuts(props.minDate)
 			const currentYear = validCurrent.year()
@@ -685,13 +751,14 @@
 			const currentDate = validCurrent.date()
 			const currentHour = validCurrent.hour()
 			const currentMinute = validCurrent.minute()
+			const currentSecond = validCurrent.second()
 
 			const yearText = safeColumnValue(values, 0, indexs[0], currentYear.toString())
 			const monthText = safeColumnValue(values, 1, indexs[1], padZero(currentMonth))
 			// 将选择的值转为数值，比如'03'转为数值的3，'2019'转为数值的2019
 			let year = toInt(intercept(yearText, 'year'), currentYear)
 			let month = toInt(intercept(monthText), currentMonth)
-			let hour = 0, minute = 0
+			let hour = 0, minute = 0, second = 0
 			month = range(1, 12, month)
 			// 此月份的最大天数
 			const maxDate = dayuts(`${year}-${month}`).daysInMonth()
@@ -703,14 +770,20 @@
 			}
 			// 不允许超过maxDate值
 			date = range(1, maxDate, date)
-			if (props.mode === 'datetime') {
+			if (props.mode === 'datehour' || props.mode === 'datetime' || props.mode === 'datetimesecond') {
 				const hourText = safeColumnValue(values, 3, indexs[3], padZero(currentHour))
-				const minuteText = safeColumnValue(values, 4, indexs[4], padZero(currentMinute))
 				hour = range(0, 23, toInt(intercept(hourText), currentHour))
+			}
+			if (props.mode === 'datetime' || props.mode === 'datetimesecond') {
+				const minuteText = safeColumnValue(values, 4, indexs[4], padZero(currentMinute))
 				minute = range(0, 59, toInt(intercept(minuteText), currentMinute))
 			}
+			if (props.mode === 'datetimesecond') {
+				const secondText = safeColumnValue(values, 5, indexs[5], padZero(currentSecond))
+				second = range(0, 59, toInt(intercept(secondText), currentSecond))
+			}
 			// 转为时间模式
-			selectValue = new Date(year, month - 1, date, hour, minute).getTime()
+			selectValue = new Date(year, month - 1, date, hour, minute, second).getTime()
 			if (isNaN(selectValue)) {
 				selectValue = correctValue(innerValue.value)
 			}
