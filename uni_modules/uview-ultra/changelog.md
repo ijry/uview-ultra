@@ -1,3 +1,10 @@
+## 4.4.3（2026-05-31）
+扩展 up-datetime-picker 支持小时与秒级选择
+
+- 在 uvue 实现中新增 datehour、timesecond、datetimesecond 模式处理逻辑
+- 增加 minSecond/maxSecond 秒级边界并补齐列生成、回显与变更计算
+- 同步更新 TypeScript 类型定义，确保模式与新属性可被正确提示和约束
+
 ## 4.4.2（2026-05-30）
 feat: add pageInline prop to up-popup, up-picker, up-datetime-picker
 
