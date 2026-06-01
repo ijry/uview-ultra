@@ -33,7 +33,7 @@
 <script>
 	import { mpMixin } from '../../libs/mixin/mpMixin';
 	import { mixin } from '../../libs/mixin/mixin';
-	import { addUnit, deepClone, toast, sleep } from '../../libs/function/index';
+	import { addUnit, deepClone, toast, sleep, getWindowInfo } from '../../libs/function/index';
 	import { colorGradient } from '../../libs/function/colorGradient';
 	import { array as testArray } from '../../libs/function/test';
 	import defProps from './calendar.uts';
@@ -175,15 +175,12 @@
 					const style = {} as UTSJSONObject
 					if (item != null) {
 						let week:number = item.week
-						// 不进行四舍五入的形式保留2位小数
-						let tmp = (this.width / 7).toFixed(3).slice(0, -1)
-						const dayWidth = parseFloat(tmp)
 						// 得出每个日期的宽度
 						style['height'] = addUnit(this.rowHeight)
 						if (index2 == 0) {
 							// 获取当前为星期几，如果为0，则为星期天，减一为每月第一天时，需要向左偏移的item个数
 							week = (week == 0 ? 7 : week) - 1
-							style['marginLeft'] = addUnit(week * dayWidth, 'px')
+							style['marginLeft'] = `${(week / 7) * 100}%`
 						}
 					}
 					if (this.mode == 'range') {
@@ -324,7 +321,11 @@
 				// @ts-ignore
 				this.upGetRect('.up-calendar-month-wrapper', false).then((res) => {
 					let size = res as NodeInfo;
-					this.width = size.width ?? 0
+					let width = size.width ?? 0
+					if (width <= 0) {
+						width = getWindowInfo().windowWidth
+					}
+					this.width = width
 				})
 			},
 			getMonthRect() {
