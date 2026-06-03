@@ -131,17 +131,8 @@
                             >
                                 <text>{{ isExpanded(item['row'] as UTSJSONObject) ? '-' : '+' }}</text>
                             </view>
-                            <slot
-                                name="cell"
-                                :row="item['row'] as UTSJSONObject"
-                                :column="cell['col'] as UTSJSONObject"
-                                :prow="item['parentRow'] as UTSJSONObject | null"
-                                :rowIndex="safeToNumber(item['rowIndex'])"
-                                :columnIndex="safeToNumber(cell['colIndex'])"
-                                :level="safeToNumber(item['level'], 1)"
-                            >
-                                <text class="up-table-cell-text">{{ getCellText(item['row'] as UTSJSONObject, cell['col'] as UTSJSONObject) }}</text>
-                            </slot>
+                            <!-- 固定列浮动视图直接内联渲染，不使用 slot，避免与主表体 slot name="cell" 重名报错 -->
+                            <text class="up-table-cell-text">{{ getCellText(item['row'] as UTSJSONObject, cell['col'] as UTSJSONObject) }}</text>
                         </template>
                     </view>
                 </view>
