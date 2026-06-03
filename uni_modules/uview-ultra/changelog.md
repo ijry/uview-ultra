@@ -1,3 +1,14 @@
+## 4.4.6（2026-06-03）
+fix(table2): 修复微信小程序中重复 slot name="cell" 导致的报错 (#839)
+
+在固定列浮动视图（up-table-fixed-shadow）的 MP-WEIXIN 条件编译块中，
+将 <slot name="cell"> 改为直接内联渲染，消除同组件内同名 slot 的冲突。
+
+- up-table2.vue：固定列浮动区 #ifdef MP-WEIXIN 分支移除重复 slot，改为
+  直接渲染 item.row[col.key]
+- up-table2.uvue：固定列浮动区同样移除重复 slot，改为直接渲染
+  getCellText() 的结果
+
 ## 4.4.5（2026-06-02）
 fix(picker): 修复异步columns加载时defaultIndex位置不更新的问题 (#841)
 
