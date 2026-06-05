@@ -1,3 +1,11 @@
+## 4.4.8（2026-06-05）
+fix(radio,subsection): 修复 issue#850 两个类型/行为不一致问题
+
+- up-radio.vue / up-radio.uvue: 补充 label 具名插槽实现，与 .d.ts 中
+  RadioSlots['label'] 声明保持一致（原来 label 仅通过 prop 渲染，无插槽）
+- up-subsection/subsection.js: 补全 disabled/activeColorKeyName/
+  inactiveColorKeyName 默认值，修复 disabled 默认值为 undefined 的问题
+
 ## 4.4.7（2026-06-04）
 feat(calendar): 日历顶部增加时分秒选择能力
 
