@@ -1,3 +1,17 @@
+## 4.4.9（2026-06-08）
+feat: add UTS version of luch-request for UniApp X compatibility
+
+- 创建完整的 UTS 版本实现，支持 UniApp X 项目
+- 保持与原 JavaScript 版本完全相同的 API 接口
+- 针对 UTS 限制进行适配：
+  * 移除 arguments 对象，使用 rest 参数
+  * 移除 delete 操作符，使用对象重建
+  * 移除 prototype 操作，使用标准 class 语法
+  * 简化 clone 函数，移除 Buffer/Map/Set/RegExp 处理
+  * 移除 for...in 循环，使用 Object.keys()
+  * 移除 URLSearchParams 支持
+  * 添加完整的 TypeScript 类型注解
+
 ## 4.4.8（2026-06-05）
 fix(radio,subsection): 修复 issue#850 两个类型/行为不一致问题
 
