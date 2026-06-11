@@ -473,6 +473,19 @@
 				if (event) {
 					this.$emit('monthSelected', this.selected, 'tap')
 				}
+			},
+			selectDate(date: string) {
+				const targetDate = dayuts(date).format("YYYY-MM-DD")
+				for (let monthIndex = 0; monthIndex < this.monthsInner.length; monthIndex++) {
+					const dayIndex = this.monthsInner[monthIndex].date.findIndex((item: UPCalendarMonthsItemDate): boolean => {
+						const itemDate = item['dateStr'] != null ? item['dateStr'] as string : dayuts(item['date']).format("YYYY-MM-DD")
+						return this.dateSame(itemDate, targetDate)
+					})
+					if (dayIndex != -1) {
+						this.clickHandler(monthIndex, dayIndex, this.monthsInner[monthIndex].date[dayIndex])
+						return
+					}
+				}
 			}
 		}
 	}

@@ -165,6 +165,7 @@ import { mpMixin } from '../../libs/mixin/mpMixin'
 import { mixin } from '../../libs/mixin/mixin'
 import { addUnit, range, error, padZero } from '../../libs/function/index';
 import { number as testNumber, array as testArray } from '../../libs/function/test';
+import type { ComponentPublicInstance } from 'vue'
 /**
  * Calendar 日历
  * @description  此组件用于单个选择日期，范围选择日期等，日历被包裹在底部弹起的容器中.
@@ -959,6 +960,10 @@ export default {
 			}
 			// @ts-ignore
 			const targetMonth = dayuts(this.todayDate).format('YYYY-MM')
+			const selectToday = () => {
+				// @ts-ignore
+				(this.$refs['month'] as ComponentPublicInstance | null)?.$callMethod('selectDate', this.todayDate)
+			}
 			// @ts-ignore
 			if (this.monthSwitch) {
 				// @ts-ignore
@@ -969,10 +974,14 @@ export default {
 				if (todayMonthIndex != -1) {
 					// @ts-ignore
 					this.monthIndex = todayMonthIndex
+					// @ts-ignore
+					this.$nextTick(selectToday)
 				}
 				return
 			}
 			this.scrollIntoDefaultMonth(targetMonth)
+			// @ts-ignore
+			this.$nextTick(selectToday)
 		},
 		// 滚动到默认设置的月份
 		scrollIntoDefaultMonth(selected: string) {

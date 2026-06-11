@@ -1,3 +1,8 @@
+## 4.4.10（2026-06-11）
+fix(calendar): 修复今天按钮点击后未选中日期的问题
+
+今天按钮在跳转到今天所在月份后，会复用日历原有日期点击逻辑选中今天，并按 showConfirm 配置保持确认行为一致；同步覆盖 vue 与 uvue 实现。
+
 ## 4.4.9（2026-06-08）
 feat: add UTS version of luch-request for UniApp X compatibility
 
