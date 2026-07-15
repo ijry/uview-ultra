@@ -14,7 +14,7 @@
 		    :class="iconClasses"
 		    :style="[iconWrapStyle]"
 		>
-			<slot name="icon">
+			<slot name="icon" :elIconSize="elIconSize" :elIconColor="elIconColor" :checked="isChecked" :elDisabled="elDisabled">
 				<up-icon
 				    class="up-checkbox__icon-wrap__icon"
 				    name="checkbox-mark"
@@ -247,8 +247,12 @@
 		if (elDisabled.value as boolean) {
 			classes.push('up-checkbox__icon-wrap--disabled')
 		}
-		if (isChecked.value && elDisabled.value as boolean) {
-			classes.push('up-checkbox__icon-wrap--disabled--checked')
+		if (isChecked.value) {
+			if (elDisabled.value as boolean) {
+				classes.push('up-checkbox__icon-wrap--disabled--checked')
+			} else {
+				classes.push('up-checkbox__icon-wrap--checked')
+			}
 		}
 		let classStr = ""
 		classStr = classes.join(' ')
