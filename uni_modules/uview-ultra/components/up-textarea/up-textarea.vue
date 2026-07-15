@@ -36,7 +36,7 @@
                 'background-color': disabled ? 'transparent' : '#fff',
             }"
             v-if="count"
-            >{{ innerValue.length }}/{{ maxlength }}</text
+            >{{ valueLength }}/{{ maxlength }}</text
         >
 		<!-- #endif -->
     </view>
@@ -108,7 +108,7 @@ export default {
 	    value: {
 	        immediate: true,
 	        handler(newVal, oldVal) {
-	            this.innerValue = newVal;
+	            this.innerValue = this.normalizeValue(newVal);
 	            /* #ifdef H5 */
 	            // 在H5中，外部value变化后，修改input中的值，不会触发@input事件，此时手动调用值变化方法
 	            if (
@@ -128,7 +128,7 @@ export default {
         modelValue: {
 	        immediate: true,
 	        handler(newVal, oldVal) {
-	            this.innerValue = newVal;
+	            this.innerValue = this.normalizeValue(newVal);
 	            /* #ifdef H5 */
 	            // 在H5中，外部value变化后，修改input中的值，不会触发@input事件，此时手动调用值变化方法
 	            if (
@@ -146,6 +146,10 @@ export default {
         // #endif
 	},
     computed: {
+        // 字数统计安全取值，避免 v-model 为 null/undefined/number 时访问 length 报错
+        valueLength() {
+            return String(this.innerValue ?? '').length
+        },
         // 组件的类名
         textareaClass() {
             let classes = [],
@@ -181,6 +185,10 @@ export default {
     methods: {
         addStyle,
         addUnit,
+		normalizeValue(value) {
+			if (value === null || value === undefined) return ''
+			return typeof value === 'number' ? String(value) : value
+		},
 		// 在微信小程序中，不支持将函数当做props参数，故只能通过ref形式调用
 		setFormatter(e) {
 			this.innerFormatter = e
@@ -197,10 +205,11 @@ export default {
             this.$emit("linechange", e);
         },
         onInput(e) {
-			let { value = "" } = e.detail || {};
+			let { value } = e.detail || {};
+			value = this.normalizeValue(value)
 			// 格式化过滤方法
 			const formatter = this.formatter || this.innerFormatter
-			const formatValue = formatter(value)
+			const formatValue = this.normalizeValue(formatter(value))
 			// 为了避免props的单向数据流特性，需要先将innerValue值设置为当前值，再在$nextTick中重新赋予设置后的值才有效
 			this.innerValue = value
 			this.$nextTick(() => {

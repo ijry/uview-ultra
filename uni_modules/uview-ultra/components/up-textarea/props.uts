@@ -8,7 +8,7 @@ export const propsTextarea = defineMixin({
 	props: {
 		// 输入框的内容
 		modelValue: {
-			type: String,
+			type: [String, Number],
 			default: crtProp['value']
 		},
 		// 输入框为空时占位符

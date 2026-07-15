@@ -1,3 +1,6 @@
+## 4.4.12
+fix(up-textarea): 修复 count 开启时 v-model 为空导致字数统计报错，vue/uvue 同步处理
+
 ## 4.4.11
 chore: 给radio和checkbox组件添加选中样式名及插槽变量
 
