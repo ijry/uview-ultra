@@ -234,6 +234,8 @@ export default {
 			scrollIntoView: '',
 			scrollIntoViewScroll: '',
 			scrollTop:0,
+			// 月份数据是否已初始化，避免 mounted / watch 重复全量生成
+			monthsInited: false,
 			timePickerShow: false,
 			timePickerTarget: 'single',
 			timePickerValue: [0, 0, 0],
@@ -255,9 +257,11 @@ export default {
 			}
 		},
 		selectedChange: {
-			immediate: true,
 			handler(n) {
-				this.setMonth()
+				// 仅在初始化后、边界/默认值变化时重建，避免 mounted 与打开弹层重复生成月份
+				if (this.monthsInited) {
+					this.setMonth()
+				}
 			}
 		},
 		timePrecision() {
@@ -272,7 +276,10 @@ export default {
 			immediate: true,
 			handler(n) {
 				if (n) {
-					this.setMonth()
+					// 已初始化过则复用月份数据，避免每次打开都全量重建
+					if (!this.monthsInited || !this.months.length) {
+						this.setMonth()
+					}
 				} else {
 					// 关闭时重置scrollIntoView，否则会出现二次打开日历，当前月份数据显示不正确。
 					// scrollIntoView需要有一个值变动过程，才会产生作用。
@@ -580,64 +587,55 @@ export default {
 				this.monthNum,
 				this.getMonths(minDate, maxDate)
 			)
+			const minDateStr = dayjs(minDate).format('YYYY-MM-DD')
+			const maxDateStr = dayjs(maxDate).format('YYYY-MM-DD')
+			const formatter = this.formatter || this.innerFormatter
 			// 先清空数组
-			this.months = []
+			const monthsData = []
 			for (let i = 0; i < months; i++) {
-				this.months.push({
-					date: new Array(
-						dayjs(minDate).add(i, 'month').daysInMonth()
-					)
-						.fill(1)
-						.map((item, index) => {
-							// 日期，取值1-31
-							let day = index + 1
-							// 星期，0-6，0为周日
-							const week = dayjs(minDate)
-								.add(i, 'month')
-								.date(day)
-								.day()
-							const date = dayjs(minDate)
-								.add(i, 'month')
-								.date(day)
-								.format('YYYY-MM-DD')
-							let bottomInfo = ''
-							if (this.showLunar) {
-								// 将日期转为农历格式
-								const lunar = Calendar.solar2lunar(
-									dayjs(date).year(),
-									dayjs(date).month() + 1,
-									dayjs(date).date()
-								)
-								bottomInfo = lunar.IDayCn
-							}
-							let config = {
-								day,
-								week,
-								// 小于最小允许的日期，或者大于最大的日期，则设置为disabled状态
-								disabled:
-									dayjs(date).isBefore(
-										dayjs(minDate).format('YYYY-MM-DD')
-									) ||
-									dayjs(date).isAfter(
-										dayjs(maxDate).format('YYYY-MM-DD')
-									),
-								// 返回一个日期对象，供外部的formatter获取当前日期的年月日等信息，进行加工处理
-								date: new Date(date),
-								bottomInfo,
-								dot: false,
-								month:
-									dayjs(minDate).add(i, 'month').month() + 1
-							}
-							const formatter =
-								this.formatter || this.innerFormatter
-							return formatter(config)
-						}),
+				// 缓存当月 dayjs，避免每个日期重复创建/add
+				const monthBase = dayjs(minDate).add(i, 'month')
+				const daysInMonth = monthBase.daysInMonth()
+				const monthValue = monthBase.month() + 1
+				const yearValue = monthBase.year()
+				const dateList = []
+				for (let day = 1; day <= daysInMonth; day++) {
+					const dayBase = monthBase.date(day)
+					const date = dayBase.format('YYYY-MM-DD')
+					const week = dayBase.day()
+					let bottomInfo = ''
+					if (this.showLunar) {
+						// 将日期转为农历格式
+						const lunar = Calendar.solar2lunar(
+							dayBase.year(),
+							dayBase.month() + 1,
+							dayBase.date()
+						)
+						bottomInfo = lunar.IDayCn
+					}
+					const config = {
+						day,
+						week,
+						// 小于最小允许的日期，或者大于最大的日期，则设置为disabled状态
+						disabled: date < minDateStr || date > maxDateStr,
+						// 返回一个日期对象，供外部的formatter获取当前日期的年月日等信息，进行加工处理
+						date: new Date(date),
+						bottomInfo,
+						dot: false,
+						month: monthValue
+					}
+					dateList.push(formatter(config))
+				}
+				monthsData.push({
+					date: dateList,
 					// 当前所属的月份
-					month: dayjs(minDate).add(i, 'month').month() + 1,
+					month: monthValue,
 					// 当前年份
-					year: dayjs(minDate).add(i, 'month').year()
+					year: yearValue
 				})
 			}
+			this.months = monthsData
+			this.monthsInited = true
 			if (this.monthSwitch) {
 				this.monthIndex = this.getDefaultMonthIndex()
 			}
@@ -772,6 +770,9 @@ export default {
 @import '../../libs/css/components.scss';
 
 .up-calendar {
+	/* 保证底部确认按钮始终在弹层可视区域内 */
+	width: 100%;
+
 	&__time-panel {
 		padding: 8px 16px 0;
 	}
@@ -852,6 +853,8 @@ export default {
 
 	&__confirm {
 		padding: 7px 18px;
+		/* 防止在 bottom popup + safe-area 下被挤出可视区 */
+		flex-shrink: 0;
 	}
 }
 </style>

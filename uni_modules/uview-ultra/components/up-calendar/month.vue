@@ -215,21 +215,21 @@
 						}
 					} else if (this.mode === 'range') {
 						if (this.selected.length >= 2) {
-							const len = this.selected.length - 1
+							const startDate = this.rangeStartDate
+							const endDate = this.rangeEndDate
 							// 第一个日期设置左上角和左下角的圆角
-							if (this.dateSame(date, this.selected[0])) {
+							if (this.dateSame(date, startDate)) {
 								style.borderTopLeftRadius = '3px'
 								style.borderBottomLeftRadius = '3px'
 							}
 							// 最后一个日期设置右上角和右下角的圆角
-							if (this.dateSame(date, this.selected[len])) {
+							if (this.dateSame(date, endDate)) {
 								style.borderTopRightRadius = '3px'
 								style.borderBottomRightRadius = '3px'
 							}
-							// 处于第一和最后一个之间的日期，背景色设置为浅色，通过将对应颜色进行等分，再取其尾部的颜色值
-							if (dayjs(date).isAfter(dayjs(this.selected[0])) && dayjs(date).isBefore(dayjs(this
-									.selected[len]))) {
-								style.backgroundColor = colorGradient(this.color, '#ffffff', 100)[90]
+							// 处于第一和最后一个之间的日期，背景色设置为浅色
+							if (date > startDate && date < endDate) {
+								style.backgroundColor = this.rangeMiddleColor
 								// 增加一个透明度，让范围区间的背景色也能看到底部的mark水印字符
 								style.opacity = 0.7
 							}
@@ -253,6 +253,16 @@
 			resolvedTodayColor() {
 				return this.todayColor || this.color
 			},
+			// 区间中间态背景色只计算一次，避免每个日期都跑 colorGradient(100)
+			rangeMiddleColor() {
+				return colorGradient(this.color, '#ffffff', 100)[90]
+			},
+			rangeStartDate() {
+				return this.selected.length ? this.selected[0] : ''
+			},
+			rangeEndDate() {
+				return this.selected.length >= 2 ? this.selected[this.selected.length - 1] : ''
+			},
 			// 某个日期是否被选中
 			textStyle() {
 				return (item) => {
@@ -262,11 +272,9 @@
 					if (this.selected.some(item => this.dateSame(item, date))) {
 						style.color = '#ffffff'
 					}
-					if (this.mode === 'range') {
-						const len = this.selected.length - 1
+					if (this.mode === 'range' && this.selected.length >= 2) {
 						// 如果是范围选择模式，第一个和最后一个之间的日期，文字颜色设置为高亮的主题色
-						if (dayjs(date).isAfter(dayjs(this.selected[0])) && dayjs(date).isBefore(dayjs(this
-								.selected[len]))) {
+						if (date > this.rangeStartDate && date < this.rangeEndDate) {
 							style.color = this.color
 						}
 					}

@@ -225,10 +225,9 @@
 								style['borderTopRightRadius'] = '3px'
 								style['borderBottomRightRadius'] = '3px'
 							}
-							// 处于第一和最后一个之间的日期，背景色设置为浅色，通过将对应颜色进行等分，再取其尾部的颜色值
-							if (dayuts(date).isAfter(dayuts(this.selected[0])) && dayuts(date).isBefore(dayuts(this
-									.selected[len]))) {
-								style['backgroundColor'] = colorGradient(this.color, '#ffffff', 100)[90]
+							// 处于第一和最后一个之间的日期，背景色设置为浅色
+							if (date > this.rangeStartDate && date < this.rangeEndDate) {
+								style['backgroundColor'] = this.rangeMiddleColor
 								// 增加一个透明度，让范围区间的背景色也能看到底部的mark水印字符
 								style['opacity'] = 0.7
 							}
@@ -250,6 +249,16 @@
 			resolvedTodayColor(): string {
 				return this.todayColor != '' ? this.todayColor : this.color
 			},
+			// 区间中间态背景色只计算一次，避免每个日期都跑 colorGradient(100)
+			rangeMiddleColor(): string {
+				return colorGradient(this.color, '#ffffff', 100)[90]
+			},
+			rangeStartDate(): string {
+				return this.selected.length > 0 ? this.selected[0] : ''
+			},
+			rangeEndDate(): string {
+				return this.selected.length >= 2 ? this.selected[this.selected.length - 1] : ''
+			},
 			// 某个日期是否被选中
 			textStyle() {
 				return (item: UPCalendarMonthsItemDate) => {
@@ -260,11 +269,9 @@
 					if (this.selected.some(sameDate)) {
 						style['color'] = '#ffffff'
 					}
-					if (this.mode === 'range') {
-						const len = this.selected.length - 1
+					if (this.mode === 'range' && this.selected.length >= 2) {
 						// 如果是范围选择模式，第一个和最后一个之间的日期，文字颜色设置为高亮的主题色
-						if (dayuts(date).isAfter(dayuts(this.selected[0])) && dayuts(date).isBefore(dayuts(this
-								.selected[len]))) {
+						if (date > this.rangeStartDate && date < this.rangeEndDate) {
 							style['color'] = this.color
 						}
 					}
