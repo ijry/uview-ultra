@@ -19,8 +19,14 @@ import test from './libs/function/test.js'
 import debounce from './libs/function/debounce.js'
 // 节流方法
 import throttle from './libs/function/throttle.js'
+// 浮点计算
+import calc from './libs/function/calc.js'
+// 高精度数字处理
+import digit from './libs/function/digit.js'
 // 公共文件写入的方法
 import index from './libs/function/index.js'
+// i18n
+import i18n, { t } from './libs/i18n/index.js'
 
 // 配置信息
 import config from './libs/config/config.js'
@@ -36,7 +42,7 @@ import platform from './libs/function/platform'
 // 导出
 const http = new Request()
 let themeType = ['primary', 'success', 'error', 'warning', 'info'];
-export { route, http, debounce, throttle, platform, themeType, mixin, mpMixin, props, color, test, zIndex }
+export { route, http, debounce, throttle, calc, digit, platform, themeType, mixin, mpMixin, props, color, test, zIndex, i18n, t }
 export * from './libs/function/index.js'
 export * from './libs/function/colorGradient.js'
 
@@ -69,6 +75,10 @@ const $u = {
     zIndex,
     debounce,
     throttle,
+    calc,
+    digit,
+    i18n,
+    t,
     mixin,
     mpMixin,
     props,

@@ -1,6 +1,13 @@
 /// <reference path="./comps.d.ts" />
 declare module 'uview-plus' {
 	export function install(): void  //必要
+	export function t(value: string, params?: Record<string, string | number>): string;
+	export const i18n: {
+		settings: {
+			lang: string;
+			locales: Record<string, Record<string, string>>;
+		}
+	};
 	interface test {
 		/** 邮箱格式校验 */
 		email(email: string): boolean
@@ -141,6 +148,15 @@ declare module 'uview-plus' {
 		},
 		debounce: (func, wait, immediate) => void;
 		throttle: (func, wait, immediate) => void;
+		calc: Record<string, (...args: any[]) => any>;
+		digit: Record<string, (...args: any[]) => any>;
+		i18n: {
+			settings: {
+				lang: string;
+				locales: Record<string, Record<string, string>>;
+			}
+		};
+		t: (value: string, params?: Record<string, string | number>) => string;
 		mixin: {},
 		mpMixin: {},
 		props: {},
