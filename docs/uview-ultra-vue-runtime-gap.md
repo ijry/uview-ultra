@@ -41,3 +41,13 @@
 - H5/Vue compile after entry, i18n, theme, and root host batches when available.
 - Android compile after final batch using HBuilderX CLI.
 - Every compile result must report whether any error is newly introduced by this work or matches the baseline issue above.
+
+## Final Verification
+
+- Android compile command: `& "C:\ProgramData\HBuilderX\cli.exe" launch app-android --project "D:\Repos\xyito\open\uview-plus4\.worktrees\uview-ultra-vue-runtime-parity" --deviceId "emulator-5554" --compile true --continue-on-error true`
+- Android result: command exited with code `0`, but the build log still reports the pre-existing `pages/componentsC/navbar/navbar.uvue:26` unsupported `page` selector error. No new error-level failures were reported from the `uni_modules/uview-ultra` Vue runtime, theme, root host, or newly ported Vue components.
+- Android lastBuild command: `& "C:\ProgramData\HBuilderX\cli.exe" logcat app-android --project "D:\Repos\xyito\open\uview-plus4\.worktrees\uview-ultra-vue-runtime-parity" --deviceId "emulator-5554" --mode lastBuild`
+- Android lastBuild result: log is available and matches the final compile result.
+- Web command: `& "C:\ProgramData\HBuilderX\cli.exe" publish web --project "D:\Repos\xyito\open\uview-plus4\.worktrees\uview-ultra-vue-runtime-parity" --platform Web --webTitle "uview-plus4"`
+- Web result: timeout. The command did not finish after the initial 180s tool timeout plus an additional 240s wait. The active child process was `uni build -p h5`, no Web/H5 output directory was produced under `unpackage`, and the hung CLI/Node processes were stopped.
+- Warnings: the pre-existing `uni_modules/uview-ultra/components/up-swipe-action-item/up-swipe-action-item.uvue:29` non-standard `touch-action` warning remains. It does not affect the Vue runtime parity changes in this plan.
