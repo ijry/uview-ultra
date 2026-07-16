@@ -1,3 +1,14 @@
+## 4.4.15
+fix(number-box): integer=false 时改用 digit 键盘，支持输入小数
+
+## 4.4.14
+fix(calendar): 修复真机 UTS 下 Number 构造导致的编译错误
+fix(lazy-load,swipe-action-item): 修复 Android UTS 编译阻塞问题
+
+## 4.4.13
+fix(calendar): 修复真机 UTS 下 Number 构造导致的编译错误
+fix(lazy-load,swipe-action-item): 修复 Android UTS 编译阻塞问题
+
 ## 4.4.12
 fix(up-textarea): 修复 count 开启时 v-model 为空导致字数统计报错，vue/uvue 同步处理
 
