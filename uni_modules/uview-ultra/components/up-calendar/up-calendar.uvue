@@ -603,6 +603,11 @@ export default {
 			let str = num.toString()
 			return str.length < 2 ? ('0' + str) : str
 		},
+		toInt(value: any, fallback: number = 0): number {
+			if (value == null) return fallback
+			let parsed = parseInt(value.toString())
+			return isNaN(parsed) ? fallback : parsed
+		},
 		initTimeOptions() {
 			// @ts-ignore
 			this.hourOptions = [] as Array<string>
@@ -624,12 +629,9 @@ export default {
 		parseTimeValue(value: string): Array<number> {
 			let raw = value == null ? '' : value.toString()
 			let parts = raw.length > 0 ? raw.split(':') : []
-			let hour = parts.length > 0 ? Number(parts[0]) : 0
-			let minute = parts.length > 1 ? Number(parts[1]) : 0
-			let second = parts.length > 2 ? Number(parts[2]) : 0
-			if (Number.isNaN(hour)) hour = 0
-			if (Number.isNaN(minute)) minute = 0
-			if (Number.isNaN(second)) second = 0
+			let hour = parts.length > 0 ? this.toInt(parts[0], 0) : 0
+			let minute = parts.length > 1 ? this.toInt(parts[1], 0) : 0
+			let second = parts.length > 2 ? this.toInt(parts[2], 0) : 0
 			hour = Math.max(0, Math.min(23, hour))
 			minute = Math.max(0, Math.min(59, minute))
 			second = Math.max(0, Math.min(59, second))
@@ -664,9 +666,9 @@ export default {
 			return this.parseTimeValue(value)
 		},
 		pickerValueToTime(value: Array<number>): string {
-			let hour = value.length > 0 ? Number(value[0]) : 0
-			let minute = value.length > 1 ? Number(value[1]) : 0
-			let second = value.length > 2 ? Number(value[2]) : 0
+			let hour = value.length > 0 ? this.toInt(value[0], 0) : 0
+			let minute = value.length > 1 ? this.toInt(value[1], 0) : 0
+			let second = value.length > 2 ? this.toInt(value[2], 0) : 0
 			// @ts-ignore
 			if (this.timePrecision == 'hour') {
 				return this.padTime(hour)

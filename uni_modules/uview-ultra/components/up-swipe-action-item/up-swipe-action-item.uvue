@@ -192,10 +192,11 @@
 			},
 			getBtnWidth() {
 				let view = uni.createSelectorQuery().in(this).select(".up-swipe-action-item__right");
-				view.fields({
+				let fields = {
 					size: true,
 					scrollOffset: true
-					}, (data: any) => {
+				} as NodeField
+				view.fields(fields, (data: any) => {
 						this.state['buttonsWidth'] = (data as NodeInfo).width
 						// console.log("得到节点信息" + JSON.stringify(data));
 				}).exec();
