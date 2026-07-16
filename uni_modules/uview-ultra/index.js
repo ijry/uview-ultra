@@ -27,6 +27,26 @@ import digit from './libs/function/digit.js'
 import index from './libs/function/index.js'
 // i18n
 import i18n, { t } from './libs/i18n/index.js'
+import {
+    themeState,
+    setTheme,
+    setThemePreference,
+    getThemePreference,
+    getSystemTheme,
+    getThemeVars,
+    initThemeSystem,
+    refreshThemeFromConfig,
+    syncThemeColorOverrideState
+} from './libs/theme/theme.js'
+import {
+    applyNativeThemeUI,
+    getThemeCardStyle,
+    getThemeIsDark,
+    getThemePageStyle,
+    getThemeTabBarStyle,
+    getThemeVar,
+    getThemeVarsForStyle
+} from './libs/theme/runtime.js'
 
 // 配置信息
 import config from './libs/config/config.js'
@@ -54,10 +74,21 @@ export * from './libs/function/colorGradient.js'
  * @param {object} zIndex 修改内置zIndex属性
  */
 export function setConfig(configs) {
-	index.shallowMerge(config, configs.config || {})
-	index.shallowMerge(props, configs.props || {})
-	index.shallowMerge(color, configs.color || {})
-	index.shallowMerge(zIndex, configs.zIndex || {})
+    const settings = configs || {}
+	index.shallowMerge(config, settings.config || {})
+	index.shallowMerge(props, settings.props || {})
+	index.shallowMerge(color, settings.color || {})
+	index.shallowMerge(zIndex, settings.zIndex || {})
+    syncThemeColorOverrideState({
+        color: settings.color,
+        configColor: settings?.config?.color
+    })
+    const shouldRefreshTheme = !!settings.color
+        || !!settings?.config?.color
+        || themeState.version > 0
+    if (shouldRefreshTheme) {
+        refreshThemeFromConfig()
+    }
 }
 index.setConfig = setConfig
 
@@ -84,11 +115,20 @@ const $u = {
     props,
     ...index,
     color,
-    platform
+    platform,
+    theme: themeState,
+    setTheme,
+    setThemePreference,
+    getThemePreference,
+    getSystemTheme,
+    getThemeVars,
+    getThemeTabBarStyle,
+    applyNativeThemeUI
 }
 
 export const mount$u = function() {
     uni.$u = $u
+    initThemeSystem()
 }
 
 // #ifdef H5
@@ -123,6 +163,41 @@ for (const key in miniImportFn) {
 }
 // #endif
 
+function defineGlobalThemeHelpers(Vue) {
+    const globalProperties = Vue?.config?.globalProperties
+    if (!globalProperties) return
+    Object.defineProperty(globalProperties, 'upThemeIsDark', {
+        configurable: true,
+        get() {
+            return getThemeIsDark()
+        }
+    })
+    Object.defineProperty(globalProperties, 'upThemeVars', {
+        configurable: true,
+        get() {
+            return getThemeVarsForStyle()
+        }
+    })
+    Object.defineProperty(globalProperties, 'upThemePageStyle', {
+        configurable: true,
+        get() {
+            return getThemePageStyle()
+        }
+    })
+    Object.defineProperty(globalProperties, 'upThemeCardStyle', {
+        configurable: true,
+        get() {
+            return getThemeCardStyle()
+        }
+    })
+    globalProperties.upThemeVar = function(varName, fallbackColor) {
+        return getThemeVar(varName, fallbackColor)
+    }
+    globalProperties.upApplyNativeThemeUI = function() {
+        return applyNativeThemeUI()
+    }
+}
+
 function toCamelCase(str) {
     return str.replace(/-([a-z])/g, function(match, group1) {
       return group1.toUpperCase();
@@ -141,10 +216,12 @@ const install = (Vue) => {
     // 同时挂载到uni和Vue.prototype中
     // $u挂载到uni对象上
     uni.$u = $u
+    initThemeSystem()
 
     // #ifndef APP-NVUE
     // 只有vue，挂载到Vue.prototype才有意义，因为nvue中全局Vue.prototype和Vue.mixin是无效的
     Vue.config.globalProperties.$u = $u
+    defineGlobalThemeHelpers(Vue)
     Vue.mixin(mixin)
     // #endif
 }

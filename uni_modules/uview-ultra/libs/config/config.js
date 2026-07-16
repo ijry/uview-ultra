@@ -27,7 +27,12 @@ export default {
         'up-content-color': '#606266',
         'up-tips-color': '#909399',
         'up-light-color': '#c0c4cc',
+        'up-border-color': '#dadbde',
+        'up-bg-color': '#f3f4f6',
+        'up-disabled-color': '#c8c9cc',
     },
 	// 默认单位，可以通过配置为rpx，那么在用于传入组件大小参数为数值时，就默认为rpx
-	unit: 'px'
+	unit: 'px',
+    themeMode: 'light',
+    nativeThemeSync: false
 }
