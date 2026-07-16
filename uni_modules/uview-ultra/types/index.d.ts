@@ -85,7 +85,9 @@ declare module 'uview-plus' {
 		v: string;
 		version: string;
 		color: Partial<Color>;
-		unit: 'px' | 'rpx'
+		unit: 'px' | 'rpx';
+		nativeThemeSync: boolean;
+		themeMode?: 'light' | 'dark';
 	}
 	interface Color {
 		primary: string,
@@ -98,7 +100,9 @@ declare module 'uview-plus' {
 		contentColor: string,
 		tipsColor: string,
 		lightColor: string,
-		borderColor: string
+		borderColor: string,
+		bgColor?: string,
+		disabledColor?: string
 	}
 	interface GlobalConfig {
 		config: Partial<Config>;
@@ -166,6 +170,24 @@ declare module 'uview-plus' {
 		props: {},
 		color: Color;
 		platform: string;
+		theme: {
+			preference: 'system' | 'light' | 'dark';
+			mode: 'light' | 'dark';
+			version: number;
+			vars: Record<string, string>;
+		};
+		setTheme: (mode?: 'light' | 'dark') => any;
+		setThemePreference: (mode?: 'system' | 'light' | 'dark') => any;
+		getThemePreference: () => 'system' | 'light' | 'dark';
+		getSystemTheme: () => 'light' | 'dark';
+		getThemeVars: (mode?: 'light' | 'dark') => Record<string, string>;
+		getThemeTabBarStyle: () => {
+			color: string;
+			selectedColor: string;
+			backgroundColor: string;
+			borderStyle: string;
+		};
+		applyNativeThemeUI: () => void;
 	}
 
 	export function setConfig(config: Partial<GlobalConfig>): void;
