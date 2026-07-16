@@ -48,6 +48,7 @@ declare module '@vue/runtime-core' {
     ['up-action-sheet']: typeof import('./comps/actionSheet')['ActionSheet']
     ['up-alert']: typeof import('./comps/alert')['Alert']
     ['up-toast']: typeof import('./comps/toast')['Toast']
+    ['up-root-toast-host']: typeof import('./comps/rootToastHost')['RootToastHost']
     ['up-notice-bar']: typeof import('./comps/noticeBar')['NoticeBar']
     ['up-notify']: typeof import('./comps/notify')['Notify']
     ['up-swipe-action']: typeof import('./comps/swipeAction')['SwipeAction']

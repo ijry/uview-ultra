@@ -66,6 +66,75 @@ export { route, http, debounce, throttle, calc, digit, platform, themeType, mixi
 export * from './libs/function/index.js'
 export * from './libs/function/colorGradient.js'
 
+const rootToastState = {
+    ref: null
+}
+const rootNotifyState = {
+    ref: null
+}
+
+function normalizeRootToastOptions(options = {}) {
+    const toastOptions = typeof options === 'string'
+        ? { message: options }
+        : (options && typeof options === 'object' ? { ...options } : {})
+    if (!toastOptions.message && toastOptions.title) {
+        toastOptions.message = toastOptions.title
+    }
+    return toastOptions
+}
+
+function setRootToastRef(ref = null) {
+    rootToastState.ref = ref || null
+}
+
+function rootToast(options = {}) {
+    const toastOptions = normalizeRootToastOptions(options)
+    const toastRef = rootToastState.ref
+    if (toastRef && typeof toastRef.show === 'function') {
+        toastRef.show(toastOptions)
+        return
+    }
+    if (!toastOptions.message) return
+    if (typeof uni !== 'undefined' && typeof uni.showToast === 'function') {
+        uni.showToast({
+            title: toastOptions.message,
+            icon: 'none',
+            duration: Number(toastOptions.duration) || 2000,
+        })
+    }
+}
+
+function normalizeRootNotifyOptions(options = {}) {
+    const notifyOptions = typeof options === 'string'
+        ? { message: options }
+        : (options && typeof options === 'object' ? { ...options } : {})
+    if (!notifyOptions.message && notifyOptions.title) {
+        notifyOptions.message = notifyOptions.title
+    }
+    return notifyOptions
+}
+
+function setRootNotifyRef(ref = null) {
+    rootNotifyState.ref = ref || null
+}
+
+function rootNotify(options = {}) {
+    const notifyOptions = normalizeRootNotifyOptions(options)
+    const notifyRef = rootNotifyState.ref
+    if (notifyRef && typeof notifyRef.show === 'function') {
+        notifyRef.show(notifyOptions)
+        return
+    }
+    if (!notifyOptions.message) return
+    if (typeof uni !== 'undefined' && typeof uni.showToast === 'function') {
+        uni.showToast({
+            title: notifyOptions.message,
+            icon: 'none',
+            duration: Number(notifyOptions.duration) || 3000,
+        })
+    }
+}
+
 /**
  * @description 修改uView内置属性值
  * @param {object} props 修改内置props属性
@@ -123,7 +192,11 @@ const $u = {
     getSystemTheme,
     getThemeVars,
     getThemeTabBarStyle,
-    applyNativeThemeUI
+    applyNativeThemeUI,
+    rootToast,
+    setRootToastRef,
+    rootNotify,
+    setRootNotifyRef
 }
 
 export const mount$u = function() {

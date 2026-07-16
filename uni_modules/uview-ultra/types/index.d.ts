@@ -157,6 +157,10 @@ declare module 'uview-plus' {
 			}
 		};
 		t: (value: string, params?: Record<string, string | number>) => string;
+		rootToast: (options?: string | { message?: string; title?: string; duration?: number; [key: string]: any }) => void;
+		setRootToastRef: (ref?: any) => void;
+		rootNotify: (options?: string | { message?: string; title?: string; duration?: number; [key: string]: any }) => void;
+		setRootNotifyRef: (ref?: any) => void;
 		mixin: {},
 		mpMixin: {},
 		props: {},
