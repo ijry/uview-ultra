@@ -1,5 +1,5 @@
 <template>
-	<view class="up-popup"  :class="[customClass]">
+	<view class="up-popup" :class="[customClass, pageInline ? 'up-popup--page-inline' : '']">
 		<up-overlay
 			:show="show && !pageInline"
 			@click="overlayClick"
@@ -243,11 +243,18 @@
 
 <style lang="scss" scoped>
 	@import "../../libs/css/components.scss";
-	$up-popup-flex:1 !default;
 	$up-popup-content-background-color: #fff !default;
 
+	/* 根节点默认脱离文档流，避免 uni-app-x 下 flex:1 在 show=false 时仍占满剩余高度 */
 	.up-popup {
-		flex: $up-popup-flex;
+		position: absolute;
+		top: 0;
+		left: 0;
+
+		&--page-inline {
+			position: relative;
+			flex: 1;
+		}
 
 		&__content {
 			background-color: $up-popup-content-background-color;
