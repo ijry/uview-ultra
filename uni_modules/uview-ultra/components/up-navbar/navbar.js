@@ -7,8 +7,6 @@
  * @lastTime     : 2024-08-20 14:20:58
  * @FilePath     : /uview-ultra/libs/config/props/navbar.js
  */
-import color from '../../libs/config/color.js'
-
 export default {
     // navbar 组件
     navbar: {
@@ -21,11 +19,11 @@ export default {
         rightText: '',
         rightIcon: '',
         title: '',
-        bgColor: '#ffffff',
+        bgColor: 'var(--up-navbar-bg-color, #ffffff)',
         titleWidth: '400rpx',
         height: '44px',
 		leftIconSize: 20,
-		leftIconColor: color.mainColor,
+		leftIconColor: 'var(--up-main-color, #303133)',
 		autoBack: false,
 		titleStyle: ''
     }

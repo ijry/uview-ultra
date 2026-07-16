@@ -791,7 +791,7 @@ export default {
     .up-table-header {
         min-width: 100% !important;
         width: fit-content;
-        background-color: #f5f7fa;
+        background-color: var(--up-table2-header-bg-color, #f5f7fa);
     }
 
     .up-table-body {
@@ -816,11 +816,11 @@ export default {
 
     // 添加border样式支持
     &.up-table-border {
-        border-top: 1px solid #ebeef5;
-        border-left: 1px solid #ebeef5;
-        border-right: 1px solid #ebeef5;
+        border-top: 1px solid var(--up-border-color, #ebeef5);
+        border-left: 1px solid var(--up-border-color, #ebeef5);
+        border-right: 1px solid var(--up-border-color, #ebeef5);
         .up-table-cell {
-            border-right: 1px solid #ebeef5;
+            border-right: 1px solid var(--up-border-color, #ebeef5);
         }
         
         .up-table-cell:last-child {
@@ -839,7 +839,7 @@ export default {
         overflow: hidden;
         text-overflow: ellipsis;
         line-height: 1.1;
-        border-bottom: 1px solid #ebeef5;
+        border-bottom: 1px solid var(--up-border-color, #ebeef5);
         &.up-text-left {
             justify-content: flex-start;
             text-align: left;
@@ -855,17 +855,17 @@ export default {
     }
 
     .up-table-row-zebra {
-        background-color: #fafafa;
+        background-color: var(--up-table2-zebra-bg-color, #fafafa);
     }
 
     .up-table-row-highlight {
-        background-color: #f5f7fa;
+        background-color: var(--up-table2-highlight-bg-color, #f5f7fa);
     }
 
     .up-table-empty {
         text-align: center;
         padding: 20px;
-        color: #999;
+        color: var(--up-tips-color, #999);
     }
 
     .up-table-cell-hidden {
@@ -886,7 +886,7 @@ export default {
     z-index: 20;
     box-shadow: 2px 0 5px rgba(0, 0, 0, 0.15);
     overflow: hidden;
-    background-color: #ffffff;
+    background-color: var(--up-card-bg-color, #ffffff);
 }
 
 // .up-table-fixed-row {
@@ -900,7 +900,7 @@ export default {
 // 为固定列也添加border样式支持
 .up-table-fixed-shadow .up-table-border {
     .up-table-cell {
-        border-right: 1rpx solid #ebeef5;
+        border-right: 1rpx solid var(--up-border-color, #ebeef5);
     }
     
     .up-table-cell:last-child {

@@ -18,7 +18,7 @@ export default {
 		bgColor: '',
 		color: '',
 		borderColor: '',
-		closeColor: '#C6C7CB',
+		closeColor: 'var(--up-tag-close-bg-color, #C6C7CB)',
 		name: '',
 		plainFill: false,
 		plain: false,

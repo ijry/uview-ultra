@@ -10,7 +10,7 @@
 export default {
     // gap组件
     gap: {
-        bgColor: 'transparent',
+        bgColor: 'var(--up-gap-bg-color, #f3f4f6)',
         height: 20,
         marginTop: 0,
         marginBottom: 0,

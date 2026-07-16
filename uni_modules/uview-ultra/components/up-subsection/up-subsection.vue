@@ -166,7 +166,7 @@ export default {
                 if (this.disabled) {
                     style.fontWeight = "normal";
                     style.fontSize = addUnit(this.fontSize);
-                    style.color = "#c8c9cc";
+                    style.color = "var(--up-disabled-color, #c8c9cc)";
                     return style;
                 }
                 style.fontWeight =
@@ -246,6 +246,7 @@ export default {
 
 <style lang="scss" scoped>
 @import "../../libs/css/components.scss";
+@import "./theme-vars.scss";
 
 .up-subsection {
     @include flex;
@@ -258,13 +259,13 @@ export default {
 
     &--button {
         height: 34px;
-        background-color: rgb(238, 238, 239);
+        background-color: var(--up-hover-bg-color, rgb(238, 238, 239));
         padding: 3px;
         border-radius: 4px;
         align-items: stretch;
 
         &__bar {
-            background-color: #ffffff;
+            background-color: var(--up-card-bg-color, #ffffff);
             border-radius: 4px !important;
         }
     }
@@ -338,7 +339,7 @@ export default {
             transition-duration: 0.3s;
 
             &--disabled {
-                color: #c8c9cc !important;
+                color: var(--up-disabled-color, #c8c9cc) !important;
             }
         }
     }
