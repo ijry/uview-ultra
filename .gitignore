@@ -9,3 +9,5 @@ deploy.sh
 /.hbuilderx/
 /*-lock.*
 /stats.html
+/.worktrees
+/.worktrees/
