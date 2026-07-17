@@ -38,6 +38,9 @@ export default {
     },
     customIcons: {},
     loadFontOnce: false,
+    interceptor: {
+        navbarLeftClick: null
+    },
 	// 默认单位，可以通过配置为rpx，那么在用于传入组件大小参数为数值时，就默认为rpx
 	unit: 'px',
     themeMode: 'light',

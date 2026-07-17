@@ -68,6 +68,45 @@ $u-info-dark: $up-info-dark;
 $u-info-disabled: $up-info-disabled;
 $u-info-light: $up-info-light;
 
+$up-legacy-light-theme-map: (
+	'main-color': $u-main-color,
+	'content-color': $u-content-color,
+	'tips-color': $u-tips-color,
+	'light-color': $u-light-color,
+	'border-color': $u-border-color,
+	'bg-color': $u-bg-color,
+	'disabled-color': $u-disabled-color,
+	'primary': $u-primary,
+	'primary-dark': $u-primary-dark,
+	'primary-disabled': $u-primary-disabled,
+	'primary-light': $u-primary-light,
+	'warning': $u-warning,
+	'warning-dark': $u-warning-dark,
+	'warning-disabled': $u-warning-disabled,
+	'warning-light': $u-warning-light,
+	'success': $u-success,
+	'success-dark': $u-success-dark,
+	'success-disabled': $u-success-disabled,
+	'success-light': $u-success-light,
+	'error': $u-error,
+	'error-dark': $u-error-dark,
+	'error-disabled': $u-error-disabled,
+	'error-light': $u-error-light,
+	'info': $u-info,
+	'info-dark': $u-info-dark,
+	'info-disabled': $u-info-disabled,
+	'info-light': $u-info-light
+);
+
+@mixin up-export-legacy-light-vars($selector) {
+	#{$selector} {
+		@each $name, $value in $up-legacy-light-theme-map {
+			--up-light-#{$name}: #{$value};
+			--u-light-#{$name}: #{$value};
+		}
+	}
+}
+
 // scss混入，为了少写几行#ifndef
 @mixin flex($direction: row) {
 	/* #ifndef APP-NVUE */

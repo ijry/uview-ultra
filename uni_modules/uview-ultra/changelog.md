@@ -1,3 +1,6 @@
+## 4.4.21
+fix: 修复navbar全局左侧点击拦截上下文
+
 ## 4.4.20
 fix(action-sheet): 修复 description 上下间距不生效
 

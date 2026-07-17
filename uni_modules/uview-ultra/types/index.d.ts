@@ -96,6 +96,9 @@ declare module 'uview-plus' {
 			[key: string]: string;
 		};
 		loadFontOnce: boolean;
+		interceptor: {
+			navbarLeftClick: ((navbar: any) => void) | null;
+		};
 		themeMode?: 'light' | 'dark';
 	}
 	interface Color {
