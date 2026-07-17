@@ -90,7 +90,7 @@
 
 <style lang="scss">
 	/* #ifndef APP-NVUE */
-	page {
+	.u-page {
 		background-color: $u-bg-color;
 	}
 	/* #endif */

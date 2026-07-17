@@ -25,13 +25,15 @@
 					></up-icon>
 				</view>
 			</view>
-			<text
+			<view
 			    class="up-action-sheet__description"
 				:style="[{
 					marginTop: `${title && description ? 0 : '18px'}`
 				}]"
 			    v-if="description"
-			>{{description}}</text>
+			>
+				<text class="up-action-sheet__description__text">{{description}}</text>
+			</view>
 			<slot>
 				<up-line v-if="description"></up-line>
 				<scroll-view scroll-y class="up-action-sheet__item-wrap" :style="{maxHeight: wrapMaxHeight}">
@@ -243,6 +245,12 @@
 			color: $up-tips-color;
 			margin: $up-action-sheet-description-margin;
 			text-align: center;
+
+			&__text {
+				font-size: $up-action-sheet-description-font-size;
+				color: $up-tips-color;
+				text-align: center;
+			}
 		}
 
 		&__item-wrap {
