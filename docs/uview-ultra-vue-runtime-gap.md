@@ -51,3 +51,12 @@
 - Web command: `& "C:\ProgramData\HBuilderX\cli.exe" publish web --project "D:\Repos\xyito\open\uview-plus4\.worktrees\uview-ultra-vue-runtime-parity" --platform Web --webTitle "uview-plus4"`
 - Web result: timeout. The command did not finish after the initial 180s tool timeout plus an additional 240s wait. The active child process was `uni build -p h5`, no Web/H5 output directory was produced under `unpackage`, and the hung CLI/Node processes were stopped.
 - Warnings: the pre-existing `uni_modules/uview-ultra/components/up-swipe-action-item/up-swipe-action-item.uvue:29` non-standard `touch-action` warning remains. It does not affect the Vue runtime parity changes in this plan.
+
+## Vue Component Parity Verification
+
+- Scope: Vue-only `up-calendar` and `up-icon` component parity; no `.uvue`, `.uts`, `index.uts`, demo, or `pages/**` files changed.
+- Android compile command: `& "C:\ProgramData\HBuilderX\cli.exe" launch app-android --project "D:\Repos\xyito\open\uview-plus4\.worktrees\uview-ultra-vue-runtime-parity" --deviceId "emulator-5554" --compile true --continue-on-error true`
+- Android result: command exited with code `0`. Build output still reports the pre-existing `pages/componentsC/navbar/navbar.uvue:26` unsupported `page` selector error and `uni_modules/uview-ultra/components/up-swipe-action-item/up-swipe-action-item.uvue:29` non-standard `touch-action` warning. No new `uni_modules/uview-ultra` Vue component error was introduced by the calendar/icon parity batch.
+- lastBuild command: `& "C:\ProgramData\HBuilderX\cli.exe" logcat app-android --project "D:\Repos\xyito\open\uview-plus4\.worktrees\uview-ultra-vue-runtime-parity" --deviceId "emulator-5554" --mode lastBuild`
+- lastBuild result: log is available and matches the final compile output.
+- Warnings: remaining warning is the known `up-swipe-action-item.uvue:29` `touch-action` warning. It is outside this Vue-only component parity scope.
