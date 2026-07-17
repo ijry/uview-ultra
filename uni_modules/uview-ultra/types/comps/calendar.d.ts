@@ -164,6 +164,28 @@ declare interface CalendarProps {
    */
   todayColor?: string
   /**
+   * 星期文案，顺序为周一到周日
+   */
+  weekText?: string[]
+  /**
+   * 禁用日期，格式为 YYYY-MM-DD；range 模式不启用该限制
+   */
+  forbidDays?: string[]
+  /**
+   * 点击禁用日期时的提示文案
+   * @default "该日期不可选"
+   */
+  forbidDaysToast?: string
+  /**
+   * 月份标题格式，遵循 dayjs format
+   */
+  monthFormat?: string
+  /**
+   * 是否以内联模式渲染日历
+   * @default false
+   */
+  pageInline?: boolean
+  /**
    * 日期选择完成后触发，若`show-confirm`为`true`，则点击确认按钮后触发
    */
   onConfirm?: (...args: any) => any

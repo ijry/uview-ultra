@@ -7,6 +7,8 @@
  * @lastTime     : 2024-08-20 14:20:58
  * @FilePath     : /uview-ultra/libs/config/props/calendar.js
  */
+import { t } from '../../libs/i18n/index.js'
+
 export default {
     // calendar 组件
     calendar: {
@@ -44,6 +46,19 @@ export default {
 		monthNum: 3,
 		monthSwitch: false,
 		showToday: true,
-		todayColor: ''
+		todayColor: '',
+		weekText: [
+			t('up.week.one'),
+			t('up.week.two'),
+			t('up.week.three'),
+			t('up.week.four'),
+			t('up.week.five'),
+			t('up.week.six'),
+			t('up.week.seven')
+		],
+		forbidDays: [],
+		forbidDaysToast: t('up.calendar.disabled'),
+		monthFormat: '',
+		pageInline: false
     }
 }
