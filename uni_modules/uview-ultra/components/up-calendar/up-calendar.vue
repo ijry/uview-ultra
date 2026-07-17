@@ -2,7 +2,8 @@
 	<up-popup
 		:show="show"
 		mode="bottom"
-		closeable
+		:closeable="!pageInline"
+		:pageInline="pageInline"
 		@close="close"
 		:round="round"
 		:closeOnClickOverlay="closeOnClickOverlay"
@@ -17,6 +18,7 @@
 				:showToday="showToday"
 				:todayText="todayText"
 				:todayDisabled="todayDisabled"
+				:weekText="weekText"
 				:prevDisabled="switchPrevDisabled"
 				:nextDisabled="switchNextDisabled"
 				:prevYearDisabled="switchPrevYearDisabled"
@@ -79,6 +81,9 @@
 					:allowSameDay="allowSameDay"
 					:todayDate="todayDate"
 					:todayColor="todayColor"
+					:forbidDays="forbidDays"
+					:forbidDaysToast="forbidDaysToast"
+					:monthFormat="monthFormat"
 					ref="month"
 					@monthSelected="monthSelected"
 					@updateMonthTop="onUpdateMonthTop"
@@ -110,6 +115,9 @@
 					:allowSameDay="allowSameDay"
 					:todayDate="todayDate"
 					:todayColor="todayColor"
+					:forbidDays="forbidDays"
+					:forbidDaysToast="forbidDaysToast"
+					:monthFormat="monthFormat"
 					ref="month"
 					@monthSelected="monthSelected"
 					@updateMonthTop="onUpdateMonthTop"
@@ -548,7 +556,11 @@ export default {
 				return error('maxDate不能小于minDate时间')
 			}
 			// 滚动区域的高度
-			this.listHeight = this.rowHeight * (this.monthSwitch ? 6 : 5) + 30
+			let bottomPadding = 0
+			if (!this.pageInline) {
+				bottomPadding = 30
+			}
+			this.listHeight = this.rowHeight * (this.monthSwitch ? 6 : 5) + bottomPadding
 			this.initTimeOptions()
 			this.initTimeValues()
 			this.setMonth()

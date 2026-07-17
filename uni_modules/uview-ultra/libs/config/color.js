@@ -11,7 +11,9 @@ const color = {
     contentColor: '#606266',
     tipsColor: '#909399',
     lightColor: '#c0c4cc',
-    borderColor: '#e4e7ed'
+    borderColor: '#e4e7ed',
+    bgColor: '#f3f4f6',
+    disabledColor: '#c8c9cc'
 }
 
 export default color

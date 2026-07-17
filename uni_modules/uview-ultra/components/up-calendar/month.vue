@@ -2,7 +2,7 @@
 	<view class="up-calendar-month-wrapper" ref="up-calendar-month-wrapper">
 		<view v-for="(item, index) in months" :key="index" :class="[`up-calendar-month-${index}`]"
 			:ref="`up-calendar-month-${index}`" :id="`month-${index}`">
-			<text v-if="index !== 0" class="up-calendar-month__title">{{ item.year }}年{{ item.month }}月</text>
+			<text v-if="index !== 0" class="up-calendar-month__title">{{ getMonthTitle(item) }}</text>
 			<view class="up-calendar-month__days">
 				<view v-if="showMark" class="up-calendar-month__days__month-mark-wrapper">
 					<text class="up-calendar-month__days__month-mark-wrapper__text">{{ item.month }}</text>
@@ -126,6 +126,21 @@
 			allowSameDay: {
 				type: Boolean,
 				default: false
+			},
+			// 禁用日期，格式为 YYYY-MM-DD；range 模式不启用该限制
+			forbidDays: {
+				type: Array,
+				default: () => []
+			},
+			// 点击禁用日期时的提示
+			forbidDaysToast: {
+				type: String,
+				default: ''
+			},
+			// 月份标题格式，遵循 dayjs format
+			monthFormat: {
+				type: String,
+				default: ''
 			},
 			// 今天日期，用于独立高亮
 			todayDate: {
@@ -332,9 +347,25 @@
 					})
 				})
 			},
+			getMonthTitle(item) {
+				if (!item) return ''
+				const month = String(item.month).padStart(2, '0')
+				const monthDate = dayjs(`${item.year}-${month}-01`)
+				if (this.monthFormat && monthDate.isValid()) {
+					return monthDate.format(this.monthFormat)
+				}
+				return `${item.year}年${item.month}月`
+			},
 			// 判断两个日期是否相等
 			dateSame(date1, date2) {
 				return dayjs(date1).isSame(dayjs(date2))
+			},
+			isForbid(item) {
+				const date = dayjs(item.date).format('YYYY-MM-DD')
+				if (this.mode !== 'range' && this.forbidDays.includes(date)) {
+					return true
+				}
+				return false
 			},
 			isSelectedDate(date) {
 				return this.selected.some(item => this.dateSame(item, date))
@@ -402,6 +433,13 @@
 				this.item = item
 				const date = dayjs(item.date).format("YYYY-MM-DD")
 				if (item.disabled) return
+				if (this.isForbid(item)) {
+					uni.showToast({
+						title: this.forbidDaysToast,
+						icon: 'none'
+					})
+					return
+				}
 				// 对上一次选择的日期数组进行深度克隆
 				let selected = deepClone(this.selected)
 				if (this.mode === 'single') {

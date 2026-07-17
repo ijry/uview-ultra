@@ -132,6 +132,7 @@
 
 <style lang="scss" scoped>
 	@import "../../libs/css/components.scss";
+	@import "./theme-vars.scss";
 
 	.up-navbar {
 
@@ -147,7 +148,7 @@
 			@include flex(row);
 			align-items: center;
 			height: 44px;
-			background-color: #9acafc;
+			background-color: var(--up-navbar-bg-color, #ffffff);
 			position: relative;
 			justify-content: center;
 
@@ -177,7 +178,7 @@
 			&__title {
 				text-align: center;
 				font-size: 16px;
-				color: $up-main-color;
+				color: var(--up-main-color, #303133);
 			}
 
 			&__right {

@@ -159,6 +159,7 @@
 	scoped
 >
 	@import "../../libs/css/components.scss";
+	@import "./theme-vars.scss";
 
 	.up-tag-wrapper {
 		position: relative;
@@ -228,7 +229,7 @@
 		}
 
 		&--primary--plain--fill {
-			background-color: #ecf5ff;
+			background-color: var(--up-primary-light, #ecf5ff);
 		}
 
 		&__text--primary {
@@ -251,7 +252,7 @@
 		}
 
 		&--error--plain--fill {
-			background-color: #fef0f0;
+			background-color: var(--up-error-light, #fef0f0);
 		}
 
 		&__text--error {
@@ -274,7 +275,7 @@
 		}
 
 		&--warning--plain--fill {
-			background-color: #fdf6ec;
+			background-color: var(--up-warning-light, #fdf6ec);
 		}
 
 		&__text--warning {
@@ -297,7 +298,7 @@
 		}
 
 		&--success--plain--fill {
-			background-color: #f5fff0;
+			background-color: var(--up-success-light, #f5fff0);
 		}
 
 		&__text--success {
@@ -320,7 +321,7 @@
 		}
 
 		&--info--plain--fill {
-			background-color: #f4f4f5;
+			background-color: var(--up-info-light, #f4f4f5);
 		}
 
 		&__text--info {
@@ -337,7 +338,7 @@
 			top: 10px;
 			right: 10px;
 			border-radius: 100px;
-			background-color: #C6C7CB;
+			background-color: var(--up-tag-close-bg-color, #C6C7CB);
 			@include flex(row);
 			align-items: center;
 			justify-content: center;

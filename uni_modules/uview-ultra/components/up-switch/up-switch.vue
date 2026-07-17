@@ -26,10 +26,10 @@
 			    mode="circle"
 			    timingFunction='linear'
 			    <!-- #ifdef VUE3 -->
-				:color="modelValue ? activeColor : '#AAABAD'"
+				:color="modelValue ? activeColor : 'var(--up-switch-loading-inactive-color, #AAABAD)'"
 				<!-- #endif -->
 				<!-- #ifdef VUE2 -->
-				:color="value ? activeColor : '#AAABAD'"
+				:color="value ? activeColor : 'var(--up-switch-loading-inactive-color, #AAABAD)'"
 				<!-- #endif -->
 			    :size="size * 0.6"
 			/>
@@ -135,7 +135,9 @@
 			},
 			customInactiveColor() {
 				// 之所以需要判断是否自定义了“非激活”颜色，是为了让node圆点离外边框更宽一点的距离
-				return this.inactiveColor !== '#fff' && this.inactiveColor !== '#ffffff'
+				return this.inactiveColor !== '#fff' &&
+					this.inactiveColor !== '#ffffff' &&
+					this.inactiveColor !== 'var(--up-switch-inactive-color, #ffffff)'
 			}
 		},
 		// #ifdef VUE3
@@ -165,6 +167,7 @@
 </script>
 
 <style lang="scss" scoped>
+	@import "./theme-vars.scss";
 
 	.up-switch {
 		@include flex(row);
@@ -172,11 +175,11 @@
 		box-sizing: border-box;
 		/* #endif */
 		position: relative;
-		background-color: #fff;
+		background-color: var(--up-switch-inactive-color, #ffffff);
 		border-width: 1px;
 		border-radius: 100px;
 		transition: background-color 0.4s;
-		border-color: rgba(0, 0, 0, 0.12);
+		border-color: var(--up-switch-border-color, rgba(0, 0, 0, 0.12));
 		border-style: solid;
 		justify-content: flex-end;
 		align-items: center;
@@ -189,7 +192,7 @@
 			align-items: center;
 			justify-content: center;
 			border-radius: 100px;
-			background-color: #fff;
+			background-color: var(--up-switch-dot-inactive-color, #ffffff);
 			border-radius: 100px;
 			box-shadow: 1px 1px 1px 0 rgba(0, 0, 0, 0.25);
 			transition-property: transform;
@@ -200,7 +203,7 @@
 		&__bg {
 			position: absolute;
 			border-radius: 100px;
-			background-color: #FFFFFF;
+			background-color: var(--up-switch-inactive-color, #ffffff);
 			transition-property: transform;
 			transition-duration: 0.4s;
 			border-top-left-radius: 0;

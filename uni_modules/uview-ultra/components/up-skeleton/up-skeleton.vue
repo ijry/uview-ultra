@@ -190,10 +190,10 @@
 
 	@mixin background {
 		/* #ifdef APP-NVUE */
-		background-color: #F1F2F4;
+		background-color: var(--up-skeleton-bg-color, #F1F2F4);
 		/* #endif */
 		/* #ifndef APP-NVUE */
-		background: linear-gradient(90deg, #F1F2F4 25%, #e6e6e6 37%, #F1F2F4 50%);
+		background: linear-gradient(90deg, var(--up-skeleton-bg-color, #F1F2F4) 25%, var(--up-skeleton-shimmer-color, #e6e6e6) 37%, var(--up-skeleton-bg-color, #F1F2F4) 50%);
 		background-size: 400% 100%;
 		/* #endif */
 	}

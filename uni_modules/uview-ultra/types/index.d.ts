@@ -1,6 +1,13 @@
 /// <reference path="./comps.d.ts" />
 declare module 'uview-plus' {
 	export function install(): void  //必要
+	export function t(value: string, params?: Record<string, string | number>): string;
+	export const i18n: {
+		settings: {
+			lang: string;
+			locales: Record<string, Record<string, string>>;
+		}
+	};
 	interface test {
 		/** 邮箱格式校验 */
 		email(email: string): boolean
@@ -78,7 +85,18 @@ declare module 'uview-plus' {
 		v: string;
 		version: string;
 		color: Partial<Color>;
-		unit: 'px' | 'rpx'
+		unit: 'px' | 'rpx';
+		nativeThemeSync: boolean;
+		iconUrl: string;
+		customIcon: {
+			family: string;
+			url: string;
+		};
+		customIcons: {
+			[key: string]: string;
+		};
+		loadFontOnce: boolean;
+		themeMode?: 'light' | 'dark';
 	}
 	interface Color {
 		primary: string,
@@ -91,7 +109,9 @@ declare module 'uview-plus' {
 		contentColor: string,
 		tipsColor: string,
 		lightColor: string,
-		borderColor: string
+		borderColor: string,
+		bgColor?: string,
+		disabledColor?: string
 	}
 	interface GlobalConfig {
 		config: Partial<Config>;
@@ -141,11 +161,42 @@ declare module 'uview-plus' {
 		},
 		debounce: (func, wait, immediate) => void;
 		throttle: (func, wait, immediate) => void;
+		calc: Record<string, (...args: any[]) => any>;
+		digit: Record<string, (...args: any[]) => any>;
+		i18n: {
+			settings: {
+				lang: string;
+				locales: Record<string, Record<string, string>>;
+			}
+		};
+		t: (value: string, params?: Record<string, string | number>) => string;
+		rootToast: (options?: string | { message?: string; title?: string; duration?: number; [key: string]: any }) => void;
+		setRootToastRef: (ref?: any) => void;
+		rootNotify: (options?: string | { message?: string; title?: string; duration?: number; [key: string]: any }) => void;
+		setRootNotifyRef: (ref?: any) => void;
 		mixin: {},
 		mpMixin: {},
 		props: {},
 		color: Color;
 		platform: string;
+		theme: {
+			preference: 'system' | 'light' | 'dark';
+			mode: 'light' | 'dark';
+			version: number;
+			vars: Record<string, string>;
+		};
+		setTheme: (mode?: 'light' | 'dark') => any;
+		setThemePreference: (mode?: 'system' | 'light' | 'dark') => any;
+		getThemePreference: () => 'system' | 'light' | 'dark';
+		getSystemTheme: () => 'light' | 'dark';
+		getThemeVars: (mode?: 'light' | 'dark') => Record<string, string>;
+		getThemeTabBarStyle: () => {
+			color: string;
+			selectedColor: string;
+			backgroundColor: string;
+			borderStyle: string;
+		};
+		applyNativeThemeUI: () => void;
 	}
 
 	export function setConfig(config: Partial<GlobalConfig>): void;
@@ -168,5 +219,7 @@ declare type UniUploadRef = typeof import('./comps/upload')['UploadRef']
 declare type UniDatetimePickerRef = typeof import('./comps/datetimePicker')['DatetimePickerRef']
 declare type UniPickerRef = typeof import('./comps/picker')['PickerRef']
 declare type UniCalendarRef = typeof import('./comps/calendar')['CalendarRef']
+declare type UniCalendarStripRef = typeof import('./comps/calendarStrip')['CalendarStripRef']
+declare type UniGuideRef = typeof import('./comps/guide')['GuideRef']
 declare type UniTextareaRef = typeof import('./comps/textarea')['TextareaRef']
 declare type UniFormRef = typeof import('./comps/form')['FormRef']

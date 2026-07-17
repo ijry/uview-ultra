@@ -177,6 +177,31 @@ export const props = defineMixin({
 		todayColor: {
 			type: String,
 			default: () => defProps.calendar.todayColor
+		},
+		// 星期文案（周一到周日）
+		weekText: {
+			type: Array,
+			default: () => defProps.calendar.weekText
+		},
+		// 禁用日期，格式为 YYYY-MM-DD
+		forbidDays: {
+			type: Array,
+			default: () => defProps.calendar.forbidDays
+		},
+		// 点击禁用日期时的提示
+		forbidDaysToast: {
+			type: String,
+			default: () => defProps.calendar.forbidDaysToast
+		},
+		// 月份标题格式，遵循 dayjs format
+		monthFormat: {
+			type: String,
+			default: () => defProps.calendar.monthFormat
+		},
+		// 是否以内联模式渲染，主要用于 up-calendar-strip 内嵌完整月历
+		pageInline: {
+			type: Boolean,
+			default: () => defProps.calendar.pageInline
 		}
     }
 })

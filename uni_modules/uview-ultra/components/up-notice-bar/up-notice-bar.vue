@@ -96,6 +96,7 @@
 
 <style lang="scss" scoped>
 	@import "../../libs/css/components.scss";
+	@import "./theme-vars.scss";
 
 	.up-notice-bar {
 		overflow: hidden;

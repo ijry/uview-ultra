@@ -27,7 +27,19 @@ export default {
         'up-content-color': '#606266',
         'up-tips-color': '#909399',
         'up-light-color': '#c0c4cc',
+        'up-border-color': '#dadbde',
+        'up-bg-color': '#f3f4f6',
+        'up-disabled-color': '#c8c9cc',
     },
+    iconUrl: 'https://at.alicdn.com/t/font_2225171_8kdcwk4po24.ttf',
+    customIcon: {
+        family: '',
+        url: ''
+    },
+    customIcons: {},
+    loadFontOnce: false,
 	// 默认单位，可以通过配置为rpx，那么在用于传入组件大小参数为数值时，就默认为rpx
-	unit: 'px'
+	unit: 'px',
+    themeMode: 'light',
+    nativeThemeSync: false
 }
