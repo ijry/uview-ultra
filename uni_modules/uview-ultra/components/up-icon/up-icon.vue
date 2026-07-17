@@ -48,6 +48,7 @@
 
 	// 引入图标名称，已经对应的unicode
 	import icons from './icons.js'
+	import fontUtil from './util.js';
 	import { propsIcon } from './props.js';
 	import { mpMixin } from '../../libs/mixin/mpMixin.js';
 	import { mixin } from '../../libs/mixin/mixin.js';
@@ -81,6 +82,11 @@
 	 */
 	export default {
 		name: 'up-icon',
+		beforeCreate() {
+			if (!fontUtil.params.loaded) {
+				fontUtil.loadFont();
+			}
+		},
 		data() {
 			return {
 
@@ -117,6 +123,9 @@
 					// 某些特殊情况需要设置一个到顶部的距离，才能更好的垂直居中
 					top: addUnit(this.top)
 				}
+				if (this.customPrefix !== 'upicon') {
+					style.fontFamily = this.customPrefix
+				}
 				// 非主题色值时，才当作颜色值
 				if (this.color && !config.type.includes(this.color)) style.color = this.color
 
@@ -136,7 +145,9 @@
 			// 通过图标名，查找对应的图标
 			icon() {
 				// 使用自定义图标的时候页面上会把name属性也展示出来，所以在这里处理一下
-				if (this.customPrefix !== "upicon") return "";
+				if (this.customPrefix !== 'upicon') {
+					return config.customIcons[this.name] || this.name;
+				}
 				// 如果内置的图标中找不到对应的图标，就直接返回name值，因为用户可能传入的是unicode代码
 				return icons['upicon-' + this.name] || this.name
 			}

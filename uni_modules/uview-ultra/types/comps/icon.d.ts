@@ -30,6 +30,11 @@ declare interface IconProps {
    */
   hoverClass?: string
   /**
+   * 自定义扩展前缀，方便用户扩展自己的图标库
+   * @default "upicon"
+   */
+  customPrefix?: string
+  /**
    * 图标右侧/下方的label文字
    */
   label?: string | number

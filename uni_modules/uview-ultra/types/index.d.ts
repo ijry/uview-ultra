@@ -87,6 +87,15 @@ declare module 'uview-plus' {
 		color: Partial<Color>;
 		unit: 'px' | 'rpx';
 		nativeThemeSync: boolean;
+		iconUrl: string;
+		customIcon: {
+			family: string;
+			url: string;
+		};
+		customIcons: {
+			[key: string]: string;
+		};
+		loadFontOnce: boolean;
 		themeMode?: 'light' | 'dark';
 	}
 	interface Color {
