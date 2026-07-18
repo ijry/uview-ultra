@@ -19,19 +19,17 @@
 	</view>
 </template>
 
-<script>
-	export default {
-		methods: {
-			disconnected() {
-				console.log('disconnected');
-			},
-			connected() {
-				console.log('connected');
-			},
-			retry() {
-				console.log('retry');
-			}
-		},
+<script setup lang="uts">
+	function disconnected() {
+		console.log('disconnected')
+	}
+
+	function connected() {
+		console.log('connected')
+	}
+
+	function retry() {
+		console.log('retry')
 	}
 </script>
 

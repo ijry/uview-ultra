@@ -88,38 +88,33 @@
 	</view>
 </template>
 
-<script>
+<script setup lang="uts">
+	import { ref } from 'vue'
 	import { sleep, range } from '../../../uni_modules/uview-ultra/libs/function/index.uts'
 
-	export default {
-		data() {
-			return {
-				androidNvue: false,
-				percentage1: 30,
-				percentage2: 40,
-				percentage3: 50,
-				percentage4: 60,
-				percentage5: 70,
-				percentage6: 50,
-			}
-		},
-		onLoad() {
-			// #ifdef APP-NVUE
-			this.androidNvue = uni.$u.os() === 'android'
-			// #endif
-			sleep(2500).then(() => {
-				this.percentage1 = 120
-			})
-		},
-		methods: {
-			computedWidth(type: string) {
-				if(type === 'plus') {
-					this.percentage6 = range(0, 100, this.percentage6 + 10)
-				} else {
-					this.percentage6 = range(0, 100, this.percentage6 - 10)
-				}
-			}
-		},
+	const androidNvue = ref(false)
+	const percentage1 = ref(30)
+	const percentage2 = ref(40)
+	const percentage3 = ref(50)
+	const percentage4 = ref(60)
+	const percentage5 = ref(70)
+	const percentage6 = ref(50)
+
+	onLoad((_options: OnLoadOptions) => {
+		// #ifdef APP-NVUE
+		androidNvue.value = uni.$u.os() === 'android'
+		// #endif
+		sleep(2500).then(() => {
+			percentage1.value = 120
+		})
+	})
+
+	function computedWidth(type: string) {
+		if (type === 'plus') {
+			percentage6.value = range(0, 100, percentage6.value + 10)
+		} else {
+			percentage6.value = range(0, 100, percentage6.value - 10)
+		}
 	}
 </script>
 

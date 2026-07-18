@@ -131,36 +131,30 @@
 	</view>
 </template>
 
-<script>
-	export default {
-		data() {
-			return {
-				timeData: {},
-			}
-		},
-		onLoad() {
+<script setup lang="uts">
+	import { ref } from 'vue'
 
-		},
-		methods: {
-			//开始
-			start() {
-				(this.$refs['countDownRef'] as ComponentPublicInstance)?.$callMethod('start')
-			},
-			// 暂停
-			pause() {
-				(this.$refs['countDownRef'] as ComponentPublicInstance)?.$callMethod('pause')
-			},
-			// 重置
-			reset() {
-				(this.$refs['countDownRef'] as ComponentPublicInstance)?.$callMethod('reset')
-			},
-			onChange(e: UTSJSONObject) {
-				this.timeData = e
-			},
-			finish() {
-				console.log('finish');
-			}
-		}
+	const countDownRef = ref<ComponentPublicInstance | null>(null)
+	const timeData = ref({} as UTSJSONObject)
+
+	function start() {
+		countDownRef.value?.$callMethod('start')
+	}
+
+	function pause() {
+		countDownRef.value?.$callMethod('pause')
+	}
+
+	function reset() {
+		countDownRef.value?.$callMethod('reset')
+	}
+
+	function onChange(e: UTSJSONObject) {
+		timeData.value = e
+	}
+
+	function finish() {
+		console.log('finish')
 	}
 </script>
 

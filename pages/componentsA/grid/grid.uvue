@@ -134,57 +134,55 @@
 	</view>
 </template>
 
-<script>
-	export default {
-		data() {
-			return {
-				baseList: [{
-						name: 'photo',
-						title: '图片'
-					},
-					{
-						name: 'lock',
-						title: '锁头'
-					},
-					// {
-					// 	name: 'star',
-					// 	title: '星星'
-					// },
-				],
-				list: [{
-						name: 'photo',
-						title: '图片'
-					},
-					{
-						name: 'lock',
-						title: '锁头'
-					},
-					{
-						name: 'star',
-						title: '星星'
-					},
-					{
-						name: 'hourglass',
-						title: '沙漏'
-					},
-					{
-						name: 'home',
-						title: '首页'
-					},
-					{
-						name: 'volume',
-						title: '音量'
-					},
-				],
-				swiperList: ['integral', 'kefu-ermai', 'coupon', 'gift', 'scan', 'pause-circle', 'wifi', 'email', 'list'],
-			}
+<script setup lang="uts">
+	import { ref } from 'vue'
+
+	const uToastRef = ref<ComponentPublicInstance | null>(null)
+	const baseList = [
+		{
+			name: 'photo',
+			title: '图片'
 		},
-		methods: {
-			click(name: string) {
-				console.log(name)
-				// (this.$refs['uToastRef'] as ComponentPublicInstance)?.$callMethod('success', `点击了第${name}个`)
-			}
-		}
+		{
+			name: 'lock',
+			title: '锁头'
+		},
+		// {
+		// 	name: 'star',
+		// 	title: '星星'
+		// },
+	]
+	const list = [
+		{
+			name: 'photo',
+			title: '图片'
+		},
+		{
+			name: 'lock',
+			title: '锁头'
+		},
+		{
+			name: 'star',
+			title: '星星'
+		},
+		{
+			name: 'hourglass',
+			title: '沙漏'
+		},
+		{
+			name: 'home',
+			title: '首页'
+		},
+		{
+			name: 'volume',
+			title: '音量'
+		},
+	]
+	const swiperList = ['integral', 'kefu-ermai', 'coupon', 'gift', 'scan', 'pause-circle', 'wifi', 'email', 'list']
+
+	function click(name: string) {
+		console.log(name)
+		// uToastRef.value?.$callMethod('success', `点击了第${name}个`)
 	}
 </script>
 

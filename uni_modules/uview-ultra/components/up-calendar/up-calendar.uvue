@@ -154,936 +154,513 @@
 	</up-popup>
 </template>
 
-<script>
+<script setup lang="uts">
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
+import type { ComponentPublicInstance } from 'vue'
 import uHeader from './header.uvue'
 import { UPCalendarMonthsItemDate } from './types.uts'
 import uMonth, { monthsItem } from './month.uvue'
-import { propsCalendar } from './props'
-import util from './util'
-import {dayuts} from '@/uni_modules/lime-dayuts';
+import { dayuts } from '@/uni_modules/lime-dayuts'
 import { t } from '../../libs/i18n/index.uts'
-// import Calendar from '../../libs/util/calendar'
-import { mpMixin } from '../../libs/mixin/mpMixin'
-import { mixin } from '../../libs/mixin/mixin'
-import { addUnit, range, error, padZero } from '../../libs/function/index';
-import { number as testNumber, array as testArray } from '../../libs/function/test';
-import type { ComponentPublicInstance } from 'vue'
-/**
- * Calendar 日历
- * @description  此组件用于单个选择日期，范围选择日期等，日历被包裹在底部弹起的容器中.
- * @tutorial https://ijry.github.io/uview-plus/components/calendar.html
- *
- * @property {String}				title				标题内容 (默认 日期选择 )
- * @property {Boolean}				showTitle			是否显示标题  (默认 true )
- * @property {Boolean}				showSubtitle		是否显示副标题	(默认 true )
- * @property {String}				mode				日期类型选择  single-选择单个日期，multiple-可以选择多个日期，range-选择日期范围 （ 默认 'single' )
- * @property {String}				startText			mode=range时，第一个日期底部的提示文字  (默认 '开始' )
- * @property {String}				endText				mode=range时，最后一个日期底部的提示文字 (默认 '结束' )
- * @property {Array}				customList			自定义列表
- * @property {String}				color				主题色，对底部按钮和选中日期有效  (默认 ‘#3c9cff' )
- * @property {String | Number}		minDate				最小的可选日期	 (默认 0 )
- * @property {String | Number}		maxDate				最大可选日期  (默认 0 )
- * @property {Array | String| Date}	defaultDate			默认选中的日期，mode为multiple或range是必须为数组格式
- * @property {String | Number}		maxCount			mode=multiple时，最多可选多少个日期  (默认 	Number.MAX_SAFE_INTEGER  )
- * @property {String | Number}		rowHeight			日期行高 (默认 56 )
- * @property {Function}				formatter			日期格式化函数
- * @property {Boolean}				showLunar			是否显示农历  (默认 false )
- * @property {Boolean}				showMark			是否显示月份背景色 (默认 true )
- * @property {String}				confirmText			确定按钮的文字 (默认 '确定' )
- * @property {String}				confirmDisabledText	确认按钮处于禁用状态时的文字 (默认 '确定' )
- * @property {Boolean}				show				是否显示日历弹窗 (默认 false )
- * @property {Boolean}				closeOnClickOverlay	是否允许点击遮罩关闭日历 (默认 false )
- * @property {Boolean}				readonly	        是否为只读状态，只读状态下禁止选择日期 (默认 false )
- * @property {String | Number}		maxRange	        日期区间最多可选天数，默认无限制，mode = range时有效
- * @property {String}				rangePrompt	        范围选择超过最多可选天数时的提示文案，mode = range时有效
- * @property {Boolean}				showRangePrompt	    范围选择超过最多可选天数时，是否展示提示文案，mode = range时有效 (默认 true )
- * @property {Boolean}				allowSameDay	    是否允许日期范围的起止时间为同一天，mode = range时有效 (默认 false )
- * @property {String}				rangeResultMode	    区间模式下确认返回值格式，all-返回区间内所有日期，boundary-仅返回起止日期 (默认 'all' )
- * @property {Boolean}				enableTime			是否开启时分秒选择 (默认 false )
- * @property {String}				timePrecision		时间精度，hour-仅时，minute-时分，second-时分秒 (默认 'minute' )
- * @property {String}				defaultTime			默认时间，支持HH/HH:mm/HH:mm:ss，不传则按00:00补齐
- * @property {Number|String}	    round				圆角值，默认无圆角  (默认 0 )
- * @property {Number|String}	    monthNum			最多展示的月份数量  (默认 3 )
- * @property {Boolean}	            monthSwitch			是否启用非滚动的单月切换模式  (默认 false )
- * @property {String}	            todayColor			今天日期的独立高亮颜色，默认跟随主题色
- *
- * @event {Function()} confirm 		点击确定按钮时触发		选择日期相关的返回参数
- * @event {Function()} close 		日历关闭时触发			可定义页面关闭时的回调事件
- * @example <up-calendar  :defaultDate="defaultDateMultiple" :show="show" mode="multiple" @confirm="confirm">
-	</up-calendar>
- * */
-import defProps from './calendar.uts';
-let calendarProp = defProps['calendar'] as UTSJSONObject;
-export default {
-	name: 'up-calendar',
-	mixins: [mpMixin, mixin],
-	// mixins: [mpMixin, mixin, propsCalendar],
-	components: {
-		uHeader,
-		uMonth
-	},
-	props: {
-	    // 日历顶部标题
-	    title: {
-	        type: String,
-	        default: calendarProp['title']
-	    },
-	    // 是否显示标题
-	    showTitle: {
-	        type: Boolean,
-	        default: calendarProp['showTitle']
-	    },
-	    // 是否显示副标题
-	    showSubtitle: {
-	        type: Boolean,
-	        default: calendarProp['showSubtitle']
-	    },
-	    // 日期类型选择，single-选择单个日期，multiple-可以选择多个日期，range-选择日期范围
-	    mode: {
-	        type: String,
-	        default: calendarProp['mode']
-	    },
-	    // mode=range时，第一个日期底部的提示文字
-	    startText: {
-	        type: String,
-	        default: calendarProp['startText']
-	    },
-	    // mode=range时，最后一个日期底部的提示文字
-	    endText: {
-	        type: String,
-	        default: calendarProp['endText']
-	    },
-	    // 自定义列表
-	    customList: {
-	        type: Array,
-	        default: calendarProp['customList']
-	    },
-	    // 主题色，对底部按钮和选中日期有效
-	    color: {
-	        type: String,
-	        default: calendarProp['color']
-	    },
-	    // 最小的可选日期
-	    minDate: {
-	        type: [String, Number],
-	        default: calendarProp['minDate']
-	    },
-	    // 最大可选日期
-	    maxDate: {
-	        type: [String, Number],
-	        default: calendarProp['maxDate']
-	    },
-	    // 默认选中的日期，mode为multiple或range是必须为数组格式
-		// @ts-ignore
-	    defaultDate: {
-	        type: [Array, String, Date, null],
-	        default: calendarProp['defaultDate']
-	    },
-	    // mode=multiple时，最多可选多少个日期
-	    maxCount: {
-	        type: [String, Number],
-	        default: calendarProp['maxCount']
-	    },
-	    // 日期行高
-	    rowHeight: {
-	        type: [String, Number],
-	        default: calendarProp['rowHeight']
-	    },
-	    // 日期格式化函数
-		// @ts-ignore
-	    formatter: {
-	        type: [Function, null],
-	        default: calendarProp['formatter']
-	    },
-	    // 是否显示农历
-	    showLunar: {
-	        type: Boolean,
-	        default: calendarProp['showLunar']
-	    },
-	    // 是否显示月份背景色
-	    showMark: {
-	        type: Boolean,
-	        default: calendarProp['showMark']
-	    },
-	    // 确定按钮的文字
-	    confirmText: {
-	        type: String,
-	        default: calendarProp['confirmText']
-	    },
-	    // 确认按钮处于禁用状态时的文字
-	    confirmDisabledText: {
-	        type: String,
-	        default: calendarProp['confirmDisabledText']
-	    },
-	    // 是否显示日历弹窗
-	    show: {
-	        type: Boolean,
-	        default: calendarProp['show']
-	    },
-	    // 是否允许点击遮罩关闭日历
-	    closeOnClickOverlay: {
-	        type: Boolean,
-	        default: calendarProp['closeOnClickOverlay']
-	    },
-	    // 是否为只读状态，只读状态下禁止选择日期
-	    readonly: {
-	        type: Boolean,
-	        default: calendarProp['readonly']
-	    },
-	    // 	是否展示确认按钮
-	    showConfirm: {
-	        type: Boolean,
-	        default: calendarProp['showConfirm']
-	    },
-	    // 日期区间最多可选天数，默认无限制，mode = range时有效
-	    maxRange: {
-	        type: [Number, String],
-	        default: calendarProp['maxRange']
-	    },
-	    // 范围选择超过最多可选天数时的提示文案，mode = range时有效
-	    rangePrompt: {
-	        type: String,
-	        default: calendarProp['rangePrompt']
-	    },
-	    // 范围选择超过最多可选天数时，是否展示提示文案，mode = range时有效
-	    showRangePrompt: {
-	        type: Boolean,
-	        default: calendarProp['showRangePrompt']
-	    },
-	    // 是否允许日期范围的起止时间为同一天，mode = range时有效
-	    allowSameDay: {
-	        type: Boolean,
-	        default: calendarProp['allowSameDay']
-	    },
-		// 区间模式下确认返回值格式，all-返回区间内所有日期，boundary-仅返回起止日期
-		rangeResultMode: {
-			type: String,
-			default: calendarProp['rangeResultMode']
-		},
-		// 是否开启时分秒选择
-		enableTime: {
-			type: Boolean,
-			default: calendarProp['enableTime']
-		},
-		// 时间精度：hour-仅时，minute-时分，second-时分秒
-		timePrecision: {
-			type: String,
-			default: calendarProp['timePrecision']
-		},
-		// 默认时间，格式支持 HH / HH:mm / HH:mm:ss
-		defaultTime: {
-			type: String,
-			default: calendarProp['defaultTime']
-		},
-		// 圆角值
-		round: {
-		    type: [Boolean, String, Number],
-		    default: calendarProp['round']
-		},
-		// 最多展示月份数量
-		monthNum: {
-			type: [Number, String],
-			default: 3
-		},
-		// 是否启用非滚动的单月切换模式
-		monthSwitch: {
-			type: Boolean,
-			default: calendarProp['monthSwitch']
-		},
-		// 是否显示今天按钮
-		showToday: {
-			type: Boolean,
-			default: calendarProp['showToday']
-		},
-		// 今天日期的独立高亮颜色，默认跟随主题色
-		todayColor: {
-			type: String,
-			default: calendarProp['todayColor']
-		}
-	},
-	data() {
-		return {
-			start: 0,
-			inited: false,
-			// 需要显示的月份的数组
-			months: [] as monthsItem[],
-			// 在月份滚动区域中，当前视图中月份的index索引
-			monthIndex: 0,
-			// 月份滚动区域的高度
-			listHeight: 0,
-			// month组件中选择的日期数组
-			selected: [] as Array<string>,
-			scrollIntoView: '',
-			scrollIntoViewScroll: '',
-			scrollTop:0,
-			timePickerShow: false,
-			timePickerTarget: 'single',
-			timePickerValue: [0, 0, 0] as Array<number>,
-			hourOptions: [] as Array<string>,
-			minuteOptions: [] as Array<string>,
-			secondOptions: [] as Array<string>,
-			singleTime: '00:00',
-			rangeStartTime: '00:00',
-			rangeEndTime: '00:00',
-			// 过滤处理方法
-			innerFormatter: (value: UPCalendarMonthsItemDate):UPCalendarMonthsItemDate => value
-		}
-	},
-	watch: {
-		defaultDate: {
-			handler() {
-				// @ts-ignore
-				if (this.inited) this.setMonth()
-			}
-		},
-		// @ts-ignore
-		selectedChange: {
-			handler() {
-				// @ts-ignore
-				if (this.inited) this.setMonth()
-			}
-		},
-		timePrecision: {
-			handler() {
-				// @ts-ignore
-				this.initTimeOptions()
-				// @ts-ignore
-				this.initTimeValues()
-			}
-		},
-		defaultTime: {
-			handler() {
-				// @ts-ignore
-				this.initTimeValues()
-			}
-		},
-		// 打开弹窗时，设置月份数据
-		show: {
-			immediate: true,
-			handler(nval) {
-				if (nval) {
-					// @ts-ignore
-					if (!this.inited) {
-						// @ts-ignore
-						this.init()
-					} else if ((this.months as Array<monthsItem>).length == 0) {
-						// @ts-ignore
-						this.setMonth()
-					}
-				} else {
-					// 关闭时重置scrollIntoView，否则会出现二次打开日历，当前月份数据显示不正确。
-					// scrollIntoView需要有一个值变动过程，才会产生作用。
-					// @ts-ignore
-					this.scrollIntoView = ''
-				}
-			}
-		}
-	},
-	computed: {
-		// 由于maxDate和minDate可以为字符串(2021-10-10)，或者数值(时间戳)，但是dayuts如果接受字符串形式的时间戳会有问题，这里进行处理
-		innerMaxDate(): string {
-			// @ts-ignore
-			return testNumber(this.maxDate)
-			// @ts-ignore
-				? (this.maxDate as number).toString()
-				// @ts-ignore
-				: this.maxDate.toString()
-		},
-		innerMinDate(): string {
-			// @ts-ignore
-			return testNumber(this.minDate)
-			// @ts-ignore
-				? (this.minDate as number).toString()
-				// @ts-ignore
-				: this.minDate.toString()
-		},
-		todayDate(): string {
-			return dayuts().format('YYYY-MM-DD')
-		},
-		todayText(): string {
-			return t('up.calendar.today')
-		},
-		todayDisabled(): boolean {
-			let today = dayuts(this.todayDate as string)
-			let innerMinDate = this.innerMinDate as string
-			let innerMaxDate = this.innerMaxDate as string
-			if (innerMinDate != '' && innerMinDate != '0' && today.isBefore(dayuts(innerMinDate), 'day')) {
-				return true
-			}
-			if (innerMaxDate != '' && innerMaxDate != '0' && today.isAfter(dayuts(innerMaxDate), 'day')) {
-				return true
-			}
-			return false
-		},
-		// 多个条件的变化，会引起选中日期的变化，这里统一管理监听
-		selectedChange(): Array<string> {
-			// @ts-ignore
-			return [this.innerMinDate, this.innerMaxDate]
-		},
-		subtitle() {
-			// 初始化时，this.months为空数组，所以需要特别判断处理
-			// @ts-ignore
-			if (this.months.length > 0) {
-				// @ts-ignore
-				let monthIndex: number = this.monthIndex as number
-				// @ts-ignore
-				return `${this.months[monthIndex]['year']}年${
-					// @ts-ignore
-					this.months[monthIndex]['month']
-				}月`
-			} else {
-				return ''
-			}
-		},
-		currentMonths(): Array<monthsItem> {
-			// @ts-ignore
-			if (this.monthSwitch && this.months.length > 0) {
-				// @ts-ignore
-				return [this.months[this.monthIndex] as monthsItem]
-			}
-			// @ts-ignore
-			return this.months as Array<monthsItem>
-		},
-		switchPrevDisabled(): boolean {
-			// @ts-ignore
-			return this.monthIndex <= 0
-		},
-		switchNextDisabled(): boolean {
-			// @ts-ignore
-			return this.monthIndex >= this.months.length - 1
-		},
-		switchPrevYearDisabled(): boolean {
-			// @ts-ignore
-			return this.monthIndex - 12 < 0
-		},
-		switchNextYearDisabled(): boolean {
-			// @ts-ignore
-			return this.monthIndex + 12 > this.months.length - 1
-		},
-		showTimePanel(): boolean {
-			// @ts-ignore
-			if (!this.enableTime) return false
-			// @ts-ignore
-			if (this.mode == 'single') return true
-			// @ts-ignore
-			if (this.mode == 'range' && this.rangeResultMode == 'boundary') return true
-			return false
-		},
-		singleDateLabel(): string {
-			// @ts-ignore
-			return this.selected.length > 0 ? this.selected[0] : '--'
-		},
-		rangeStartDateLabel(): string {
-			// @ts-ignore
-			return this.selected.length > 0 ? this.selected[0] : '--'
-		},
-		rangeEndDateLabel(): string {
-			// @ts-ignore
-			return this.selected.length > 1 ? this.selected[this.selected.length - 1] : '--'
-		},
-		buttonDisabled() {
-			// 如果为range类型，且选择的日期个数不足1个时，让底部的按钮出于disabled状态
-			// @ts-ignore
-			if (this.mode === 'range') {
-				// @ts-ignore
-				if (this.selected.length <= 1) {
-					return true
-				} else {
-					return false
-				}
-			} else {
-				return false
-			}
-		}
-	},
-	mounted() {
-		// @ts-ignore
-		this.start = Date.now()
-	},
-	emits: ["confirm", "close"],
-	methods: {
-		addUnit(e: any) {
-			return addUnit(e)
-		},
-		padTime(num: number): string {
-			let str = num.toString()
-			return str.length < 2 ? ('0' + str) : str
-		},
-		toInt(value: any, fallback: number = 0): number {
-			if (value == null) return fallback
-			let parsed = parseInt(value.toString())
-			return isNaN(parsed) ? fallback : parsed
-		},
-		initTimeOptions() {
-			// @ts-ignore
-			this.hourOptions = [] as Array<string>
-			// @ts-ignore
-			this.minuteOptions = [] as Array<string>
-			// @ts-ignore
-			this.secondOptions = [] as Array<string>
-			for (let i = 0; i < 24; i++) {
-				// @ts-ignore
-				this.hourOptions.push(this.padTime(i))
-			}
-			for (let i = 0; i < 60; i++) {
-				// @ts-ignore
-				this.minuteOptions.push(this.padTime(i))
-				// @ts-ignore
-				this.secondOptions.push(this.padTime(i))
-			}
-		},
-		parseTimeValue(value: string): Array<number> {
-			let raw = value == null ? '' : value.toString()
-			let parts = raw.length > 0 ? raw.split(':') : []
-			let hour = parts.length > 0 ? this.toInt(parts[0], 0) : 0
-			let minute = parts.length > 1 ? this.toInt(parts[1], 0) : 0
-			let second = parts.length > 2 ? this.toInt(parts[2], 0) : 0
-			hour = Math.max(0, Math.min(23, hour))
-			minute = Math.max(0, Math.min(59, minute))
-			second = Math.max(0, Math.min(59, second))
-			return [hour, minute, second]
-		},
-		getDefaultTimeValue(): string {
-			// @ts-ignore
-			let parsed = this.parseTimeValue(this.defaultTime as string)
-			let hour = parsed[0]
-			let minute = parsed[1]
-			let second = parsed[2]
-			// @ts-ignore
-			if (this.timePrecision == 'hour') {
-				return this.padTime(hour)
-			}
-			// @ts-ignore
-			if (this.timePrecision == 'second') {
-				return `${this.padTime(hour)}:${this.padTime(minute)}:${this.padTime(second)}`
-			}
-			return `${this.padTime(hour)}:${this.padTime(minute)}`
-		},
-		initTimeValues() {
-			let value = this.getDefaultTimeValue()
-			// @ts-ignore
-			this.singleTime = value
-			// @ts-ignore
-			this.rangeStartTime = value
-			// @ts-ignore
-			this.rangeEndTime = value
-		},
-		timeToPickerValue(value: string): Array<number> {
-			return this.parseTimeValue(value)
-		},
-		pickerValueToTime(value: Array<number>): string {
-			let hour = value.length > 0 ? this.toInt(value[0], 0) : 0
-			let minute = value.length > 1 ? this.toInt(value[1], 0) : 0
-			let second = value.length > 2 ? this.toInt(value[2], 0) : 0
-			// @ts-ignore
-			if (this.timePrecision == 'hour') {
-				return this.padTime(hour)
-			}
-			// @ts-ignore
-			if (this.timePrecision == 'second') {
-				return `${this.padTime(hour)}:${this.padTime(minute)}:${this.padTime(second)}`
-			}
-			return `${this.padTime(hour)}:${this.padTime(minute)}`
-		},
-		openTimePicker(target: string) {
-			// @ts-ignore
-			this.timePickerTarget = target
-			let currentValue = ''
-			// @ts-ignore
-			if (target == 'single') currentValue = this.singleTime as string
-			// @ts-ignore
-			if (target == 'start') currentValue = this.rangeStartTime as string
-			// @ts-ignore
-			if (target == 'end') currentValue = this.rangeEndTime as string
-			// @ts-ignore
-			this.timePickerValue = this.timeToPickerValue(currentValue.length > 0 ? currentValue : this.getDefaultTimeValue())
-			// @ts-ignore
-			this.timePickerShow = true
-		},
-		onTimePickerChange(event: UniPickerViewChangeEvent) {
-			// @ts-ignore
-			this.timePickerValue = event.detail.value as Array<number>
-		},
-		closeTimePicker() {
-			// @ts-ignore
-			this.timePickerShow = false
-		},
-		confirmTimePicker() {
-			// @ts-ignore
-			let value = this.pickerValueToTime(this.timePickerValue as Array<number>)
-			// @ts-ignore
-			if (this.timePickerTarget == 'single') this.singleTime = value
-			// @ts-ignore
-			if (this.timePickerTarget == 'start') this.rangeStartTime = value
-			// @ts-ignore
-			if (this.timePickerTarget == 'end') this.rangeEndTime = value
-			// @ts-ignore
-			this.timePickerShow = false
-		},
-		timeToSecond(value: string): number {
-			let parsed = this.parseTimeValue(value)
-			return parsed[0] * 3600 + parsed[1] * 60 + parsed[2]
-		},
-		validateSameDayRangeTime(): boolean {
-			// @ts-ignore
-			if (!this.enableTime || this.mode != 'range' || this.rangeResultMode != 'boundary') {
-				return true
-			}
-			// @ts-ignore
-			if (this.selected.length < 2) return true
-			// @ts-ignore
-			let startDate = this.selected[0] as string
-			// @ts-ignore
-			let endDate = this.selected[this.selected.length - 1] as string
-			if (startDate != endDate) return true
-			// @ts-ignore
-			let startSeconds = this.timeToSecond(this.rangeStartTime as string)
-			// @ts-ignore
-			let endSeconds = this.timeToSecond(this.rangeEndTime as string)
-			if (endSeconds < startSeconds) {
-				uni.showToast({
-					title: '结束时间不能早于开始时间',
-					icon: 'none'
-				})
-				return false
-			}
-			return true
-		},
-		appendTime(dateText: string, timeText: string): string {
-			return `${dateText} ${timeText}`
-		},
-		getConfirmValue(selected: Array<string> = this.selected as Array<string>): Array<string> {
-			let result = selected
-			// @ts-ignore
-			if (this.mode == 'range' && this.rangeResultMode == 'boundary' && selected.length >= 2) {
-				let len = selected.length - 1
-				result = [selected[0], selected[len]]
-			}
-			// @ts-ignore
-			if (!this.showTimePanel || !this.enableTime) {
-				return result
-			}
-			// @ts-ignore
-			if (this.mode == 'single' && result.length >= 1) {
-				// @ts-ignore
-				return [this.appendTime(result[0], this.singleTime as string)]
-			}
-			// @ts-ignore
-			if (this.mode == 'range' && this.rangeResultMode == 'boundary' && result.length >= 2) {
-				// @ts-ignore
-				return [this.appendTime(result[0], this.rangeStartTime as string), this.appendTime(result[1], this.rangeEndTime as string)]
-			}
-			return result
-		},
-		// 在微信小程序中，不支持将函数当做props参数，故只能通过ref形式调用
-		setFormatter(e: object)  {
-			// @ts-ignore
-			this.innerFormatter = e as ((val: UPCalendarMonthsItemDate) => UPCalendarMonthsItemDate)
-		},
-		// month组件内部选择日期后，通过事件通知给父组件
-		monthSelectedM(e: Array<string>, scene: string) {
-			// @ts-ignore
-			this.selected = e
-			// @ts-ignore
-			if (!this.showConfirm) {
-				// 在不需要确认按钮的情况下，如果为单选，或者范围多选且已选长度大于2，则直接进行返还
-				if (
-					// @ts-ignore
-					this.mode === 'multiple' ||
-					// @ts-ignore
-					this.mode === 'single' ||
-					// @ts-ignore
-					(this.mode === 'range' && this.selected.length >= 2)
-				) {
-				   if( scene === 'init'){
-					 return
-				   }
-				   if( scene === 'tap') {
-					   // @ts-ignore
-					   if (!this.validateSameDayRangeTime()) return
-					   // @ts-ignore
-					 this.$emit('confirm', this.getConfirmValue())
-				   }
-				}
-			}
-		},
-		init() {
-			// 校验maxDate，不能小于minDate。
-			if (
-				// @ts-ignore
-				this.innerMaxDate != '0' && this.innerMaxDate != '' &&
-				// @ts-ignore
-                this.innerMinDate != '0' && this.innerMinDate != '' &&
-				// @ts-ignore
-				new Date(this.innerMaxDate).getTime() < new Date(this.innerMinDate).getTime()
-			) {
-				// @ts-ignore
-				console.log(this.innerMaxDate)
-				return error('maxDate不能小于minDate时间')
-			}
-			// 滚动区域的高度
-			// @ts-ignore
-			this.listHeight = (this.rowHeight as number) * (this.monthSwitch ? 6 : 5) + 30
-			// @ts-ignore
-			this.initTimeOptions()
-			// @ts-ignore
-			this.initTimeValues()
-			this.setMonth()
-			// @ts-ignore
-			this.inited = true
-		},
-		close() {
-			// @ts-ignore
-			this.$emit('close')
-		},
-		// 点击确定按钮
-		confirm() {
-			// @ts-ignore
-			if (!this.buttonDisabled) {
-				// @ts-ignore
-				if (!this.validateSameDayRangeTime()) return
-				// @ts-ignore
-				this.$emit('confirm', this.getConfirmValue())
-			}
-		},
-		// 获得两个日期之间的月份数
-		getMonths(minDate: any, maxDate: any): number {
-			const minYear = dayuts(minDate).year()
-			const minMonth = dayuts(minDate).month() + 1
-			const maxYear = dayuts(maxDate).year()
-			const maxMonth = dayuts(maxDate).month() + 1
-			return (maxYear - minYear) * 12 + (maxMonth - minMonth) + 1
-		},
-		// 设置月份数据
-		setMonth() {
-			// 最小日期的毫秒数
-			// @ts-ignore
-			const minDate = (this.innerMinDate != '' && this.innerMinDate != '0') ? this.innerMinDate : dayuts().valueOf()
-			// 如果没有指定最大日期，则往后推3个月
-			const maxDate =
-			// @ts-ignore
-				(this.innerMaxDate != '' && this.innerMaxDate != '0') ? this.innerMaxDate :
-				dayuts(minDate)
-				// @ts-ignore
-					.add((this.monthNum as number) - 1, 'month')
-					.valueOf()
-			// 最大最小月份之间的共有多少个月份，
-			const months = range(
-				1,
-				// @ts-ignore
-				this.monthNum as number,
-				this.getMonths(minDate, maxDate)
-			)
-			// 先清空数组
-			// @ts-ignore
-			this.months = [] as monthsItem[]
-			const minDateStr = dayuts(minDate).format('YYYY-MM-DD')
-			const maxDateStr = dayuts(maxDate).format('YYYY-MM-DD')
-			for (let i = 0; i < months; i++) {
-				// 缓存当月的 dayuts 实例，避免重复创建
-				const monthBase = dayuts(minDate).add(i, 'month')
-				const daysInMonth = monthBase.daysInMonth()
-				const monthValue = monthBase.month() + 1
-				const yearValue = monthBase.year()
-				let cdate: Array<UPCalendarMonthsItemDate> = []
-				for (let day = 1; day <= daysInMonth; day++) {
-					const dayBase = monthBase.date(day)
-					const date = dayBase.format('YYYY-MM-DD')
-					const week = dayBase.day()
-					let bottomInfo = ''
-					let config = {
-						day: day.toString(),
-						week,
-						disabled: date < minDateStr || date > maxDateStr,
-						date: new Date(date),
-						dateStr: date,
-						bottomInfo,
-						dot: false,
-						month: monthValue
-					} as UPCalendarMonthsItemDate
-					cdate.push(config)
-				}
-				let md:monthsItem = {
-					top: 0,
-					date: cdate,
-					// 当前所属的月份
-					month: monthValue.toString(),
-					// 当前年份
-					year: yearValue.toString()
-				}
-				// @ts-ignore
-				this.months.push(md)
-			}
-			// @ts-ignore
-			if (this.monthSwitch) {
-				// @ts-ignore
-				this.monthIndex = this.getDefaultMonthIndex()
-			}
-		},
-		getDefaultMonthIndex(): number {
-			let selected = dayuts().format('YYYY-MM')
-			// @ts-ignore
-			if (this.defaultDate != null) {
-				// @ts-ignore
-				if (!testArray(this.defaultDate)) {
-					// @ts-ignore
-					selected = dayuts(this.defaultDate).format('YYYY-MM')
-				// @ts-ignore
-				} else if ((this.defaultDate as Array<any>).length > 0) {
-					// @ts-ignore
-					selected = dayuts((this.defaultDate as Array<any>)[0]).format('YYYY-MM')
-				}
-			}
-			// @ts-ignore
-			const index = this.months.findIndex(({ year, month }): boolean => {
-				month = padZero(month)
-				return `${year}-${month}` === selected
-			})
-			return index == -1 ? 0 : index
-		},
-		prevMonth() {
-			// @ts-ignore
-			if (!this.switchPrevDisabled) {
-				// @ts-ignore
-				this.monthIndex -= 1
-			}
-		},
-		nextMonth() {
-			// @ts-ignore
-			if (!this.switchNextDisabled) {
-				// @ts-ignore
-				this.monthIndex += 1
-			}
-		},
-		prevYear() {
-			// @ts-ignore
-			if (!this.switchPrevYearDisabled) {
-				// @ts-ignore
-				this.monthIndex -= 12
-			}
-		},
-		nextYear() {
-			// @ts-ignore
-			if (!this.switchNextYearDisabled) {
-				// @ts-ignore
-				this.monthIndex += 12
-			}
-		},
-		jumpToToday() {
-			// @ts-ignore
-			if (this.todayDisabled) {
-				return
-			}
-			// @ts-ignore
-			const targetMonth = dayuts(this.todayDate).format('YYYY-MM')
-			const selectToday = () => {
-				// @ts-ignore
-				if (this.mode == 'range') {
-					return
-				}
-				// @ts-ignore
-				(this.$refs['month'] as ComponentPublicInstance | null)?.$callMethod('selectDate', this.todayDate)
-			}
-			// @ts-ignore
-			if (this.monthSwitch) {
-				// @ts-ignore
-				const todayMonthIndex = this.months.findIndex(({ year, month }): boolean => {
-					month = padZero(month)
-					return `${year}-${month}` == targetMonth
-				})
-				if (todayMonthIndex != -1) {
-					// @ts-ignore
-					this.monthIndex = todayMonthIndex
-					// @ts-ignore
-					this.$nextTick(selectToday)
-				}
-				return
-			}
-			this.scrollIntoDefaultMonth(targetMonth)
-			// @ts-ignore
-			this.$nextTick(selectToday)
-		},
-		// 滚动到默认设置的月份
-		scrollIntoDefaultMonth(selected: string) {
-			// 查询默认日期在可选列表的下标
-			// @ts-ignore
-			const _index = this.months.findIndex(({
-				  year,
-				  month
-			  }): boolean => {
-				month = padZero(month)
-				return `${year}-${month}` === selected
-			})
-			if (_index != -1) {
-				// #ifndef MP-WEIXIN
-				// @ts-ignore
-				this.$nextTick(() => {
-					// @ts-ignore
-					this.scrollIntoView = ''
-					// @ts-ignore
-					this.scrollIntoView = `month-${_index}`
-					// @ts-ignore
-					this.scrollIntoViewScroll = this.scrollIntoView
-				})
-				// #endif
-				// #ifdef MP-WEIXIN
-				this.scrollTop = this.months[_index].top || 0;
-				// #endif
-			}
-		},
-		// scroll-view滚动监听
-		onScroll(event: UniScrollEvent) {
-			// 不允许小于0的滚动值，如果scroll-view到顶了，继续下拉，会出现负数值
-			const scrollTop = Math.max(0, event.detail.scrollTop)
-			// 将当前滚动条数值，除以滚动区域的高度，可以得出当前滚动到了哪一个月份的索引
-			// @ts-ignore
-			for (let i = 0; i < this.months.length; i++) {
-				// @ts-ignore
-				if (scrollTop >= (this.months[i].top > 0 ? this.months[i].top : this.listHeight)) {
-					// @ts-ignore
-					this.monthIndex = i
-					// @ts-ignore
-					this.scrollIntoViewScroll = `month-${i}`
-				}
-			}
-		},
-		// 更新月份的top值
-		onUpdateMonthTopM(topArr: Array<number>) {
-			// @ts-ignore
-			if (this.monthSwitch) {
-				return
-			}
-			this.updateMonthTopM(topArr)
-		},
-		updateMonthTopM(topArr: Array<number>) {
-			// 设置对应月份的top值，用于onScroll方法更新月份
-			topArr.map((item, index) => {
-				// @ts-ignore
-				this.months[index]['top'] = item
-			})
+import { addUnit as addUnitFn, range, error, padZero } from '../../libs/function/index.uts'
+import { number as testNumber, array as testArray } from '../../libs/function/test.uts'
+import defProps from './calendar.uts'
 
-			// 获取默认日期的下标
-			// @ts-ignore
-			if (this.defaultDate == null) {
-				// 如果没有设置默认日期，则将当天日期设置为默认选中的日期
-				const select = dayuts().format("YYYY-MM")
-				this.scrollIntoDefaultMonth(select)
-				return
+function watchValueSignature(value: any | null): string {
+	if (value == null) {
+		return ''
+	}
+	return JSON.stringify(value)
+}
+
+defineOptions({
+	name: 'up-calendar'
+})
+
+const props = defineProps({
+	title: { type: String, default: (defProps['calendar'] as UTSJSONObject)['title'] },
+	showTitle: { type: Boolean, default: (defProps['calendar'] as UTSJSONObject)['showTitle'] },
+	showSubtitle: { type: Boolean, default: (defProps['calendar'] as UTSJSONObject)['showSubtitle'] },
+	mode: { type: String, default: (defProps['calendar'] as UTSJSONObject)['mode'] },
+	startText: { type: String, default: (defProps['calendar'] as UTSJSONObject)['startText'] },
+	endText: { type: String, default: (defProps['calendar'] as UTSJSONObject)['endText'] },
+	customList: { type: Array, default: (defProps['calendar'] as UTSJSONObject)['customList'] },
+	color: { type: String, default: (defProps['calendar'] as UTSJSONObject)['color'] },
+	minDate: { type: [String, Number], default: (defProps['calendar'] as UTSJSONObject)['minDate'] },
+	maxDate: { type: [String, Number], default: (defProps['calendar'] as UTSJSONObject)['maxDate'] },
+	defaultDate: { type: [Array, String, Date, null], default: (defProps['calendar'] as UTSJSONObject)['defaultDate'] },
+	maxCount: { type: [String, Number], default: (defProps['calendar'] as UTSJSONObject)['maxCount'] },
+	rowHeight: { type: [String, Number], default: (defProps['calendar'] as UTSJSONObject)['rowHeight'] },
+	formatter: { type: [Function, null], default: (defProps['calendar'] as UTSJSONObject)['formatter'] },
+	showLunar: { type: Boolean, default: (defProps['calendar'] as UTSJSONObject)['showLunar'] },
+	showMark: { type: Boolean, default: (defProps['calendar'] as UTSJSONObject)['showMark'] },
+	confirmText: { type: String, default: (defProps['calendar'] as UTSJSONObject)['confirmText'] },
+	confirmDisabledText: { type: String, default: (defProps['calendar'] as UTSJSONObject)['confirmDisabledText'] },
+	show: { type: Boolean, default: (defProps['calendar'] as UTSJSONObject)['show'] },
+	closeOnClickOverlay: { type: Boolean, default: (defProps['calendar'] as UTSJSONObject)['closeOnClickOverlay'] },
+	readonly: { type: Boolean, default: (defProps['calendar'] as UTSJSONObject)['readonly'] },
+	showConfirm: { type: Boolean, default: (defProps['calendar'] as UTSJSONObject)['showConfirm'] },
+	maxRange: { type: [Number, String], default: (defProps['calendar'] as UTSJSONObject)['maxRange'] },
+	rangePrompt: { type: String, default: (defProps['calendar'] as UTSJSONObject)['rangePrompt'] },
+	showRangePrompt: { type: Boolean, default: (defProps['calendar'] as UTSJSONObject)['showRangePrompt'] },
+	allowSameDay: { type: Boolean, default: (defProps['calendar'] as UTSJSONObject)['allowSameDay'] },
+	rangeResultMode: { type: String, default: (defProps['calendar'] as UTSJSONObject)['rangeResultMode'] },
+	enableTime: { type: Boolean, default: (defProps['calendar'] as UTSJSONObject)['enableTime'] },
+	timePrecision: { type: String, default: (defProps['calendar'] as UTSJSONObject)['timePrecision'] },
+	defaultTime: { type: String, default: (defProps['calendar'] as UTSJSONObject)['defaultTime'] },
+	round: { type: [Boolean, String, Number], default: (defProps['calendar'] as UTSJSONObject)['round'] },
+	monthNum: { type: [Number, String], default: 3 },
+	monthSwitch: { type: Boolean, default: (defProps['calendar'] as UTSJSONObject)['monthSwitch'] },
+	showToday: { type: Boolean, default: (defProps['calendar'] as UTSJSONObject)['showToday'] },
+	todayColor: { type: String, default: (defProps['calendar'] as UTSJSONObject)['todayColor'] }
+})
+
+const emit = defineEmits(['confirm', 'close'])
+const month = ref<ComponentPublicInstance | null>(null)
+const start = ref(0)
+const inited = ref(false)
+const months = ref([] as monthsItem[])
+const monthIndex = ref(0)
+const listHeight = ref(0)
+const selected = ref([] as Array<string>)
+const scrollIntoView = ref('')
+const scrollIntoViewScroll = ref('')
+const scrollTop = ref(0)
+const timePickerShow = ref(false)
+const timePickerTarget = ref('single')
+const timePickerValue = ref([0, 0, 0] as Array<number>)
+const hourOptions = ref([] as Array<string>)
+const minuteOptions = ref([] as Array<string>)
+const secondOptions = ref([] as Array<string>)
+const singleTime = ref('00:00')
+const rangeStartTime = ref('00:00')
+const rangeEndTime = ref('00:00')
+const innerFormatter = ref((value: UPCalendarMonthsItemDate): UPCalendarMonthsItemDate => value)
+
+const addUnit = (e: any): string => addUnitFn(e)
+const innerMaxDate = computed((): string => testNumber(props.maxDate) ? (props.maxDate as number).toString() : props.maxDate.toString())
+const innerMinDate = computed((): string => testNumber(props.minDate) ? (props.minDate as number).toString() : props.minDate.toString())
+const todayDate = computed((): string => dayuts().format('YYYY-MM-DD'))
+const todayText = computed((): string => t('up.calendar.today'))
+const todayDisabled = computed((): boolean => {
+	const today = dayuts(todayDate.value)
+	if (innerMinDate.value != '' && innerMinDate.value != '0' && today.isBefore(dayuts(innerMinDate.value), 'day')) return true
+	if (innerMaxDate.value != '' && innerMaxDate.value != '0' && today.isAfter(dayuts(innerMaxDate.value), 'day')) return true
+	return false
+})
+const selectedChange = computed((): Array<string> => [innerMinDate.value, innerMaxDate.value])
+const subtitle = computed((): string => {
+	if (months.value.length > 0) {
+		const current = months.value[monthIndex.value]
+		return `${current['year']}年${current['month']}月`
+	}
+	return ''
+})
+const currentMonths = computed((): Array<monthsItem> => {
+	if (props.monthSwitch && months.value.length > 0) return [months.value[monthIndex.value] as monthsItem]
+	return months.value as Array<monthsItem>
+})
+const switchPrevDisabled = computed((): boolean => monthIndex.value <= 0)
+const switchNextDisabled = computed((): boolean => monthIndex.value >= months.value.length - 1)
+const switchPrevYearDisabled = computed((): boolean => monthIndex.value - 12 < 0)
+const switchNextYearDisabled = computed((): boolean => monthIndex.value + 12 > months.value.length - 1)
+const showTimePanel = computed((): boolean => {
+	if (!props.enableTime) return false
+	if (props.mode == 'single') return true
+	if (props.mode == 'range' && props.rangeResultMode == 'boundary') return true
+	return false
+})
+const singleDateLabel = computed((): string => selected.value.length > 0 ? selected.value[0] : '--')
+const rangeStartDateLabel = computed((): string => selected.value.length > 0 ? selected.value[0] : '--')
+const rangeEndDateLabel = computed((): string => selected.value.length > 1 ? selected.value[selected.value.length - 1] : '--')
+const buttonDisabled = computed((): boolean => props.mode === 'range' ? selected.value.length <= 1 : false)
+
+const padTime = (num: number): string => {
+	const str = num.toString()
+	return str.length < 2 ? ('0' + str) : str
+}
+function toInt(value: any, fallback: number = 0): number {
+	if (value == null) return fallback
+	const parsed = parseInt(value.toString())
+	return isNaN(parsed) ? fallback : parsed
+}
+const initTimeOptions = (): void => {
+	hourOptions.value = [] as Array<string>
+	minuteOptions.value = [] as Array<string>
+	secondOptions.value = [] as Array<string>
+	for (let i = 0; i < 24; i++) hourOptions.value.push(padTime(i))
+	for (let i = 0; i < 60; i++) {
+		minuteOptions.value.push(padTime(i))
+		secondOptions.value.push(padTime(i))
+	}
+}
+const parseTimeValue = (value: string): Array<number> => {
+	const raw = value == null ? '' : value.toString()
+	const parts = raw.length > 0 ? raw.split(':') : []
+	let hour = parts.length > 0 ? toInt(parts[0], 0) : 0
+	let minute = parts.length > 1 ? toInt(parts[1], 0) : 0
+	let second = parts.length > 2 ? toInt(parts[2], 0) : 0
+	hour = Math.max(0, Math.min(23, hour))
+	minute = Math.max(0, Math.min(59, minute))
+	second = Math.max(0, Math.min(59, second))
+	return [hour, minute, second]
+}
+const getDefaultTimeValue = (): string => {
+	const parsed = parseTimeValue(props.defaultTime as string)
+	const hour = parsed[0]
+	const minute = parsed[1]
+	const second = parsed[2]
+	if (props.timePrecision == 'hour') return padTime(hour)
+	if (props.timePrecision == 'second') return `${padTime(hour)}:${padTime(minute)}:${padTime(second)}`
+	return `${padTime(hour)}:${padTime(minute)}`
+}
+const initTimeValues = (): void => {
+	const value = getDefaultTimeValue()
+	singleTime.value = value
+	rangeStartTime.value = value
+	rangeEndTime.value = value
+}
+const timeToPickerValue = (value: string): Array<number> => parseTimeValue(value)
+const pickerValueToTime = (value: Array<number>): string => {
+	const hour = value.length > 0 ? toInt(value[0], 0) : 0
+	const minute = value.length > 1 ? toInt(value[1], 0) : 0
+	const second = value.length > 2 ? toInt(value[2], 0) : 0
+	if (props.timePrecision == 'hour') return padTime(hour)
+	if (props.timePrecision == 'second') return `${padTime(hour)}:${padTime(minute)}:${padTime(second)}`
+	return `${padTime(hour)}:${padTime(minute)}`
+}
+const openTimePicker = (target: string): void => {
+	timePickerTarget.value = target
+	let currentValue = ''
+	if (target == 'single') currentValue = singleTime.value
+	if (target == 'start') currentValue = rangeStartTime.value
+	if (target == 'end') currentValue = rangeEndTime.value
+	timePickerValue.value = timeToPickerValue(currentValue.length > 0 ? currentValue : getDefaultTimeValue())
+	timePickerShow.value = true
+}
+const onTimePickerChange = (event: UniPickerViewChangeEvent): void => {
+	timePickerValue.value = event.detail.value as Array<number>
+}
+const closeTimePicker = (): void => {
+	timePickerShow.value = false
+}
+const confirmTimePicker = (): void => {
+	const value = pickerValueToTime(timePickerValue.value as Array<number>)
+	if (timePickerTarget.value == 'single') singleTime.value = value
+	if (timePickerTarget.value == 'start') rangeStartTime.value = value
+	if (timePickerTarget.value == 'end') rangeEndTime.value = value
+	timePickerShow.value = false
+}
+const timeToSecond = (value: string): number => {
+	const parsed = parseTimeValue(value)
+	return parsed[0] * 3600 + parsed[1] * 60 + parsed[2]
+}
+const validateSameDayRangeTime = (): boolean => {
+	if (!props.enableTime || props.mode != 'range' || props.rangeResultMode != 'boundary') return true
+	if (selected.value.length < 2) return true
+	const startDate = selected.value[0] as string
+	const endDate = selected.value[selected.value.length - 1] as string
+	if (startDate != endDate) return true
+	if (timeToSecond(rangeEndTime.value as string) < timeToSecond(rangeStartTime.value as string)) {
+		uni.showToast({ title: '结束时间不能早于开始时间', icon: 'none' })
+		return false
+	}
+	return true
+}
+const appendTime = (dateText: string, timeText: string): string => `${dateText} ${timeText}`
+function getConfirmValue(selectedValue: Array<string>): Array<string> {
+	let result = selectedValue
+	if (props.mode == 'range' && props.rangeResultMode == 'boundary' && selectedValue.length >= 2) {
+		result = [selectedValue[0], selectedValue[selectedValue.length - 1]]
+	}
+	if (!showTimePanel.value || !props.enableTime) return result
+	if (props.mode == 'single' && result.length >= 1) return [appendTime(result[0], singleTime.value as string)]
+	if (props.mode == 'range' && props.rangeResultMode == 'boundary' && result.length >= 2) {
+		return [appendTime(result[0], rangeStartTime.value as string), appendTime(result[1], rangeEndTime.value as string)]
+	}
+	return result
+}
+const setFormatter = (e: object): void => {
+	innerFormatter.value = e as ((val: UPCalendarMonthsItemDate) => UPCalendarMonthsItemDate)
+}
+const monthSelectedM = (e: Array<string>, scene: string): void => {
+	selected.value = e
+	if (!props.showConfirm) {
+		if (props.mode === 'multiple' || props.mode === 'single' || (props.mode === 'range' && selected.value.length >= 2)) {
+			if (scene === 'init') return
+			if (scene === 'tap') {
+				if (!validateSameDayRangeTime()) return
+				emit('confirm', getConfirmValue(selected.value as Array<string>))
 			}
-			let selected = dayuts().format("YYYY-MM");
-			// 单选模式，可以是字符串或数组，Date对象等
-			// @ts-ignore
-			if (!testArray(this.defaultDate)) {
-				// @ts-ignore
-				selected = dayuts(this.defaultDate).format("YYYY-MM")
-			} else {
-				// @ts-ignore
-				selected = dayuts((this.defaultDate as Array<any>)[0]).format("YYYY-MM");
-			}
-			this.scrollIntoDefaultMonth(selected)
 		}
 	}
 }
+const close = (): void => {
+	emit('close')
+}
+const confirm = (): void => {
+	if (!buttonDisabled.value) {
+		if (!validateSameDayRangeTime()) return
+		emit('confirm', getConfirmValue(selected.value as Array<string>))
+	}
+}
+function getMonths(minDate: any, maxDate: any): number {
+	const minYear = dayuts(minDate).year()
+	const minMonth = dayuts(minDate).month() + 1
+	const maxYear = dayuts(maxDate).year()
+	const maxMonth = dayuts(maxDate).month() + 1
+	return (maxYear - minYear) * 12 + (maxMonth - minMonth) + 1
+}
+
+function getDefaultMonthIndex(): number {
+	let selectedMonth = dayuts().format('YYYY-MM')
+	if (props.defaultDate != null) {
+		if (!testArray(props.defaultDate)) {
+			selectedMonth = dayuts(props.defaultDate).format('YYYY-MM')
+		} else if ((props.defaultDate as Array<any>).length > 0) {
+			selectedMonth = dayuts((props.defaultDate as Array<any>)[0]).format('YYYY-MM')
+		}
+	}
+	const index = months.value.findIndex(({ year, month }): boolean => {
+		month = padZero(month)
+		return `${year}-${month}` === selectedMonth
+	})
+	return index == -1 ? 0 : index
+}
+
+function setMonth(): void {
+	const minDate = (innerMinDate.value != '' && innerMinDate.value != '0') ? innerMinDate.value : dayuts().valueOf()
+	const maxDate = (innerMaxDate.value != '' && innerMaxDate.value != '0') ? innerMaxDate.value : dayuts(minDate).add((props.monthNum as number) - 1, 'month').valueOf()
+	const monthCount = range(1, props.monthNum as number, getMonths(minDate, maxDate))
+	months.value = [] as monthsItem[]
+	const minDateStr = dayuts(minDate).format('YYYY-MM-DD')
+	const maxDateStr = dayuts(maxDate).format('YYYY-MM-DD')
+	for (let i = 0; i < monthCount; i++) {
+		const monthBase = dayuts(minDate).add(i, 'month')
+		const daysInMonth = monthBase.daysInMonth()
+		const monthValue = monthBase.month() + 1
+		const yearValue = monthBase.year()
+		const cdate = [] as Array<UPCalendarMonthsItemDate>
+		for (let day = 1; day <= daysInMonth; day++) {
+			const dayBase = monthBase.date(day)
+			const date = dayBase.format('YYYY-MM-DD')
+			cdate.push({
+				day: day.toString(),
+				week: dayBase.day(),
+				disabled: date < minDateStr || date > maxDateStr,
+				date: new Date(date),
+				dateStr: date,
+				bottomInfo: '',
+				dot: false,
+				month: monthValue
+			} as UPCalendarMonthsItemDate)
+		}
+		months.value.push({
+			top: 0,
+			date: cdate,
+			month: monthValue.toString(),
+			year: yearValue.toString()
+		} as monthsItem)
+	}
+	if (props.monthSwitch) {
+		monthIndex.value = getDefaultMonthIndex()
+	}
+}
+
+function init(): void {
+	if (innerMaxDate.value != '0' && innerMaxDate.value != '' && innerMinDate.value != '0' && innerMinDate.value != '' && new Date(innerMaxDate.value).getTime() < new Date(innerMinDate.value).getTime()) {
+		console.log(innerMaxDate.value)
+		error('maxDate不能小于minDate时间')
+		return
+	}
+	listHeight.value = (props.rowHeight as number) * (props.monthSwitch ? 6 : 5) + 30
+	initTimeOptions()
+	initTimeValues()
+	setMonth()
+	inited.value = true
+}
+const prevMonth = (): void => {
+	if (!switchPrevDisabled.value) monthIndex.value -= 1
+}
+const nextMonth = (): void => {
+	if (!switchNextDisabled.value) monthIndex.value += 1
+}
+const prevYear = (): void => {
+	if (!switchPrevYearDisabled.value) monthIndex.value -= 12
+}
+const nextYear = (): void => {
+	if (!switchNextYearDisabled.value) monthIndex.value += 12
+}
+
+function scrollIntoDefaultMonth(selectedMonth: string): void {
+	const index = months.value.findIndex(({ year, month }): boolean => {
+		month = padZero(month)
+		return `${year}-${month}` === selectedMonth
+	})
+	if (index != -1) {
+		// #ifndef MP-WEIXIN
+		nextTick(() => {
+			scrollIntoView.value = ''
+			scrollIntoView.value = `month-${index}`
+			scrollIntoViewScroll.value = scrollIntoView.value
+		})
+		// #endif
+		// #ifdef MP-WEIXIN
+		scrollTop.value = months.value[index].top || 0
+		// #endif
+	}
+}
+
+const jumpToToday = (): void => {
+	if (todayDisabled.value) return
+	const targetMonth = dayuts(todayDate.value).format('YYYY-MM')
+	const selectToday = (): void => {
+		if (props.mode == 'range') return
+		month.value?.$callMethod('selectDate', todayDate.value)
+	}
+	if (props.monthSwitch) {
+		const todayMonthIndex = months.value.findIndex(({ year, month }): boolean => {
+			month = padZero(month)
+			return `${year}-${month}` == targetMonth
+		})
+		if (todayMonthIndex != -1) {
+			monthIndex.value = todayMonthIndex
+			nextTick(selectToday)
+		}
+		return
+	}
+	scrollIntoDefaultMonth(targetMonth)
+	nextTick(selectToday)
+}
+const onScroll = (event: UniScrollEvent): void => {
+	const currentScrollTop = Math.max(0, event.detail.scrollTop)
+	for (let i = 0; i < months.value.length; i++) {
+		if (currentScrollTop >= (months.value[i].top > 0 ? months.value[i].top : listHeight.value)) {
+			monthIndex.value = i
+			scrollIntoViewScroll.value = `month-${i}`
+		}
+	}
+}
+function updateMonthTopM(topArr: Array<number>): void {
+	topArr.map((item: number, index: number) => {
+		months.value[index]['top'] = item
+	})
+	if (props.defaultDate == null) {
+		scrollIntoDefaultMonth(dayuts().format("YYYY-MM"))
+		return
+	}
+	let selectedMonth = dayuts().format("YYYY-MM")
+	if (!testArray(props.defaultDate)) {
+		selectedMonth = dayuts(props.defaultDate).format("YYYY-MM")
+	} else {
+		selectedMonth = dayuts((props.defaultDate as Array<any>)[0]).format("YYYY-MM")
+	}
+	scrollIntoDefaultMonth(selectedMonth)
+}
+const onUpdateMonthTopM = (topArr: Array<number>): void => {
+	if (props.monthSwitch) return
+	updateMonthTopM(topArr)
+}
+
+watch((): string => watchValueSignature(props.defaultDate), () => {
+	if (inited.value) setMonth()
+})
+watch(selectedChange, () => {
+	if (inited.value) setMonth()
+})
+watch((): string => props.timePrecision, () => {
+	initTimeOptions()
+	initTimeValues()
+})
+watch((): string => props.defaultTime, () => {
+	initTimeValues()
+})
+watch((): boolean => props.show, (nval: boolean) => {
+	if (nval) {
+		if (!inited.value) init()
+		else if ((months.value as Array<monthsItem>).length == 0) setMonth()
+	} else {
+		scrollIntoView.value = ''
+	}
+}, { immediate: true })
+
+onMounted(() => {
+	start.value = Date.now()
+})
+
+defineExpose({
+	month,
+	start,
+	inited,
+	months,
+	monthIndex,
+	listHeight,
+	selected,
+	scrollIntoView,
+	scrollIntoViewScroll,
+	scrollTop,
+	timePickerShow,
+	timePickerTarget,
+	timePickerValue,
+	hourOptions,
+	minuteOptions,
+	secondOptions,
+	singleTime,
+	rangeStartTime,
+	rangeEndTime,
+	innerFormatter,
+	addUnit,
+	innerMaxDate,
+	innerMinDate,
+	todayDate,
+	todayText,
+	todayDisabled,
+	selectedChange,
+	subtitle,
+	currentMonths,
+	switchPrevDisabled,
+	switchNextDisabled,
+	switchPrevYearDisabled,
+	switchNextYearDisabled,
+	showTimePanel,
+	singleDateLabel,
+	rangeStartDateLabel,
+	rangeEndDateLabel,
+	buttonDisabled,
+	padTime,
+	toInt,
+	initTimeOptions,
+	parseTimeValue,
+	getDefaultTimeValue,
+	initTimeValues,
+	timeToPickerValue,
+	pickerValueToTime,
+	openTimePicker,
+	onTimePickerChange,
+	closeTimePicker,
+	confirmTimePicker,
+	timeToSecond,
+	validateSameDayRangeTime,
+	appendTime,
+	getConfirmValue,
+	setFormatter,
+	monthSelectedM,
+	init,
+	close,
+	confirm,
+	getMonths,
+	setMonth,
+	getDefaultMonthIndex,
+	prevMonth,
+	nextMonth,
+	prevYear,
+	nextYear,
+	jumpToToday,
+	scrollIntoDefaultMonth,
+	onScroll,
+	onUpdateMonthTopM,
+	updateMonthTopM
+})
 </script>
 
 <style lang="scss" scoped>

@@ -17,34 +17,23 @@
 	</view>
 </template>
 
-<script>
-import citySelect from './u-city-select.uvue';
-export default {
-	components: {
-		citySelect
-	},
-	data() {
-		return {
-			height: 30,
-			bgColor: '#f3f4f6',
-			marginTop: 30,
-			marginBottom: 30,
-			value: false,
-			input: '',
-		};
-	},
-	methods: {
-		getInputText(): string {
-			return this.input != '' ? this.input : 'Picker值';
-		},
-		cityChange(e: UTSJSONObject) {
-			const province = e['province'] as UTSJSONObject;
-			const city = e['city'] as UTSJSONObject;
-			const area = e['area'] as UTSJSONObject;
-			this.input = province['label'].toString() + '-' + city['label'].toString() + '-' + area['label'].toString();
-		}
-	}
-};
+<script setup lang="uts">
+import { ref } from 'vue'
+import CitySelect from './u-city-select.uvue'
+
+const value = ref(false)
+const input = ref('')
+
+function getInputText(): string {
+	return input.value != '' ? input.value : 'Picker值'
+}
+
+function cityChange(e: UTSJSONObject) {
+	const province = e['province'] as UTSJSONObject
+	const city = e['city'] as UTSJSONObject
+	const area = e['area'] as UTSJSONObject
+	input.value = province['label'].toString() + '-' + city['label'].toString() + '-' + area['label'].toString()
+}
 </script>
 
 <style scoped>

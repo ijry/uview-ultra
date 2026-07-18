@@ -1,7 +1,7 @@
 <template>
 	<view
 		class="up-loading-icon"
-		:style="[addStyle(customStyle)]"
+		:style="rootStyle"
 		:class="[vertical ? 'up-loading-icon--vertical' : '']"
 		v-if="show"
 	>
@@ -10,17 +10,7 @@
 			class="up-loading-icon__spinner"
 			:class="[`up-loading-icon__spinner--${mode}`]"
 			ref="ani"
-			:style="{
-				transform: transform,
-				width: addUnit(size),
-				height: addUnit(size),
-				borderTopColor: color,
-				borderBottomColor: otherBorderColor,
-				borderLeftColor: otherBorderColor,
-				borderRightColor: otherBorderColor
-				// 'animation-duration': `${duration}ms`,
-				// 'animation-timing-function': (mode === 'semicircle' || mode === 'circle') ? timingFunction : ''
-			}"
+			:style="spinnerWrapStyle"
 		>
 			<template v-if="mode === 'spinner'">
 				<view
@@ -35,20 +25,16 @@
 		<text
 			v-if="text != ''"
 			class="up-loading-icon__text"
-			:style="{
-				fontSize: addUnit(textSize),
-				color: textColor,
-			}"
+			:style="textStyle"
 		>{{text}}</text>
 	</view>
 </template>
 
-<script>
-	import { propsLoadicon } from './props';
-	import { mpMixin } from '../../libs/mixin/mpMixin';
-	import { mixin } from '../../libs/mixin/mixin';
-	import { addUnit, addStyle, getPx } from '../../libs/function/index';
-	import { colorGradient } from '../../libs/function/colorGradient';
+<script setup lang="uts">
+	import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+	import defProps from './loadingIcon.uts'
+	import { addUnit, addStyle, getPx } from '../../libs/function/index.uts';
+	import { colorGradient } from '../../libs/function/colorGradient.uts';
 	/**
 	 * loading 加载动画
 	 * @author jry ijry@qq.com 2024
@@ -68,123 +54,227 @@
 	 * @property {Object}			customStyle		定义需要用到的外部样式
 	 * @example <up-loading mode="circle"></up-loading>
 	 */
-	export default {
-		name: 'up-loading-icon',
-		mixins: [mpMixin, mixin, propsLoadicon],
-		data() {
-			return {
-				array12: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-				// 这里需要设置默认值为360，否则在安卓nvue上，会延迟一个duration周期后才执行
-				// 在iOS nvue上，则会一开始默认执行两个周期的动画
-				aniAngel: 360, // 动画旋转角度
-				webviewHide: false, // 监听webview的状态，如果隐藏了页面，则停止动画，以免性能消耗
-				loading: false, // 是否运行中，针对nvue使用
-				degree: 0, // js方案旋转角度因为uni-app-x不支持keyframes
-				transform: '', // js方案旋转
-				spinnerStyle: [
-					{left: 0, top: 0},{left: 0, top: 0},{left: 0, top: 0},{left: 0, top: 0},
-					{left: 0, top: 0},{left: 0, top: 0},{left: 0, top: 0},{left: 0, top: 0},
-					{left: 0, top: 0},{left: 0, top: 0},{left: 0, top: 0},{left: 0, top: 0}
-				] as UTSJSONObject[],
-				animationFrame: 0
-			}
+	defineOptions({
+		name: 'up-loading-icon'
+	})
+
+	const props = defineProps({
+		// 是否显示组件
+		show: {
+			type: Boolean,
+			default: defProps.getBoolean('loadingIcon.show')
 		},
-		computed: {
-			// 当为circle类型时，给其另外三边设置一个更轻一些的颜色
-			// 之所以需要这么做的原因是，比如父组件传了color为红色，那么需要另外的三个边为浅红色
-			// 而不能是固定的某一个其他颜色(因为这个固定的颜色可能浅蓝，导致效果没有那么细腻良好)
-			otherBorderColor(): string {
-				const lightColor = colorGradient(this.color, '#ffffff', 100)[80]
-				if (this.mode === 'circle') {
-					return this.inactiveColor != '' ? this.inactiveColor : lightColor
-				} else {
-					return 'transparent'
-				}
-				// return this.mode === 'circle' ? this.inactiveColor ? this.inactiveColor : lightColor : 'transparent'
-			}
+		// 颜色
+		color: {
+			type: String,
+			default: defProps.getString('loadingIcon.color')
 		},
-		watch: {
-			show(nVal: boolean) {
-				if (nVal) {
-					this.startRotate()
-				} else {
-					this.stopRotate()
-				}
-			}
+		// 提示文字颜色
+		textColor: {
+			type: String,
+			default: defProps.getString('loadingIcon.textColor')
 		},
-		mounted() {
-			this.init()
+		// 文字和图标是否垂直排列
+		vertical: {
+			type: Boolean,
+			default: defProps.getBoolean('loadingIcon.vertical')
 		},
-		beforeUnmount() {
-			this.stopRotate()
+		// 模式选择，circle-圆形，spinner-花朵形，semicircle-半圆形
+		mode: {
+			type: String,
+			default: defProps.getString('loadingIcon.mode')
 		},
-		methods: {
-			addStyle(val: any): any {
-				return addStyle(val)
-			},
-			addUnit(val: any): string {
-				return addUnit(val)
-			},
-			getSpinnerDotStyle(index: number): UTSJSONObject {
-				const style = {} as UTSJSONObject
-				style['backgroundColor'] = this.color
-				style['transform'] = `rotate(${((index + 1) * 30).toString()}deg)`
-				style['opacity'] = 1 - 0.0625 * index
-				return style
-			},
-			rotateLoader(): void {
-				this.degree = (this.degree + this.getRotateStep()) % 360
-				this.transform = `rotate(${this.degree.toString()}deg)`
-			},
-			init(): void {
-				this.calcSpinnerTopAndLeft()
-				this.startRotate()
-			},
-			getRotateDuration(): number {
-				const durationValue = this.$props['duration']
-				const durationNumber = parseInt(durationValue.toString())
-				return durationNumber > 0 ? durationNumber : 1200
-			},
-			getRotateStep(): number {
-				return 360 * 16 / this.getRotateDuration()
-			},
-			startRotate(): void {
-				if (!this.show || this.animationFrame > 0) {
-					return
-				}
-				this.animationFrame = setInterval(() => {
-					this.rotateLoader()
-				}, 16)
-			},
-			stopRotate(): void {
-				if (this.animationFrame > 0) {
-					clearInterval(this.animationFrame)
-					this.animationFrame = 0
-				}
-			},
-			calculateSquareRadius(sideLength: number): number {  
-				// 计算正方形的对角线长度  
-				const diagonalLength = Math.sqrt(sideLength * sideLength + sideLength * sideLength);  
-				// 对角线长度的一半即为等效圆的半径  
-				const radius = diagonalLength / 2;  
-				return radius;  
-			},
-			// 因为uni-app-x不支持:before所以实现Spinner得用JS计算坐标
-			calcSpinnerTopAndLeft(){
-				this.array12.forEach((ele: number, index: number) => {
-					const angle = index * (360 / 12); // 计算角度  
-					const angleRad = angle * (Math.PI / 180); // 转换为弧度  
-					const banjing = this.calculateSquareRadius(parseInt(getPx(parseInt(this.$props['size'].toString()) * 2)));  // 半径
-					const xOffset = banjing * Math.cos(angleRad);
-					const yOffset = banjing * Math.sin(angleRad);  
-					// 假设.loading-container的position是relative，并且宽度和高度都是100% 
-					this.spinnerStyle[index]['left'] = `${Math.round(45 + xOffset).toString()}%`; 
-					this.spinnerStyle[index]['top'] = `${Math.round(34 + yOffset).toString()}%`;  
-					// 注意：这里可能需要调整50%的偏移量
-				})
-			},
+		// 图标大小，单位默认px
+		size: {
+			type: [String, Number],
+			default: defProps.getAny('loadingIcon.size')
+		},
+		// 文字大小
+		textSize: {
+			type: [String, Number],
+			default: defProps.getAny('loadingIcon.textSize')
+		},
+		// 文字内容
+		text: {
+			type: [String, Number],
+			default: defProps.getAny('loadingIcon.text')
+		},
+		// 动画模式
+		timingFunction: {
+			type: String,
+			default: defProps.getString('loadingIcon.timingFunction')
+		},
+		// 动画执行周期时间
+		duration: {
+			type: [String, Number],
+			default: defProps.getAny('loadingIcon.duration')
+		},
+		// mode=circle时的暗边颜色
+		inactiveColor: {
+			type: String,
+			default: defProps.getString('loadingIcon.inactiveColor')
+		},
+		customStyle: {
+			type: [Object, String],
+			default: () => ({})
+		}
+	})
+
+	const array12 = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] as number[]
+	// 这里需要设置默认值为360，否则在安卓nvue上，会延迟一个duration周期后才执行
+	// 在iOS nvue上，则会一开始默认执行两个周期的动画
+	const aniAngel = ref(360) // 动画旋转角度
+	const webviewHide = ref(false) // 监听webview的状态，如果隐藏了页面，则停止动画，以免性能消耗
+	const loading = ref(false) // 是否运行中，针对nvue使用
+	const degree = ref(0) // js方案旋转角度因为uni-app-x不支持keyframes
+	const transform = ref('') // js方案旋转
+	const spinnerStyle = ref<UTSJSONObject[]>([
+		{left: 0, top: 0},{left: 0, top: 0},{left: 0, top: 0},{left: 0, top: 0},
+		{left: 0, top: 0},{left: 0, top: 0},{left: 0, top: 0},{left: 0, top: 0},
+		{left: 0, top: 0},{left: 0, top: 0},{left: 0, top: 0},{left: 0, top: 0}
+	] as UTSJSONObject[])
+	const animationFrame = ref(0)
+
+	const rootStyle = computed((): UTSJSONObject => {
+		return addStyle(props.customStyle) as UTSJSONObject
+	})
+
+	const spinnerWrapStyle = computed((): UTSJSONObject => {
+		const lightColor = colorGradient(props.color, '#ffffff', 100)[80]
+		const borderColor = props.mode === 'circle' ? (props.inactiveColor != '' ? props.inactiveColor : lightColor) : 'transparent'
+		const style = {} as UTSJSONObject
+		style['transform'] = transform.value
+		style['width'] = addUnit(props.size)
+		style['height'] = addUnit(props.size)
+		style['borderTopColor'] = props.color
+		style['borderBottomColor'] = borderColor
+		style['borderLeftColor'] = borderColor
+		style['borderRightColor'] = borderColor
+		return style
+	})
+
+	const textStyle = computed((): UTSJSONObject => {
+		const style = {} as UTSJSONObject
+		style['fontSize'] = addUnit(props.textSize)
+		style['color'] = props.textColor
+		return style
+	})
+
+	// 当为circle类型时，给其另外三边设置一个更轻一些的颜色
+	// 之所以需要这么做的原因是，比如父组件传了color为红色，那么需要另外的三个边为浅红色
+	// 而不能是固定的某一个其他颜色(因为这个固定的颜色可能浅蓝，导致效果没有那么细腻良好)
+	const otherBorderColor = computed((): string => {
+		const lightColor = colorGradient(props.color, '#ffffff', 100)[80]
+		if (props.mode === 'circle') {
+			return props.inactiveColor != '' ? props.inactiveColor : lightColor
+		} else {
+			return 'transparent'
+		}
+		// return props.mode === 'circle' ? props.inactiveColor ? props.inactiveColor : lightColor : 'transparent'
+	})
+
+	const getSpinnerDotStyle = (index: number): UTSJSONObject => {
+		const style = {} as UTSJSONObject
+		style['backgroundColor'] = props.color
+		style['transform'] = `rotate(${((index + 1) * 30).toString()}deg)`
+		style['opacity'] = 1 - 0.0625 * index
+		return style
+	}
+
+	const getRotateDuration = (): number => {
+		const durationValue = props.duration
+		const durationNumber = parseInt(durationValue.toString())
+		return durationNumber > 0 ? durationNumber : 1200
+	}
+
+	const getRotateStep = (): number => {
+		return 360 * 16 / getRotateDuration()
+	}
+
+	const rotateLoader = (): void => {
+		degree.value = (degree.value + getRotateStep()) % 360
+		transform.value = `rotate(${degree.value.toString()}deg)`
+	}
+
+	const startRotate = (): void => {
+		if (!props.show || animationFrame.value > 0) {
+			return
+		}
+		animationFrame.value = setInterval(() => {
+			rotateLoader()
+		}, 16)
+	}
+
+	const stopRotate = (): void => {
+		if (animationFrame.value > 0) {
+			clearInterval(animationFrame.value)
+			animationFrame.value = 0
 		}
 	}
+
+	const calculateSquareRadius = (sideLength: number): number => {
+		// 计算正方形的对角线长度
+		const diagonalLength = Math.sqrt(sideLength * sideLength + sideLength * sideLength);
+		// 对角线长度的一半即为等效圆的半径
+		const radius = diagonalLength / 2;
+		return radius;
+	}
+
+	// 因为uni-app-x不支持:before所以实现Spinner得用JS计算坐标
+	const calcSpinnerTopAndLeft = (): void => {
+		array12.forEach((ele: number, index: number) => {
+			const angle = index * (360 / 12); // 计算角度
+			const angleRad = angle * (Math.PI / 180); // 转换为弧度
+			const banjing = calculateSquareRadius(parseInt(getPx(parseInt(props.size.toString()) * 2)));  // 半径
+			const xOffset = banjing * Math.cos(angleRad);
+			const yOffset = banjing * Math.sin(angleRad);
+			// 假设.loading-container的position是relative，并且宽度和高度都是100%
+			spinnerStyle.value[index]['left'] = `${Math.round(45 + xOffset).toString()}%`;
+			spinnerStyle.value[index]['top'] = `${Math.round(34 + yOffset).toString()}%`;
+			// 注意：这里可能需要调整50%的偏移量
+		})
+	}
+
+	const init = (): void => {
+		calcSpinnerTopAndLeft()
+		startRotate()
+	}
+
+	watch((): boolean => props.show, (nVal: boolean) => {
+		if (nVal) {
+			startRotate()
+		} else {
+			stopRotate()
+		}
+	})
+
+	onMounted(() => {
+		init()
+	})
+
+	onBeforeUnmount(() => {
+		stopRotate()
+	})
+
+	defineExpose({
+		array12,
+		aniAngel,
+		webviewHide,
+		loading,
+		degree,
+		transform,
+		spinnerStyle,
+		animationFrame,
+		getSpinnerDotStyle,
+		rotateLoader,
+		init,
+		getRotateDuration,
+		getRotateStep,
+		startRotate,
+		stopRotate,
+		calculateSquareRadius,
+		calcSpinnerTopAndLeft
+	})
 </script>
 
 <style lang="scss" scoped>

@@ -20,15 +20,11 @@
   </view>
 </template>
 
-<script>
-export default {
-  data() {
-    return {
-      show: false,
-      pdfFileUrl: 'https://uview-plus.jiangruyi.com/big/plus.pdf'
-    };
-  }
-};
+<script setup lang="uts">
+import { ref } from 'vue'
+
+const show = ref(false)
+const pdfFileUrl = 'https://uview-plus.jiangruyi.com/big/plus.pdf'
 </script>
 
 <style lang="scss" scoped>

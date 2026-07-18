@@ -31,33 +31,27 @@
 	</view>
 </template>
 
-<script>
-export default {
-	data() {
-		return {
-			tel: ''
-		}
-	},
-	computed: {
-		inputStyle(): UTSJSONObject {
-			let style = {} as UTSJSONObject;
-			if(this.tel.length > 0) {
-				style['color'] = "#fff";
-				style['backgroundColor'] = "#f9ae3d";
-			}
-			return style;
-		}
-	},
-	methods: {
-		submit() {
-			if(this.tel.length == 11) {
-				uni.navigateTo({
-					url: '/pages/template/login/code'
-				})
-			}
-		}
+<script setup lang="uts">
+import { computed, ref } from 'vue'
+
+const tel = ref('')
+
+const inputStyle = computed((): UTSJSONObject => {
+	let style = {} as UTSJSONObject
+	if (tel.value.length > 0) {
+		style['color'] = "#fff"
+		style['backgroundColor'] = "#f9ae3d"
 	}
-};
+	return style
+})
+
+function submit() {
+	if (tel.value.length == 11) {
+		uni.navigateTo({
+			url: '/pages/template/login/code'
+		})
+	}
+}
 </script>
 
 <style lang="scss" scoped>

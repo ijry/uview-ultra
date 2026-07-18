@@ -47,12 +47,12 @@
 				<text v-if="isRange && showValue"
 					class="up-slider__show-range-value"
 					:style="{left: (parseFloat(getPx(barStyle0.width)) + parseFloat(getPx(blockSize))/2) + 'px'}">
-					{{ this.rangeValue[0] ?? '' }}
+					{{ rangeValue[0] ?? '' }}
 				</text>
 				<text v-if="isRange && showValue"
 					class="up-slider__show-range-value"
 					:style="{left: (parseFloat(getPx(barStyle.width)) + parseFloat(getPx(blockSize))/2) + 'px'}">
-					{{ this.rangeValue[1] ?? '' }}
+					{{ rangeValue[1] ?? '' }}
 				</text>
 				<template v-if="isRange">
 					<view class="up-slider__button-wrap up-slider__button-wrap-0" @touchstart="onTouchStart($event, 0)"
@@ -100,11 +100,10 @@
 	</view>
 </template>
 
-<script>
-	import { propsSlider } from './props';
-	import { mpMixin } from '../../libs/mixin/mpMixin';
-	import { mixin } from '../../libs/mixin/mixin';
-	import { addStyle, getPx, sleep } from '../../libs/function/index'
+<script setup lang="uts">
+	import { computed, getCurrentInstance, onMounted, ref, watch } from 'vue'
+	import defProps from './slider.uts'
+	import { addStyle as addStyleFn, getPx as getPxFn, upGetRect } from '../../libs/function/index.uts'
 	/**
 	 * slider 滑块选择器
 	 * @tutorial https://uview-plus.jiangruyi.com/components/slider.html
@@ -131,339 +130,403 @@
 		left: number,
 		width : number
 	}
-	export default {
-		name: 'up-slider',
-		mixins: [mpMixin, mixin, propsSlider],
-		emits: ["start", "changing", "change", "update:modelValue"],
-		data() {
-			return {
-				startX: 0,
-				status: 'end',
-				newValue: 0,
-				distanceX: 0,
-				startValue0: 0,
-				startValue: 0,
-				barStyle0: {
-					width: '0px'
-				} as barStyleType,
-				barStyle: {
-					width: '0px',
-					transition: ''
-				} as barStyleType,
-				sliderRect: {
-					left: 0,
-					width: 0
-				} as sliderRectType
-			};
-		},
-		watch: {
-			// #ifdef VUE3
-			modelValue(n: number) {
-				// 只有在非滑动状态时，才可以通过value更新滑块值，这里监听，是为了让用户触发
-				if (this.status == 'end') {
-					const $crtFmtValue = this.updateValue(this.modelValue, false);
-					this.$emit('change', $crtFmtValue);
-				}
-			},
-			// #endif
-			// #ifdef VUE2
-			value(n) {
-				// 只有在非滑动状态时，才可以通过value更新滑块值，这里监听，是为了让用户触发
-				if (this.status == 'end') {
-					const $crtFmtValue = this.updateValue(this.value, false);
-					this.$emit('change', $crtFmtValue);
-				}
-			},
-			// #endif
-			rangeValue:{
-            	handler(n: Array<number>){
-					if (this.status == 'end') {
-						this.updateValue(n[0], false, 0);
-						this.updateValue(n[1], false, 1);
-						this.$emit('change', n);
-					}
-            	},
-            	deep:true
-        	}
-		},
-		created() {
-		},
-		computed: {
-			innerStyleCpu() {
-				let style: UTSJSONObject = this.innerStyle;
+	defineOptions({
+		name: 'up-slider'
+	})
 
-				style['height'] = (this.isRange && this.showValue)
-					? (parseFloat(getPx(this.blockSize)) + 24).toString() + 'px'
-					: (getPx(this.blockSize)) + 'px';
-				return style;
-			}
+	const props = defineProps({
+		// 最小可选值
+		min: {
+			type: [Number, String],
+			default: (defProps['slider'] as UTSJSONObject)['min']
 		},
-		mounted() {
-			// 获取滑块条的尺寸信息
-			if (!this.useNative) {
-				// @ts-ignore
-				this.upGetRect('.up-slider__base').then((rect: NodeInfo) => {
-					this.sliderRect.width = rect.width ?? 0;
-					this.sliderRect.left = rect.left ?? 0;
-					// console.log('sliderRect', this.sliderRect)
-					if (this.sliderRect.width == 0) {
-						console.info('如在弹窗等元素中使用，请使用v-if来显示滑块，否则无法计算长度。')
-					}
-					this.init()
-				});
-			}
+		// 最大可选值
+		max: {
+			type: [Number, String],
+			default: (defProps['slider'] as UTSJSONObject)['max']
 		},
-		methods: {
-			addStyle(e: any) {
-				return addStyle(e)
-			},
-			getPx(e: any, s: boolean = false): string {
-				return getPx(e, s)
-			},
-			init() {
-				if (this.isRange) {
-					// @ts-ignore
-					this.updateValue(parseFloat(this.rangeValue[0].toString()), false, 0);
-					// @ts-ignore
-					this.updateValue(parseFloat(this.rangeValue[1].toString()), false, 1);
-				} else {
-					// #ifdef VUE3
-					this.updateValue(this.modelValue, false);
-					// #endif
-					// #ifdef VUE2
-					this.updateValue(this.value, false);
-					// #endif
-				}
-			},
-			// native拖动过程中触发
-			changingHandler(e: UniSliderChangeEvent) {
-				const {
-					value
-				} = e.detail
-				// 更新v-model的值
-				// #ifdef VUE3
-                this.$emit("update:modelValue", value);
-                // #endif
-                // #ifdef VUE2
-                this.$emit("input", value);
-                // #endif
-				// 触发事件
-				this.$emit('changing', value)
-			},
-			// native滑动结束时触发
-			changeHandler(e: UniSliderChangeEvent) {
-				const {
-					value
-				} = e.detail
-				// 更新v-model的值
-				// #ifdef VUE3
-                this.$emit("update:modelValue", value);
-                // #endif
-                // #ifdef VUE2
-                this.$emit("input", value);
-                // #endif
-				// 触发事件
-				this.$emit('change', value);
-			},
-			onTouchStart(e: any, index = 1) {
-				let event = e as UniTouchEvent
-				if (this.disabled) return;
-				this.startX = 0;
-				// 触摸点集
-				let touches = event.touches[0];
-				// 触摸点到屏幕左边的距离
-				this.startX = touches.clientX;
-				// 此处的this.modelValue虽为props值，但是通过$emit('update:modelValue')进行了修改
-				if (this.isRange) {
-					// @ts-ignore
-					this.startValue0 = this.format(parseFloat(this.rangeValue[0].toString()), 0);
-					// @ts-ignore
-					this.startValue = this.format(parseFloat(this.rangeValue[1].toString()), 1);
-				} else {
-					// #ifdef VUE3
-					this.startValue = this.format(this.modelValue);
-					// #endif
-					// #ifdef VUE2
-					this.startValue = this.format(this.value);
-					// #endif
-				}
-				// 标示当前的状态为开始触摸滑动
-				this.status = 'start';
+		// 步长，取值必须大于 0，并且可被(max - min)整除
+		step: {
+			type: [Number, String],
+			default: (defProps['slider'] as UTSJSONObject)['step']
+		},
+		// 当前取值
+		modelValue: {
+			type: [Number],
+			default: (defProps['slider'] as UTSJSONObject)['value']
+		},
+		// 是否区间模式
+		isRange: {
+			type: Boolean,
+			default: false
+		},
+		// 双滑块时值
+		rangeValue: {
+			type: Array,
+			default: [0, 0]
+		},
+		// 滑块右侧已选择部分的背景色
+		activeColor: {
+			type: String,
+			default: (defProps['slider'] as UTSJSONObject)['activeColor']
+		},
+		// 滑块左侧未选择部分的背景色
+		inactiveColor: {
+			type: String,
+			default: (defProps['slider'] as UTSJSONObject)['inactiveColor']
+		},
+		// 滑块的大小，取值范围为 12 - 28
+		blockSize: {
+			type: [Number, String],
+			default: (defProps['slider'] as UTSJSONObject)['blockSize']
+		},
+		// 滑块的颜色
+		blockColor: {
+			type: String,
+			default: (defProps['slider'] as UTSJSONObject)['blockColor']
+		},
+		// 用户对滑块的自定义颜色
+		blockStyle: {
+			type: UTSJSONObject,
+			default: (defProps['slider'] as UTSJSONObject)['blockStyle']
+		},
+		// 禁用状态
+		disabled: {
+			type: Boolean,
+			default: (defProps['slider'] as UTSJSONObject)['disabled']
+		},
+		// 是否显示当前的选择值
+		showValue: {
+			type: Boolean,
+			default: (defProps['slider'] as UTSJSONObject)['showValue']
+		},
+		// 是否渲染uni-app框架内置组件
+		useNative: {
+			type: Boolean,
+			default: (defProps['slider'] as UTSJSONObject)['useNative']
+		},
+		// 滑块高度
+		height: {
+			type: String,
+			default: (defProps['slider'] as UTSJSONObject)['height']
+		},
+		innerStyle: {
+			type: UTSJSONObject,
+			default: (defProps['slider'] as UTSJSONObject)['innerStyle']
+		},
+		customStyle: {
+			type: [Object, String],
+			default: {}
+		}
+	})
 
-				let clientX = 0;
-				// #ifndef APP-NVUE
-				clientX = touches.clientX;
-				// #endif
-				// #ifdef APP-NVUE
-				clientX = touches.screenX;
-				// #endif
-				this.distanceX = clientX - this.sliderRect.left;
-				// 获得移动距离对整个滑块的值，此为带有多位小数的值，不能用此更新视图
-				// 否则造成通信阻塞，需要每改变一个step值时修改一次视图
-				// @ts-ignore
-				this.newValue = ((this.distanceX / this.sliderRect.width) * (parseFloat(this.max.toString()) - parseFloat(this.min.toString()))) + parseFloat(this.min.toString());
-				this.status = 'moving';
-				// 发出moving事件
-				let $crtFmtValue = this.updateValue(this.newValue, true, index);
-				this.$emit('changing', $crtFmtValue);
-			},
-			onTouchMove(e: any, index = 1) {
-				let event = e as UniTouchEvent
-				if (this.disabled) return;
-				// 连续触摸的过程会一直触发本方法，但只有手指触发且移动了才被认为是拖动了，才发出事件
-				// 触摸后第一次移动已经将status设置为moving状态，故触摸第二次移动不会触发本事件
-				if (this.status == 'start') this.$emit('start');
-				let touches = event.touches[0];
-				// console.log('touchs', touches)
-				// 滑块的左边不一定跟屏幕左边接壤，所以需要减去最外层父元素的左边值
-				let clientX = 0;
-				// #ifndef APP-NVUE
-				clientX = touches.clientX;
-				// #endif
-				// #ifdef APP-NVUE
-				clientX = touches.screenX;
-				// #endif
-				this.distanceX = clientX - this.sliderRect.left;
-				// 获得移动距离对整个滑块的值，此为带有多位小数的值，不能用此更新视图
-				// 否则造成通信阻塞，需要每改变一个step值时修改一次视图
-				// @ts-ignore
-				this.newValue = ((this.distanceX / this.sliderRect.width) * (parseFloat(this.max.toString()) - parseFloat(this.min.toString()))) + parseFloat(this.min.toString());
-				this.status = 'moving';
-				// 发出moving事件
-				let crtFmtValue = this.updateValue(this.newValue, true, index);
-				this.$emit('changing', crtFmtValue);
-			},
-			onTouchEnd(e: any, index = 1) {
-				let event = e as UniTouchEvent
-				if (this.disabled) return;
-				if (this.status === 'moving') {
-					let $crtFmtValue = this.updateValue(this.newValue, false, index);
-					this.$emit('change', $crtFmtValue);
-				}
-				this.status = 'end';
-			},
-			onTouchStart2(e: any, index = 1) {
-				let event = e as UniTouchEvent
-				if (!this.isRange) {
-					// this.onChangeStart(event, index);
-				}
-			},
-			onTouchMove2(e: any, index = 1) {
-				let event = e as UniTouchEvent
-				if (!this.isRange) {
-					// this.onTouchMove(event, index);
-				}
-			},
-			onTouchEnd2(e: any, index = 1) {
-				let event = e as UniTouchEvent
-				if (!this.isRange) {
-					// this.onTouchEnd(event, index);
-				}
-			},
-			onClick(event: UniPointerEvent) {
-				// if (this.isRange) return;
-				if (this.disabled) return;
-				// 直接点击滑块的情况，计算方式与onTouchMove方法相同
-				// console.log('click', event)
-				// #ifndef APP-NVUE
-				// nvue下暂时无法获取坐标
-				let clientX = event.x - this.sliderRect.left
-				// @ts-ignore
-				this.newValue = ((clientX / this.sliderRect.width) * (parseFloat(this.max.toString()) - parseFloat(this.min.toString()))) + parseFloat(this.min.toString());
-				this.updateValue(this.newValue, false, 1);
-				// #endif
-			},
-			updateValue(value: number, drag: boolean, index = 1): Array<number> | number {
-				// 去掉小数部分，同时也是对step步进的处理
-				let valueFormat: number = this.format(value, index);
-				// 不允许滑动的值超过max最大值
-				// @ts-ignore
-				if(valueFormat > parseFloat(this.max.toString())) {
-					// @ts-ignore
-					valueFormat = parseFloat(this.max.toString())
-				}
-				// 设置移动的距离，不能用百分比，因为NVUE不支持。
-				// @ts-ignore
-				let width = Math.min((valueFormat - parseFloat(this.min.toString())) / (parseFloat(this.max.toString()) - parseFloat(this.min.toString())) * this.sliderRect.width, this.sliderRect.width)
-				let barStyle = {
-					width: width.toString() + 'px'
-				} as barStyleType;
-				// 移动期间无需过渡动画
-				if (drag == true) {
-					barStyle['transition'] = 'none';
-				} else {
-					// 非移动期间，删掉对过渡为空的声明，让css中的声明起效
-					barStyle['transition'] = '';
-				}
-				// 修改value值
-				if (this.isRange) {
-					// @ts-ignore
-					this.rangeValue[index] = valueFormat;
-					this.$emit("update:modelValue", this.rangeValue);
-				} else {
-					// #ifdef VUE3
-					this.$emit("update:modelValue", valueFormat);
-					// #endif
-					// #ifdef VUE2
-					this.$emit("input", valueFormat);
-					// #endif
-				}
+	const emit = defineEmits(["start", "changing", "change", "update:modelValue"])
+	const instance = getCurrentInstance()!.proxy!
 
-				switch (index) {
-					case 0:
-						this.barStyle0.width = barStyle.width;
-						break;
-					case 1:
-						this.barStyle.width = barStyle.width;
-						break;
-					default:
-						break;
-				}
-				if (this.isRange) {
-					return this.rangeValue
-				} else {
-					return valueFormat
-				}
-				return valueFormat
-			},
-			format(value: number, index = 1): number {
-				// 将小数变成整数，为了减少对视图的更新，造成视图层与逻辑层的阻塞
-				if (this.isRange) {
-					switch (index) {
-						case 0:
-							return Math.round(
-								// @ts-ignore
-								Math.max(parseFloat(this.min.toString()), Math.min(value, parseFloat(this.rangeValue[1].toString())- parseFloat(this.step.toString()), parseFloat(this.max.toString())))
-								// @ts-ignore
-								/ parseFloat(this.step.toString())
-								// @ts-ignore
-							) * parseInt(this.step.toString());
-							break;
-						case 1:
-							return Math.round(
-								// @ts-ignore
-								Math.max(parseFloat(this.min.toString()), parseFloat(this.rangeValue[0].toString()) + parseFloat(this.step.toString()), Math.min(value, parseFloat(this.max.toString())))
-								// @ts-ignore
-								/ parseFloat(this.step.toString())
-								// @ts-ignore
-							) * parseFloat(this.step.toString());
-							break;
-						default:
-							break;
-					}
-				} else {
+	const startX = ref(0)
+	const status = ref('end')
+	const newValue = ref(0)
+	const distanceX = ref(0)
+	const startValue0 = ref(0)
+	const startValue = ref(0)
+	const barStyle0 = ref<barStyleType>({
+		width: '0px'
+	} as barStyleType)
+	const barStyle = ref<barStyleType>({
+		width: '0px',
+		transition: ''
+	} as barStyleType)
+	const sliderRect = ref<sliderRectType>({
+		left: 0,
+		width: 0
+	} as sliderRectType)
+
+	const addStyle = (e: any): any => {
+		return addStyleFn(e)
+	}
+
+	function getPx(e: any, s: boolean = false): string {
+		return getPxFn(e, s)
+	}
+
+	const innerStyleCpu = computed((): UTSJSONObject => {
+		let style: UTSJSONObject = props.innerStyle
+		style['height'] = (props.isRange && props.showValue)
+			? (parseFloat(getPx(props.blockSize)) + 24).toString() + 'px'
+			: (getPx(props.blockSize)) + 'px'
+		return style
+	})
+
+	function formatValue(value: number, index: number = 1): number {
+		// 将小数变成整数，为了减少对视图的更新，造成视图层与逻辑层的阻塞
+		if (props.isRange) {
+			switch (index) {
+				case 0:
 					return Math.round(
 						// @ts-ignore
-						Math.max(parseFloat(this.min.toString()), Math.min(value, parseFloat(this.max.toString())))
+						Math.max(parseFloat(props.min.toString()), Math.min(value, parseFloat(props.rangeValue[1].toString()) - parseFloat(props.step.toString()), parseFloat(props.max.toString())))
 						// @ts-ignore
-						/ parseFloat(this.step.toString())
-					// @ts-ignore
-					) * parseFloat(this.step.toString());
-				}
-				return 0
+						/ parseFloat(props.step.toString())
+						// @ts-ignore
+					) * parseInt(props.step.toString())
+				case 1:
+					return Math.round(
+						// @ts-ignore
+						Math.max(parseFloat(props.min.toString()), parseFloat(props.rangeValue[0].toString()) + parseFloat(props.step.toString()), Math.min(value, parseFloat(props.max.toString())))
+						// @ts-ignore
+						/ parseFloat(props.step.toString())
+						// @ts-ignore
+					) * parseFloat(props.step.toString())
+				default:
+					break
 			}
+		} else {
+			return Math.round(
+				// @ts-ignore
+				Math.max(parseFloat(props.min.toString()), Math.min(value, parseFloat(props.max.toString())))
+				// @ts-ignore
+				/ parseFloat(props.step.toString())
+			// @ts-ignore
+			) * parseFloat(props.step.toString())
+		}
+		return 0
+	}
+
+	function updateValue(value: number, drag: boolean, index: number = 1): Array<number> | number {
+		// 去掉小数部分，同时也是对step步进的处理
+		let valueFormat: number = formatValue(value, index)
+		// 不允许滑动的值超过max最大值
+		// @ts-ignore
+		if (valueFormat > parseFloat(props.max.toString())) {
+			// @ts-ignore
+			valueFormat = parseFloat(props.max.toString())
+		}
+		// 设置移动的距离，不能用百分比，因为NVUE不支持。
+		// @ts-ignore
+		let width = Math.min((valueFormat - parseFloat(props.min.toString())) / (parseFloat(props.max.toString()) - parseFloat(props.min.toString())) * sliderRect.value.width, sliderRect.value.width)
+		let nextBarStyle = {
+			width: width.toString() + 'px'
+		} as barStyleType
+		// 移动期间无需过渡动画
+		if (drag == true) {
+			nextBarStyle['transition'] = 'none'
+		} else {
+			// 非移动期间，删掉对过渡为空的声明，让css中的声明起效
+			nextBarStyle['transition'] = ''
+		}
+		// 修改value值
+		if (props.isRange) {
+			// @ts-ignore
+			props.rangeValue[index] = valueFormat
+			emit("update:modelValue", props.rangeValue)
+		} else {
+			emit("update:modelValue", valueFormat)
+		}
+
+		switch (index) {
+			case 0:
+				barStyle0.value.width = nextBarStyle.width
+				break
+			case 1:
+				barStyle.value.width = nextBarStyle.width
+				break
+			default:
+				break
+		}
+		if (props.isRange) {
+			return props.rangeValue as Array<number>
+		}
+		return valueFormat
+	}
+
+	const init = (): void => {
+		if (props.isRange) {
+			// @ts-ignore
+			updateValue(parseFloat(props.rangeValue[0].toString()), false, 0)
+			// @ts-ignore
+			updateValue(parseFloat(props.rangeValue[1].toString()), false, 1)
+		} else {
+			updateValue(props.modelValue, false)
 		}
 	}
+
+	// native拖动过程中触发
+	const changingHandler = (e: UniSliderChangeEvent): void => {
+		const { value } = e.detail
+		// 更新v-model的值
+		emit("update:modelValue", value)
+		// 触发事件
+		emit('changing', value)
+	}
+
+	// native滑动结束时触发
+	const changeHandler = (e: UniSliderChangeEvent): void => {
+		const { value } = e.detail
+		// 更新v-model的值
+		emit("update:modelValue", value)
+		// 触发事件
+		emit('change', value)
+	}
+
+	function onTouchStart(e: any, index: number = 1): void {
+		let event = e as UniTouchEvent
+		if (props.disabled) return
+		startX.value = 0
+		// 触摸点集
+		let touches = event.touches[0]
+		// 触摸点到屏幕左边的距离
+		startX.value = touches.clientX
+		// 此处的modelValue虽为props值，但是通过$emit('update:modelValue')进行了修改
+		if (props.isRange) {
+			// @ts-ignore
+			startValue0.value = formatValue(parseFloat(props.rangeValue[0].toString()), 0)
+			// @ts-ignore
+			startValue.value = formatValue(parseFloat(props.rangeValue[1].toString()), 1)
+		} else {
+			startValue.value = formatValue(props.modelValue)
+		}
+		// 标示当前的状态为开始触摸滑动
+		status.value = 'start'
+
+		let clientX = 0
+		// #ifndef APP-NVUE
+		clientX = touches.clientX
+		// #endif
+		// #ifdef APP-NVUE
+		clientX = touches.screenX
+		// #endif
+		distanceX.value = clientX - sliderRect.value.left
+		// 获得移动距离对整个滑块的值，此为带有多位小数的值，不能用此更新视图
+		// 否则造成通信阻塞，需要每改变一个step值时修改一次视图
+		// @ts-ignore
+		newValue.value = ((distanceX.value / sliderRect.value.width) * (parseFloat(props.max.toString()) - parseFloat(props.min.toString()))) + parseFloat(props.min.toString())
+		status.value = 'moving'
+		// 发出moving事件
+		let crtFmtValue = updateValue(newValue.value, true, index)
+		emit('changing', crtFmtValue)
+	}
+
+	function onTouchMove(e: any, index: number = 1): void {
+		let event = e as UniTouchEvent
+		if (props.disabled) return
+		// 连续触摸的过程会一直触发本方法，但只有手指触发且移动了才被认为是拖动了，才发出事件
+		// 触摸后第一次移动已经将status设置为moving状态，故触摸第二次移动不会触发本事件
+		if (status.value == 'start') emit('start')
+		let touches = event.touches[0]
+		let clientX = 0
+		// #ifndef APP-NVUE
+		clientX = touches.clientX
+		// #endif
+		// #ifdef APP-NVUE
+		clientX = touches.screenX
+		// #endif
+		distanceX.value = clientX - sliderRect.value.left
+		// 获得移动距离对整个滑块的值，此为带有多位小数的值，不能用此更新视图
+		// 否则造成通信阻塞，需要每改变一个step值时修改一次视图
+		// @ts-ignore
+		newValue.value = ((distanceX.value / sliderRect.value.width) * (parseFloat(props.max.toString()) - parseFloat(props.min.toString()))) + parseFloat(props.min.toString())
+		status.value = 'moving'
+		// 发出moving事件
+		let crtFmtValue = updateValue(newValue.value, true, index)
+		emit('changing', crtFmtValue)
+	}
+
+	function onTouchEnd(_e: any, index: number = 1): void {
+		if (props.disabled) return
+		if (status.value === 'moving') {
+			let crtFmtValue = updateValue(newValue.value, false, index)
+			emit('change', crtFmtValue)
+		}
+		status.value = 'end'
+	}
+
+	function onTouchStart2(_e: any, _index: number = 1): void {
+		if (!props.isRange) {
+			// onChangeStart(event, index)
+		}
+	}
+
+	function onTouchMove2(_e: any, _index: number = 1): void {
+		if (!props.isRange) {
+			// onTouchMove(event, index)
+		}
+	}
+
+	function onTouchEnd2(_e: any, _index: number = 1): void {
+		if (!props.isRange) {
+			// onTouchEnd(event, index)
+		}
+	}
+
+	const onClick = (event: UniPointerEvent): void => {
+		// if (isRange) return
+		if (props.disabled) return
+		// 直接点击滑块的情况，计算方式与onTouchMove方法相同
+		// #ifndef APP-NVUE
+		// nvue下暂时无法获取坐标
+		let clientX = event.x - sliderRect.value.left
+		// @ts-ignore
+		newValue.value = ((clientX / sliderRect.value.width) * (parseFloat(props.max.toString()) - parseFloat(props.min.toString()))) + parseFloat(props.min.toString())
+		updateValue(newValue.value, false, 1)
+		// #endif
+	}
+
+	watch((): number => props.modelValue, () => {
+		// 只有在非滑动状态时，才可以通过value更新滑块值，这里监听，是为了让用户触发
+		if (status.value == 'end') {
+			const crtFmtValue = updateValue(props.modelValue, false)
+			emit('change', crtFmtValue)
+		}
+	})
+
+	watch((): Array<number> => props.rangeValue as Array<number>, (n: Array<number>) => {
+		if (status.value == 'end') {
+			updateValue(n[0], false, 0)
+			updateValue(n[1], false, 1)
+			emit('change', n)
+		}
+	}, { deep: true })
+
+	onMounted(() => {
+		// 获取滑块条的尺寸信息
+		if (!props.useNative) {
+			upGetRect('.up-slider__base', false, instance).then((rect: NodeInfo) => {
+				sliderRect.value.width = rect.width ?? 0
+				sliderRect.value.left = rect.left ?? 0
+				if (sliderRect.value.width == 0) {
+					console.info('如在弹窗等元素中使用，请使用v-if来显示滑块，否则无法计算长度。')
+				}
+				init()
+			})
+		}
+	})
+
+	defineExpose({
+		startX,
+		status,
+		newValue,
+		distanceX,
+		startValue0,
+		startValue,
+		barStyle0,
+		barStyle,
+		sliderRect,
+		innerStyleCpu,
+		addStyle,
+		getPx,
+		init,
+		changingHandler,
+		changeHandler,
+		onTouchStart,
+		onTouchMove,
+		onTouchEnd,
+		onTouchStart2,
+		onTouchMove2,
+		onTouchEnd2,
+		onClick,
+		updateValue,
+		format: formatValue
+	})
 </script>
 
 <style lang="scss" scoped>

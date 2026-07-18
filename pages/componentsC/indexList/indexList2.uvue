@@ -63,54 +63,49 @@
 	<!-- #endif -->
 </template>
 
-<script>
-import { random } from '@/uni_modules/uview-ultra/libs/function/index';
+<script setup lang="uts">
+import { computed, ref } from 'vue'
+import { random } from '@/uni_modules/uview-ultra/libs/function/index'
 
-export default {
-  data() {
-    return {
-      show: false,
-      urls: [
-        'https://uview-plus.jiangruyi.com/album/1.jpg',
-        'https://uview-plus.jiangruyi.com/album/2.jpg',
-        'https://uview-plus.jiangruyi.com/album/3.jpg',
-        'https://uview-plus.jiangruyi.com/album/4.jpg',
-        'https://uview-plus.jiangruyi.com/album/5.jpg',
-        'https://uview-plus.jiangruyi.com/album/6.jpg',
-        'https://uview-plus.jiangruyi.com/album/7.jpg',
-        'https://uview-plus.jiangruyi.com/album/8.jpg',
-        'https://uview-plus.jiangruyi.com/album/9.jpg',
-        'https://uview-plus.jiangruyi.com/album/10.jpg'
-      ],
-      names: ['????', '?????', '???', '?????', '????', '????', '????', '??????', '???', '????', 'Red??', '????', '????', '?????', '???', 'supersonic?']
-    };
-  },
-  computed: {
-    indexList(): string[] {
-      const indexList: string[] = [];
-      const charCodeOfA: number | null = 'A'.charCodeAt(0);
-      indexList.push('?');
-      indexList.push('?');
-      for (let i = 0; i < 10; i++) {
-        indexList.push(String.fromCharCode(charCodeOfA! + i));
-      }
-      indexList.push('#');
-      return indexList;
-    },
-    itemArr(): UTSJSONObject[][] {
-      return this.indexList.map((item: string): UTSJSONObject[] => {
-        const arr: UTSJSONObject[] = [];
-        for (let i = 0; i < 10; i++) {
-          arr.push({
-            name: this.names[random(0, this.names.length - 1)],
-            url: this.urls[random(0, this.urls.length - 1)]
-          });
-        }
-        return arr;
-      });
-    }
+const show = ref(false)
+const urls = [
+  'https://uview-plus.jiangruyi.com/album/1.jpg',
+  'https://uview-plus.jiangruyi.com/album/2.jpg',
+  'https://uview-plus.jiangruyi.com/album/3.jpg',
+  'https://uview-plus.jiangruyi.com/album/4.jpg',
+  'https://uview-plus.jiangruyi.com/album/5.jpg',
+  'https://uview-plus.jiangruyi.com/album/6.jpg',
+  'https://uview-plus.jiangruyi.com/album/7.jpg',
+  'https://uview-plus.jiangruyi.com/album/8.jpg',
+  'https://uview-plus.jiangruyi.com/album/9.jpg',
+  'https://uview-plus.jiangruyi.com/album/10.jpg'
+]
+const names = ['????', '?????', '???', '?????', '????', '????', '????', '??????', '???', '????', 'Red??', '????', '????', '?????', '???', 'supersonic?']
+
+const indexList = computed((): string[] => {
+  const list: string[] = []
+  const charCodeOfA: number | null = 'A'.charCodeAt(0)
+  list.push('?')
+  list.push('?')
+  for (let i = 0; i < 10; i++) {
+    list.push(String.fromCharCode(charCodeOfA! + i))
   }
-}
+  list.push('#')
+  return list
+})
+
+const itemArr = computed((): UTSJSONObject[][] => {
+  return indexList.value.map((item: string): UTSJSONObject[] => {
+    const arr: UTSJSONObject[] = []
+    for (let i = 0; i < 10; i++) {
+      arr.push({
+        name: names[random(0, names.length - 1)],
+        url: urls[random(0, urls.length - 1)]
+      })
+    }
+    return arr
+  })
+})
 </script>
 
 <style lang="scss">

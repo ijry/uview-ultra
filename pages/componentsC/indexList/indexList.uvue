@@ -44,61 +44,56 @@
 	</up-index-list>
 </template>
 
-<script>
-	import { random } from '@/uni_modules/uview-ultra/libs/function/index';
-	const indexList = () => {
-		const indexList: string[] = []
+<script setup lang="uts">
+	import { computed } from 'vue'
+	import { random } from '@/uni_modules/uview-ultra/libs/function/index'
+
+	const createIndexList = () => {
+		const indexListArray: string[] = []
 		const charCodeOfA : number | null = 'A'.charCodeAt(0)
-		indexList.push("↑")
-		indexList.push("☆")
+		indexListArray.push("↑")
+		indexListArray.push("☆")
 		for (let i = 0; i < 16; i++) {
-			indexList.push(String.fromCharCode(charCodeOfA! + i))
+			indexListArray.push(String.fromCharCode(charCodeOfA! + i))
 		}
-		indexList.push('#')
-		return indexList
+		indexListArray.push('#')
+		return indexListArray
 	}
-	export default {
-		data() {
-			return {
-				indexList: indexList() as string[],
-				urls: [
-					'./static/uview/album/1.jpg',
-					'./static/uview/album/2.jpg',
-					'./static/uview/album/3.jpg',
-					'./static/uview/album/4.jpg',
-					'./static/uview/album/5.jpg',
-					'./static/uview/album/6.jpg',
-					'./static/uview/album/7.jpg',
-					'./static/uview/album/8.jpg',
-					'./static/uview/album/9.jpg',
-					'./static/uview/album/10.jpg',
-				],
-				names: ["勇往无敌", "疯狂的迪飙", "磊爱可", "梦幻梦幻梦", "枫中飘瓢", "飞翔天使",
-					"曾经第一", "追风幻影族长", "麦小姐", "胡格罗雅", "Red磊磊", "乐乐立立", "青龙爆风", "跑跑卡叮车", "山里狼", "supersonic超"
-				]
-			}
-		},
-		computed: {
-			itemArr(): UTSJSONObject[][] {
-				return this.indexList.map((item: string) => {
-					const arr: UTSJSONObject[] = []
-					for (let i = 0; i < 10; i++) {
-						arr.push({
-							name: this.names[random(0, this.names.length - 1)],
-							url: this.urls[random(0, this.urls.length - 1)]
-						})
-					}
-					return arr
+
+	const indexList = createIndexList() as string[]
+	const urls = [
+		'./static/uview/album/1.jpg',
+		'./static/uview/album/2.jpg',
+		'./static/uview/album/3.jpg',
+		'./static/uview/album/4.jpg',
+		'./static/uview/album/5.jpg',
+		'./static/uview/album/6.jpg',
+		'./static/uview/album/7.jpg',
+		'./static/uview/album/8.jpg',
+		'./static/uview/album/9.jpg',
+		'./static/uview/album/10.jpg',
+	]
+	const names = ["勇往无敌", "疯狂的迪飙", "磊爱可", "梦幻梦幻梦", "枫中飘瓢", "飞翔天使",
+		"曾经第一", "追风幻影族长", "麦小姐", "胡格罗雅", "Red磊磊", "乐乐立立", "青龙爆风", "跑跑卡叮车", "山里狼", "supersonic超"
+	]
+
+	const itemArr = computed((): UTSJSONObject[][] => {
+		return indexList.map((item: string) => {
+			const arr: UTSJSONObject[] = []
+			for (let i = 0; i < 10; i++) {
+				arr.push({
+					name: names[random(0, names.length - 1)],
+					url: urls[random(0, urls.length - 1)]
 				})
 			}
-		},
-		methods: {
-			goNext() {
-				uni.navigateTo({
-					url: 'indexList2'
-				})
-			}
-		}
+			return arr
+		})
+	})
+
+	function goNext() {
+		uni.navigateTo({
+			url: 'indexList2'
+		})
 	}
 </script>
 

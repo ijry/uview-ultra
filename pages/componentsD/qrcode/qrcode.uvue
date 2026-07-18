@@ -27,12 +27,6 @@
 	</view>
 </template>
 
-<script lang="uts">
-export default {
-  data() {
-    return {
-      logo: '/static/uview/common/logo.png'
-    }
-  }
-}
+<script setup lang="uts">
+const logo = '/static/uview/common/logo.png'
 </script>

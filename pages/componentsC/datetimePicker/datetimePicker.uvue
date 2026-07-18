@@ -100,113 +100,103 @@
 		></up-datetime-picker>
 	</view>
 </template>
-<script>
-	import { padZero, timeFormat, toast } from '@/uni_modules/uview-ultra/libs/function/index.uts'
-	export default {
-		data() {
-			const d = new Date()
-			const year = d.getFullYear()
-			let month = padZero(d.getMonth() + 1)
-			const date = d.getDate()
-			return {
-				current: 0,
-				value1: (new Date().getTime()),
-				value2: (new Date().getTime()),
-				value3: (new Date().getTime()),
-				value4: '05:28',
-				value5: (new Date().getTime()),
-				value6: (new Date().getTime()),
-				value7: (new Date().getTime()),
-				show1: false,
-				show2: false,
-				show3: false,
-				show4: false,
-				show5: false,
-				show6: false,
-				show7: false,
-				list: [{
-						title: '完整日期时间',
-						iconUrl: 'https://cdn.uviewui.com/uview/demo/datetime-picker/6.png'
-					},
-					{
-						title: '年月日',
-						iconUrl: 'https://cdn.uviewui.com/uview/demo/datetime-picker/4.png'
-					},
-					{
-						title: '年月',
-						iconUrl: 'https://cdn.uviewui.com/uview/demo/datetime-picker/3.png'
-					},
-					{
-						title: '时间',
-						iconUrl: 'https://cdn.uviewui.com/uview/demo/datetime-picker/5.png'
-					}, {
-						title: '过滤器(保留偶数年)',
-						iconUrl: 'https://cdn.uviewui.com/uview/demo/datetime-picker/2.png'
-					}, {
-						title: '格式化',
-						iconUrl: 'https://cdn.uviewui.com/uview/demo/datetime-picker/1.png'
-					}, {
-						title: '限制最大最小值',
-						iconUrl: 'https://cdn.uviewui.com/uview/demo/datetime-picker/7.png'
-					}
-				]
-			}
-		},
-		methods: {
-			close() {
-				this.$data[`show${this.current}`] = false
-			},
-			cancel() {
-				this.$data[`show${this.current}`] = false
-			},
-			confirm(e: UTSJSONObject) {
-				this.$data[`show${this.current}`] = false
-				// @ts-ignore
-				this.result(e['value'].toString(), e['mode'].toString())
-			},
-			change(e: UTSJSONObject) {
-				// console.log('change', e)
-			},
-			navigateBack() {
-				uni.navigateBack()
-			},
-			filter: function(mode: string, options: string[]) {
-				if (mode === 'year') {
-					return options.filter((option: string) => parseInt(option) % 2 == 0);
-				}
+<script setup lang="uts">
+	import { ref } from 'vue'
+	import { timeFormat, toast } from '@/uni_modules/uview-ultra/libs/function/index.uts'
 
-				return options;
-			},
-			showDatetimePicker(index: number) {
-				this.current = index + 1
-				this.$data[`show${index + 1}`] = true
-			},
-			result(time: string, mode: string): void {
-				switch (mode) {
-					case 'datetime':
-						toast(timeFormat(time, 'yyyy-mm-dd hh:MM'))
-					case 'date':
-						toast(timeFormat(time, 'yyyy-mm-dd'))
-					case 'year-month':
-						toast(timeFormat(time, 'yyyy-mm'))
-					case 'time':
-						toast(time)
-					default:
-				}
-			},
-			formatter(type: string, value: string) {
-				if (type === 'year') {
-					return `${value}年`
-				}
-				if (type === 'month') {
-					return `${value}月`
-				}
-				if (type === 'day') {
-					return `${value}日`
-				}
-				return value
-			},
-		},
+	const current = ref(0)
+	const value1 = ref(new Date().getTime())
+	const value2 = ref(new Date().getTime())
+	const value3 = ref(new Date().getTime())
+	const value4 = ref('05:28')
+	const value5 = ref(new Date().getTime())
+	const value6 = ref(new Date().getTime())
+	const value7 = ref(new Date().getTime())
+	const show1 = ref(false)
+	const show2 = ref(false)
+	const show3 = ref(false)
+	const show4 = ref(false)
+	const show5 = ref(false)
+	const show6 = ref(false)
+	const show7 = ref(false)
+	const list = [
+		{ title: '完整日期时间', iconUrl: 'https://cdn.uviewui.com/uview/demo/datetime-picker/6.png' },
+		{ title: '年月日', iconUrl: 'https://cdn.uviewui.com/uview/demo/datetime-picker/4.png' },
+		{ title: '年月', iconUrl: 'https://cdn.uviewui.com/uview/demo/datetime-picker/3.png' },
+		{ title: '时间', iconUrl: 'https://cdn.uviewui.com/uview/demo/datetime-picker/5.png' },
+		{ title: '过滤器(保留偶数年)', iconUrl: 'https://cdn.uviewui.com/uview/demo/datetime-picker/2.png' },
+		{ title: '格式化', iconUrl: 'https://cdn.uviewui.com/uview/demo/datetime-picker/1.png' },
+		{ title: '限制最大最小值', iconUrl: 'https://cdn.uviewui.com/uview/demo/datetime-picker/7.png' }
+	]
+
+	function setShow(index: number, value: boolean): void {
+		if (index == 1) show1.value = value
+		if (index == 2) show2.value = value
+		if (index == 3) show3.value = value
+		if (index == 4) show4.value = value
+		if (index == 5) show5.value = value
+		if (index == 6) show6.value = value
+		if (index == 7) show7.value = value
+	}
+
+	function close() {
+		setShow(current.value, false)
+	}
+
+	function cancel() {
+		setShow(current.value, false)
+	}
+
+	function result(time: string, mode: string): void {
+		switch (mode) {
+			case 'datetime':
+				toast(timeFormat(time, 'yyyy-mm-dd hh:MM'))
+			case 'date':
+				toast(timeFormat(time, 'yyyy-mm-dd'))
+			case 'year-month':
+				toast(timeFormat(time, 'yyyy-mm'))
+			case 'time':
+				toast(time)
+			default:
+		}
+	}
+
+	function confirm(e: UTSJSONObject) {
+		setShow(current.value, false)
+		result(e['value']!.toString(), e['mode']!.toString())
+	}
+
+	function change(e: UTSJSONObject) {
+		// console.log('change', e)
+	}
+
+	function navigateBack() {
+		uni.navigateBack()
+	}
+
+	function filter(mode: string, options: string[]) {
+		if (mode === 'year') {
+			return options.filter((option: string) => parseInt(option) % 2 == 0)
+		}
+		return options
+	}
+
+	function showDatetimePicker(index: number) {
+		current.value = index + 1
+		setShow(current.value, true)
+	}
+
+	function formatter(type: string, value: string) {
+		if (type === 'year') {
+			return `${value}年`
+		}
+		if (type === 'month') {
+			return `${value}月`
+		}
+		if (type === 'day') {
+			return `${value}日`
+		}
+		return value
 	}
 </script>
 

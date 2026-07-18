@@ -60,139 +60,135 @@
 	</view>
 </template>
 
-<script>
-export default {
-  data() {
-    return {
-      value1: 0,
-      value2: 1,
-      value3: 2,
-      value4: 1,
-      value5: 0,
-      deliveryCurrent: 0,
-      options1: [
-        { id: 1, title: '选项1' },
-        { id: 2, title: '选项2' },
-        { id: 3, title: '选项3' },
-        { id: 4, title: '选项4' },
-        { id: 5, title: '选项5' },
-        { id: 6, title: '选项6' }
-      ],
-      options2: [
-        { id: 1, title: '标签A' },
-        { id: 2, title: '标签B' },
-        { id: 3, title: '标签C' },
-        { id: 4, title: '标签D' },
-        { id: 5, title: '标签E' },
-        { id: 6, title: '标签F' }
-      ],
-      options3: [
-        { id: 1, title: '9:00-10:00' },
-        { id: 2, title: '10:00-11:00' },
-        { id: 3, title: '11:00-12:00' },
-        { id: 4, title: '12:00-13:00' },
-        { id: 5, title: '13:00-14:00' },
-        { id: 6, title: '14:00-15:00' },
-        { id: 7, title: '15:00-16:00' },
-        { id: 8, title: '16:00-17:00' }
-      ],
-      options4: [
-        { id: 1, title: '自定义1' },
-        { id: 2, title: '自定义2' },
-        { id: 3, title: '自定义3' }
-      ],
-      deliveryOptions: [
-        {
-          name: '今天',
-          selectedIndex: 0,
-          times: [
-            { id: 1, title: '9:00-10:00' },
-            { id: 2, title: '10:00-11:00' },
-            { id: 3, title: '11:00-12:00' },
-            { id: 4, title: '12:00-13:00' },
-            { id: 5, title: '13:00-14:00' },
-            { id: 6, title: '14:00-15:00' },
-            { id: 7, title: '15:00-16:00' },
-            { id: 8, title: '16:00-17:00' },
-            { id: 9, title: '17:00-18:00' },
-            { id: 10, title: '18:00-19:00' },
-            { id: 11, title: '19:00-20:00' },
-            { id: 12, title: '20:00-21:00' }
-          ]
-        },
-        {
-          name: '明天',
-          selectedIndex: 0,
-          times: [
-            { id: 1, title: '9:00-10:00' },
-            { id: 2, title: '10:00-11:00' },
-            { id: 3, title: '11:00-12:00' },
-            { id: 4, title: '12:00-13:00' },
-            { id: 5, title: '13:00-14:00' },
-            { id: 6, title: '14:00-15:00' },
-            { id: 7, title: '15:00-16:00' },
-            { id: 8, title: '16:00-17:00' },
-            { id: 9, title: '17:00-18:00' },
-            { id: 10, title: '18:00-19:00' },
-            { id: 11, title: '19:00-20:00' },
-            { id: 12, title: '20:00-21:00' }
-          ]
-        },
-        {
-          name: '后天',
-          selectedIndex: 0,
-          times: [
-            { id: 1, title: '9:00-10:00' },
-            { id: 2, title: '10:00-11:00' },
-            { id: 3, title: '11:00-12:00' },
-            { id: 4, title: '12:00-13:00' },
-            { id: 5, title: '13:00-14:00' },
-            { id: 6, title: '14:00-15:00' },
-            { id: 7, title: '15:00-16:00' },
-            { id: 8, title: '16:00-17:00' },
-            { id: 9, title: '17:00-18:00' },
-            { id: 10, title: '18:00-19:00' },
-            { id: 11, title: '19:00-20:00' },
-            { id: 12, title: '20:00-21:00' }
-          ]
-        }
-      ] as UTSJSONObject[]
-    };
+<script setup lang="uts">
+import { ref } from 'vue'
+
+const value1 = ref(0)
+const value2 = ref(1)
+const value5 = ref(0)
+const deliveryCurrent = ref(0)
+const options1 = [
+  { id: 1, title: '选项1' },
+  { id: 2, title: '选项2' },
+  { id: 3, title: '选项3' },
+  { id: 4, title: '选项4' },
+  { id: 5, title: '选项5' },
+  { id: 6, title: '选项6' }
+]
+const options2 = [
+  { id: 1, title: '标签A' },
+  { id: 2, title: '标签B' },
+  { id: 3, title: '标签C' },
+  { id: 4, title: '标签D' },
+  { id: 5, title: '标签E' },
+  { id: 6, title: '标签F' }
+]
+const options3 = [
+  { id: 1, title: '9:00-10:00' },
+  { id: 2, title: '10:00-11:00' },
+  { id: 3, title: '11:00-12:00' },
+  { id: 4, title: '12:00-13:00' },
+  { id: 5, title: '13:00-14:00' },
+  { id: 6, title: '14:00-15:00' },
+  { id: 7, title: '15:00-16:00' },
+  { id: 8, title: '16:00-17:00' }
+]
+const options4 = [
+  { id: 1, title: '自定义1' },
+  { id: 2, title: '自定义2' },
+  { id: 3, title: '自定义3' }
+]
+const deliveryOptions = ref([
+  {
+    name: '今天',
+    selectedIndex: 0,
+    times: [
+      { id: 1, title: '9:00-10:00' },
+      { id: 2, title: '10:00-11:00' },
+      { id: 3, title: '11:00-12:00' },
+      { id: 4, title: '12:00-13:00' },
+      { id: 5, title: '13:00-14:00' },
+      { id: 6, title: '14:00-15:00' },
+      { id: 7, title: '15:00-16:00' },
+      { id: 8, title: '16:00-17:00' },
+      { id: 9, title: '17:00-18:00' },
+      { id: 10, title: '18:00-19:00' },
+      { id: 11, title: '19:00-20:00' },
+      { id: 12, title: '20:00-21:00' }
+    ]
   },
-  methods: {
-    getDeliveryName(item: any | null): string {
-      const deliveryItem = item as UTSJSONObject | null;
-      if (deliveryItem == null) {
-        return '';
-      }
-      const name = deliveryItem['name'];
-      return name == null ? '' : name.toString();
-    },
-    getDeliverySelectedIndex(item: any | null): number {
-      const deliveryItem = item as UTSJSONObject | null;
-      if (deliveryItem == null) {
-        return 0;
-      }
-      const selectedIndex = deliveryItem['selectedIndex'];
-      return selectedIndex == null ? 0 : selectedIndex as number;
-    },
-    getDeliveryTimes(item: any | null): UTSJSONObject[] {
-      const deliveryItem = item as UTSJSONObject | null;
-      if (deliveryItem == null) {
-        return [] as UTSJSONObject[];
-      }
-      const times = deliveryItem['times'] as UTSJSONObject[] | null;
-      return times == null ? [] as UTSJSONObject[] : times;
-    },
-    updateDeliverySelectedIndex(item: any | null, index: any): void {
-      const deliveryItem = item as UTSJSONObject | null;
-      const nextIndex = index == null ? 0 : index as number;
-      if (deliveryItem != null) {
-        deliveryItem['selectedIndex'] = nextIndex;
-      }
-      console.log('预约时间索引:', nextIndex);
-    }
+  {
+    name: '明天',
+    selectedIndex: 0,
+    times: [
+      { id: 1, title: '9:00-10:00' },
+      { id: 2, title: '10:00-11:00' },
+      { id: 3, title: '11:00-12:00' },
+      { id: 4, title: '12:00-13:00' },
+      { id: 5, title: '13:00-14:00' },
+      { id: 6, title: '14:00-15:00' },
+      { id: 7, title: '15:00-16:00' },
+      { id: 8, title: '16:00-17:00' },
+      { id: 9, title: '17:00-18:00' },
+      { id: 10, title: '18:00-19:00' },
+      { id: 11, title: '19:00-20:00' },
+      { id: 12, title: '20:00-21:00' }
+    ]
+  },
+  {
+    name: '后天',
+    selectedIndex: 0,
+    times: [
+      { id: 1, title: '9:00-10:00' },
+      { id: 2, title: '10:00-11:00' },
+      { id: 3, title: '11:00-12:00' },
+      { id: 4, title: '12:00-13:00' },
+      { id: 5, title: '13:00-14:00' },
+      { id: 6, title: '14:00-15:00' },
+      { id: 7, title: '15:00-16:00' },
+      { id: 8, title: '16:00-17:00' },
+      { id: 9, title: '17:00-18:00' },
+      { id: 10, title: '18:00-19:00' },
+      { id: 11, title: '19:00-20:00' },
+      { id: 12, title: '20:00-21:00' }
+    ]
   }
+] as UTSJSONObject[])
+
+function getDeliveryName(item: any | null): string {
+  const deliveryItem = item as UTSJSONObject | null
+  if (deliveryItem == null) {
+    return ''
+  }
+  const name = deliveryItem['name']
+  return name == null ? '' : name.toString()
+}
+
+function getDeliverySelectedIndex(item: any | null): number {
+  const deliveryItem = item as UTSJSONObject | null
+  if (deliveryItem == null) {
+    return 0
+  }
+  const selectedIndex = deliveryItem['selectedIndex']
+  return selectedIndex == null ? 0 : selectedIndex as number
+}
+
+function getDeliveryTimes(item: any | null): UTSJSONObject[] {
+  const deliveryItem = item as UTSJSONObject | null
+  if (deliveryItem == null) {
+    return [] as UTSJSONObject[]
+  }
+  const times = deliveryItem['times'] as UTSJSONObject[] | null
+  return times == null ? [] as UTSJSONObject[] : times
+}
+
+function updateDeliverySelectedIndex(item: any | null, index: any): void {
+  const deliveryItem = item as UTSJSONObject | null
+  const nextIndex = index == null ? 0 : index as number
+  if (deliveryItem != null) {
+    deliveryItem['selectedIndex'] = nextIndex
+  }
+  console.log('预约时间索引:', nextIndex)
 }
 </script>
 

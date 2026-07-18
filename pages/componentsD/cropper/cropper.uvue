@@ -37,37 +37,34 @@
 	</view>
 </template>
 
-<script lang="uts">
-export default {
-	data() {
-		return {
-			avatarUrl: '',
-			wideUrl: ''
-		}
-	},
-	methods: {
-		chooseWideImage(): void {
-			const cropper = this.$refs['wideRef'] as ComponentPublicInstance | null
-			if (cropper == null) {
-				return
-			}
-			cropper.$callMethod('chooseImage', 1, {
-				canChangeSize: true,
-				areaWidth: '300rpx',
-				areaHeight: '180rpx',
-				exportWidth: '260rpx',
-				exportHeight: '160rpx'
-			} as UTSJSONObject)
-		},
-		cutImage(result: UTSJSONObject): void {
-			const path = result['path'] == null ? '' : result['path'].toString()
-			const index = result['index'] == null ? 0 : parseInt(result['index'].toString())
-			if (index == 1) {
-				this.wideUrl = path
-			} else {
-				this.avatarUrl = path
-			}
-		}
+<script setup lang="uts">
+import { ref } from 'vue'
+
+const avatarUrl = ref('')
+const wideUrl = ref('')
+const wideRef = ref<ComponentPublicInstance | null>(null)
+
+function chooseWideImage(): void {
+	const cropper = wideRef.value
+	if (cropper == null) {
+		return
+	}
+	cropper.$callMethod('chooseImage', 1, {
+		canChangeSize: true,
+		areaWidth: '300rpx',
+		areaHeight: '180rpx',
+		exportWidth: '260rpx',
+		exportHeight: '160rpx'
+	} as UTSJSONObject)
+}
+
+function cutImage(result: UTSJSONObject): void {
+	const path = result['path'] == null ? '' : result['path'].toString()
+	const index = result['index'] == null ? 0 : parseInt(result['index'].toString())
+	if (index == 1) {
+		wideUrl.value = path
+	} else {
+		avatarUrl.value = path
 	}
 }
 </script>

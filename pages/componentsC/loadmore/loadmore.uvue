@@ -94,21 +94,12 @@
 	<!-- #endif -->
 </template>
 
-<script>
-	export default {
-		data() {
-			return {
-
-			}
-		},
-		methods: {
-			loadmore() {
-				console.log('loadmore');
-				uni.showToast({
-					title: '加载更多'
-				})
-			}
-		},
+<script setup lang="uts">
+	function loadmore() {
+		console.log('loadmore')
+		uni.showToast({
+			title: '加载更多'
+		})
 	}
 </script>
 

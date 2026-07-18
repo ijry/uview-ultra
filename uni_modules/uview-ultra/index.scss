@@ -1,6 +1,8 @@
 // 引入公共基础类
+/* #ifndef APP-ANDROID || APP-IOS */
 @import "./libs/css/theme-vars.scss";
 @import "./libs/css/theme-legacy-bridge.scss";
+/* #endif */
 @import "./libs/css/common.scss";
 @import "./libs/css/flex.scss";
 @import "./libs/css/color.scss";

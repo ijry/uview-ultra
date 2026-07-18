@@ -199,27 +199,35 @@ export function guid(len = 32, firstU = true, radix = 0): string {
  * @param {String} target 转换的目的，object-转为对象，string-转为字符串
  * @returns any
  */
-export function addStyle(customStyle: any, target = 'object'): any {
+export function addStyle(customStyle: any | null, target = 'object'): any {
     // 字符串转字符串，对象转对象情形，直接返回
-    if (testEmpty(customStyle) || typeof(customStyle) === 'object' && target === 'object' || target === 'string' &&
-        typeof(customStyle) === 'string') {
-        return customStyle
-    }
+    if (customStyle == null || testEmpty(customStyle as any)) {
+		return target === 'object' ? ({} as UTSJSONObject) : ''
+	}
+	const styleValue = customStyle as any
+	if (typeof(styleValue) === 'object' && target === 'object' || target === 'string' &&
+		typeof(styleValue) === 'string') {
+		return styleValue
+	}
     // 字符串转对象
     if (target === 'object') {
-		let customStyleStr = JSON.stringify(customStyle)
+		let customStyleStr = typeof(styleValue) === 'string' ? styleValue as string : JSON.stringify(styleValue)
         // 去除字符串样式中的两端空格(中间的空格不能去掉，比如padding: 20px 0如果去掉了就错了)，空格是无用的
         customStyleStr = customStyleStr.trim()
         // 根据";"将字符串转为数组形式
         const styleArray = customStyleStr.split(';')
-        const style = {}
+        const style = {} as UTSJSONObject
         // 历遍数组，拼接成对象
         for (let i = 0; i < styleArray.length; i++) {
             // 'font-size:20px;color:red;'，如此最后字符串有";"的话，会导致styleArray最后一个元素为空字符串，这里需要过滤
             if (styleArray[i] != '') {
-                const item = styleArray[i].split(':')
-				if (item.length > 1) {
-					style[(item[0]).trim()] = item[1].trim()
+                const splitIndex = styleArray[i].indexOf(':')
+				if (splitIndex > -1) {
+					const key = styleArray[i].substring(0, splitIndex).trim()
+					const value = styleArray[i].substring(splitIndex + 1).trim()
+					if (key != '') {
+						style[key] = value
+					}
 				}
             }
         }
@@ -228,10 +236,10 @@ export function addStyle(customStyle: any, target = 'object'): any {
     // 这里为对象转字符串形式
     let string = ''
 	// let customStyleObj
-	UTSJSONObject.keys(customStyle as UTSJSONObject).forEach((key: string) => {
+	UTSJSONObject.keys(styleValue as UTSJSONObject).forEach((key: string) => {
 		// 驼峰命名转换为中划线
 		key = key.replace(/([A-Z])/g, '-$1').toLowerCase()
-		let val = customStyle[key]
+		let val = (styleValue as UTSJSONObject)[key]
 		string += `${key}: ${val};`
 	})
     // 去除两端空格

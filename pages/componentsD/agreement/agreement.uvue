@@ -46,42 +46,45 @@
     </view>
 </template>
 
-<script>
-export default {
-  data() {
-    return {
-      checked1: 0,
-      checked2: 0,
-      checked3: 0,
-      urlProtocol: '/pages/agreement/protocol',
-      urlPrivacy: '/pages/agreement/privacy',
-      urlThird: '/pages/agreement/third-party'
-    };
-  },
-  methods: {
-    change1(val: number) {
-      console.log('agreement1 change:', val);
-      this.checked1 = val;
-    },
-    change2(val: number) {
-      console.log('agreement2 change:', val);
-      this.checked2 = val;
-    },
-    change3(val: number) {
-      console.log('agreement3 change:', val);
-      this.checked3 = val;
-    },
-    showAgreement1(): void {
-      (this.$refs['agreement1'] as ComponentPublicInstance).$callMethod('showModal');
-    },
-    showAgreement2(): void {
-      (this.$refs['agreement2'] as ComponentPublicInstance).$callMethod('showModal');
-    },
-    showAgreement3(): void {
-      (this.$refs['agreement3'] as ComponentPublicInstance).$callMethod('showModal');
-    }
-  }
-};
+<script setup lang="uts">
+import { ref } from 'vue'
+
+const checked1 = ref(0)
+const checked2 = ref(0)
+const checked3 = ref(0)
+const urlProtocol = '/pages/agreement/protocol'
+const urlPrivacy = '/pages/agreement/privacy'
+const urlThird = '/pages/agreement/third-party'
+const agreement1 = ref<ComponentPublicInstance | null>(null)
+const agreement2 = ref<ComponentPublicInstance | null>(null)
+const agreement3 = ref<ComponentPublicInstance | null>(null)
+
+function change1(val: number) {
+  console.log('agreement1 change:', val)
+  checked1.value = val
+}
+
+function change2(val: number) {
+  console.log('agreement2 change:', val)
+  checked2.value = val
+}
+
+function change3(val: number) {
+  console.log('agreement3 change:', val)
+  checked3.value = val
+}
+
+function showAgreement1(): void {
+  agreement1.value?.$callMethod('showModal')
+}
+
+function showAgreement2(): void {
+  agreement2.value?.$callMethod('showModal')
+}
+
+function showAgreement3(): void {
+  agreement3.value?.$callMethod('showModal')
+}
 </script>
 
 <style lang="scss" scoped>

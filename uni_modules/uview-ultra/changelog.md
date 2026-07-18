@@ -1,3 +1,28 @@
+## 4.5.0
+feat: 发布 4.5.0，完成 uvue Composition API 与 Android UTS 兼容性升级
+
+本版本重点提升 uni-app x / Android 端的 uvue 组件可编译性、运行稳定性和组件示例可用性，是一次面向 v4 主线的兼容性增强版本。
+
+主要更新：
+- 大规模推进 uvue 组件 Composition API 化，统一使用 `<script setup lang="uts">`、`defineProps`、`defineEmits`、`defineExpose`、`computed`、`watch`、生命周期 hooks 等写法，降低 Options API、mixin 和 UTS 编译限制之间的冲突。
+- 补齐组件间父子通信与实例暴露能力，多个组件改为通过组合式工具维护 parentData、getProps、getRefs、setStatus、open/close、初始化和测量方法，保持既有组件 API 与示例调用方式兼容。
+- 修复 Android UTS 编译中的严格比较、空数组判断、字符串长度判断、平台条件样式等兼容性问题，减少 HBuilderX / uni-app x 编译期 warning 和潜在运行期阻塞。
+- 优化 swipe-action-item 在 Android / iOS app 端的样式条件编译，避免 `touch-action` 在 app-uvue-css 下产生非标准属性警告，同时保留 Web/小程序侧滚动手势兼容处理。
+- 修复 tabs、text 等组件在 UTS 编译场景中的比较表达式兼容问题，避免 Android class 编译阶段因类型推断差异产生 warning。
+- 同步调整大量示例页与组件页的 uvue 写法，提升 Android 调试基座中组件列表、基础组件、表单组件、数据组件和模板页的加载稳定性。
+- 保持现有 `up-*` 组件命名、属性、事件与插槽使用方式不变，升级后无需调整已有业务调用。
+
+验证结果：
+- 使用 HBuilderX 5.07 与 MuMu Android 模拟器 `emulator-5554` 完成 uni-app x Android 编译与运行验证。
+- Android 端已成功启动 `uview-plus4`，日志显示 `UTS编译完毕`、`App Launch`、`应用【uview-plus4】已启动`。
+- 已检查运行期日志，未发现项目级 `FATAL EXCEPTION`、`AndroidRuntime`、`ReferenceError`、`TypeError`、`SyntaxError`、`app-service.js` 错误。
+- 已截图检查组件首页显示，组件列表正常渲染，无白屏、崩溃页或明显布局缺失。
+
+兼容性说明：
+- 本版本聚焦 uview-ultra v4 在 uni-app x / Android UTS 下的兼容性与运行稳定性。
+- 既有 Vue3、uni-app、uni-app x 使用入口保持不变。
+- 发布包继续保持免费源码插件形式，适配平台声明不变。
+
 ## 4.4.21
 fix: 修复navbar全局左侧点击拦截上下文
 

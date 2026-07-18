@@ -78,170 +78,171 @@
   </view>
 </template>
 
-<script>
-export default {
-  data() {
-    return {
-      show1: false,
-      result1: [] as string[],
-      show2: false,
-      result2: ['2'] as string[],
-      show3: false,
-      result3: [] as string[],
-      areaData: [{
-        label: '北京市',
-        value: '11',
-        children: [{
-          label: '北京市',
-          value: '1101',
-          children: [{
-            label: '东城区',
-            value: '110101'
-          }, {
-            label: '西城区',
-            value: '110102'
-          }, {
-            label: '朝阳区',
-            value: '110105'
-          }]
-        }]
-      }, {
-        label: '广东省',
-        value: '44',
-        children: [{
-          label: '广州市',
-          value: '4401',
-          children: [{
-            label: '越秀区',
-            value: '440103'
-          }, {
-            label: '荔湾区',
-            value: '440103'
-          }, {
-            label: '海珠区',
-            value: '440105'
-          }]
-        }, {
-          label: '深圳市',
-          value: '4403',
-          children: [{
-            label: '罗湖区',
-            value: '440303'
-          }, {
-            label: '福田区',
-            value: '440304'
-          }]
-        }]
-      }],
-      categoryData: [{
-        label: '服装',
-        value: '1',
-        children: [{
-          label: '上装',
-          value: '1-1',
-          children: [{
-            label: 'T恤',
-            value: '1-1-1'
-          }, {
-            label: '衬衫',
-            value: '1-1-2'
-          }]
-        }, {
-          label: '下装',
-          value: '1-2',
-          children: [{
-            label: '裤子',
-            value: '1-2-1'
-          }, {
-            label: '裙子',
-            value: '1-2-2'
-          }]
-        }]
-      }, {
-        label: '数码',
-        value: '2',
-        children: [{
-          label: '手机',
-          value: '2-1',
-          children: [{
-            label: '智能手机',
-            value: '2-1-1'
-          }, {
-            label: '功能手机',
-            value: '2-1-2'
-          }]
-        }, {
-          label: '电脑',
-          value: '2-2',
-          children: [{
-            label: '笔记本',
-            value: '2-2-1'
-          }, {
-            label: '台式机',
-            value: '2-2-2'
-          }]
-        }]
-      }],
-      orgData: [{
-        name: '总部',
-        id: '1',
-        childs: [{
-          name: '研发部',
-          id: '1-1',
-          childs: [{
-            name: '前端组',
-            id: '1-1-1'
-          }, {
-            name: '后端组',
-            id: '1-1-2'
-          }]
-        }, {
-          name: '市场部',
-          id: '1-2',
-          childs: [{
-            name: '销售组',
-            id: '1-2-1'
-          }, {
-            name: '推广组',
-            id: '1-2-2'
-          }]
-        }]
-      }]
-    };
-  },
-  methods: {
-    openCascader1() {
-      this.show1 = true;
-    },
-    openCascader2() {
-      this.show2 = true;
-    },
-    openCascader3() {
-      this.show3 = true;
-    },
-    confirm2(e: UTSJSONObject): void {
-      this.result2 = this.getConfirmValue(e);
-    },
-    confirm3(e: UTSJSONObject): void {
-      this.result3 = this.getConfirmValue(e);
-    },
-    getConfirmValue(e: UTSJSONObject): string[] {
-      const value = e['value'] as any[] | null;
-      if (value == null) {
-        return [] as string[];
-      }
-      const result = [] as string[];
-      for (let i = 0; i < value.length; i++) {
-        result.push(value[i].toString());
-      }
-      return result;
-    },
-    formatResult(result: string[]): string {
-      if (result.length == 0) return '';
-      return result.join(' / ');
-    }
+<script setup lang="uts">
+import { ref } from 'vue'
+
+const show1 = ref(false)
+const result1 = ref([] as string[])
+const show2 = ref(false)
+const result2 = ref(['2'] as string[])
+const show3 = ref(false)
+const result3 = ref([] as string[])
+const areaData = [{
+  label: '北京市',
+  value: '11',
+  children: [{
+    label: '北京市',
+    value: '1101',
+    children: [{
+      label: '东城区',
+      value: '110101'
+    }, {
+      label: '西城区',
+      value: '110102'
+    }, {
+      label: '朝阳区',
+      value: '110105'
+    }]
+  }]
+}, {
+  label: '广东省',
+  value: '44',
+  children: [{
+    label: '广州市',
+    value: '4401',
+    children: [{
+      label: '越秀区',
+      value: '440103'
+    }, {
+      label: '荔湾区',
+      value: '440103'
+    }, {
+      label: '海珠区',
+      value: '440105'
+    }]
+  }, {
+    label: '深圳市',
+    value: '4403',
+    children: [{
+      label: '罗湖区',
+      value: '440303'
+    }, {
+      label: '福田区',
+      value: '440304'
+    }]
+  }]
+}]
+const categoryData = [{
+  label: '服装',
+  value: '1',
+  children: [{
+    label: '上装',
+    value: '1-1',
+    children: [{
+      label: 'T恤',
+      value: '1-1-1'
+    }, {
+      label: '衬衫',
+      value: '1-1-2'
+    }]
+  }, {
+    label: '下装',
+    value: '1-2',
+    children: [{
+      label: '裤子',
+      value: '1-2-1'
+    }, {
+      label: '裙子',
+      value: '1-2-2'
+    }]
+  }]
+}, {
+  label: '数码',
+  value: '2',
+  children: [{
+    label: '手机',
+    value: '2-1',
+    children: [{
+      label: '智能手机',
+      value: '2-1-1'
+    }, {
+      label: '功能手机',
+      value: '2-1-2'
+    }]
+  }, {
+    label: '电脑',
+    value: '2-2',
+    children: [{
+      label: '笔记本',
+      value: '2-2-1'
+    }, {
+      label: '台式机',
+      value: '2-2-2'
+    }]
+  }]
+}]
+const orgData = [{
+  name: '总部',
+  id: '1',
+  childs: [{
+    name: '研发部',
+    id: '1-1',
+    childs: [{
+      name: '前端组',
+      id: '1-1-1'
+    }, {
+      name: '后端组',
+      id: '1-1-2'
+    }]
+  }, {
+    name: '市场部',
+    id: '1-2',
+    childs: [{
+      name: '销售组',
+      id: '1-2-1'
+    }, {
+      name: '推广组',
+      id: '1-2-2'
+    }]
+  }]
+}]
+
+function openCascader1() {
+  show1.value = true
+}
+
+function openCascader2() {
+  show2.value = true
+}
+
+function openCascader3() {
+  show3.value = true
+}
+
+function getConfirmValue(e: UTSJSONObject): string[] {
+  const value = e['value'] as any[] | null
+  if (value == null) {
+    return [] as string[]
   }
-};
+  const result = [] as string[]
+  for (let i = 0; i < value.length; i++) {
+    result.push(value[i].toString())
+  }
+  return result
+}
+
+function confirm2(e: UTSJSONObject): void {
+  result2.value = getConfirmValue(e)
+}
+
+function confirm3(e: UTSJSONObject): void {
+  result3.value = getConfirmValue(e)
+}
+
+function formatResult(result: string[]): string {
+  if (result.length == 0) return ''
+  return result.join(' / ')
+}
 </script>
 
 <style lang="scss" scoped>

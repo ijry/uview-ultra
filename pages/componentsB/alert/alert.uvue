@@ -138,15 +138,9 @@
 	<!-- #endif -->
 </template>
 
-<script>
-	export default {
-		data() {
-			return {
-				description: '',
-				title: ''
-			}
-		}
-	}
+<script setup lang="uts">
+const description = ''
+const title = ''
 </script>
 
 <style lang="scss">

@@ -2,9 +2,7 @@
 	<view
 		class="up-notice-bar"
 		v-if="show"
-		:style="[{
-			backgroundColor: bgColor
-		}, addStyle(customStyle)]"
+		:style="rootStyle"
 	>
 		<template v-if="direction === 'column' || (direction === 'row' && step)">
 			<up-column-notice
@@ -38,11 +36,10 @@
 		</template>
 	</view>
 </template>
-<script>
-	import { propsNoticeBar } from './props';
-	import { mpMixin } from '../../libs/mixin/mpMixin';
-	import { mixin } from '../../libs/mixin/mixin';
-	import { addStyle } from '../../libs/function/index';
+<script setup lang="uts">
+	import { computed, ref } from 'vue'
+	import defProps from './noticeBar.uts'
+	import { addStyle } from '../../libs/function/index'
 	/**
 	 * noticeBar 滚动通知
 	 * @description 该组件用于滚动通告场景，有多种模式可供选择
@@ -66,35 +63,108 @@
 	 * @event {Function}			close			点击右侧关闭图标触发
 	 * @example <up-notice-bar :more-icon="true" :list="list"></up-notice-bar>
 	 */
-	export default {
-		name: "up-notice-bar",
-		mixins: [mpMixin, mixin, propsNoticeBar],
-		data() {
-			return {
-				show: true
-			}
+	defineOptions({
+		name: 'up-notice-bar'
+	})
+
+	const props = defineProps({
+		// 显示的内容，数组
+		text: {
+			type: [Array, String],
+			default: defProps.getAny('noticeBar.text')
 		},
-		emits: ["click", "close"],
-		methods: {
-			addStyle(val: any) {
-				return addStyle(val)
-			},
-			// 点击通告栏
-			click(index: number) {
-				this.$emit('click', index)
-				if (this.url != '' && this.linkType != '') {
-					// 此方法写在mixin中，另外跳转的url和linkType参数也在mixin的props中
-					// @ts-ignore
-					this.openPage()
-				}
-			},
-			// 点击关闭按钮
-			close() {
-				this.show = false
-				this.$emit('close')
-			}
+		// 通告滚动模式，row-横向滚动，column-竖向滚动
+		direction: {
+			type: String,
+			default: defProps.getString('noticeBar.direction')
+		},
+		// direction = row时，是否使用步进形式滚动
+		step: {
+			type: Boolean,
+			default: defProps.getBoolean('noticeBar.step')
+		},
+		// 是否显示左侧的音量图标
+		icon: {
+			type: String,
+			default: defProps.getString('noticeBar.icon')
+		},
+		// 通告模式，link-显示右箭头，closable-显示右侧关闭图标
+		mode: {
+			type: String,
+			default: defProps.getString('noticeBar.mode')
+		},
+		// 文字颜色，各图标也会使用文字颜色
+		color: {
+			type: String,
+			default: defProps.getString('noticeBar.color')
+		},
+		// 背景颜色
+		bgColor: {
+			type: String,
+			default: defProps.getString('noticeBar.bgColor')
+		},
+		// 水平滚动时的滚动速度，即每秒滚动多少px(px)
+		speed: {
+			type: [String, Number],
+			default: defProps.getNumber('noticeBar.speed')
+		},
+		// 字体大小
+		fontSize: {
+			type: [String, Number],
+			default: defProps.getNumber('noticeBar.fontSize')
+		},
+		// 滚动一个周期的时间长，单位ms
+		duration: {
+			type: [String, Number],
+			default: defProps.getNumber('noticeBar.duration')
+		},
+		// 是否禁止用手滑动切换
+		disableTouch: {
+			type: Boolean,
+			default: defProps.getBoolean('noticeBar.disableTouch')
+		},
+		// 跳转的页面路径
+		url: {
+			type: String,
+			default: defProps.getString('noticeBar.url')
+		},
+		// 页面跳转的类型
+		linkType: {
+			type: String,
+			default: defProps.getString('noticeBar.linkType')
+		},
+		customStyle: {
+			type: [Object, String],
+			default: () => ({})
 		}
-	};
+	})
+
+	const emit = defineEmits(['click', 'close'])
+
+	const show = ref(true)
+
+	const rootStyle = computed((): UTSJSONObject => {
+		const style = {} as UTSJSONObject
+		style['backgroundColor'] = props.bgColor
+		return UTSJSONObject.assign(style, addStyle(props.customStyle) as UTSJSONObject)
+	})
+
+	const openPage = (): void => {
+	}
+
+	// 点击通告栏
+	const click = (index: number): void => {
+		emit('click', index)
+		if (props.url != '' && props.linkType != '') {
+			openPage()
+		}
+	}
+
+	// 点击关闭按钮
+	const close = (): void => {
+		show.value = false
+		emit('close')
+	}
 </script>
 
 <style lang="scss" scoped>

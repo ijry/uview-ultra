@@ -65,18 +65,9 @@
 	<!-- #endif -->
 </template>
 
-<script>
-	export default {
-		data() {
-			return {
-
-			}
-		},
-		methods: {
-			click() {
-				console.log('click');
-			}
-		}
+<script setup lang="uts">
+	function click() {
+		console.log('click')
 	}
 </script>
 

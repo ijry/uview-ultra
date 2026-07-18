@@ -114,84 +114,66 @@
 	<!-- #endif -->
 </template>
 
-<script>
-	export default {
-		data() {
-			return {
-				content: '模态框，常用于消息提示、消息确认、在当前页面内完成特定的交互操作',
-				show1: false,
-				show2: false,
-				show3: false,
-				show4: false,
-				show5: false,
-				show6: false,
-				show7: false,
-				show8: false,
-				show9: false,
-				list: [{
-						title: '基础使用',
-						iconUrl: 'https://cdn.uviewui.com/uview/demo/modal/4.png'
-					},
-					{
-						title: '无标题',
-						iconUrl: 'https://cdn.uviewui.com/uview/demo/modal/5.png'
-					},
-					{
-						title: '带取消按钮',
-						iconUrl: 'https://cdn.uviewui.com/uview/demo/modal/2.png'
-					},
-					{
-						title: '异步关闭',
-						iconUrl: 'https://cdn.uviewui.com/uview/demo/modal/6.png'
-					},
-					{
-						title: '对调取消和确认按钮',
-						iconUrl: 'https://cdn.uviewui.com/uview/demo/modal/3.png'
-					},
-					{
-						title: '允许点击遮罩关闭',
-						iconUrl: 'https://cdn.uviewui.com/uview/demo/modal/7.png'
-					},
-					{
-						title: '传入slot',
-						iconUrl: 'https://cdn.uviewui.com/uview/demo/modal/1.png'
-					},
-					{
-						title: '自定义按钮',
-						iconUrl: 'https://cdn.uviewui.com/uview/demo/modal/8.png'
-					},
-					{
-						title: '淡入淡出动画',
-						iconUrl: 'https://cdn.uviewui.com/uview/demo/modal/9.png'
-					}
-				]
-			}
-		},
-		methods: {
-			showModal(index: number) {
-				this.$data[`show${index + 1}`] = true
-			},
-			navigateBack() {
-				uni.navigateBack()
-			},
-			confirm4() {
-				setTimeout(() => {
-					this.show4 = false
-				}, 2000)
-			},
-			confirm() {
-				this.show3 = false
-				console.log('confirm');
-			},
-			cancel() {
-				this.show3 = false
-				console.log('cancel');
-			},
-			close() {
-				this.show3 = false
-				console.log('close');
-			}
-		}
+<script setup lang="uts">
+	import { ref } from 'vue'
+
+	const content = '模态框，常用于消息提示、消息确认、在当前页面内完成特定的交互操作'
+	const show1 = ref(false)
+	const show2 = ref(false)
+	const show3 = ref(false)
+	const show4 = ref(false)
+	const show5 = ref(false)
+	const show6 = ref(false)
+	const show7 = ref(false)
+	const show8 = ref(false)
+	const show9 = ref(false)
+	const list = [
+		{ title: '基础使用', iconUrl: 'https://cdn.uviewui.com/uview/demo/modal/4.png' },
+		{ title: '无标题', iconUrl: 'https://cdn.uviewui.com/uview/demo/modal/5.png' },
+		{ title: '带取消按钮', iconUrl: 'https://cdn.uviewui.com/uview/demo/modal/2.png' },
+		{ title: '异步关闭', iconUrl: 'https://cdn.uviewui.com/uview/demo/modal/6.png' },
+		{ title: '对调取消和确认按钮', iconUrl: 'https://cdn.uviewui.com/uview/demo/modal/3.png' },
+		{ title: '允许点击遮罩关闭', iconUrl: 'https://cdn.uviewui.com/uview/demo/modal/7.png' },
+		{ title: '传入slot', iconUrl: 'https://cdn.uviewui.com/uview/demo/modal/1.png' },
+		{ title: '自定义按钮', iconUrl: 'https://cdn.uviewui.com/uview/demo/modal/8.png' },
+		{ title: '淡入淡出动画', iconUrl: 'https://cdn.uviewui.com/uview/demo/modal/9.png' }
+	]
+
+	function showModal(index: number) {
+		if (index == 0) show1.value = true
+		if (index == 1) show2.value = true
+		if (index == 2) show3.value = true
+		if (index == 3) show4.value = true
+		if (index == 4) show5.value = true
+		if (index == 5) show6.value = true
+		if (index == 6) show7.value = true
+		if (index == 7) show8.value = true
+		if (index == 8) show9.value = true
+	}
+
+	function navigateBack() {
+		uni.navigateBack()
+	}
+
+	function confirm4() {
+		setTimeout(() => {
+			show4.value = false
+		}, 2000)
+	}
+
+	function confirm() {
+		show3.value = false
+		console.log('confirm')
+	}
+
+	function cancel() {
+		show3.value = false
+		console.log('cancel')
+	}
+
+	function close() {
+		show3.value = false
+		console.log('close')
 	}
 </script>
 

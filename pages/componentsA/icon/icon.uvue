@@ -27,15 +27,12 @@
 	<!-- #endif -->
 </template>
 
-<script>
+<script setup lang="uts">
 	type iconItem = {
 	  name: string
 	}
 	import { toast } from '@/uni_modules/uview-ultra/index.uts'
-	export default {
-		data() {
-			return {
-				iconList: [{
+	const iconList = [{
 						name: 'level'
 					},
 					{
@@ -614,22 +611,19 @@
 					{
 						name: 'share-square'
 					},
-				] as iconItem[]
-			};
-		},
-		methods: {
-			test() {
-				console.log('test')
-			},
-			selectIcon(name: string) {
-				// #ifdef APP
-				uni.setClipboardData({
-					data: name
-				});
-				// #endif
-				toast('图标名称已复制');
-			}
-		}
+	] as iconItem[]
+
+	function test() {
+		console.log('test')
+	}
+
+	function selectIcon(name: string) {
+		// #ifdef APP
+		uni.setClipboardData({
+			data: name
+		})
+		// #endif
+		toast('图标名称已复制')
 	}
 </script>
 

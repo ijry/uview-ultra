@@ -46,11 +46,7 @@
 	</view>
 </template>
 
-<script lang="uts">
-export default {
-	onLoad() {
-	}
-}
+<script setup lang="uts">
 </script>
 
 <style lang="scss">

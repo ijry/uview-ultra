@@ -13,49 +13,43 @@
 	</view>
 </template>
 
-<script>
-export default {
-	data() {
-		return {
-			maxlength: 4,
-			value: '',
-			second: 3,
-			show: false,
-			error: false,
-			captchaTimer: null as number | null
-		};
-	},
-	computed: {},
-	onLoad() {
-		// this.getCaptcha()
-		this.captchaTimer = setInterval(() => {
-			this.second--;
-			if (this.second <= 0) {
-				this.show = true;
-				if (this.value.length != 4) {
-					this.error = true;
-				}
-				clearInterval(this.captchaTimer ?? 0);
+<script setup lang="uts">
+import { ref } from 'vue'
+
+const maxlength = 4
+const value = ref('')
+const second = ref(3)
+const show = ref(false)
+const error = ref(false)
+const captchaTimer = ref<number | null>(null)
+
+onLoad((_options: OnLoadOptions) => {
+	// getCaptcha()
+	captchaTimer.value = setInterval(() => {
+		second.value--
+		if (second.value <= 0) {
+			show.value = true
+			if (value.value.length != 4) {
+				error.value = true
 			}
-		}, 1000);
-	},
-	methods: {
-		// 收不到验证码选择时的选择
-		noCaptcha() {
-			uni.showActionSheet({
-				itemList: ['重新获取验证码', '接听语音验证码']
-			});
-		},
-		// change事件侦听
-		change(value: string) {
-			// console.log('change', value);
-		},
-		// 输入完验证码最后一位执行
-		finish(value: string) {
-			// console.log('finish', value);
+			clearInterval(captchaTimer.value ?? 0)
 		}
-	}
-};
+	}, 1000)
+})
+
+function noCaptcha() {
+	uni.showActionSheet({
+		itemList: ['重新获取验证码', '接听语音验证码']
+	})
+}
+
+function change(value: string) {
+	// console.log('change', value)
+}
+
+function finish(value: string) {
+	// console.log('finish', value)
+}
 </script>
 
 <style lang="scss" scoped>

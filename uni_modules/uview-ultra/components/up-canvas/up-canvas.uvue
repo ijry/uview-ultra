@@ -17,7 +17,9 @@
     </view>
 </template>
 
-<script lang="uts">
+<script setup lang="uts">
+import { computed, getCurrentInstance, onMounted, ref } from 'vue'
+
 function normalizeSize(value: any | null, fallback: number): number {
     if (typeof value === 'number') {
         return value
@@ -33,14 +35,15 @@ function makeId(prefix: string): string {
     return prefix + Date.now().toString()
 }
 
-export default {
-    name: 'up-canvas',
-    emits: ['touchstart', 'touchmove', 'touchend'],
-    props: {
+defineOptions({
+    name: 'up-canvas'
+})
+
+const props = defineProps({
         canvasId: {
             type: String,
             default(): string {
-                return makeId('up-canvas-')
+                return 'up-canvas-' + Date.now().toString()
             }
         },
         width: {
@@ -63,200 +66,264 @@ export default {
             type: String,
             default: '#ffffff'
         }
-    },
-    data() {
-        return {
-            rootId: makeId('rootId-'),
-            widthLocal: normalizeSize(this.width, 300),
-            heightLocal: normalizeSize(this.height, 300),
-            canvasContext: null as CanvasContext | null,
-            ctx: null as CanvasRenderingContext2D | null,
-            isReady: false
-        }
-    },
-    computed: {
-        actualWidth(): number {
-            return this.useRootHeightAndWidth ? normalizeSize(this.widthLocal, 300) : normalizeSize(this.width, 300)
-        },
-        actualHeight(): number {
-            return this.useRootHeightAndWidth ? normalizeSize(this.heightLocal, 300) : normalizeSize(this.height, 300)
-        },
-        rootStyle(): UTSJSONObject {
-            const style = {} as UTSJSONObject
-            style['width'] = this.useRootHeightAndWidth ? '100%' : this.actualWidth.toString() + this.unit
-            style['height'] = this.useRootHeightAndWidth ? '100%' : this.actualHeight.toString() + this.unit
-            return style
-        },
-        canvasStyle(): UTSJSONObject {
-            const style = {} as UTSJSONObject
-            style['width'] = this.actualWidth.toString() + this.unit
-            style['height'] = this.actualHeight.toString() + this.unit
-            return style
-        }
-    },
-    methods: {
-        onTouchStart(e: UniTouchEvent): void {
-            this.$emit('touchstart', e)
-        },
-        onTouchMove(e: UniTouchEvent): void {
-            this.$emit('touchmove', e)
-        },
-        onTouchEnd(e: UniTouchEvent): void {
-            this.$emit('touchend', e)
-        },
-        getCanvasContext(): CanvasRenderingContext2D | null {
-            return this.ctx
-        },
-        initCanvas(): void {
-            uni.createCanvasContextAsync({
-                id: this.canvasId.toString() as string.IDString,
-                component: this,
-                success: (context: CanvasContext) => {
-                    this.canvasContext = context
-                    this.ctx = context.getContext('2d')
-                    this.isReady = this.ctx != null
-                    this.clearCanvas()
-                },
-                fail: (error: UniError) => {
-                    this.isReady = false
-                    console.error('初始化Canvas失败:', error)
-                }
-            })
-        },
-        ensureContext(): boolean {
-            if (this.ctx != null) {
-                return true
-            }
-            if (!this.isReady) {
-                this.initCanvas()
-            }
-            return this.ctx != null
-        },
-        clearCanvas(): void {
-            if (!this.ensureContext()) {
-                return
-            }
-            this.clearRect(0, 0, this.actualWidth, this.actualHeight)
-            this.setFillStyle(this.bgColor)
-            const context = this.ctx
-            if (context != null) {
-                context.fillRect(0, 0, this.actualWidth, this.actualHeight)
-                context.draw()
-            }
-        },
-        rect(x: number, y: number, width: number, height: number): void {
-            const context = this.ctx
-            if (context != null) {
-                context.rect(x, y, width, height)
-            }
-        },
-        clearRect(x: number, y: number, width: number, height: number): void {
-            const context = this.ctx
-            if (context != null) {
-                context.clearRect(x, y, width, height)
-            }
-        },
-        fill(): void {
-            const context = this.ctx
-            if (context != null) {
-                context.fill('nonzero')
-            }
-        },
-        setFillStyle(color: string): void {
-            const context = this.ctx
-            if (context != null) {
-                context.fillStyle = color
-            }
-        },
-        setLineStyle(lineColor: string, lineWidth: number): void {
-            this.setLineCap('round')
-            this.setLineJoin('round')
-            this.setStrokeStyle(lineColor)
-            this.setLineWidth(lineWidth)
-        },
-        setLineCap(lineCap: string = 'round'): void {
-            const context = this.ctx
-            if (context != null) {
-                context.lineCap = lineCap
-            }
-        },
-        setLineJoin(lineJoin: string = 'round'): void {
-            const context = this.ctx
-            if (context != null) {
-                context.lineJoin = lineJoin
-            }
-        },
-        setStrokeStyle(color: string): void {
-            const context = this.ctx
-            if (context != null) {
-                context.strokeStyle = color
-            }
-        },
-        setLineWidth(width: number): void {
-            const context = this.ctx
-            if (context != null) {
-                context.lineWidth = width
-            }
-        },
-        beginPath(): void {
-            const context = this.ctx
-            if (context != null) {
-                context.beginPath()
-            }
-        },
-        moveTo(x: number, y: number): void {
-            const context = this.ctx
-            if (context != null) {
-                context.moveTo(x, y)
-            }
-        },
-        lineTo(x: number, y: number): void {
-            const context = this.ctx
-            if (context != null) {
-                context.lineTo(x, y)
-            }
-        },
-        stroke(): void {
-            const context = this.ctx
-            if (context != null) {
-                context.stroke()
-            }
-        },
-        closePath(): void {
-            const context = this.ctx
-            if (context != null) {
-                context.closePath()
-            }
-        },
-        draw(isLastDraw: boolean = false): void {
-            const context = this.ctx
-            if (context != null) {
-                context.draw()
-            }
-        },
-        exportImage(fileType: string = 'png', quality: number = 1): Promise<string> {
-            return new Promise((resolve, reject) => {
-                const canvas = this.canvasContext
-                if (canvas == null) {
-                    reject(new Error('Canvas is not ready'))
-                    return
-                }
-                const mime = fileType == 'jpg' || fileType == 'jpeg' ? 'image/jpeg' : 'image/png'
-                resolve(canvas.toDataURL(mime, quality))
-            })
-        },
-        setNewSize(): void {
-            this.widthLocal = normalizeSize(this.width, 300)
-            this.heightLocal = normalizeSize(this.height, 300)
-        }
-    },
-    mounted(): void {
-        if (this.useRootHeightAndWidth) {
-            this.setNewSize()
-        }
-        this.initCanvas()
+})
+
+const emit = defineEmits(['touchstart', 'touchmove', 'touchend'])
+const instance = getCurrentInstance()!.proxy!
+const rootId = makeId('rootId-')
+const widthLocal = ref(normalizeSize(props.width, 300))
+const heightLocal = ref(normalizeSize(props.height, 300))
+const canvasContext = ref<CanvasContext | null>(null)
+const ctx = ref<CanvasRenderingContext2D | null>(null)
+const isReady = ref(false)
+
+const actualWidth = computed((): number => {
+    return props.useRootHeightAndWidth ? normalizeSize(widthLocal.value, 300) : normalizeSize(props.width, 300)
+})
+
+const actualHeight = computed((): number => {
+    return props.useRootHeightAndWidth ? normalizeSize(heightLocal.value, 300) : normalizeSize(props.height, 300)
+})
+
+const rootStyle = computed((): UTSJSONObject => {
+    const style = {} as UTSJSONObject
+    style['width'] = props.useRootHeightAndWidth ? '100%' : actualWidth.value.toString() + props.unit
+    style['height'] = props.useRootHeightAndWidth ? '100%' : actualHeight.value.toString() + props.unit
+    return style
+})
+
+const canvasStyle = computed((): UTSJSONObject => {
+    const style = {} as UTSJSONObject
+    style['width'] = actualWidth.value.toString() + props.unit
+    style['height'] = actualHeight.value.toString() + props.unit
+    return style
+})
+
+const onTouchStart = (e: UniTouchEvent): void => {
+    emit('touchstart', e)
+}
+
+const onTouchMove = (e: UniTouchEvent): void => {
+    emit('touchmove', e)
+}
+
+const onTouchEnd = (e: UniTouchEvent): void => {
+    emit('touchend', e)
+}
+
+const getCanvasContext = (): CanvasRenderingContext2D | null => {
+    return ctx.value
+}
+
+const clearRect = (x: number, y: number, width: number, height: number): void => {
+    const context = ctx.value
+    if (context != null) {
+        context.clearRect(x, y, width, height)
     }
 }
+
+const setFillStyle = (color: string): void => {
+    const context = ctx.value
+    if (context != null) {
+        context.fillStyle = color
+    }
+}
+
+function fillCanvasBackground(): void {
+    clearRect(0, 0, actualWidth.value, actualHeight.value)
+    setFillStyle(props.bgColor)
+    const context = ctx.value
+    if (context != null) {
+        context.fillRect(0, 0, actualWidth.value, actualHeight.value)
+        context.draw()
+    }
+}
+
+const initCanvas = (): void => {
+    uni.createCanvasContextAsync({
+        id: props.canvasId.toString() as string.IDString,
+        component: instance,
+        success: (context: CanvasContext) => {
+            canvasContext.value = context
+            ctx.value = context.getContext('2d')
+            isReady.value = ctx.value != null
+            fillCanvasBackground()
+        },
+        fail: (error: UniError) => {
+            isReady.value = false
+            console.error('初始化Canvas失败:', error)
+        }
+    })
+}
+
+const ensureContext = (): boolean => {
+    if (ctx.value != null) {
+        return true
+    }
+    if (!isReady.value) {
+        initCanvas()
+    }
+    return ctx.value != null
+}
+
+function clearCanvas(): void {
+    if (!ensureContext()) {
+        return
+    }
+    fillCanvasBackground()
+}
+
+const rect = (x: number, y: number, width: number, height: number): void => {
+    const context = ctx.value
+    if (context != null) {
+        context.rect(x, y, width, height)
+    }
+}
+
+const fill = (): void => {
+    const context = ctx.value
+    if (context != null) {
+        context.fill('nonzero')
+    }
+}
+
+function setLineCap(lineCap: string = 'round'): void {
+    const context = ctx.value
+    if (context != null) {
+        context.lineCap = lineCap
+    }
+}
+
+function setLineJoin(lineJoin: string = 'round'): void {
+    const context = ctx.value
+    if (context != null) {
+        context.lineJoin = lineJoin
+    }
+}
+
+const setStrokeStyle = (color: string): void => {
+    const context = ctx.value
+    if (context != null) {
+        context.strokeStyle = color
+    }
+}
+
+const setLineWidth = (width: number): void => {
+    const context = ctx.value
+    if (context != null) {
+        context.lineWidth = width
+    }
+}
+
+const setLineStyle = (lineColor: string, lineWidth: number): void => {
+    setLineCap('round')
+    setLineJoin('round')
+    setStrokeStyle(lineColor)
+    setLineWidth(lineWidth)
+}
+
+const beginPath = (): void => {
+    const context = ctx.value
+    if (context != null) {
+        context.beginPath()
+    }
+}
+
+const moveTo = (x: number, y: number): void => {
+    const context = ctx.value
+    if (context != null) {
+        context.moveTo(x, y)
+    }
+}
+
+const lineTo = (x: number, y: number): void => {
+    const context = ctx.value
+    if (context != null) {
+        context.lineTo(x, y)
+    }
+}
+
+const stroke = (): void => {
+    const context = ctx.value
+    if (context != null) {
+        context.stroke()
+    }
+}
+
+const closePath = (): void => {
+    const context = ctx.value
+    if (context != null) {
+        context.closePath()
+    }
+}
+
+function draw(_isLastDraw: boolean = false): void {
+    const context = ctx.value
+    if (context != null) {
+        context.draw()
+    }
+}
+
+function exportImage(fileType: string = 'png', quality: number = 1): Promise<string> {
+    return new Promise((resolve, reject) => {
+        const canvas = canvasContext.value
+        if (canvas == null) {
+            reject(new Error('Canvas is not ready'))
+            return
+        }
+        const mime = fileType == 'jpg' || fileType == 'jpeg' ? 'image/jpeg' : 'image/png'
+        resolve(canvas.toDataURL(mime, quality))
+    })
+}
+
+const setNewSize = (): void => {
+    widthLocal.value = normalizeSize(props.width, 300)
+    heightLocal.value = normalizeSize(props.height, 300)
+}
+
+onMounted(() => {
+    if (props.useRootHeightAndWidth) {
+        setNewSize()
+    }
+    initCanvas()
+})
+
+defineExpose({
+    rootId,
+    widthLocal,
+    heightLocal,
+    canvasContext,
+    ctx,
+    isReady,
+    actualWidth,
+    actualHeight,
+    rootStyle,
+    canvasStyle,
+    onTouchStart,
+    onTouchMove,
+    onTouchEnd,
+    getCanvasContext,
+    initCanvas,
+    ensureContext,
+    clearCanvas,
+    rect,
+    clearRect,
+    fill,
+    setFillStyle,
+    setLineStyle,
+    setLineCap,
+    setLineJoin,
+    setStrokeStyle,
+    setLineWidth,
+    beginPath,
+    moveTo,
+    lineTo,
+    stroke,
+    closePath,
+    draw,
+    exportImage,
+    setNewSize
+})
 </script>
 
 <style lang="scss" scoped>

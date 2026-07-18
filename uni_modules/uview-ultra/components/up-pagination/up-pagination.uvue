@@ -78,7 +78,8 @@
   </view>
 </template>
 
-<script>
+<script setup lang="uts">
+import { computed, ref, watch } from 'vue'
 import type { PropType } from 'vue'
 import { t } from '../../libs/i18n'
 
@@ -133,9 +134,11 @@ function getPageSizeLabel(item: UTSJSONObject): string {
   return getPageSizeValue(item).toString()
 }
 
-export default {
-  name: 'up-pagination',
-  props: {
+defineOptions({
+  name: 'up-pagination'
+})
+
+const props = defineProps({
     // 当前页码
     currentPage: {
       type: Number,
@@ -173,7 +176,13 @@ export default {
     pageSizes: {
       type: Array as PropType<UTSJSONObject[]>,
       default(): UTSJSONObject[] {
-        return createPageSizeOptions()
+        return [
+          { label: '10', value: 10 },
+          { label: '20', value: 20 },
+          { label: '30', value: 30 },
+          { label: '40', value: 40 },
+          { label: '50', value: 50 }
+        ] as UTSJSONObject[]
       }
     },
     // 布局方式（类似 el-pagination）
@@ -186,147 +195,168 @@ export default {
       type: Boolean,
       default: false
     }
-  },
-  emits: ['update:currentPage', 'update:pageSize', 'current-change', 'size-change'],
-  data() {
-    return {
-      currentPageInput: this.currentPage.toString()
-    }
-  },
-  computed: {
-    totalPages(): number {
-      return Math.max(1, Math.ceil(this.total / this.pageSize))
-    },
-    showPager(): boolean {
-      return hasLayoutItem(this.layout, 'pager')
-    },
-    showTotal(): boolean {
-      return hasLayoutItem(this.layout, 'total')
-    },
-    showSizes(): boolean {
-      return hasLayoutItem(this.layout, 'sizes')
-    },
-    showJumper(): boolean {
-      return hasLayoutItem(this.layout, 'jumper')
-    },
-    pageSizeIndex(): number {
-      const sizes = this.pageSizes as UTSJSONObject[]
-      for (let i = 0; i < sizes.length; i++) {
-        if (getPageSizeValue(sizes[i]) == this.pageSize) {
-          return i
-        }
-      }
-      return 0
-    },
-    pageSizeLabel(): string {
-      const sizes = this.pageSizes as UTSJSONObject[]
-      for (let i = 0; i < sizes.length; i++) {
-        if (getPageSizeValue(sizes[i]) == this.pageSize) {
-          return getPageSizeLabel(sizes[i])
-        }
-      }
-      return this.pageSize.toString()
-    },
-    displayedPages(): Array<string | number> {
-      const total = this.totalPages
-      const current = this.currentPage
-      const pages = createDisplayedPages()
+})
 
-      if (total <= 4) {
-        for (let i = 1; i <= total; i++) {
-          pages.push(i)
-        }
-        return pages
-      }
+const emit = defineEmits(['update:currentPage', 'update:pageSize', 'current-change', 'size-change'])
+const currentPageInput = ref(props.currentPage.toString())
 
-      // 当前页靠近头部
-      if (current <= 2) {
-        for (let i = 1; i <= 4; i++) {
-          pages.push(i)
-        }
-        pages.push('...')
-        pages.push(total)
-        return pages
-      }
+const totalPages = computed((): number => {
+  return Math.max(1, Math.ceil(props.total / props.pageSize))
+})
 
-      // 当前页在尾部附近
-      if (current >= total - 1) {
-        pages.push(1)
-        pages.push('...')
-        for (let i = total - 3; i <= total; i++) {
-          pages.push(i)
-        }
-        return pages
-      }
+const showPager = computed((): boolean => {
+  return hasLayoutItem(props.layout, 'pager')
+})
 
-      // 中间情况
-      pages.push(1)
-      pages.push('...')
-      pages.push(current - 1)
-      pages.push(current)
-      pages.push(current + 1)
-      pages.push('...')
-      pages.push(total)
-      return pages
-    }
-    // 控制是否隐藏
-  },
-  watch: {
-    currentPage(val: number) {
-      this.currentPageInput = val.toString()
-    }
-  },
-  methods: {
-    t,
-    handleSizeChange(e: UniCustomEvent<UTSJSONObject>): void {
-      let selected = 0
-      if (e.detail != null && e.detail['value'] != null) {
-        selected = normalizeNumber(e.detail['value'], 0)
-      }
-      const sizes = this.pageSizes as UTSJSONObject[]
-      let size = this.pageSize
-      if (selected >= 0 && selected < sizes.length) {
-        size = getPageSizeValue(sizes[selected])
-      } else if (sizes.length > 0) {
-        size = getPageSizeValue(sizes[0])
-      }
-      this.$emit('update:pageSize', size)
-      this.$emit('size-change', size)
-    },
-    prev(): void {
-      if (this.currentPage > 1) {
-        this.goTo(this.currentPage - 1)
-      }
-    },
-    next(): void {
-      if (this.currentPage < this.totalPages) {
-        this.goTo(this.currentPage + 1)
-      }
-    },
-    goTo(page: string | number): void {
-      if (page === '...' || page === this.currentPage) {
-        return
-      }
-      const nextPage = normalizeNumber(page, this.currentPage)
-      this.$emit('update:currentPage', nextPage)
-      this.$emit('current-change', nextPage)
-    },
-    onInputPage(e: UniCustomEvent<UTSJSONObject>): void {
-      if (e.detail != null && e.detail['value'] != null) {
-        this.currentPageInput = e.detail['value'].toString()
-      }
-    },
-    onConfirmPage(e: UniCustomEvent<UTSJSONObject>): void {
-      let num = NaN
-      if (e.detail != null && e.detail['value'] != null) {
-        num = parseInt(e.detail['value'].toString())
-      }
-      if (!isNaN(num) && num >= 1 && num <= this.totalPages) {
-        this.goTo(num)
-      }
+const showTotal = computed((): boolean => {
+  return hasLayoutItem(props.layout, 'total')
+})
+
+const showSizes = computed((): boolean => {
+  return hasLayoutItem(props.layout, 'sizes')
+})
+
+const showJumper = computed((): boolean => {
+  return hasLayoutItem(props.layout, 'jumper')
+})
+
+const pageSizeIndex = computed((): number => {
+  const sizes = props.pageSizes as UTSJSONObject[]
+  for (let i = 0; i < sizes.length; i++) {
+    if (getPageSizeValue(sizes[i]) == props.pageSize) {
+      return i
     }
   }
+  return 0
+})
+
+const pageSizeLabel = computed((): string => {
+  const sizes = props.pageSizes as UTSJSONObject[]
+  for (let i = 0; i < sizes.length; i++) {
+    if (getPageSizeValue(sizes[i]) == props.pageSize) {
+      return getPageSizeLabel(sizes[i])
+    }
+  }
+  return props.pageSize.toString()
+})
+
+const displayedPages = computed((): Array<string | number> => {
+  const total = totalPages.value
+  const current = props.currentPage
+  const pages = createDisplayedPages()
+
+  if (total <= 4) {
+    for (let i = 1; i <= total; i++) {
+      pages.push(i)
+    }
+    return pages
+  }
+
+  // 当前页靠近头部
+  if (current <= 2) {
+    for (let i = 1; i <= 4; i++) {
+      pages.push(i)
+    }
+    pages.push('...')
+    pages.push(total)
+    return pages
+  }
+
+  // 当前页在尾部附近
+  if (current >= total - 1) {
+    pages.push(1)
+    pages.push('...')
+    for (let i = total - 3; i <= total; i++) {
+      pages.push(i)
+    }
+    return pages
+  }
+
+  // 中间情况
+  pages.push(1)
+  pages.push('...')
+  pages.push(current - 1)
+  pages.push(current)
+  pages.push(current + 1)
+  pages.push('...')
+  pages.push(total)
+  return pages
+})
+
+watch((): number => props.currentPage, (val: number) => {
+  currentPageInput.value = val.toString()
+})
+
+const handleSizeChange = (e: UniCustomEvent<UTSJSONObject>): void => {
+  let selected = 0
+  if (e.detail != null && e.detail['value'] != null) {
+    selected = normalizeNumber(e.detail['value'], 0)
+  }
+  const sizes = props.pageSizes as UTSJSONObject[]
+  let size = props.pageSize
+  if (selected >= 0 && selected < sizes.length) {
+    size = getPageSizeValue(sizes[selected])
+  } else if (sizes.length > 0) {
+    size = getPageSizeValue(sizes[0])
+  }
+  emit('update:pageSize', size)
+  emit('size-change', size)
 }
+
+function goTo(page: string | number): void {
+  if (page === '...' || page === props.currentPage) {
+    return
+  }
+  const nextPage = normalizeNumber(page, props.currentPage)
+  emit('update:currentPage', nextPage)
+  emit('current-change', nextPage)
+}
+
+const prev = (): void => {
+  if (props.currentPage > 1) {
+    goTo(props.currentPage - 1)
+  }
+}
+
+const next = (): void => {
+  if (props.currentPage < totalPages.value) {
+    goTo(props.currentPage + 1)
+  }
+}
+
+const onInputPage = (e: UniCustomEvent<UTSJSONObject>): void => {
+  if (e.detail != null && e.detail['value'] != null) {
+    currentPageInput.value = e.detail['value'].toString()
+  }
+}
+
+const onConfirmPage = (e: UniCustomEvent<UTSJSONObject>): void => {
+  let num = NaN
+  if (e.detail != null && e.detail['value'] != null) {
+    num = parseInt(e.detail['value'].toString())
+  }
+  if (!isNaN(num) && num >= 1 && num <= totalPages.value) {
+    goTo(num)
+  }
+}
+
+defineExpose({
+  currentPageInput,
+  totalPages,
+  showPager,
+  showTotal,
+  showSizes,
+  showJumper,
+  pageSizeIndex,
+  pageSizeLabel,
+  displayedPages,
+  handleSizeChange,
+  prev,
+  next,
+  goTo,
+  onInputPage,
+  onConfirmPage
+})
 </script>
 
 <style lang="scss" scoped>

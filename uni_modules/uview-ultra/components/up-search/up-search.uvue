@@ -3,17 +3,11 @@
 	    class="up-search"
 		:class="[iconPosition === 'right' ? 'up-search__reverse' : '']"
 	    @tap="clickHandler"
-	    :style="[{
-			margin: margin,
-		}, addStyle(customStyle)]"
+	    :style="rootStyle"
 	>
 		<view
 		    class="up-search__content"
-		    :style="{
-				backgroundColor: bgColor,
-				borderRadius: shape == 'round' ? '100px' : '4px',
-				borderColor: borderColor,
-			}"
+		    :style="contentStyle"
 		>
 			<template v-if="$slots['label'] != null || label !== null">
 				<slot name="label">
@@ -45,13 +39,7 @@
 			    :placeholder-style="`color: ${placeholderColor}`"
 			    class="up-search__content__input"
 			    type="text"
-			    :style="[{
-					pointerEvents: disabled ? 'none' : 'auto',
-					textAlign: inputAlign,
-					color: color,
-					backgroundColor: bgColor,
-					height: addUnit(height)
-				}, inputStyle]"
+			    :style="inputMergedStyle"
 			/>
 			<view
 			    class="up-search__content__icon up-search__content__close"
@@ -68,7 +56,7 @@
             <slot name="inputRight"></slot>
 		</view>
 		<text
-		    :style="[actionStyle]"
+		    :style="actionTextStyle"
 		    class="up-search__action"
 		    :class="[(showActionBtn || show) ? 'up-search__action--active' : '']"
 		    @tap.stop.prevent="custom"
@@ -76,11 +64,10 @@
 	</view>
 </template>
 
-<script>
-	import { propsSearch } from './props';
-	import { mpMixin } from '../../libs/mixin/mpMixin';
-	import { mixin } from '../../libs/mixin/mixin';
-	import { addUnit, addStyle } from '../../libs/function/index';
+<script setup lang="uts">
+	import { computed, nextTick, onMounted, ref, watch } from 'vue'
+	import defProps from './search.uts'
+	import { addUnit, addStyle } from '../../libs/function/index.uts';
 	/**
 	 * search 搜索框
 	 * @description 搜索组件，集成了常见搜索框所需功能，用户可以一键引入，开箱即用。
@@ -120,139 +107,312 @@
 	 * @event {Function} clear 用户点击清除按钮时触发
 	 * @example <up-search placeholder="日照香炉生紫烟" v-model="keyword"></up-search>
 	 */
-	export default {
-		name: "up-search",
-		mixins: [mpMixin, mixin, propsSearch],
-		data() {
-			return {
-				keyword: '',
-				show: false,
-				// 标记input当前状态是否处于聚焦中，如果是，才会显示右侧的清除控件
-				focused: false
-				// 绑定输入框的值
-				// inputValue: this.value
-			};
+	defineOptions({
+		name: 'up-search'
+	})
+
+	const props = defineProps({
+		// 绑定的值
+		modelValue: {
+			type: [String, Number],
+			default: defProps.getAny('search.value')
 		},
-		mounted() {
-			this.focused = this.focus
+		// 兼容旧 value prop
+		value: {
+			type: [String, Number],
+			default: defProps.getAny('search.value')
 		},
-		watch: {
-			keyword(nVal: string) {
-				// 双向绑定值，让v-model绑定的值双向变化
-				// #ifdef VUE3
-				this.$emit("update:modelValue", nVal);
-				// #endif
-				// #ifdef VUE2
-				this.$emit('input', nVal);
-				// #endif
-				// 触发change事件，事件效果和v-model双向绑定的效果一样，让用户多一个选择
-				this.$emit('change', nVal);
-			},
-			// #ifdef VUE3
-			modelValue: {
-				immediate: true,
-				handler(nVal: string|number) {
-					//this.keyword = nVal.toString();
-				}
-			},
-			// #endif
-			// #ifdef VUE2
-			value: {
-				immediate: true,
-				handler(nVal: : string|number) {
-					this.keyword = nVal.toString();
-				}
-			},
-			// #endif
+		// 搜索框形状，round-圆形，square-方形
+		shape: {
+			type: String,
+			default: defProps.getString('search.shape')
 		},
-		computed: {
-			showActionBtn(): boolean {
-				return !this.animation && this.showAction
-			},
-			// 是否显示清除控件
-			isShowClear(): boolean {
-				let clearabled = this.$props['clearabled'] as boolean;
-				let focused = this.$data['focused'] as boolean;
-				let keyword = this.$data['keyword'] as string;
-				let onlyClearableOnFocused = this.$props['onlyClearableOnFocused'] as boolean;
-				if (!clearabled) {
-					return false;
-				}
-				if (onlyClearableOnFocused) {
-					return !!focused && keyword !== "";
-				} else {
-					return keyword !== "";
-				}
-			}
+		// 搜索框背景色
+		bgColor: {
+			type: String,
+			default: defProps.getString('search.bgColor')
 		},
-		emits: ['clear', 'search', 'custom', 'focus', 'blur', 'click', 'clickIcon', 'update:modelValue', 'change'],
-		methods: {
-			addUnit(e: any): string {
-				return addUnit(e)
-			},
-			addStyle(e: any): any {
-				return addStyle(e)
-			},
-			// 目前HX2.6.9 v-model双向绑定无效，故监听input事件获取输入框内容的变化
-			inputChange(e: UniInputEvent) {
-				this.keyword = e.detail.value;
-			},
-			// 清空输入
-			// 也可以作为用户通过this.$refs形式调用清空输入框内容
-			clear() {
-				this.keyword = '';
-				// 延后发出事件，避免在父组件监听clear事件时，value为更新前的值(不为空)
-				this.$nextTick(() => {
-					this.$emit('clear');
-				})
-			},
-			// 确定搜索
-			search(e: UniInputConfirmEvent) {
-				this.$emit('search', e.detail.value);
-				try {
-					// 收起键盘
-					uni.hideKeyboard();
-				} catch (e) {}
-			},
-			// 点击右边自定义按钮的事件
-			custom() {
-				this.$emit('custom', this.keyword);
-				try {
-					// 收起键盘
-					uni.hideKeyboard();
-				} catch (e) {}
-			},
-			// 获取焦点
-			getFocus() {
-				this.focused = true;
-				// 开启右侧搜索按钮展开的动画效果
-				if (this.animation && this.showAction) this.show = true;
-				this.$emit('focus', this.keyword);
-			},
-			// 失去焦点
-			blurFunc() {
-				// 最开始使用的是监听图标@touchstart事件，自从hx2.8.4后，此方法在微信小程序出错
-				// 这里改为监听点击事件，手点击清除图标时，同时也发生了@blur事件，导致图标消失而无法点击，这里做一个延时
-				setTimeout(() => {
-					this.focused = false;
-				}, 100)
-				this.show = false;
-				this.$emit('blur', this.keyword);
-			},
-			// 点击搜索框，只有disabled=true时才发出事件，因为禁止了输入，意味着是想跳转真正的搜索页
-			clickHandler() {
-				if (this.disabled) this.$emit('click');
-			},
-			// 点击左边图标
-			clickIcon(e: UniPointerEvent) {
-				this.$emit('clickIcon', this.keyword);
-				try {
-					// 收起键盘
-					uni.hideKeyboard();
-				} catch (e) {}
-			}
+		// 占位提示文字
+		placeholder: {
+			type: String,
+			default: defProps.getString('search.placeholder')
+		},
+		// 是否启用清除控件
+		clearabled: {
+			type: Boolean,
+			default: defProps.getBoolean('search.clearabled')
+		},
+		// 是否仅聚焦时显示清除控件
+		onlyClearableOnFocused: {
+			type: Boolean,
+			default: true
+		},
+		// 是否自动聚焦
+		focus: {
+			type: Boolean,
+			default: defProps.getBoolean('search.focus')
+		},
+		// 是否在搜索框右侧显示取消按钮
+		showAction: {
+			type: Boolean,
+			default: defProps.getBoolean('search.showAction')
+		},
+		// 右侧取消按钮文字
+		actionText: {
+			type: String,
+			default: defProps.getString('search.actionText')
+		},
+		// 搜索框左侧文本
+		label: {
+			type: [String, Number, null],
+			default: defProps.getAny('search.label')
+		},
+		// 输入框内容对齐方式，可选值为：left|center|right
+		inputAlign: {
+			type: String,
+			default: defProps.getString('search.inputAlign')
+		},
+		// 是否启用输入框
+		disabled: {
+			type: Boolean,
+			default: defProps.getBoolean('search.disabled')
+		},
+		// 开启showAction时，是否在input获取焦点时才显示
+		animation: {
+			type: Boolean,
+			default: defProps.getBoolean('search.animation')
+		},
+		// 边框颜色，只要配置了颜色，才会有边框
+		borderColor: {
+			type: String,
+			default: defProps.getString('search.borderColor')
+		},
+		// 搜索图标的颜色，默认同输入框字体颜色
+		searchIconColor: {
+			type: String,
+			default: defProps.getString('search.searchIconColor')
+		},
+		// 搜索图标的大小
+		searchIconSize: {
+			type: [Number, String],
+			default: defProps.getAny('search.searchIconSize')
+		},
+		// 输入框字体颜色
+		color: {
+			type: String,
+			default: defProps.getString('search.color')
+		},
+		// placeholder的颜色
+		placeholderColor: {
+			type: String,
+			default: defProps.getString('search.placeholderColor')
+		},
+		// 左边输入框的图标，可以为uView图标名称或图片路径
+		searchIcon: {
+			type: String,
+			default: defProps.getString('search.searchIcon')
+		},
+		// 组件与其他上下左右元素之间的距离，带单位的字符串形式，如"30px"
+		margin: {
+			type: String,
+			default: defProps.getString('search.margin')
+		},
+		// 应该是uview-plus版本新增的，用于控制搜索图标的插槽位置
+		iconPosition: {
+			type: String,
+			default: defProps.getString('search.iconPosition')
+		},
+		// 输入框最大能输入的长度，-1为不限制长度
+		maxlength: {
+			type: [String, Number],
+			default: defProps.getAny('search.maxlength')
+		},
+		// 输入框高度，单位px
+		height: {
+			type: [String, Number],
+			default: defProps.getAny('search.height')
+		},
+		// 键盘弹起时，是否自动上推页面
+		adjustPosition: {
+			type: Boolean,
+			default: defProps.getBoolean('search.adjustPosition')
+		},
+		// 键盘收起时，是否自动失去焦点
+		autoBlur: {
+			type: Boolean,
+			default: defProps.getBoolean('search.autoBlur')
+		},
+		// 输入框的样式，对象形式
+		inputStyle: {
+			type: Object,
+			default: defProps.getAny('search.inputStyle')
+		},
+		// 右侧控件的样式，对象形式
+		actionStyle: {
+			type: Object,
+			default: defProps.getAny('search.actionStyle')
+		},
+		customStyle: {
+			type: [Object, String],
+			default: () => ({})
 		}
+	})
+
+	const emit = defineEmits(['clear', 'search', 'custom', 'focus', 'blur', 'click', 'clickIcon', 'update:modelValue', 'change', 'input'])
+	const keyword = ref('')
+	const show = ref(false)
+	// 标记input当前状态是否处于聚焦中，如果是，才会显示右侧的清除控件
+	const focused = ref(false)
+
+	const rootStyle = computed((): UTSJSONObject => {
+		const style = {} as UTSJSONObject
+		style['margin'] = props.margin
+		return UTSJSONObject.assign(style, addStyle(props.customStyle) as UTSJSONObject)
+	})
+
+	const contentStyle = computed((): UTSJSONObject => {
+		const style = {} as UTSJSONObject
+		style['backgroundColor'] = props.bgColor
+		style['borderRadius'] = props.shape == 'round' ? '100px' : '4px'
+		style['borderColor'] = props.borderColor
+		return style
+	})
+
+	const inputMergedStyle = computed((): UTSJSONObject => {
+		const style = {} as UTSJSONObject
+		style['pointerEvents'] = props.disabled ? 'none' : 'auto'
+		style['textAlign'] = props.inputAlign
+		style['color'] = props.color
+		style['backgroundColor'] = props.bgColor
+		style['height'] = addUnit(props.height)
+		return UTSJSONObject.assign(style, props.inputStyle as UTSJSONObject)
+	})
+
+	const actionTextStyle = computed((): UTSJSONObject => {
+		return props.actionStyle as UTSJSONObject
+	})
+
+	watch(keyword, (nVal: string) => {
+		// 双向绑定值，让v-model绑定的值双向变化
+		// #ifdef VUE3
+		emit('update:modelValue', nVal);
+		// #endif
+		// #ifdef VUE2
+		emit('input', nVal);
+		// #endif
+		// 触发change事件，事件效果和v-model双向绑定的效果一样，让用户多一个选择
+		emit('change', nVal);
+	})
+
+	watch((): any => props.modelValue, (_nVal: any) => {
+		// keyword.value = nVal.toString();
+	}, { immediate: true })
+
+	const showActionBtn = computed((): boolean => {
+		return !props.animation && props.showAction
+	})
+
+	// 是否显示清除控件
+	const isShowClear = computed((): boolean => {
+		if (!props.clearabled) {
+			return false;
+		}
+		if (props.onlyClearableOnFocused) {
+			return !!focused.value && keyword.value !== '';
+		} else {
+			return keyword.value !== '';
+		}
+	})
+
+	// 目前HX2.6.9 v-model双向绑定无效，故监听input事件获取输入框内容的变化
+	const inputChange = (e: UniInputEvent): void => {
+		keyword.value = e.detail.value;
 	}
+
+	// 清空输入
+	// 也可以作为用户通过this.$refs形式调用清空输入框内容
+	const clear = (): void => {
+		keyword.value = '';
+		// 延后发出事件，避免在父组件监听clear事件时，value为更新前的值(不为空)
+		nextTick(() => {
+			emit('clear');
+		})
+	}
+
+	// 确定搜索
+	const search = (e: UniInputConfirmEvent): void => {
+		emit('search', e.detail.value);
+		try {
+			// 收起键盘
+			uni.hideKeyboard();
+		} catch (_e) {}
+	}
+
+	// 点击右边自定义按钮的事件
+	const custom = (): void => {
+		emit('custom', keyword.value);
+		try {
+			// 收起键盘
+			uni.hideKeyboard();
+		} catch (_e) {}
+	}
+
+	// 获取焦点
+	const getFocus = (): void => {
+		focused.value = true;
+		// 开启右侧搜索按钮展开的动画效果
+		if (props.animation && props.showAction) show.value = true;
+		emit('focus', keyword.value);
+	}
+
+	// 失去焦点
+	const blurFunc = (): void => {
+		// 最开始使用的是监听图标@touchstart事件，自从hx2.8.4后，此方法在微信小程序出错
+		// 这里改为监听点击事件，手点击清除图标时，同时也发生了@blur事件，导致图标消失而无法点击，这里做一个延时
+		setTimeout(() => {
+			focused.value = false;
+		}, 100)
+		show.value = false;
+		emit('blur', keyword.value);
+	}
+
+	// 点击搜索框，只有disabled=true时才发出事件，因为禁止了输入，意味着是想跳转真正的搜索页
+	const clickHandler = (): void => {
+		if (props.disabled) emit('click');
+	}
+
+	// 点击左边图标
+	const clickIcon = (_e: UniPointerEvent): void => {
+		emit('clickIcon', keyword.value);
+		try {
+			// 收起键盘
+			uni.hideKeyboard();
+		} catch (_err) {}
+	}
+
+	onMounted(() => {
+		focused.value = props.focus
+	})
+
+	defineExpose({
+		keyword,
+		show,
+		focused,
+		rootStyle,
+		contentStyle,
+		inputMergedStyle,
+		actionTextStyle,
+		showActionBtn,
+		isShowClear,
+		inputChange,
+		clear,
+		search,
+		custom,
+		getFocus,
+		blurFunc,
+		clickHandler,
+		clickIcon
+	})
 </script>
 
 <style lang="scss" scoped>

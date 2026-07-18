@@ -141,31 +141,21 @@
 	<!-- #endif -->
 </template>
 
-<script>
-	export default {
-		data() {
-			return {
-				//自定义星星的个数
-				value: 3,
-				value1: 2,
-				// 自定义选择星星颜色个数
-				activeColorValue: 3,
-				// 是否允许半星的个数
-				HalfValue: 3.5,
-				// 自定义图标星星个数
-				activeIconValue: 3,
-			}
-		},
-		watch: {
-			value(newValue: number, oldValue: number) {
-				// console.log(newValue);
-			}
-		},
-		methods: {
-			change(e: number) {
-				// console.log('change', e);
-			}
-		},
+<script setup lang="uts">
+	import { ref, watch } from 'vue'
+
+	const value = ref(3)
+	const value1 = ref(2)
+	const activeColorValue = ref(3)
+	const HalfValue = ref(3.5)
+	const activeIconValue = ref(3)
+
+	watch(value, (newValue: number, oldValue: number) => {
+		// console.log(newValue)
+	})
+
+	function change(e: number) {
+		// console.log('change', e)
 	}
 </script>
 

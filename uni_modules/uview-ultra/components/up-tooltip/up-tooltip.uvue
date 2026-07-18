@@ -78,10 +78,9 @@
 	</view>
 </template>
 
-<script>
-	import { mpMixin } from '../../libs/mixin/mpMixin';
-	import { mixin } from '../../libs/mixin/mixin';
-	import { addStyle, addUnit, getPx, guid, toast, sleep, sys } from '../../libs/function/index';
+<script setup lang="uts">
+	import { computed, getCurrentInstance, onMounted, ref, watch } from 'vue';
+	import { addStyle, addUnit, getPx, guid, toast, sleep, getWindowInfo, upGetRect } from '../../libs/function/index.uts';
 
 	function createRectInfo(): UTSJSONObject {
 		const info = {} as UTSJSONObject
@@ -113,6 +112,15 @@
 	function getObjNumber(obj: UTSJSONObject, key: string, fallback: number = 0): number {
 		return normalizeNumber(obj[key], fallback)
 	}
+
+	function nodeInfoToObject(size: NodeInfo | null): UTSJSONObject {
+		const info = createRectInfo()
+		if (size == null) return info
+		info['width'] = size.width ?? 0
+		info['left'] = size.left ?? 0
+		info['right'] = size.right ?? 0
+		return info
+	}
 	/**
 	 * Tooltip 
 	 * @description 
@@ -132,263 +140,310 @@
 	 * @event {Function} 
 	 * @example 
 	 */
-	export default {
-		name: 'up-tooltip',
-		mixins: [mpMixin, mixin],
-		props: {
-			text: {
-				type: [String, Number],
-				default: ''
-			},
-			copyText: {
-				type: [String, Number],
-				default: ''
-			},
-			size: {
-				type: [String, Number],
-				default: 14
-			},
-			color: {
-				type: String,
-				default: '#606266'
-			},
-			bgColor: {
-				type: String,
-				default: 'transparent'
-			},
-			direction: {
-				type: String,
-				default: 'top'
-			},
-			zIndex: {
-				type: [String, Number],
-				default: 10071
-			},
-			showCopy: {
-				type: Boolean,
-				default: true
-			},
-			buttons: {
-				type: Array,
-				default(): Array<string> {
-					return [] as Array<string>
-				}
-			},
-			overlay: {
-				type: Boolean,
-				default: true
-			},
-			showToast: {
-				type: Boolean,
-				default: true
-			},
-			customStyle: {
-				type: Object,
-				default(): UTSJSONObject {
-					return {} as UTSJSONObject
-				}
+	defineOptions({
+		name: 'up-tooltip'
+	})
+
+	const props = defineProps({
+		text: {
+			type: [String, Number],
+			default: ''
+		},
+		copyText: {
+			type: [String, Number],
+			default: ''
+		},
+		size: {
+			type: [String, Number],
+			default: 14
+		},
+		color: {
+			type: String,
+			default: '#606266'
+		},
+		bgColor: {
+			type: String,
+			default: 'transparent'
+		},
+		direction: {
+			type: String,
+			default: 'top'
+		},
+		zIndex: {
+			type: [String, Number],
+			default: 10071
+		},
+		showCopy: {
+			type: Boolean,
+			default: true
+		},
+		buttons: {
+			type: Array,
+			default(): Array<string> {
+				return [] as Array<string>
 			}
 		},
-		data() {
-			return {
-				// 是否展示气泡
-				showTooltip: true,
-				// 生成唯一id，防止一个页面多个组件，造成干扰
-				textId: guid(),
-				tooltipId: guid(),
-				// 初始时甚至为很大的值，让其移到屏幕外面，为了计算元素的尺寸
-				tooltipTop: -10000,
-				// 气泡的位置信息
-				tooltipInfo: createRectInfo(),
-				// 文本的位置信息
-				textInfo: createRectInfo(),
-				// 三角形指示器的样式
-				indicatorStyle: emptyStyle(),
-				// 气泡在可能超出屏幕边沿范围时，重新定位后，距离屏幕边沿的距离
-				screenGap: 12,
-				// 三角形指示器的宽高，由于对元素进行了角度旋转，精确计算指示器位置时，需要用到其尺寸信息
-				indicatorWidth: 14,
-			}
+		overlay: {
+			type: Boolean,
+			default: true
 		},
-		watch: {
-			propsChange() {
-				this.getElRect()
-			}
+		showToast: {
+			type: Boolean,
+			default: true
 		},
-		computed: {
-			// 特别处理H5的复制，因为H5浏览器是自带系统复制功能的，在H5环境
-			// 当一些依赖参数变化时，需要重新计算气泡和指示器的位置信息
-			propsChange() {
-				return this.displayText + '-' + this.buttonCount.toString()
-			},
-			displayText(): string {
-				const text = this.text
-				return text == null ? '' : text.toString()
-			},
-			rootStyle(): UTSJSONObject {
-				const customStyle = this.customStyle as UTSJSONObject
-				return addStyle(customStyle) as UTSJSONObject
-			},
-			buttonItems(): Array<string> {
-				return this.buttons as Array<string>
-			},
-			buttonCount(): number {
-				return this.buttonItems.length
-			},
-			overlayShow(): boolean {
-				return this.showTooltip == true && this.tooltipTop !== -10000 && normalizeBool(this.overlay)
-			},
-			showIndicator(): boolean {
-				return normalizeBool(this.showCopy) || this.buttonCount > 0
-			},
-			showCopyLine(): boolean {
-				return normalizeBool(this.showCopy) && this.buttonCount > 0
-			},
-			showCopyButton(): boolean {
-				return normalizeBool(this.showCopy)
-			},
-			textStyle(): UTSJSONObject {
-				const style = {} as UTSJSONObject
-				style['color'] = this.color
-				style['backgroundColor'] = this.bgColor != '' && this.showTooltip == true && this.tooltipTop !== -10000 ? this.bgColor : 'transparent'
-				return style
-			},
-			transitionStyle(): UTSJSONObject {
-				const style = {} as UTSJSONObject
-				style['position'] = 'absolute'
-				style['top'] = addUnit(this.tooltipTop)
-				style['zIndex'] = this.zIndex
-				return UTSJSONObject.assign(style, this.tooltipStyle)
-			},
-			indicatorMergedStyle(): UTSJSONObject {
-				const indicatorStyle = this.indicatorStyle as UTSJSONObject
-				const style = UTSJSONObject.assign({} as UTSJSONObject, indicatorStyle)
-				style['width'] = addUnit(this.indicatorWidth)
-				style['height'] = addUnit(this.indicatorWidth)
-				return style
-			},
-			// 计算气泡和指示器的位置信息
-			tooltipStyle(): UTSJSONObject {
-				const style = {} as UTSJSONObject
-				style['transform'] = this.direction === 'top' ? 'translateY(-100%)' : 'translateY(100%)'
-				const sysInfo = sys() as UTSJSONObject
-				const tooltipInfo = this.tooltipInfo as UTSJSONObject
-				const textInfo = this.textInfo as UTSJSONObject
-				const tooltipWidth = getObjNumber(tooltipInfo, 'width')
-				const textWidth = getObjNumber(textInfo, 'width')
-				const textLeft = getObjNumber(textInfo, 'left')
-				const textRight = getObjNumber(textInfo, 'right')
-				const windowWidth = normalizeNumber((sysInfo as UTSJSONObject)['windowWidth'], 0)
-				if (tooltipWidth / 2 > textLeft + textWidth / 2 - this.screenGap) {
-					this.indicatorStyle = emptyStyle()
-					const left = '-' + addUnit(textLeft - this.screenGap)
-					style['left'] = left
-					const indicatorStyle = this.indicatorStyle as UTSJSONObject
-					indicatorStyle['left'] = addUnit(textWidth / 2 - normalizeNumber(getPx(left), 0) - this.indicatorWidth / 2)
-				} else if (tooltipWidth / 2 > windowWidth - textRight + textWidth / 2 - this.screenGap) {
-					this.indicatorStyle = emptyStyle()
-					const right = '-' + addUnit(windowWidth - textRight - this.screenGap)
-					style['right'] = right
-					const indicatorStyle = this.indicatorStyle as UTSJSONObject
-					indicatorStyle['right'] = addUnit(textWidth / 2 - normalizeNumber(getPx(right), 0) - this.indicatorWidth / 2)
-				} else {
-					const left = Math.abs(textWidth / 2 - tooltipWidth / 2)
-					style['left'] = textWidth > tooltipWidth ? addUnit(left) : '-' + addUnit(left)
-					this.indicatorStyle = emptyStyle()
-				}
-				if (this.direction === 'top') {
-					style['marginTop'] = '-10px'
-					const indicatorStyle = this.indicatorStyle as UTSJSONObject
-					indicatorStyle['bottom'] = '-4px'
-				} else {
-					style['marginBottom'] = '-10px'
-					const indicatorStyle = this.indicatorStyle as UTSJSONObject
-					indicatorStyle['top'] = '-4px'
-				}
-				return style
-			}
-		},
-		mounted() {
-			this.init()
-		},
-		emits: ["click"],
-		methods: {
-			init() {
-				this.getElRect()
-			},
-			// 长按触发事件
-			async longpressHandler() {
-				this.tooltipTop = 0
-				this.showTooltip = true
-			},
-			// 点击透明遮罩
-			overlayClickHandler() {
-				this.showTooltip = false
-			},
-			// 点击弹出按钮
-			btnClickHandler(index: number): void {
-				this.showTooltip = false
-				// 如果需要展示复制按钮，此处index需要加1，因为复制按钮在第一个位置
-				this.$emit('click', this.showCopy ? index + 1 : index)
-			},
-			// 查询内容高度
-			queryRect(ref: string): Promise<any | null> {
-				// $uGetRect为uView自带的节点查询简化方法，详见文档介绍：https://ijry.github.io/uview-plus/js/getRect.html
-				// 组件内部一般用this.$uGetRect，对外的为uni.$u.getRect，二者功能一致，名称不同
-				return new Promise(resolve => {
-					this.$uGetRect(`#${ref}`).then(size => {
-						resolve(size)
-					})
-				})
-			},
-			// 元素尺寸
-			getElRect() {
-				// 调用之前，先将指示器调整到屏幕外，方便获取尺寸
-				this.showTooltip = true
-				this.tooltipTop = -10000
-				sleep(500).then(() => {
-					this.queryRect(this.tooltipId.toString()).then((size: any | null) => {
-						this.tooltipInfo = size
-						// 获取气泡尺寸之后，将其隐藏，为了让下次切换气泡显示与隐藏时，有淡入淡出的效果
-						this.showTooltip = false
-					})
-					this.queryRect(this.textId.toString()).then((size: any | null) => {
-						this.textInfo = size
-					})
-				})
-			},
-			getCopyData(): string {
-				const copyText = this.copyText
-				if (copyText != null && copyText.toString() != '') {
-					return copyText.toString()
-				}
-				return this.displayText
-			},
-			// 复制文本到粘贴板
-			setClipboardData() {
-				// 关闭组件
-				this.showTooltip = false
-				this.$emit('click', 0)
-				uni.setClipboardData({
-					// 优先使用copyText字段，如果没有，则默认使用text字段当做复制的内容
-					data: this.getCopyData(),
-					success: () => {
-						if (this.showToast == true) {
-							toast('复制成功')
-						}
-					},
-					fail: () => {
-						if (this.showToast == true) {
-							toast('复制失败')
-						}
-					},
-					complete: () => {
-						this.showTooltip = false
-					}
-				})
+		customStyle: {
+			type: Object,
+			default(): UTSJSONObject {
+				return {} as UTSJSONObject
 			}
 		}
+	})
+
+	const emit = defineEmits(["click"])
+	const instance = getCurrentInstance()!.proxy!
+
+	// 是否展示气泡
+	const showTooltip = ref(true)
+	// 生成唯一id，防止一个页面多个组件，造成干扰
+	const textId = ref(guid())
+	const tooltipId = ref(guid())
+	// 初始时甚至为很大的值，让其移到屏幕外面，为了计算元素的尺寸
+	const tooltipTop = ref(-10000)
+	// 气泡的位置信息
+	const tooltipInfo = ref<UTSJSONObject>(createRectInfo())
+	// 文本的位置信息
+	const textInfo = ref<UTSJSONObject>(createRectInfo())
+	// 三角形指示器的样式
+	const indicatorStyle = ref<UTSJSONObject>(emptyStyle())
+	// 气泡在可能超出屏幕边沿范围时，重新定位后，距离屏幕边沿的距离
+	const screenGap = ref(12)
+	// 三角形指示器的宽高，由于对元素进行了角度旋转，精确计算指示器位置时，需要用到其尺寸信息
+	const indicatorWidth = ref(14)
+
+	const displayText = computed((): string => {
+		const text = props.text
+		return text == null ? '' : text.toString()
+	})
+
+	const rootStyle = computed((): UTSJSONObject => {
+		return addStyle(props.customStyle) as UTSJSONObject
+	})
+
+	const buttonItems = computed((): Array<string> => {
+		const buttons = props.buttons as Array<string> | null
+		return buttons == null ? [] as Array<string> : buttons
+	})
+
+	const buttonCount = computed((): number => {
+		return buttonItems.value.length
+	})
+
+	const overlayShow = computed((): boolean => {
+		return showTooltip.value == true && tooltipTop.value > -9999 && normalizeBool(props.overlay)
+	})
+
+	const showIndicator = computed((): boolean => {
+		return normalizeBool(props.showCopy) || buttonCount.value > 0
+	})
+
+	const showCopyLine = computed((): boolean => {
+		return normalizeBool(props.showCopy) && buttonCount.value > 0
+	})
+
+	const showCopyButton = computed((): boolean => {
+		return normalizeBool(props.showCopy)
+	})
+
+	const textStyle = computed((): UTSJSONObject => {
+		const style = {} as UTSJSONObject
+		style['color'] = props.color
+		style['backgroundColor'] = props.bgColor != '' && showTooltip.value == true && tooltipTop.value > -9999 ? props.bgColor : 'transparent'
+		return style
+	})
+
+	// 计算气泡和指示器的位置信息
+	const tooltipStyle = computed((): UTSJSONObject => {
+		const style = {} as UTSJSONObject
+		style['transform'] = props.direction === 'top' ? 'translateY(-100%)' : 'translateY(100%)'
+		const tooltipInfoValue = tooltipInfo.value as UTSJSONObject
+		const textInfoValue = textInfo.value as UTSJSONObject
+		const tooltipWidth = getObjNumber(tooltipInfoValue, 'width')
+		const textWidth = getObjNumber(textInfoValue, 'width')
+		const textLeft = getObjNumber(textInfoValue, 'left')
+		const textRight = getObjNumber(textInfoValue, 'right')
+		const windowWidth = normalizeNumber(getWindowInfo().windowWidth, 0)
+		if (tooltipWidth / 2 > textLeft + textWidth / 2 - screenGap.value) {
+			indicatorStyle.value = emptyStyle()
+			const left = '-' + addUnit(textLeft - screenGap.value)
+			style['left'] = left
+			const currentIndicatorStyle = indicatorStyle.value as UTSJSONObject
+			currentIndicatorStyle['left'] = addUnit(textWidth / 2 - normalizeNumber(getPx(left), 0) - indicatorWidth.value / 2)
+		} else if (tooltipWidth / 2 > windowWidth - textRight + textWidth / 2 - screenGap.value) {
+			indicatorStyle.value = emptyStyle()
+			const right = '-' + addUnit(windowWidth - textRight - screenGap.value)
+			style['right'] = right
+			const currentIndicatorStyle = indicatorStyle.value as UTSJSONObject
+			currentIndicatorStyle['right'] = addUnit(textWidth / 2 - normalizeNumber(getPx(right), 0) - indicatorWidth.value / 2)
+		} else {
+			const left = Math.abs(textWidth / 2 - tooltipWidth / 2)
+			style['left'] = textWidth > tooltipWidth ? addUnit(left) : '-' + addUnit(left)
+			indicatorStyle.value = emptyStyle()
+		}
+		if (props.direction === 'top') {
+			style['marginTop'] = '-10px'
+			const currentIndicatorStyle = indicatorStyle.value as UTSJSONObject
+			currentIndicatorStyle['bottom'] = '-4px'
+		} else {
+			style['marginBottom'] = '-10px'
+			const currentIndicatorStyle = indicatorStyle.value as UTSJSONObject
+			currentIndicatorStyle['top'] = '-4px'
+		}
+		return style
+	})
+
+	const transitionStyle = computed((): UTSJSONObject => {
+		const style = {} as UTSJSONObject
+		style['position'] = 'absolute'
+		style['top'] = addUnit(tooltipTop.value)
+		style['zIndex'] = props.zIndex
+		return UTSJSONObject.assign(style, tooltipStyle.value)
+	})
+
+	const indicatorMergedStyle = computed((): UTSJSONObject => {
+		const currentIndicatorStyle = indicatorStyle.value as UTSJSONObject
+		const style = UTSJSONObject.assign({} as UTSJSONObject, currentIndicatorStyle)
+		style['width'] = addUnit(indicatorWidth.value)
+		style['height'] = addUnit(indicatorWidth.value)
+		return style
+	})
+
+	// 特别处理H5的复制，因为H5浏览器是自带系统复制功能的，在H5环境
+	// 当一些依赖参数变化时，需要重新计算气泡和指示器的位置信息
+	const propsChange = computed((): string => {
+		return displayText.value + '-' + buttonCount.value.toString()
+	})
+
+	// 长按触发事件
+	async function longpressHandler(): Promise<void> {
+		tooltipTop.value = 0
+		showTooltip.value = true
 	}
+
+	// 点击透明遮罩
+	function overlayClickHandler(): void {
+		showTooltip.value = false
+	}
+
+	// 点击弹出按钮
+	function btnClickHandler(index: number): void {
+		showTooltip.value = false
+		// 如果需要展示复制按钮，此处index需要加1，因为复制按钮在第一个位置
+		emit('click', props.showCopy ? index + 1 : index)
+	}
+
+	// 查询内容高度
+	function queryRect(refValue: string): Promise<NodeInfo | null> {
+		// $uGetRect为uView自带的节点查询简化方法，详见文档介绍：https://ijry.github.io/uview-plus/js/getRect.html
+		return new Promise(resolve => {
+			upGetRect(`#${refValue}`, false, instance).then((size: NodeInfo) => {
+				resolve(size)
+			})
+		})
+	}
+
+	// 元素尺寸
+	function getElRect(): void {
+		// 调用之前，先将指示器调整到屏幕外，方便获取尺寸
+		showTooltip.value = true
+		tooltipTop.value = -10000
+		sleep(500).then(() => {
+			queryRect(tooltipId.value.toString()).then((size: NodeInfo | null) => {
+				tooltipInfo.value = nodeInfoToObject(size)
+				// 获取气泡尺寸之后，将其隐藏，为了让下次切换气泡显示与隐藏时，有淡入淡出的效果
+				showTooltip.value = false
+			})
+			queryRect(textId.value.toString()).then((size: NodeInfo | null) => {
+				textInfo.value = nodeInfoToObject(size)
+			})
+		})
+	}
+
+	function init(): void {
+		getElRect()
+	}
+
+	function getCopyData(): string {
+		const copyText = props.copyText
+		if (copyText != null && copyText.toString() != '') {
+			return copyText.toString()
+		}
+		return displayText.value
+	}
+
+	// 复制文本到粘贴板
+	function setClipboardData(): void {
+		// 关闭组件
+		showTooltip.value = false
+		emit('click', 0)
+		uni.setClipboardData({
+			// 优先使用copyText字段，如果没有，则默认使用text字段当做复制的内容
+			data: getCopyData(),
+			success: () => {
+				if (props.showToast == true) {
+					toast('复制成功')
+				}
+			},
+			fail: () => {
+				if (props.showToast == true) {
+					toast('复制失败')
+				}
+			},
+			complete: () => {
+				showTooltip.value = false
+			}
+		})
+	}
+
+	watch(propsChange, () => {
+		getElRect()
+	})
+
+	onMounted(() => {
+		init()
+	})
+
+	defineExpose({
+		showTooltip,
+		textId,
+		tooltipId,
+		tooltipTop,
+		tooltipInfo,
+		textInfo,
+		indicatorStyle,
+		screenGap,
+		indicatorWidth,
+		propsChange,
+		displayText,
+		rootStyle,
+		buttonItems,
+		buttonCount,
+		overlayShow,
+		showIndicator,
+		showCopyLine,
+		showCopyButton,
+		textStyle,
+		transitionStyle,
+		indicatorMergedStyle,
+		tooltipStyle,
+		init,
+		longpressHandler,
+		overlayClickHandler,
+		btnClickHandler,
+		queryRect,
+		getElRect,
+		getCopyData,
+		setClipboardData
+	})
 </script>
 
 <style lang="scss" scoped>

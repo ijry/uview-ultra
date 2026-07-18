@@ -6,10 +6,10 @@
 			aclass="[ center && 'up-cell--center', size === 'large' && 'up-cell__body--large']">
 			<view class="up-cell__body__content">
 				<view class="up-cell__left-icon-wrap"
-					v-if="$slots['icon'] != null || icon != ''">
+					v-if="$slots['icon'] != null || hasLeftIcon">
 					<slot name="icon" v-if="$slots['icon'] != null">
 					</slot>
-					<up-icon v-else :name="icon"
+					<up-icon v-else :name="iconName"
 						:custom-style="iconStyle"
 						:size="size === 'large' ? '22px' : '18px'"></up-icon>
 				</view>
@@ -73,7 +73,7 @@
 			default: defProps.getString('cell.value')
 		},
 		icon: {
-			type: String,
+			type: [String, Boolean],
 			default: defProps.getString('cell.icon')
 		},
 		iconStyle: {
@@ -145,6 +145,16 @@
 
 	const titleTextStyle = computed(() => {
 		return addStyle(props.titleStyle)
+	})
+
+	const iconName = computed((): string => {
+		const value = props.icon
+		if (value == null || typeof value === 'boolean') return ''
+		return value.toString()
+	})
+
+	const hasLeftIcon = computed(() => {
+		return iconName.value != ''
 	})
 
 	const clickHandler = (e: any) => {

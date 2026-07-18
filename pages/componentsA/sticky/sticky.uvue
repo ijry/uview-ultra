@@ -32,22 +32,17 @@
 	</scroll-view>
 </template>
 
-<script>
-	export default {
-		data() {
-			return {
+<script setup lang="uts">
+	import { ref } from 'vue'
 
-			}
-		},
-		// mixins: [mixin],
-		methods: {
-			onScroll(e :UniScrollEvent) {
-				(this.$refs['stickyRef'] as ComponentPublicInstance)?.$callMethod('setFixed', e.detail.scrollTop)
-			},
-			navigateBack() {
-				uni.navigateBack()
-			}
-		}
+	const stickyRef = ref<ComponentPublicInstance | null>(null)
+
+	function onScroll(e: UniScrollEvent) {
+		stickyRef.value?.$callMethod('setFixed', e.detail.scrollTop)
+	}
+
+	function navigateBack() {
+		uni.navigateBack()
 	}
 </script>
 

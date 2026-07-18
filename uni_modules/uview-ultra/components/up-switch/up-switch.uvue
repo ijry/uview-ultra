@@ -2,7 +2,7 @@
 	<view
 	    class="up-switch cursor-pointer"
 	    :class="[disabled ? 'up-switch--disabled' : '']"
-	    :style="[switchStyle, addStyle(customStyle)]"
+	    :style="rootStyle"
 	    @tap="clickHandler"
 	>
 		<view
@@ -20,19 +20,17 @@
 			    :show="loading"
 			    mode="circle"
 			    timingFunction='linear'
-				:color="modelValue == activeValue ? activeColor : '#AAABAD'"
-			    :size="parseInt(getPx(size)) * 0.6"
+				:color="loadingIconColor"
+			    :size="loadingIconSize"
 			/>
 		</view>
 	</view>
 </template>
 
-<script>
-	import { propsSwitch } from './props';
-	import { mpMixin } from '../../libs/mixin/mpMixin';
-	import { mixin } from '../../libs/mixin/mixin';
+<script setup lang="uts">
+	import { computed, nextTick, watch } from 'vue'
+	import defProps from './switch.uts'
 	import { addStyle, getPx, addUnit, error } from '../../libs/function/index';
-	import { UPCommonStyle } from '../../types/common.uts'
 	/**
 	 * switch 开关选择器
 	 * @description 选择开关一般用于只有两个选择，且只能选其一的场景。
@@ -52,94 +50,159 @@
 	 * @event {Function} change 在switch打开或关闭时触发
 	 * @example <up-switch v-model="checked" active-color="red" inactive-color="#eee"></up-switch>
 	 */
-	export default {
-		name: "up-switch",
-		mixins: [mpMixin, mixin, propsSwitch],
-		watch: {
-			modelValue: {
-				immediate: true,
-				handler(n) {
-					if(n !== this.inactiveValue && n !== this.activeValue) {
-						error('v-model绑定的值必须为inactiveValue、activeValue二者之一')
-					}
-				}
-			}
+	defineOptions({
+		name: 'up-switch'
+	})
+
+	const props = defineProps({
+		// 开关尺寸，单位px
+		size: {
+			type: [String, Number],
+			default: defProps.getNumber('switch.size')
 		},
-		data() {
-			return {
-				bgColor: '#ffffff'
-			}
+		// 是否为加载中状态
+		loading: {
+			type: Boolean,
+			default: defProps.getBoolean('switch.loading')
 		},
-		computed: {
-			isActive(){
-				return this.modelValue === this.activeValue;
-			},
-			switchStyle(): UTSJSONObject {
-				let style = {}
-				// 这里需要加2，是为了腾出边框的距离，否则圆点node会和外边框紧贴在一起
-				// @ts-ignore
-				style['width'] = addUnit(parseInt(this.size.toString()) * 2 + 2)
-				// @ts-ignore
-				style['height'] = addUnit(parseInt(this.size.toString()) + 2)
-				// style['borderColor'] = this.value ? 'rgba(0, 0, 0, 0)' : 'rgba(0, 0, 0, 0.12)'
-				// 如果自定义了“非激活”演示，name边框颜色设置为透明(跟非激活颜色一致)
-				// 这里不能简单的设置为非激活的颜色，否则打开状态时，会有边框，所以需要透明
-				if(this.customInactiveColor) {
-					style['borderColor'] = 'rgba(0, 0, 0, 0)'
-				}
-				style['backgroundColor'] = this.isActive ? this.activeColor : this.inactiveColor
-				return style;
-			},
-			nodeStyle(): UTSJSONObject {
-				let style = {}
-				// 如果自定义非激活颜色，将node圆点的尺寸减少两个像素，让其与外边框距离更大一点
-				// @ts-ignore
-				style['width'] = addUnit(parseInt(this.size.toString()) - parseInt(this.space.toString()))
-				// @ts-ignore
-				style['height'] = addUnit(parseInt(this.size.toString()) - parseInt(this.space.toString()))
-				const translateX = this.isActive ? addUnit(this.space) : addUnit(this.size);
-				style['transform'] = `translateX(-${translateX})`
-				return style
-			},
-			bgStyle(): UTSJSONObject {
-				let style = {}
-				// 这里配置一个多余的元素在HTML中，是为了让switch切换时，有更良好的背景色扩充体验(见实际效果)
-				// @ts-ignore
-				style['width'] = addUnit(parseInt(this.size.toString()) * 2 - parseInt(this.size.toString()) / 2)
-				// @ts-ignore
-				style['height'] = addUnit(parseInt(this.size.toString()))
-				style['backgroundColor'] = this.inactiveColor
-				// 打开时，让此元素收缩，否则反之
-				style['transform'] = `scale(${this.isActive ? 0 : 1})`
-				return style
-			},
-			customInactiveColor(): boolean {
-				// 之所以需要判断是否自定义了“非激活”颜色，是为了让node圆点离外边框更宽一点的距离
-				return this.inactiveColor !== '#fff' && this.inactiveColor !== '#ffffff'
-			}
+		// 是否为禁用状态
+		disabled: {
+			type: Boolean,
+			default: defProps.getBoolean('switch.disabled')
 		},
-		emits: ['update:modelValue', 'change'],
-		methods: {
-			getPx(e: any) {
-				return getPx(e);
-			},
-			addStyle(e: any): any {
-				return addStyle(e)
-			},
-			clickHandler() {
-				if (!this.disabled && !this.loading) {
-					const oldValue = this.isActive ? this.inactiveValue : this.activeValue
-					if(!this.asyncChange) {
-						this.$emit("update:modelValue", oldValue);
-					}
-					// 放到下一个生命周期，因为双向绑定的value修改父组件状态需要时间，且是异步的
-					this.$nextTick(() => {
-						this.$emit('change', oldValue)
-					})
-				}
-			}
+		// 打开时的背景颜色
+		activeColor: {
+			type: String,
+			default: defProps.getString('switch.activeColor')
+		},
+		// 关闭时的背景颜色
+		inactiveColor: {
+			type: String,
+			default: defProps.getString('switch.inactiveColor')
+		},
+		// 通过value设置开关的初始状态
+		value: {
+			type: [Boolean, String, Number],
+			default: defProps.getAny('switch.value')
+		},
+		// v-model绑定值
+		modelValue: {
+			type: [Boolean, String, Number],
+			default: defProps.getAny('switch.modelValue')
+		},
+		// 打开状态时的值
+		activeValue: {
+			type: [Boolean, String, Number],
+			default: defProps.getAny('switch.activeValue')
+		},
+		// 关闭状态时的值
+		inactiveValue: {
+			type: [Boolean, String, Number],
+			default: defProps.getAny('switch.inactiveValue')
+		},
+		// 是否开启异步变更
+		asyncChange: {
+			type: Boolean,
+			default: defProps.getBoolean('switch.asyncChange')
+		},
+		// 圆点与外边框的距离
+		space: {
+			type: [String, Number],
+			default: defProps.getNumber('switch.space')
+		},
+		// 图标大小
+		iconSize: {
+			type: [String, Number],
+			default: defProps.getNumber('switch.iconSize')
+		},
+		// 切换前执行的回调函数
+		beforeChange: {
+			// @ts-ignore
+			type: Function,
+			default: defProps.getAny('switch.beforeChange')
+		},
+		customStyle: {
+			type: [Object, String],
+			default: () => ({})
 		}
-	};
+	})
+
+	const emit = defineEmits(['update:modelValue', 'change'])
+
+	watch((): any => props.modelValue, (n: any) => {
+		if (n !== props.inactiveValue && n !== props.activeValue) {
+			error('v-model绑定的值必须为inactiveValue、activeValue二者之一')
+		}
+	}, { immediate: true })
+
+	const isActive = computed((): boolean => {
+		return props.modelValue === props.activeValue
+	})
+
+	const customInactiveColor = computed((): boolean => {
+		// 之所以需要判断是否自定义了“非激活”颜色，是为了让node圆点离外边框更宽一点的距离
+		return props.inactiveColor !== '#fff' && props.inactiveColor !== '#ffffff'
+	})
+
+	const switchStyle = computed((): UTSJSONObject => {
+		const style = {} as UTSJSONObject
+		// 这里需要加2，是为了腾出边框的距离，否则圆点node会和外边框紧贴在一起
+		style['width'] = addUnit(parseInt(props.size.toString()) * 2 + 2)
+		style['height'] = addUnit(parseInt(props.size.toString()) + 2)
+		// 如果自定义了“非激活”颜色，边框颜色设置为透明(跟非激活颜色一致)
+		if (customInactiveColor.value) {
+			style['borderColor'] = 'rgba(0, 0, 0, 0)'
+		}
+		style['backgroundColor'] = isActive.value ? props.activeColor : props.inactiveColor
+		return style
+	})
+
+	const rootStyle = computed((): UTSJSONObject => {
+		const style = UTSJSONObject.assign({} as UTSJSONObject, switchStyle.value)
+		return UTSJSONObject.assign(style, addStyle(props.customStyle) as UTSJSONObject)
+	})
+
+	const loadingIconColor = computed((): string => {
+		return props.modelValue == props.activeValue ? props.activeColor : '#AAABAD'
+	})
+
+	const loadingIconSize = computed((): number => {
+		return parseInt(getPx(props.size)) * 0.6
+	})
+
+	const nodeStyle = computed((): UTSJSONObject => {
+		const style = {} as UTSJSONObject
+		// 如果自定义非激活颜色，将node圆点的尺寸减少两个像素，让其与外边框距离更大一点
+		style['width'] = addUnit(parseInt(props.size.toString()) - parseInt(props.space.toString()))
+		style['height'] = addUnit(parseInt(props.size.toString()) - parseInt(props.space.toString()))
+		const translateX = isActive.value ? addUnit(props.space) : addUnit(props.size)
+		style['transform'] = `translateX(-${translateX})`
+		return style
+	})
+
+	const bgStyle = computed((): UTSJSONObject => {
+		const style = {} as UTSJSONObject
+		// 这里配置一个多余的元素在HTML中，是为了让switch切换时，有更良好的背景色扩充体验(见实际效果)
+		style['width'] = addUnit(parseInt(props.size.toString()) * 2 - parseInt(props.size.toString()) / 2)
+		style['height'] = addUnit(parseInt(props.size.toString()))
+		style['backgroundColor'] = props.inactiveColor
+		// 打开时，让此元素收缩，否则反之
+		style['transform'] = `scale(${isActive.value ? 0 : 1})`
+		return style
+	})
+
+	const clickHandler = (): void => {
+		if (!props.disabled && !props.loading) {
+			const oldValue = isActive.value ? props.inactiveValue : props.activeValue
+			if (!props.asyncChange) {
+				emit('update:modelValue', oldValue)
+			}
+			// 放到下一个生命周期，因为双向绑定的value修改父组件状态需要时间，且是异步的
+			nextTick(() => {
+				emit('change', oldValue)
+			})
+		}
+	}
 </script>
 
 <style lang="scss" scoped>

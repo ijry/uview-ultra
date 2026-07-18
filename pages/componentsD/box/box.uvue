@@ -51,23 +51,15 @@
 	</view>
 </template>
 
-<script>
-	export default {
-		data() {
-			return {
+<script setup lang="uts">
+	function navigateBack() {
+		uni.navigateBack({
+			delta: 1
+		})
+	}
 
-			}
-		},
-		methods: {
-			navigateBack() {
-				uni.navigateBack({
-					delta: 1
-				})
-			},
-			leftClick() {
-				console.log('leftClick');
-			}
-		}
+	function leftClick() {
+		console.log('leftClick')
 	}
 </script>
 

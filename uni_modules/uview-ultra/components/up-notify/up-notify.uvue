@@ -6,36 +6,31 @@
 	>
 		<view
 			class="up-notify"
-			:class="[`up-notify--${tmpConfig['type']}`]"
-			:style="[backgroundColor, addStyle(customStyle)]"
+			:class="[notifyTypeClass]"
+			:style="notifyStyle"
 		>
 			<up-status-bar v-if="tmpConfig['safeAreaInsetTop']"></up-status-bar>
 			<view class="up-notify__warpper">
 				<slot name="icon">
 					<up-icon
-						v-if="['success', 'warning', 'error'].includes(tmpConfig['type'].toString())"
+						v-if="showNotifyIcon"
 						:name="tmpConfig['icon']"
 						:color="tmpConfig['color']"
-						:size="1.3 * parseFloat(getPx(tmpConfig['fontSize'] ?? '0').toString())"
-						:customStyle="{marginRight: '4px'}"
+						:size="iconSize"
+						:customStyle="iconStyle"
 					></up-icon>
 				</slot>
 				<text
 					class="up-notify__warpper__text"
-					:style="{
-						fontSize: addUnit(tmpConfig['fontSize'] ?? '0'),
-						color: tmpConfig['color'] ?? ''
-					}"
+					:style="textStyle"
 				>{{ tmpConfig['message'] }}</text>
 			</view>
 		</view>
 	</up-transition>
 </template>
 
-<script lang="uts">
-	import { propsNotify } from './props.uts';
-	import { mpMixin } from '../../libs/mixin/mpMixin.uts';
-	import { mixin } from '../../libs/mixin/mixin.uts';
+<script setup lang="uts">
+	import { computed, onBeforeUnmount, ref } from 'vue'
 	import defProps from './notify.uts'
 	let notifyPropCrt = defProps['notify'] as UTSJSONObject
 	import { addUnit, addStyle, deepMerge, getPx } from '../../libs/function/index.uts';
@@ -56,158 +51,226 @@
 	 * @event {Function}	close	关闭组件式调用的函数
 	 * @example <up-notify message="Hi uView"></up-notify>
 	 */
-	type tmpConfigType = {
-		top: number;
-		bgColor: string;
-		color: string;
-		fontSize: string | number;
-		safeAreaInsetTop: boolean;
-		duration: number;
+	defineOptions({
+		name: 'up-notify'
+	})
+
+	const props = defineProps({
+		// 到顶部的距离
+		top: {
+			type: [String, Number],
+			default: defProps.getNumber('notify.top')
+		},
+		// type主题，primary，success，warning，error
+		type: {
+			type: String,
+			default: defProps.getString('notify.type')
+		},
+		// 字体颜色
+		color: {
+			type: String,
+			default: defProps.getString('notify.color')
+		},
+		// 背景颜色
+		bgColor: {
+			type: String,
+			default: defProps.getString('notify.bgColor')
+		},
+		// 展示的文字内容
+		message: {
+			type: String,
+			default: defProps.getString('notify.message')
+		},
+		// 展示时长，为0时不消失，单位ms
+		duration: {
+			type: [String, Number],
+			default: defProps.getNumber('notify.duration')
+		},
+		// 字体大小
+		fontSize: {
+			type: [String, Number],
+			default: defProps.getNumber('notify.fontSize')
+		},
+		// 是否留出顶部安全距离（状态栏高度）
+		safeAreaInsetTop: {
+			type: Boolean,
+			default: defProps.getBoolean('notify.safeAreaInsetTop')
+		},
+		customStyle: {
+			type: [Object, String],
+			default: () => ({})
+		},
+	})
+
+	// 是否展示组件
+	const open = ref(false)
+	const timer = ref<number | null>(null)
+	const config = {
+		// 到顶部的距离
+		top: notifyPropCrt['top'],
+		// type主题，primary，success，warning，error
+		type: notifyPropCrt['type'],
+		// 字体颜色
+		color: notifyPropCrt['color'],
+		// 背景颜色
+		bgColor: notifyPropCrt['bgColor'],
+		// 展示的文字内容
+		message: notifyPropCrt['message'],
+		// 展示时长，为0时不消失，单位ms
+		duration: notifyPropCrt['duration'],
+		// 字体大小
+		fontSize: notifyPropCrt['fontSize'],
+		// 是否留出顶部安全距离（状态栏高度）
+		safeAreaInsetTop: notifyPropCrt['safeAreaInsetTop']
+	} as UTSJSONObject
+	// 合并后的配置，避免多次调用组件后，可能会复用之前使用的配置参数
+	const tmpConfig = ref({} as UTSJSONObject)
+
+	function getConfigString(key: string, fallback: string = ''): string {
+		const value = tmpConfig.value[key]
+		return value == null ? fallback : value.toString()
 	}
-	export default {
-		name: 'up-notify',
-		mixins: [mpMixin, mixin, propsNotify],
-		data() {
-			return {
-				// 是否展示组件
-				open: false,
-				timer: null as number | null,
-				config: {
-					// 到顶部的距离
-					top: notifyPropCrt['top'],
-					// type主题，primary，success，warning，error
-					type: notifyPropCrt['type'],
-					// 字体颜色
-					color: notifyPropCrt['color'],
-					// 背景颜色
-					bgColor: notifyPropCrt['bgColor'],
-					// 展示的文字内容
-					message: notifyPropCrt['message'],
-					// 展示时长，为0时不消失，单位ms
-					duration: notifyPropCrt['duration'],
-					// 字体大小
-					fontSize: notifyPropCrt['fontSize'],
-					// 是否留出顶部安全距离（状态栏高度）
-					safeAreaInsetTop: notifyPropCrt['safeAreaInsetTop']
-				},
-				// 合并后的配置，避免多次调用组件后，可能会复用之前使用的配置参数
-				tmpConfig: {}
-			}
-		},
-		computed: {
-			containerStyle() {
-				let top = 0
-				const topValue = this.tmpConfig['top']
-				const isTopZero = topValue != null && parseFloat(topValue.toString()) == 0
-				if (isTopZero) {
-					// #ifdef H5
-					// H5端，导航栏为普通元素，需要将组件移动到导航栏的下边沿
-					// H5的导航栏高度为44px
-					top = 44
-					// #endif
+
+	const containerStyle = computed((): UTSJSONObject => {
+		let top = 0
+		const topValue = tmpConfig.value['top']
+		const isTopZero = topValue != null && parseFloat(topValue.toString()) == 0
+		if (isTopZero) {
+			// #ifdef H5
+			// H5端，导航栏为普通元素，需要将组件移动到导航栏的下边沿
+			// H5的导航栏高度为44px
+			top = 44
+			// #endif
+		}
+		return {
+			top: addUnit(isTopZero ? top : topValue),
+			// 因为组件底层为up-transition组件，必须将其设置为fixed定位
+			// 让其出现在导航栏底部
+			position: 'fixed',
+			left: 0,
+			right: 0,
+			zIndex: 10076
+		} as UTSJSONObject
+	})
+
+	// 组件背景颜色
+	const backgroundColor = computed((): UTSJSONObject => {
+		const style = {} as UTSJSONObject
+		if (tmpConfig.value['bgColor'] != '') {
+			style['backgroundColor'] = tmpConfig.value['bgColor']
+		}
+		return style
+	})
+
+	const notifyType = computed((): string => {
+		return getConfigString('type')
+	})
+
+	const notifyTypeClass = computed((): string => {
+		return 'up-notify--' + notifyType.value
+	})
+
+	const showNotifyIcon = computed((): boolean => {
+		const type = notifyType.value
+		return type == 'success' || type == 'warning' || type == 'error'
+	})
+
+	const iconSize = computed((): number => {
+		const size = parseFloat(getPx(getConfigString('fontSize', '0')).toString())
+		return 1.3 * (isNaN(size) ? 0 : size)
+	})
+
+	const iconStyle = computed((): UTSJSONObject => {
+		const style = {} as UTSJSONObject
+		style['marginRight'] = '4px'
+		return style
+	})
+
+	const textStyle = computed((): UTSJSONObject => {
+		const style = {} as UTSJSONObject
+		style['fontSize'] = addUnit(getConfigString('fontSize', '0'))
+		style['color'] = getConfigString('color')
+		return style
+	})
+
+	const notifyStyle = computed((): UTSJSONObject => {
+		const style = UTSJSONObject.assign({} as UTSJSONObject, backgroundColor.value)
+		return UTSJSONObject.assign(style, addStyle(props.customStyle) as UTSJSONObject)
+	})
+
+	const clearTimer = (): void => {
+		open.value = false
+		// 清除定时器
+		clearTimeout(timer.value ?? 0)
+		timer.value = null
+	}
+
+	const show = (options: UTSJSONObject): void => {
+		// 不将结果合并到config变量，避免多次调用up-toast，前后的配置造成混乱
+		tmpConfig.value = deepMerge(config, options)
+		// 任何定时器初始化之前，都要执行清除操作，否则可能会造成混乱
+		clearTimer()
+		open.value = true
+		if (parseInt(tmpConfig.value['duration'].toString()) > 0) {
+			timer.value = setTimeout(() => {
+				open.value = false
+				// 倒计时结束，清除定时器，隐藏toast组件
+				clearTimer()
+				// 判断是否存在callback方法，如果存在就执行
+				const complete = tmpConfig.value['complete']
+				if (typeof complete === 'function') {
+					;(complete as () => void)()
 				}
-				const style = {
-					top: addUnit(isTopZero ? top : topValue),
-					// 因为组件底层为up-transition组件，必须将其设置为fixed定位
-					// 让其出现在导航栏底部
-					position: 'fixed',
-					left: 0,
-					right: 0,
-					zIndex: 10076
-				}
-				return style
-			},
-			// 组件背景颜色
-			backgroundColor() {
-				const style = {}
-				if (this.tmpConfig['bgColor'] != '') {
-					style.backgroundColor = this.tmpConfig['bgColor']
-				}
-				return style
-			},
-			// 默认主题下的图标
-			icon() {
-				let icon = ''
-				if (this.tmpConfig['type'] === 'success') {
-					icon = 'checkmark-circle'
-				} else if (this.tmpConfig['type'] === 'error') {
-					icon = 'close-circle'
-				} else if (this.tmpConfig['type'] === 'warning') {
-					icon = 'error-circle'
-				}
-				return icon
-			}
-		},
-		created() {
-		},
-		methods: {
-			getPx(e: any): string {
-				return getPx(e)
-			},
-			addStyle(e: any) {
-				return addStyle(e)
-			},
-			addUnit(e: any) {
-				return addUnit(e)
-			},
-			primary(message: string) {
-				this.show({
-					type: 'primary',
-					message
-				})
-			},
-			success(message: string) {
-				this.show({
-					type: 'success',
-					message
-				})
-			},
-			error(message: string) {
-				this.show({
-					type: 'error',
-					message
-				})
-			},
-			warning(message: string) {
-				this.show({
-					type: 'warning',
-					message
-				})
-			},
-			show(options: UTSJSONObject) {
-				// 不将结果合并到this.config变量，避免多次调用up-toast，前后的配置造成混乱
-				this.tmpConfig = deepMerge(this.config, options)
-				// 任何定时器初始化之前，都要执行清除操作，否则可能会造成混乱
-				this.clearTimer()
-				this.open = true
-				if (parseInt(this.tmpConfig['duration'].toString()) > 0) {
-					this.timer = setTimeout(() => {
-						this.open = false
-						// 倒计时结束，清除定时器，隐藏toast组件
-						this.clearTimer()
-						// 判断是否存在callback方法，如果存在就执行
-						const complete = this.tmpConfig['complete']
-						if (typeof complete === 'function') {
-							;(complete as () => void)()
-						}
-					}, parseInt(this.tmpConfig['duration'].toString()))
-				}
-			},
-			// 关闭notify
-			close() {
-				this.clearTimer()
-			},
-			clearTimer() {
-				this.open = false
-				// 清除定时器
-				clearTimeout(this.timer ?? 0)
-				this.timer = null
-			}
-		},
-		beforeUnmount() {
-			this.clearTimer()
+			}, parseInt(tmpConfig.value['duration'].toString()))
 		}
 	}
+
+	const primary = (message: string): void => {
+		show({
+			type: 'primary',
+			message
+		})
+	}
+
+	const success = (message: string): void => {
+		show({
+			type: 'success',
+			message
+		})
+	}
+
+	const error = (message: string): void => {
+		show({
+			type: 'error',
+			message
+		})
+	}
+
+	const warning = (message: string): void => {
+		show({
+			type: 'warning',
+			message
+		})
+	}
+
+	// 关闭notify
+	const close = (): void => {
+		clearTimer()
+	}
+
+	onBeforeUnmount(() => {
+		clearTimer()
+	})
+
+	defineExpose({
+		primary,
+		success,
+		error,
+		warning,
+		show,
+		close,
+		clearTimer
+	})
 </script>
 
 <style lang="scss" scoped>

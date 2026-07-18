@@ -30,48 +30,55 @@
     </view>
 </template>
 
-<script>
-    export default {
-        name: 'up-agreement',
-        props: {
-            urlProtocol: {
-                type: String,
-                default: '/pages/user_agreement/agreement/info?title=用户协议'
-            },
-            urlPrivacy: {
-                type: String,
-                default: '/pages/user_agreement/agreement/info?title=隐私政策'
-            },
+<script setup lang="uts">
+    import { ref } from 'vue'
+
+    defineOptions({
+        name: 'up-agreement'
+    })
+
+    const props = defineProps({
+        urlProtocol: {
+            type: String,
+            default: '/pages/user_agreement/agreement/info?title=用户协议'
         },
-        emits: ['confirm'],
-        data() {
-            return {
-                show: false
-            }
-        },
-        methods: {
-            close() {
-                // #ifdef H5
-                window.opener = null;
-                window.close();
-                // #endif
-                // #ifdef APP-PLUS
-                plus.runtime.quit();
-                // #endif
-            },
-            confirm() {
-                this.show = false;
-                this.$emit('confirm', 1);
-            },
-            showModal() {
-                this.show = true;
-            },
-            urlClick(type: string) {
-                const targetUrl = type == 'urlPrivacy' ? this.urlPrivacy : this.urlProtocol;
-                uni.navigateTo({
-                    url: targetUrl
-                });
-            }
+        urlPrivacy: {
+            type: String,
+            default: '/pages/user_agreement/agreement/info?title=隐私政策'
         }
+    })
+
+    const emit = defineEmits(['confirm'])
+
+    const show = ref(false)
+
+    const close = (): void => {
+        // #ifdef H5
+        window.opener = null
+        window.close()
+        // #endif
+        // #ifdef APP-PLUS
+        plus.runtime.quit()
+        // #endif
     }
+
+    const confirm = (): void => {
+        show.value = false
+        emit('confirm', 1)
+    }
+
+    const showModal = (): void => {
+        show.value = true
+    }
+
+    const urlClick = (type: string): void => {
+        const targetUrl = type == 'urlPrivacy' ? props.urlPrivacy : props.urlProtocol
+        uni.navigateTo({
+            url: targetUrl
+        })
+    }
+
+    defineExpose({
+        showModal
+    })
 </script>

@@ -46,21 +46,9 @@
 	</view>
 </template>
 
-<script>
-	export default {
-		data() {
-			return {
-				pic:'https://uviewui.com/common/logo.png',
-				show:true
-			}
-		},
-		onLoad() {
-			
-		},
-		methods: {
-			
-		}
-	}
+<script setup lang="uts">
+const pic = 'https://uviewui.com/common/logo.png'
+const show = true
 </script>
 
 <style lang="scss">

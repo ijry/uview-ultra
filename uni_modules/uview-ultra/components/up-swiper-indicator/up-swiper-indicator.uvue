@@ -4,10 +4,7 @@
 			class="up-swiper-indicator__wrapper"
 			v-if="indicatorMode === 'line'"
 			:class="[`up-swiper-indicator__wrapper--${indicatorMode}`]"
-			:style="{
-				width: addUnit(lineWidth * (length as number)),
-				backgroundColor: indicatorInactiveColor
-			}"
+			:style="lineWrapperStyle"
 		>
 			<view
 				class="up-swiper-indicator__wrapper--line__bar"
@@ -30,11 +27,10 @@
 	</view>
 </template>
 
-<script lang="uts">
-	import { propsSwiperIndicator } from './props.uts';
-	import { mpMixin } from '../../libs/mixin/mpMixin.uts';
-	import { mixin } from '../../libs/mixin/mixin.uts';
-	import { addUnit } from '../../libs/function/index.uts';
+<script setup lang="uts">
+	import { computed, ref } from 'vue'
+	import defProps from './swipterIndicator.uts'
+	import { addUnit } from '../../libs/function/index.uts'
 	/**
 	 * SwiperIndicator 轮播图指示器
 	 * @description 该组件一般用于导航轮播，广告展示等场景,可开箱即用，
@@ -46,43 +42,72 @@
 	 * @property {String}			indicatorMode			指示器模式（默认 'line' ）
 	 * @example	<up-swiper :list="list4" indicator keyName="url" :autoplay="false"></up-swiper>
 	 */
-	export default {
-		name: 'up-swiper-indicator',
-		mixins: [mpMixin, mixin, propsSwiperIndicator],
-		data() {
-			return {
-				lineWidth: 22
-			}
+	defineOptions({
+		name: 'up-swiper-indicator'
+	})
+
+	const props = defineProps({
+		// 轮播的长度
+		length: {
+			type: [String, Number],
+			default: defProps.getNumber('swiperIndicator.length')
 		},
-		computed: {
-			lengthArray(): Array<string> {
-				let list: Array<string> = []
-				// @ts-ignore
-				for (var index = 0; index < this.$props['length'] as number; index++) {
-					list.push(index.toString())
-				}
-				return list
-			},
-			// 指示器为线型的样式
-			lineStyle(): any {
-				let style = {}
-				style['width'] = addUnit(this.lineWidth)
-				style['transform'] = `translateX(${ addUnit(this.current as number * this.lineWidth) })`
-				style['backgroundColor'] = this.indicatorActiveColor
-				return style
-			}
+		// 当前处于活动状态的轮播的索引
+		current: {
+			type: [String, Number],
+			default: defProps.getNumber('swiperIndicator.current')
 		},
-		methods: {
-			addUnit(val: any): string {
-				return addUnit(val)
-			},
-			// 指示器为点型的样式
-			dotStyle(index: number): any {
-				let style = {}
-				style['backgroundColor'] = index === this.current ? this.indicatorActiveColor : this.indicatorInactiveColor
-				return style
-			}
+		// 指示器非激活颜色
+		indicatorActiveColor: {
+			type: String,
+			default: defProps.getString('swiperIndicator.indicatorActiveColor')
+		},
+		// 指示器的激活颜色
+		indicatorInactiveColor: {
+			type: String,
+			default: defProps.getString('swiperIndicator.indicatorInactiveColor')
+		},
+		// 指示器模式，line-线型，dot-点型
+		indicatorMode: {
+			type: String,
+			default: defProps.getString('swiperIndicator.indicatorMode')
 		}
+	})
+
+	const lineWidth = ref(22)
+
+	const lengthArray = computed((): Array<string> => {
+		const list = [] as Array<string>
+		const count = parseInt(props.length.toString())
+		for (let index = 0; index < count; index++) {
+			list.push(index.toString())
+		}
+		return list
+	})
+
+	// 指示器为线型的样式
+	const lineWrapperStyle = computed((): UTSJSONObject => {
+		return {
+			width: addUnit(lineWidth.value * parseInt(props.length.toString())),
+			backgroundColor: props.indicatorInactiveColor
+		} as UTSJSONObject
+	})
+
+	const lineStyle = computed((): UTSJSONObject => {
+		const style = {} as UTSJSONObject
+		const current = parseInt(props.current.toString())
+		style['width'] = addUnit(lineWidth.value)
+		style['transform'] = `translateX(${addUnit(current * lineWidth.value)})`
+		style['backgroundColor'] = props.indicatorActiveColor
+		return style
+	})
+
+	// 指示器为点型的样式
+	const dotStyle = (index: number): UTSJSONObject => {
+		const style = {} as UTSJSONObject
+		const current = parseInt(props.current.toString())
+		style['backgroundColor'] = index === current ? props.indicatorActiveColor : props.indicatorInactiveColor
+		return style
 	}
 </script>
 

@@ -37,11 +37,11 @@
 	</view>
 </template>
 
-<script>
-	import { propsRadio } from './props';
-	import { mpMixin } from '../../libs/mixin/mpMixin';
-	import { mixin } from '../../libs/mixin/mixin';
-	import { addUnit, addStyle, os, deepMerge, formValidate, error } from '../../libs/function/index';
+<script setup lang="uts">
+	import { computed, getCurrentInstance, nextTick, onMounted, ref } from 'vue';
+	import defProps from './radio.uts';
+	import { addUnit, addStyle, os, deepMerge, formValidate, error } from '../../libs/function/index.uts';
+	import { useUltraUI } from '../../libs/composable/useUltraUI.uts';
 	/**
 	 * radio 单选框
 	 * @author jry ijry@qq.com
@@ -64,239 +64,347 @@
 	 * @event {Function} change 某个radio状态发生变化时触发(选中状态)
 	 * @example <up-radio :labelDisabled="false">门掩黄昏，无计留春住</up-radio>
 	 */
-	export default {
-		name: "up-radio",
-		mixins: [mpMixin, mixin, propsRadio],
-		data() {
-			return {
-				checked: false,
-				// 当你看到这段代码的时候，
-				// 父组件的默认值，因为头条小程序不支持在computed中使用this.parent.shape的形式
-				// 故只能使用如此方法
-				parentData: {
-					iconSize: '12px',
-					labelDisabled: false,
-					labelColor: '',
-					labelSize: '',
-					disabled: false,
-					shape: '',
-					activeColor: '',
-					inactiveColor: '',
-					size: '18px',
-					value: '',
-					modelValue: '',
-					iconColor: '',
-					placement: 'row',
-					borderBottom: false,
-					iconPlacement: 'left'
-				} as UTSJSONObject
+	const { parent, parentData, getParentData } = useUltraUI({
+		iconSize: '12px',
+		labelDisabled: false,
+		labelColor: '',
+		labelSize: '',
+		disabled: false,
+		shape: '',
+		activeColor: '',
+		inactiveColor: '',
+		size: '18px',
+		value: '',
+		modelValue: '',
+		iconColor: '',
+		placement: 'row',
+		borderBottom: false,
+		iconPlacement: 'left'
+	} as UTSJSONObject)
+	const instance = getCurrentInstance()!.proxy!
+
+	defineOptions({
+		name: "up-radio"
+	})
+
+	const props = defineProps({
+		// radio的名称
+		name: {
+			type: [String, Number, Boolean],
+			default: (defProps['radio'] as UTSJSONObject)['name']
+		},
+		// 形状，square为方形，circle为圆型
+		shape: {
+			type: String,
+			default: (defProps['radio'] as UTSJSONObject)['shape']
+		},
+		// 是否禁用
+		disabled: {
+			type: [String, Boolean],
+			default: (defProps['radio'] as UTSJSONObject)['disabled']
+		},
+		// 是否禁止点击提示语选中单选框
+		labelDisabled: {
+			type: [String, Boolean],
+			default: (defProps['radio'] as UTSJSONObject)['labelDisabled']
+		},
+		// 选中状态下的颜色，如设置此值，将会覆盖parent的activeColor值
+		activeColor: {
+			type: String,
+			default: (defProps['radio'] as UTSJSONObject)['activeColor']
+		},
+		// 未选中的颜色
+		inactiveColor: {
+			type: String,
+			default: (defProps['radio'] as UTSJSONObject)['inactiveColor']
+		},
+		// 图标的大小，单位px
+		iconSize: {
+			type: [String, Number],
+			default: (defProps['radio'] as UTSJSONObject)['iconSize']
+		},
+		// label的字体大小，px单位
+		labelSize: {
+			type: [String, Number],
+			default: (defProps['radio'] as UTSJSONObject)['labelSize']
+		},
+		// label提示文字，因为nvue下，直接slot进来的文字，由于特殊的结构，无法修改样式
+		label: {
+			type: [String, Number],
+			default: (defProps['radio'] as UTSJSONObject)['label']
+		},
+		// 整体的大小
+		size: {
+			type: [String, Number],
+			default: (defProps['radio'] as UTSJSONObject)['size']
+		},
+		// 图标颜色
+		color: {
+			type: String,
+			default: (defProps['radio'] as UTSJSONObject)['color']
+		},
+		// label的颜色
+		labelColor: {
+			type: String,
+			default: (defProps['radio'] as UTSJSONObject)['labelColor']
+		},
+		// 图标颜色
+		iconColor: {
+			type: String,
+			default: (defProps['radio'] as UTSJSONObject)['iconColor']
+		},
+		customStyle: {
+			type: [Object, String],
+			default: {}
+		}
+	})
+
+	const emit = defineEmits(["change"])
+	const checked = ref(false)
+
+	// 是否禁用，如果父组件up-raios-group禁用的话，将会忽略子组件的配置
+	const elDisabled = computed((): boolean => {
+		// @ts-ignore
+		let disabledStr = props.disabled.toString()
+		if (disabledStr !== '') {
+			if (disabledStr == 'true') {
+				return true
 			}
-		},
-		computed: {
-			// 是否禁用，如果父组件up-raios-group禁用的话，将会忽略子组件的配置
-			elDisabled(): boolean {
-				// @ts-ignore
-				let disabledStr = this.disabled.toString()
-				if (disabledStr !== '') {
-					if (disabledStr == 'true') {
-						return true
-					} else {
-						return false
-					}
-				} else {
-					return this.parentData['disabled'] as boolean
-				}
-			},
-			// 是否禁用label点击
-			elLabelDisabled(): boolean {
-				// @ts-ignore
-				let labelDisabledStr = this.labelDisabled.toString()
-				if (labelDisabledStr !== '') {
-					if (labelDisabledStr == 'true') {
-						return true
-					} else {
-						return false
-					}
-				} else {
-					return this.parentData['labelDisabled'] as boolean
-				}
-			},
-			// 组件尺寸，对应size的值，默认值为21px
-			elSize(): string {
-				return this.$props['size'].toString() != ''
-					? this.$props['size'].toString()
-					// @ts-ignore
-					: (this.parentData['size'].toString() != '' ? this.parentData['size'].toString() : '21px');
-			},
-			// 组件的勾选图标的尺寸，默认12px
-			elIconSize(): any {
-				return this.$props['iconSize'].toString() != ''
-					? this.$props['iconSize'].toString()
-					// @ts-ignore
-					: (this.parentData['iconSize'].toString() != '' ? this.parentData['iconSize'].toString() : '12px');
-			},
-			// 组件选中激活时的颜色
-			elActiveColor(): string {
-				return this.$props['activeColor'] as string != ''
-					? this.$props['activeColor'] as string
-					: (this.parentData['activeColor'] as string != '' ? this.parentData['activeColor'] as string : '#2979ff');
-			},
-			// 组件选未中激活时的颜色
-			elInactiveColor(): string {
-				return this.$props['inactiveColor'] as string != ''
-					? this.$props['inactiveColor'] as string
-					: (this.parentData['inactiveColor'] as string !='' ? this.parentData['inactiveColor'] as string :
-					'#c8c9cc');
-			},
-			// label的颜色
-			elLabelColor(): string {
-				return this.$props['labelColor'] as string != ''
-					? this.$props['labelColor'] as string
-					: (this.parentData['labelColor'] as string !='' ? this.parentData['labelColor'] as string : '#606266')
-			},
-			// 组件的形状
-			elShape(): string {
-				return this.$props['shape'] as string !=''
-					? this.$props['shape'] as string
-					: (this.parentData['shape'] as string != '' ? this.parentData['shape'] as string : 'circle');
-			},
-			// label大小
-			elLabelSize(): string {
-				// @ts-ignore
-				return addUnit(
-					this.$props['labelSize'].toString() != ''
-						// @ts-ignore
-						? this.$props['labelSize'].toString()
-						// @ts-ignore
-						: (this.parentData['labelSize'].toString() != '' ? this.parentData['labelSize'].toString() :
-					'15'))
-			},
-			elIconColor(): string {
-				// @ts-ignore
-				const iconColor = this.$props['iconColor'].toString() != ''
-					? this.$props['iconColor'].toString()
-					// @ts-ignore
-					: (this.parentData['iconColor'].toString() != '' ? this.parentData['iconColor'] as string :
-						'#ffffff');
-				// 图标的颜色
-				if (this.elDisabled) {
-					// disabled状态下，已勾选的radio图标改为elInactiveColor
-					return this.checked ? this.elInactiveColor : 'transparent'
-				} else {
-					return this.checked ? iconColor : 'transparent'
-				}
-			},
-			iconClasses(): string {
-				let classes: string[]= []
-				// 组件的形状
-				classes.push('up-radio__icon-wrap--' + this.elShape)
-				if (this.elDisabled) {
-					classes.push('up-radio__icon-wrap--disabled')
-				}
-				if (this.checked) {
-					if (this.elDisabled) {
-						classes.push('up-radio__icon-wrap--disabled--checked')
-					} else {
-						classes.push('up-radio__icon-wrap--checked')
-					}
-				}
-				return classes.join(' ')
-			},
-			iconWrapStyle(): any {
-				// radio的整体样式
-				const style = {}
-				style['backgroundColor'] = this.checked && !this.elDisabled ? this.elActiveColor : '#ffffff'
-				style['borderColor'] = this.checked && !this.elDisabled ? this.elActiveColor : this.elInactiveColor
-				// style['color'] = '#ffffff'
-				style['width'] = addUnit(this.elSize)
-				style['height'] = addUnit(this.elSize)
-				// 如果是图标在右边的话，移除它的右边距
-				if (this.parentData['iconPlacement'] === 'right') {
-					style['marginRight'] = 0
-				}
-				return style
-			},
-			radioStyle(): any {
-				const style = {}
-				if(this.parentData['borderBottom'] as boolean
-					&& this.parentData['placement'] as string === 'row') {
-					error('检测到您将borderBottom设置为true，需要同时将up-radio-group的placement设置为column才有效')
-				}
-				// 当父组件设置了显示下边框并且排列形式为纵向时，给内容和边框之间加上一定间隔
-				if(this.parentData['borderBottom'] as boolean
-					&& this.parentData['placement'] as string === 'column') {
-					// ios像素密度高，需要多一点的距离
-					style['paddingBottom'] = os() === 'ios' ? '12px' : '8px'
-				}
-				return deepMerge(style, addStyle(this.customStyle))
+			return false
+		}
+		return parentData.value['disabled'] as boolean
+	})
+
+	// 是否禁用label点击
+	const elLabelDisabled = computed((): boolean => {
+		// @ts-ignore
+		let labelDisabledStr = props.labelDisabled.toString()
+		if (labelDisabledStr !== '') {
+			if (labelDisabledStr == 'true') {
+				return true
 			}
-		},
-		mounted() {
-			this.init()
-		},
-		emits: ["change"],
-		methods: {
-			init(): void {
-				// 支付宝小程序不支持provide/inject，所以使用这个方法获取整个父组件，在created定义，避免循环引用
-				this.updateParentData()
-				if (this.parent == null) {
-					error('up-radio必须搭配up-radio-group组件使用')
-				}
-				// 设置初始化时，是否默认选中的状态
+			return false
+		}
+		return parentData.value['labelDisabled'] as boolean
+	})
+
+	// 组件尺寸，对应size的值，默认值为21px
+	const elSize = computed((): string => {
+		return props.size.toString() != ''
+			? props.size.toString()
+			// @ts-ignore
+			: (parentData.value['size'].toString() != '' ? parentData.value['size'].toString() : '21px')
+	})
+
+	// 组件的勾选图标的尺寸，默认12px
+	const elIconSize = computed((): any => {
+		return props.iconSize.toString() != ''
+			? props.iconSize.toString()
+			// @ts-ignore
+			: (parentData.value['iconSize'].toString() != '' ? parentData.value['iconSize'].toString() : '12px')
+	})
+
+	// 组件选中激活时的颜色
+	const elActiveColor = computed((): string => {
+		return props.activeColor as string != ''
+			? props.activeColor as string
+			: (parentData.value['activeColor'] as string != '' ? parentData.value['activeColor'] as string : '#2979ff')
+	})
+
+	// 组件选未中激活时的颜色
+	const elInactiveColor = computed((): string => {
+		return props.inactiveColor as string != ''
+			? props.inactiveColor as string
+			: (parentData.value['inactiveColor'] as string != '' ? parentData.value['inactiveColor'] as string : '#c8c9cc')
+	})
+
+	// label的颜色
+	const elLabelColor = computed((): string => {
+		return props.labelColor as string != ''
+			? props.labelColor as string
+			: (parentData.value['labelColor'] as string != '' ? parentData.value['labelColor'] as string : '#606266')
+	})
+
+	// 组件的形状
+	const elShape = computed((): string => {
+		return props.shape as string != ''
+			? props.shape as string
+			: (parentData.value['shape'] as string != '' ? parentData.value['shape'] as string : 'circle')
+	})
+
+	// label大小
+	const elLabelSize = computed((): string => {
+		// @ts-ignore
+		return addUnit(
+			props.labelSize.toString() != ''
 				// @ts-ignore
-				this.checked = this.name === this.parentData['modelValue']
-			},
-			updateParentData(): void {
+				? props.labelSize.toString()
 				// @ts-ignore
-				this.getParentData('up-radio-group')
-			},
-			// 点击图标
-			iconClickHandler(e: UniPointerEvent): void {
-				// @ts-ignore
-				this.preventEvent(e)
-				// 如果整体被禁用，不允许被点击
-				if (!this.elDisabled) {
-					this.setRadioCheckedStatus()
-				}
-			},
-			// 横向两端排列时，点击组件即可触发选中事件
-			wrapperClickHandler(e: UniPointerEvent): void {
-				if (this.parentData['iconPlacement'] === 'right') {
-					this.iconClickHandler(e)
-				}
-			},
-			// 点击label
-			labelClickHandler(e: UniPointerEvent): void {
-				// @ts-ignore
-				this.preventEvent(e)
-				// 如果按钮整体被禁用或者label被禁用，则不允许点击文字修改状态
-				if (!this.elLabelDisabled && !this.elDisabled) {
-					this.setRadioCheckedStatus()
-				}
-			},
-			emitEvent(): void {
-				// up-radio的checked不为true时(意味着未选中)，才发出事件，避免多次点击触发事件
-				if (!this.checked) {
-					this.$emit('change', this.name)
-					// 尝试调用up-form的验证方法，进行一定延迟，否则微信小程序更新可能会不及时
-					this.$nextTick(() => {
-						formValidate(this, 'change')
-					})
-				}
-			},
-			// 改变组件选中状态
-			// 这里的改变的依据是，更改本组件的checked值为true，同时通过父组件遍历所有up-radio实例
-			// 将本组件外的其他up-radio的checked都设置为false(都被取消选中状态)，因而只剩下一个为选中状态
-			setRadioCheckedStatus(): void {
-				this.emitEvent()
-				// 将本组件标记为选中状态
-				this.checked = true
-				if (this.$parent != null) {
-					this.$parent!.$callMethod('unCheckedOther', this)
-				}
+				: (parentData.value['labelSize'].toString() != '' ? parentData.value['labelSize'].toString() : '15'))
+	})
+
+	const elIconColor = computed((): string => {
+		// @ts-ignore
+		const iconColor = props.iconColor.toString() != ''
+			? props.iconColor.toString()
+			// @ts-ignore
+			: (parentData.value['iconColor'].toString() != '' ? parentData.value['iconColor'] as string : '#ffffff')
+		// 图标的颜色
+		if (elDisabled.value) {
+			// disabled状态下，已勾选的radio图标改为elInactiveColor
+			return checked.value ? elInactiveColor.value : 'transparent'
+		}
+		return checked.value ? iconColor : 'transparent'
+	})
+
+	const iconClasses = computed((): string => {
+		let classes: string[] = []
+		// 组件的形状
+		classes.push('up-radio__icon-wrap--' + elShape.value)
+		if (elDisabled.value) {
+			classes.push('up-radio__icon-wrap--disabled')
+		}
+		if (checked.value) {
+			if (elDisabled.value) {
+				classes.push('up-radio__icon-wrap--disabled--checked')
+			} else {
+				classes.push('up-radio__icon-wrap--checked')
 			}
 		}
+		return classes.join(' ')
+	})
+
+	const iconWrapStyle = computed((): any => {
+		// radio的整体样式
+		const style = {}
+		style['backgroundColor'] = checked.value && !elDisabled.value ? elActiveColor.value : '#ffffff'
+		style['borderColor'] = checked.value && !elDisabled.value ? elActiveColor.value : elInactiveColor.value
+		style['width'] = addUnit(elSize.value)
+		style['height'] = addUnit(elSize.value)
+		// 如果是图标在右边的话，移除它的右边距
+		if (parentData.value['iconPlacement'] === 'right') {
+			style['marginRight'] = 0
+		}
+		return style
+	})
+
+	const radioStyle = computed((): any => {
+		const style = {}
+		if (parentData.value['borderBottom'] != null && parentData.value['borderBottom'].toString() == 'true'
+			&& parentData.value['placement'] != null && parentData.value['placement'].toString() == 'row') {
+			error('检测到您将borderBottom设置为true，需要同时将up-radio-group的placement设置为column才有效')
+		}
+		// 当父组件设置了显示下边框并且排列形式为纵向时，给内容和边框之间加上一定间隔
+		if (parentData.value['borderBottom'] != null && parentData.value['borderBottom'].toString() == 'true'
+			&& parentData.value['placement'] != null && parentData.value['placement'].toString() == 'column') {
+			// ios像素密度高，需要多一点的距离
+			style['paddingBottom'] = os() === 'ios' ? '12px' : '8px'
+		}
+		return deepMerge(style, addStyle(props.customStyle))
+	})
+
+	const updateParentData = (): void => {
+		getParentData('up-radio-group', instance, false)
 	}
+
+	const init = (): void => {
+		// 支付宝小程序不支持provide/inject，所以使用这个方法获取整个父组件，在created定义，避免循环引用
+		updateParentData()
+		if (parent.value == null) {
+			error('up-radio必须搭配up-radio-group组件使用')
+		}
+		// 设置初始化时，是否默认选中的状态
+		// @ts-ignore
+		checked.value = props.name === parentData.value['modelValue']
+	}
+
+	const emitEvent = (): void => {
+		// up-radio的checked不为true时(意味着未选中)，才发出事件，避免多次点击触发事件
+		if (!checked.value) {
+			emit('change', props.name)
+			// 尝试调用up-form的验证方法，进行一定延迟，否则微信小程序更新可能会不及时
+			nextTick(() => {
+				formValidate(instance, 'change')
+			})
+		}
+	}
+
+	// 改变组件选中状态
+	const setRadioCheckedStatus = (): void => {
+		emitEvent()
+		// 将本组件标记为选中状态
+		checked.value = true
+		if (parent.value != null) {
+			parent.value.$callMethod('unCheckedOther', instance)
+		}
+	}
+
+	// 点击图标
+	const iconClickHandler = (e: UniPointerEvent): void => {
+		e.stopPropagation()
+		// 如果整体被禁用，不允许被点击
+		if (!elDisabled.value) {
+			setRadioCheckedStatus()
+		}
+	}
+
+	// 横向两端排列时，点击组件即可触发选中事件
+	const wrapperClickHandler = (e: UniPointerEvent): void => {
+		if (parentData.value['iconPlacement'] === 'right') {
+			iconClickHandler(e)
+		}
+	}
+
+	// 点击label
+	const labelClickHandler = (e: UniPointerEvent): void => {
+		e.stopPropagation()
+		// 如果按钮整体被禁用或者label被禁用，则不允许点击文字修改状态
+		if (!elLabelDisabled.value && !elDisabled.value) {
+			setRadioCheckedStatus()
+		}
+	}
+
+	const setChecked = (value: boolean): void => {
+		checked.value = value
+	}
+
+	const getInternalState = (): UTSJSONObject => {
+		return {
+			name: props.name,
+			checked: checked.value
+		} as UTSJSONObject
+	}
+
+	onMounted(() => {
+		init()
+	})
+
+	defineExpose({
+		checked,
+		parentData,
+		elDisabled,
+		elLabelDisabled,
+		elSize,
+		elIconSize,
+		elActiveColor,
+		elInactiveColor,
+		elLabelColor,
+		elShape,
+		elLabelSize,
+		elIconColor,
+		iconClasses,
+		iconWrapStyle,
+		radioStyle,
+		init,
+		updateParentData,
+		iconClickHandler,
+		wrapperClickHandler,
+		labelClickHandler,
+		emitEvent,
+		setRadioCheckedStatus,
+		setChecked,
+		getInternalState
+	})
 </script>
 
 <style lang="scss" scoped>

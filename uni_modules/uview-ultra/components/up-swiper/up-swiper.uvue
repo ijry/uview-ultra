@@ -1,11 +1,7 @@
 <template>
 	<view
 		class="up-swiper"
-		:style="{
-			backgroundColor: bgColor,
-			height: addUnit(height),
-			borderRadius: addUnit(radius)
-		}"
+		:style="rootStyle"
 	>
 		<view
 			class="up-swiper__loading"
@@ -16,10 +12,7 @@
 		<swiper
 			v-else
 			class="up-swiper__wrapper"
-			:style="{
-				flex: '1',
-				height: addUnit(height)
-			}"
+			:style="swiperWrapperStyle"
 			@change="change"
 			:circular="circular"
 			:interval="interval"
@@ -45,10 +38,7 @@
 							:src="getSource(item)"
 							:mode="imgMode"
 							@tap="clickHandler(index)"
-							:style="{
-								height: addUnit(height),
-								borderRadius: addUnit(radius)
-							}"
+							:style="imageStyle"
 						></image>
 						<video
 							class="up-swiper__wrapper__item__wrapper__video"
@@ -57,14 +47,12 @@
 							:enable-progress-gesture="false"
 							:src="getSource(item)"
 							:poster="getPoster(item)"
-							:title="showTitle && testObject(item) && getItemTitle(item) != '' ? getItemTitle(item) : ''"
-							:style="{
-								height: addUnit(height)
-							}"
+							:title="getVideoTitle(item)"
+							:style="videoStyle"
 							controls
 							@tap="clickHandler(index)"
 						></video>
-						<view v-if="showTitle && getItemTitle(item) != '' && testImage(getSource(item))"
+						<view v-if="shouldShowImageTitle(item)"
 							class="up-swiper__wrapper__item__wrapper__title">
 							<text class="up-line-1">{{ getItemTitle(item) }}</text>
 						</view>
@@ -72,7 +60,7 @@
 				</slot>
 			</swiper-item>
 		</swiper>
-		<view class="up-swiper__indicator" :style="[addStyle(indicatorStyle)]">
+		<view class="up-swiper__indicator" :style="indicatorRootStyle">
 			<slot name="indicator">
 				<up-swiper-indicator
 					v-if="!loading && indicator && !showTitle"
@@ -87,13 +75,11 @@
 	</view>
 </template>
 
-<script lang="uts">
-	import { propsSwiper } from './props.uts';
-	import { mpMixin } from '../../libs/mixin/mpMixin.uts';
-	import { mixin } from '../../libs/mixin/mixin.uts';
+<script setup lang="uts">
+	import { computed, getCurrentInstance, ref, watch } from 'vue';
+	import defProps from './swiper.uts';
 	import { addUnit, addStyle, error } from '../../libs/function/index.uts';
-	import { object as testObject, image as testImage, video as testVideo} from '../../libs/function/test.uts';
-	import { nextTick } from 'vue';
+	import { object as isObjectValue, image as isImageSource, video as isVideoSource } from '../../libs/function/test.uts';
 	/**
 	 * Swiper 轮播图
 	 * @description 该组件一般用于导航轮播，广告展示等场景,可开箱即用，
@@ -126,112 +112,287 @@
 	 * @event {Function(index)}	change	轮播图切换时触发(自动或者手动切换)	index：切换到了第几张图片，从0开始
 	 * @example	<up-swiper :list="list4" keyName="url" :autoplay="false"></up-swiper>
 	 */
-	export default {
-		name: 'up-swiper',
-		mixins: [mpMixin, mixin, propsSwiper],
-		data() {
-			return {
-				currentIndex: 0
-			}
+	defineOptions({
+		name: 'up-swiper'
+	})
+
+	const props = defineProps({
+		// 列表数组，元素可为字符串，如为对象可通过keyName指定目标属性名
+		list: {
+			type: Array<any>,
+			default: defProps.getAny('swiper.list')
 		},
-		watch: {
-			current(val: string | number, preVal: string | number) {
-				if(val === preVal) return;
-				this.currentIndex = val as number; // 和上游数据关联上
-			}
+		// 是否显示面板指示器
+		indicator: {
+			type: Boolean,
+			default: defProps.getBoolean('swiper.indicator')
 		},
-		emits: ["click", "change", "update:current"],
-		computed: {
+		// 指示器非激活颜色
+		indicatorActiveColor: {
+			type: String,
+			default: defProps.getString('swiper.indicatorActiveColor')
 		},
-		methods: {
-			addStyle(val: any): any {
-				return addStyle(val)
-			},
-			addUnit(val: any): string {
-				return addUnit(val)
-			},
-			itemStyle(index: number): any {
-				const style = {}
-				// #ifndef APP-NVUE || MP-TOUTIAO
-				// 左右流出空间的写法不支持nvue和头条
-				// 只有配置了此二值，才加上对应的圆角，以及缩放
-				if (this.nextMargin != '' && this.previousMargin != '') {
-					style['borderRadius'] = addUnit(this.radius)
-					if (index !== this.currentIndex) style['transform'] = 'scale(0.92)'
-				}
-				// #endif
-				return style
-			},
-			testObject(e: any|null): boolean {
-				return testObject(e)
-			},
-			testImage(e: string): boolean {
-				return testImage(e)
-			},
-			getItemType(item: any | null): string {
-				if (item == null) return ''
-				if (typeof item === 'string') return testVideo(this.getSource(item)) ? 'video' : 'image'
-				if (typeof item === 'object' && this.keyName != '') {
-					item = item as UTSJSONObject
-					if (item['type'] == null) return testVideo(this.getSource(item)) ? 'video' : 'image'
-					if (item['type'] === 'image') return 'image'
-					if (item['type'] === 'video') return 'video'
-					return 'image'
-				}
-				return 'image'
-			},
-			// 获取目标路径，可能数组中为字符串，对象的形式，额外可指定对象的目标属性名keyName
-			getSource(item: any|null): string {
-				if (typeof item === 'string') return item
-				if (typeof item === 'object' && this.keyName != '') {
-					item = item as UTSJSONObject
-					return item[this.keyName].toString()
-				}
-				else error('请按格式传递列表参数')
-				return ''
-			},
-			getItemTitle(item: any|null): string {
-				if (typeof item === 'string') return item
-				if (typeof item === 'object') {
-					item = item as UTSJSONObject
-					return item['title'].toString()
-				}
-				else error('请按格式传递列表参数')
-				return ''
-			},
-			// 轮播切换事件
-			change(e: UniSwiperChangeEvent) {
-				// 当前的激活索引
-				const { current } = e.detail
-				this.pauseVideo(this.currentIndex)
-				this.currentIndex = current
-				this.$emit('update:current', this.currentIndex)
-				this.$emit('change', e.detail)
-			},
-			// 切换轮播时，暂停视频播放
-			pauseVideo(index: number) {
-				const lastItem = this.getSource(this.list[index])
-				if (testVideo(lastItem)) {
-					// 当视频隐藏时，暂停播放
-					// @ts-ignore
-					const video = uni.createVideoContext(`video-${index}`, this)
-					video!!.pause()
-				}
-			},
-			// 当一个轮播item为视频时，获取它的视频海报
-			getPoster(item: any|null): string {
-				if (typeof item === 'object') {
-					item = item as UTSJSONObject
-					return item['poster'].toString() != '' ? item['poster'].toString() : '' 
-				}
-				return ''
-			},
-			// 点击某个item
-			clickHandler(index: number) {
-				this.$emit('click', index)
-			}
+		// 指示器的激活颜色
+		indicatorInactiveColor: {
+			type: String,
+			default: defProps.getString('swiper.indicatorInactiveColor')
 		},
+		// 指示器样式，可通过bottom，left，right进行定位
+		indicatorStyle: {
+			type: [String, Object],
+			default: defProps.getAny('swiper.indicatorStyle')
+		},
+		// 指示器模式，line-线型，dot-点型
+		indicatorMode: {
+			type: String,
+			default: defProps.getString('swiper.indicatorMode')
+		},
+		// 是否自动切换
+		autoplay: {
+			type: Boolean,
+			default: defProps.getBoolean('swiper.autoplay')
+		},
+		// 当前所在滑块的 index
+		current: {
+			type: [String, Number],
+			default: defProps.getAny('swiper.current')
+		},
+		// 当前所在滑块的 item-id ，不能与 current 被同时指定
+		currentItemId: {
+			type: String,
+			default: defProps.getString('swiper.currentItemId')
+		},
+		// 滑块自动切换时间间隔
+		interval: {
+			type: [String, Number],
+			default: defProps.getAny('swiper.interval')
+		},
+		// 滑块切换过程所需时间
+		duration: {
+			type: [String, Number],
+			default: defProps.getAny('swiper.duration')
+		},
+		// 播放到末尾后是否重新回到开头
+		circular: {
+			type: Boolean,
+			default: defProps.getBoolean('swiper.circular')
+		},
+		// 滑动方向是否为纵向
+		vertical: {
+			type: Boolean,
+			default: defProps.getBoolean('swiper.vertical')
+		},
+		// 前边距，可用于露出前一项的一小部分，nvue和支付宝不支持
+		previousMargin: {
+			type: [String, Number],
+			default: defProps.getAny('swiper.previousMargin')
+		},
+		// 后边距，可用于露出后一项的一小部分，nvue和支付宝不支持
+		nextMargin: {
+			type: [String, Number],
+			default: defProps.getAny('swiper.nextMargin')
+		},
+		// 当开启时，会根据滑动速度，连续滑动多屏，支付宝不支持
+		acceleration: {
+			type: Boolean,
+			default: defProps.getBoolean('swiper.acceleration')
+		},
+		// 同时显示的滑块数量，nvue、支付宝小程序不支持
+		displayMultipleItems: {
+			type: Number,
+			default: defProps.getNumber('swiper.displayMultipleItems')
+		},
+		// 指定swiper切换缓动动画类型，有效值：default、linear、easeInCubic、easeOutCubic、easeInOutCubic
+		// 只对微信小程序有效
+		easingFunction: {
+			type: String,
+			default: defProps.getString('swiper.easingFunction')
+		},
+		// list数组中指定对象的目标属性名
+		keyName: {
+			type: String,
+			default: defProps.getString('swiper.keyName')
+		},
+		// 图片的裁剪模式
+		imgMode: {
+			type: String,
+			default: defProps.getString('swiper.imgMode')
+		},
+		// 组件高度
+		height: {
+			type: [String, Number],
+			default: defProps.getAny('swiper.height')
+		},
+		// 背景颜色
+		bgColor: {
+			type: String,
+			default: defProps.getString('swiper.bgColor')
+		},
+		// 组件圆角，数值或带单位的字符串
+		radius: {
+			type: [String, Number],
+			default: defProps.getAny('swiper.radius')
+		},
+		// 是否加载中
+		loading: {
+			type: Boolean,
+			default: defProps.getBoolean('swiper.loading')
+		},
+		// 是否显示标题，要求数组对象中有title属性
+		showTitle: {
+			type: Boolean,
+			default: defProps.getBoolean('swiper.showTitle')
+		}
+	})
+
+	const emit = defineEmits(['click', 'change', 'update:current'])
+	const instance = getCurrentInstance()!.proxy!
+	const currentIndex = ref(0)
+
+	const rootStyle = computed((): UTSJSONObject => {
+		return {
+			backgroundColor: props.bgColor,
+			height: addUnit(props.height),
+			borderRadius: addUnit(props.radius)
+		} as UTSJSONObject
+	})
+
+	const swiperWrapperStyle = computed((): UTSJSONObject => {
+		return {
+			flex: '1',
+			height: addUnit(props.height)
+		} as UTSJSONObject
+	})
+
+	const imageStyle = computed((): UTSJSONObject => {
+		return {
+			height: addUnit(props.height),
+			borderRadius: addUnit(props.radius)
+		} as UTSJSONObject
+	})
+
+	const videoStyle = computed((): UTSJSONObject => {
+		return {
+			height: addUnit(props.height)
+		} as UTSJSONObject
+	})
+
+	const indicatorRootStyle = computed((): UTSJSONObject => {
+		return addStyle(props.indicatorStyle) as UTSJSONObject
+	})
+
+	watch((): any => props.current, (val: any, preVal: any) => {
+		if(val === preVal) return;
+		currentIndex.value = val as number; // 和上游数据关联上
+	})
+
+	const itemStyle = (index: number): UTSJSONObject => {
+		const style = {} as UTSJSONObject
+		// #ifndef APP-NVUE || MP-TOUTIAO
+		// 左右流出空间的写法不支持nvue和头条
+		// 只有配置了此二值，才加上对应的圆角，以及缩放
+		if (props.nextMargin != '' && props.previousMargin != '') {
+			style['borderRadius'] = addUnit(props.radius)
+			if (index !== currentIndex.value) style['transform'] = 'scale(0.92)'
+		}
+		// #endif
+		return style
 	}
+
+	const getSource = (item: any|null): string => {
+		if (typeof item === 'string') return item
+		if (typeof item === 'object' && props.keyName != '') {
+			item = item as UTSJSONObject
+			return item[props.keyName].toString()
+		}
+		else error('请按格式传递列表参数')
+		return ''
+	}
+
+	const getItemType = (item: any | null): string => {
+		if (item == null) return ''
+		if (typeof item === 'string') return isVideoSource(getSource(item)) ? 'video' : 'image'
+		if (typeof item === 'object' && props.keyName != '') {
+			item = item as UTSJSONObject
+			if (item['type'] == null) return isVideoSource(getSource(item)) ? 'video' : 'image'
+			if (item['type'] === 'image') return 'image'
+			if (item['type'] === 'video') return 'video'
+			return 'image'
+		}
+		return 'image'
+	}
+
+	const getItemTitle = (item: any|null): string => {
+		if (typeof item === 'string') return item
+		if (typeof item === 'object') {
+			item = item as UTSJSONObject
+			return item['title'].toString()
+		}
+		else error('请按格式传递列表参数')
+		return ''
+	}
+
+	const getVideoTitle = (item: any | null): string => {
+		const title = getItemTitle(item)
+		return props.showTitle && isObjectValue(item) && title != '' ? title : ''
+	}
+
+	const shouldShowImageTitle = (item: any | null): boolean => {
+		return props.showTitle && getItemTitle(item) != '' && isImageSource(getSource(item))
+	}
+
+	// 切换轮播时，暂停视频播放
+	const pauseVideo = (index: number): void => {
+		const lastItem = getSource(props.list[index])
+		if (isVideoSource(lastItem)) {
+			// 当视频隐藏时，暂停播放
+			const video = uni.createVideoContext(`video-${index}`, instance)
+			video!!.pause()
+		}
+	}
+
+	// 轮播切换事件
+	const change = (e: UniSwiperChangeEvent): void => {
+		// 当前的激活索引
+		const current = e.detail.current
+		pauseVideo(currentIndex.value)
+		currentIndex.value = current
+		emit('update:current', currentIndex.value)
+		emit('change', e.detail)
+	}
+
+	// 当一个轮播item为视频时，获取它的视频海报
+	const getPoster = (item: any|null): string => {
+		if (typeof item === 'object') {
+			item = item as UTSJSONObject
+			return item['poster'].toString() != '' ? item['poster'].toString() : ''
+		}
+		return ''
+	}
+
+	// 点击某个item
+	const clickHandler = (index: number): void => {
+		emit('click', index)
+	}
+
+	defineExpose({
+		currentIndex,
+		rootStyle,
+		swiperWrapperStyle,
+		imageStyle,
+		videoStyle,
+		indicatorRootStyle,
+		itemStyle,
+		getItemType,
+		getSource,
+		getItemTitle,
+		getVideoTitle,
+		shouldShowImageTitle,
+		change,
+		pauseVideo,
+		getPoster,
+		clickHandler
+	})
 </script>
 
 <style lang="scss" scoped>

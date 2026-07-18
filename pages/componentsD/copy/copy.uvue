@@ -25,6 +25,5 @@
 	</view>
 </template>
 
-<script>
-export default {};
+<script setup lang="uts">
 </script>

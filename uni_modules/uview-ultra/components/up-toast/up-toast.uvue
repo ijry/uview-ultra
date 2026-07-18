@@ -8,43 +8,42 @@
 			<view
 				class="up-toast__content"
 				:style="[contentStyle]"
-				:class="['up-type-' + tmpConfig['type'], (tmpConfig['type'] === 'loading' || tmpConfig['loading'] as boolean) ?  'up-toast__content--loading' : '']"
+				:class="['up-type-' + toastType, (toastType === 'loading' || toastLoading) ?  'up-toast__content--loading' : '']"
 			>
 				<up-loading-icon
-					v-if="tmpConfig['type'] === 'loading'"
+					v-if="toastType === 'loading'"
 					mode="circle"
 					color="rgb(255, 255, 255)"
 					inactiveColor="rgb(120, 120, 120)"
 					size="25"
 				></up-loading-icon>
 				<up-icon
-					v-else-if="tmpConfig['type'] !== 'defalut' && iconName != ''"
+					v-else-if="toastType !== 'defalut' && iconName != ''"
 					:name="iconName"
 					size="17"
-					:color="tmpConfig['type']"
+					:color="toastType"
 					:customStyle="iconStyle"
 				></up-icon>
 				<up-gap
-					v-if="tmpConfig['type'] === 'loading' || tmpConfig['loading'] as boolean"
+					v-if="toastType === 'loading' || toastLoading"
 					height="12"
 					bgColor="transparent"
 				></up-gap>
 				<text
 					class="up-toast__content__text"
-					:class="['up-toast__content__text--' + tmpConfig['type']]"
+					:class="['up-toast__content__text--' + toastType]"
 					style="max-width: 400rpx;"
-				>{{ tmpConfig['message'] }}</text>
+				>{{ toastMessage }}</text>
 			</view>
 		</up-overlay>
 	</view>
 </template>
 
-<script>
-	import { mpMixin } from '../../libs/mixin/mpMixin';
-	import { mixin } from '../../libs/mixin/mixin';
-	import { os, getWindowInfo, deepMerge, type2icon } from '../../libs/function/index';
+<script setup lang="uts">
+	import { computed, onBeforeUnmount, ref } from 'vue'
+	import { os, getWindowInfo, deepMerge, type2icon } from '../../libs/function/index.uts';
 	import color from '../../libs/config/color';
-	import { hexToRgb } from '../../libs/function/colorGradient';
+	import { hexToRgb } from '../../libs/function/colorGradient.uts';
 	/**
 	 * toast 消息提示
 	 * @description 此组件表现形式类似uni的uni.showToastAPI，但也有不同的地方。
@@ -67,164 +66,216 @@
 	 * @event {Function} show 显示toast，如需一进入页面就显示toast，请在onReady生命周期调用
 	 * @example <up-toast ref="uToast" />
 	 */
-	export default {
-		name: 'up-toast',
-		mixins: [mpMixin, mixin],
-		data() {
-			return {
-				isShow: false,
-				timer: null as number|null, // 定时器
-				config: {
-					message: '', // 显示文本
-					type: '', // 主题类型，primary，success，error，warning，black
-					zIndex: 10090, // 层级
-					duration: 2000, // 显示的时间，毫秒
-					icon: true, // 显示的图标
-					position: 'center', // toast出现的位置
-					complete: null, // 执行完后的回调函数
-					overlay: true, // 是否防止触摸穿透
-					loading: false, // 是否加载中状态
-				},
-				tmpConfig: {}, // 将用户配置和内置配置合并后的临时配置变量
+	defineOptions({
+		name: 'up-toast'
+	})
+
+	const isShow = ref(false)
+	const timer = ref<number | null>(null) // 定时器
+	const config = {
+		message: '', // 显示文本
+		type: '', // 主题类型，primary，success，error，warning，black
+		zIndex: 10090, // 层级
+		duration: 2000, // 显示的时间，毫秒
+		icon: true, // 显示的图标
+		position: 'center', // toast出现的位置
+		complete: null, // 执行完后的回调函数
+		overlay: true, // 是否防止触摸穿透
+		loading: false, // 是否加载中状态
+	} as UTSJSONObject
+	const tmpConfig = ref(deepMerge(config, {} as UTSJSONObject)) // 将用户配置和内置配置合并后的临时配置变量
+
+	function getConfigString(key: string, fallback: string = ''): string {
+		const value = tmpConfig.value[key]
+		return value == null ? fallback : value.toString()
+	}
+
+	function getConfigBoolean(key: string, fallback: boolean = false): boolean {
+		const value = tmpConfig.value[key]
+		if (value == null) return fallback
+		if (typeof value === 'boolean') return value as boolean
+		return value.toString() == 'true'
+	}
+
+	function getConfigNumber(key: string, fallback: number = 0): number {
+		const value = tmpConfig.value[key]
+		if (value == null) return fallback
+		if (typeof value === 'number') return value as number
+		const parsed = parseFloat(value.toString())
+		return isNaN(parsed) ? fallback : parsed
+	}
+
+	const toastType = computed((): string => {
+		return getConfigString('type')
+	})
+
+	const toastLoading = computed((): boolean => {
+		return getConfigBoolean('loading', false)
+	})
+
+	const toastMessage = computed((): string => {
+		return getConfigString('message')
+	})
+
+	const iconName = computed((): string => {
+		// 只有不为none，并且type为error|warning|succes|info时候，才显示图标
+		const iconValue = tmpConfig.value['icon']
+		if (iconValue == null) {
+			return ''
+		}
+		if (typeof iconValue === 'boolean') {
+			if (!(iconValue as boolean)) return ''
+			if (['error', 'warning', 'success', 'primary'].includes(toastType.value)) {
+				return type2icon(toastType.value)
+			} else {
+				return ''
 			}
-		},
-		computed: {
-			iconName(): string {
-				// 只有不为none，并且type为error|warning|succes|info时候，才显示图标
-				if(this.tmpConfig['icon'] == '' || this.tmpConfig['icon'] == 'none') {
-					return '';
+		}
+		const iconText = iconValue.toString()
+		if(iconText == '' || iconText == 'none') {
+			return ''
+		}
+		return iconText
+	})
+
+	const overlayStyle = computed((): UTSJSONObject => {
+		const style = {
+			justifyContent: 'center',
+			alignItems: 'center',
+			display: 'flex'
+		} as UTSJSONObject
+		// 将遮罩设置为100%透明度，避免出现灰色背景
+		style['backgroundColor'] = 'rgba(0, 0, 0, 0)'
+		// overlay=false时不阻止点击穿透
+		if (!getConfigBoolean('overlay', true)) {
+			style['pointerEvents'] = 'none'
+		}
+		return style
+	})
+
+	const iconStyle = computed((): UTSJSONObject => {
+		const style = {} as UTSJSONObject
+		// 图标需要一个右边距，以跟右边的文字有隔开的距离
+		style['marginRight'] = '4px'
+		// #ifdef APP-NVUE
+		// iOSAPP下，图标有1px的向下偏移，这里进行修正
+		if (os() === 'ios') {
+			style['marginTop'] = '-1px'
+		}
+		// #endif
+		return style
+	})
+
+	const loadingIconColor = computed((): string => {
+		let colorTmp = 'rgb(255, 255, 255)'
+		if (['error', 'warning', 'success', 'primary'].includes(toastType.value)) {
+			// loading-icon组件内部会对color参数进行一个透明度处理，该方法要求传入的颜色值
+			// 必须为rgb格式的，所以这里做一个处理
+			colorTmp = hexToRgb(color[toastType.value].toString()).toString()
+		}
+		return colorTmp
+	})
+
+	// 内容盒子的样式
+	const contentStyle = computed((): UTSJSONObject => {
+		const windowHeight = getWindowInfo().windowHeight
+		const style = {} as UTSJSONObject
+		let value = 0
+		// 根据top和bottom，对Y轴进行窗体高度的百分比偏移
+		const position = getConfigString('position', 'center')
+		if(position === 'top') {
+			value = - windowHeight * 0.25
+		} else if(position === 'bottom') {
+			value = windowHeight * 0.25
+		}
+		style['transform'] = `translateY(${value}px)`
+		return style
+	})
+
+	const clearTimer = (): void => {
+		isShow.value = false
+		// 清除定时器
+		clearTimeout(timer.value ?? 0)
+		timer.value = null
+	}
+
+	// 显示toast组件，由父组件通过this.$refs.xxx.show(options)形式调用
+	const show = (options: UTSJSONObject): void => {
+		// 不将结果合并到config变量，避免多次调用up-toast，前后的配置造成混乱
+		tmpConfig.value = deepMerge(config, options)
+		// 清除定时器
+		clearTimer()
+		isShow.value = true
+		// -1时不自动关闭
+		const duration = getConfigNumber('duration', 2000)
+		if (duration >= 0) {
+			timer.value = setTimeout(() => {
+				// 倒计时结束，清除定时器，隐藏toast组件
+				clearTimer()
+				// 判断是否存在callback方法，如果存在就执行
+				const complete = tmpConfig.value['complete']
+				if (typeof complete === 'function') {
+					;(complete as () => void)()
 				}
-				if (this.tmpConfig['icon'] === true) {
-					if (['error', 'warning', 'success', 'primary'].includes(this.tmpConfig['type'] as string)) {
-						return type2icon(this.tmpConfig['type'] as string)
-					} else {
-						return ''
-					}
-				} else {
-					return this.tmpConfig['icon'] != null ? this.tmpConfig['icon'].toString() : ''
-				}
-			},
-			overlayStyle() {
-				const style = {
-					justifyContent: 'center',
-					alignItems: 'center',
-					display: 'flex'
-				}
-				// 将遮罩设置为100%透明度，避免出现灰色背景
-				style['backgroundColor'] = 'rgba(0, 0, 0, 0)'
-				// overlay=false时不阻止点击穿透
-				if (!(this.tmpConfig['overlay'] as boolean)) {
-					style['pointerEvents'] = 'none'
-				}
-				return style
-			},
-			iconStyle() {
-				const style = {}
-				// 图标需要一个右边距，以跟右边的文字有隔开的距离
-				style['marginRight'] = '4px'
-				// #ifdef APP-NVUE
-				// iOSAPP下，图标有1px的向下偏移，这里进行修正
-				if (os() === 'ios') {
-					style['marginTop'] = '-1px'
-				}
-				// #endif
-				return style
-			},
-			loadingIconColor() {
-				let colorTmp = 'rgb(255, 255, 255)'
-				if (['error', 'warning', 'success', 'primary'].includes(this.tmpConfig['type'] as string)) {
-					// loading-icon组件内部会对color参数进行一个透明度处理，该方法要求传入的颜色值
-					// 必须为rgb格式的，所以这里做一个处理
-					// @ts-ignore
-					colorTmp = hexToRgb(color[this.tmpConfig['type'] as string].toString()).toString()
-				}
-				return colorTmp
-			},
-			// 内容盒子的样式
-			contentStyle() {
-				const windowHeight = getWindowInfo().windowHeight, style = {}
-				let value = 0
-				// 根据top和bottom，对Y轴进行窗体高度的百分比偏移
-				if(this.tmpConfig['position'] === 'top') {
-					value = - windowHeight * 0.25
-				} else if(this.tmpConfig['position'] === 'bottom') {
-					value = windowHeight * 0.25
-				}
-				style['transform'] = `translateY(${value}px)`
-				return style
-			}
-		},
-		created() {
-			// 通过主题的形式调用toast，批量生成方法函数
-			// ['primary', 'success', 'error', 'warning', 'default', 'loading'].map(item => {
-			// 	this.$data[item] = (message: string) => {
-			// 		this.show({
-			// 			type: item,
-			// 			message
-			// 		})
-			// 	}
-			// })
-		},
-		methods: {
-			primary(message: string) {
-				this.show({
-					type: 'primary',
-					message
-				})
-			},
-			success(message: string) {
-				this.show({
-					type: 'success',
-					message
-				})
-			},
-			error(message: string) {
-				this.show({
-					type: 'error',
-					message
-				})
-			},
-			warning(message: string) {
-				this.show({
-					type: 'warning',
-					message
-				})
-			},
-			// 显示toast组件，由父组件通过this.$refs.xxx.show(options)形式调用
-			show(options: UTSJSONObject) {
-				// 不将结果合并到this.config变量，避免多次调用up-toast，前后的配置造成混乱
-				this.tmpConfig = deepMerge(this.config, options)
-				// 清除定时器
-				this.clearTimer()
-				this.isShow = true
-				// -1时不自动关闭
-				if (this.tmpConfig['duration'] !== -1) {
-					this.timer = setTimeout(() => {
-						// 倒计时结束，清除定时器，隐藏toast组件
-						this.clearTimer()
-						// 判断是否存在callback方法，如果存在就执行
-						const complete = this.tmpConfig['complete']
-						if (typeof complete === 'function') {
-							;(complete as () => void)()
-						}
-					}, this.tmpConfig['duration'] as number)
-				}
-			},
-			// 隐藏toast组件，由父组件通过this.$refs.xxx.hide()形式调用
-			hide() {
-				this.clearTimer()
-			},
-			clearTimer() {
-				this.isShow = false
-				// 清除定时器
-				clearTimeout(this.timer ?? 0)
-				this.timer = null
-			}
-		},
-		beforeUnmount() {
-			this.clearTimer()
+			}, duration)
 		}
 	}
+
+	const primary = (message: string): void => {
+		show({
+			type: 'primary',
+			message
+		})
+	}
+
+	const success = (message: string): void => {
+		show({
+			type: 'success',
+			message
+		})
+	}
+
+	const error = (message: string): void => {
+		show({
+			type: 'error',
+			message
+		})
+	}
+
+	const warning = (message: string): void => {
+		show({
+			type: 'warning',
+			message
+		})
+	}
+
+	// 隐藏toast组件，由父组件通过this.$refs.xxx.hide()形式调用
+	const hide = (): void => {
+		clearTimer()
+	}
+
+	onBeforeUnmount(() => {
+		clearTimer()
+	})
+
+	defineExpose({
+		isShow,
+		timer,
+		config,
+		tmpConfig,
+		iconName,
+		overlayStyle,
+		iconStyle,
+		loadingIconColor,
+		contentStyle,
+		primary,
+		success,
+		error,
+		warning,
+		show,
+		hide,
+		clearTimer
+	})
 </script>
 
 <style lang="scss" scoped>

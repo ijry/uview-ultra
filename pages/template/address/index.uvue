@@ -21,78 +21,81 @@
 	</view>
 </template>
 
-<script>
-export default {
-	data() {
-		return {
-			siteList: [] as UTSJSONObject[]
-		};
-	},
-	onLoad() {
-		this.getData();
-	},
-	methods: {
-		getData() {
-			this.siteList = [
+<script setup lang="uts">
+import { ref } from 'vue'
+
+const siteList = ref([] as UTSJSONObject[])
+
+function getData() {
+	siteList.value = [
+		{
+			id: 1,
+			name: '游X',
+			phone: '183****5523',
+			tag: [
 				{
-					id: 1,
-					name: '游X',
-					phone: '183****5523',
-					tag: [
-						{
-							tagText: '默认'
-						},
-						{
-							tagText: '家'
-						}
-					],
-					site: '广东省深圳市宝安区 自由路66号'
+					tagText: '默认'
 				},
 				{
-					id: 2,
-					name: '李XX',
-					phone: '183****5555',
-					tag: [
-						{
-							tagText: '公司'
-						}
-					],
-					site: '广东省深圳市宝安区 翻身路xx号'
-				},
-				{
-					id: 3,
-					name: '王YY',
-					phone: '153****5555',
-					tag: [] as UTSJSONObject[],
-					site: '广东省深圳市宝安区 平安路13号'
+					tagText: '家'
 				}
-			];
+			],
+			site: '广东省深圳市宝安区 自由路66号'
 		},
-		getSiteId(item: UTSJSONObject): number {
-			return item['id'] as number;
+		{
+			id: 2,
+			name: '李XX',
+			phone: '183****5555',
+			tag: [
+				{
+					tagText: '公司'
+				}
+			],
+			site: '广东省深圳市宝安区 翻身路xx号'
 		},
-		getSiteName(item: UTSJSONObject): string {
-			return item['name'] as string;
-		},
-		getSitePhone(item: UTSJSONObject): string {
-			return item['phone'] as string;
-		},
-		getSiteTags(item: UTSJSONObject): UTSJSONObject[] {
-			return item['tag'] as UTSJSONObject[];
-		},
-		getTagText(item: UTSJSONObject): string {
-			return item['tagText'] as string;
-		},
-		isDefaultTag(item: UTSJSONObject): boolean {
-			return this.getTagText(item) == '默认';
-		},
-		toAddSite(){
-			uni.navigateTo({
-			    url: '/pages/template/address/addSite'
-			});
+		{
+			id: 3,
+			name: '王YY',
+			phone: '153****5555',
+			tag: [] as UTSJSONObject[],
+			site: '广东省深圳市宝安区 平安路13号'
 		}
-	}
-};
+	]
+}
+
+onLoad((_options: OnLoadOptions) => {
+	getData()
+})
+
+function getSiteId(item: UTSJSONObject): number {
+	return item['id'] as number
+}
+
+function getSiteName(item: UTSJSONObject): string {
+	return item['name'] as string
+}
+
+function getSitePhone(item: UTSJSONObject): string {
+	return item['phone'] as string
+}
+
+function getSiteTags(item: UTSJSONObject): UTSJSONObject[] {
+	return item['tag'] as UTSJSONObject[]
+}
+
+function getTagText(item: UTSJSONObject): string {
+	return item['tagText'] as string
+}
+
+function isDefaultTag(item: UTSJSONObject): boolean {
+	return getTagText(item) == '默认'
+}
+
+function toAddSite() {
+	uni.navigateTo({
+	    url: '/pages/template/address/addSite'
+	})
+}
 </script>
 
 <style lang="scss" scoped>

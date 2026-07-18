@@ -215,7 +215,7 @@
 					height: height ?? 0,
 					// 为了让字母列表对屏幕绝对居中，让其对导航栏进行修正，也即往上偏移导航栏的一半高度
 					top: (sizeScroll.height ?? 0) / 2,
-					// top: (this.scrollViewHeight - height?? 0) / 2 + customNavHeight / 2,
+					// top: (scrollViewHeight - height?? 0) / 2 + customNavHeight / 2,
 					itemHeight: Math.floor((height ?? 0) / uIndexList.value.length)
 				}
 			})
@@ -269,7 +269,7 @@
 	
 	const init = () => {
 		// 设置列表的高度为整个屏幕的高度
-		//减去this.customNavHeight，并将this.scrollViewHeight设置为maxHeight
+		//减去customNavHeight，并将scrollViewHeight设置为maxHeight
 		//解决当up-index-list组件放在tabbar页面时,scroll-view内容较少时，还能滚动
 		let customNavHeight = getPx(props.customNavHeight)
 		sys.value = getWindowInfo()
@@ -336,7 +336,7 @@
 				// #endif
 				return child
 			})
-			// console.log('this.children[currentIndex].top', childrenItems[currentIndex].top)
+			// console.log('children[currentIndex].top', childrenItems[currentIndex].top)
 			if (childrenItems[currentIndex]?.top != null || childrenItems[currentIndex].top == 0) {
 				scrollTop.value = (childrenItems[currentIndex].top ?? 0) as number - parseFloat(getPx(customNavHeight))
 			}
@@ -344,7 +344,7 @@
 			
 			// #ifdef APP-NVUE
 			// 在nvue中，由于cell和header为同级元素，所以实际是需要对header(anchor)进行偏移
-			const anchorStr = `up-index-anchor-${this.uIndexList[currentIndex]}`
+			const anchorStr = `up-index-anchor-${uIndexList.value[currentIndex]}`
 			// console.log(anchor)
 			dom.scrollToElement(anchors.value[currentIndex].$refs[anchorStr], {
 				offset: 0,
@@ -360,7 +360,7 @@
 		let top = letterInfo.value['top'] as number
 		let height = letterInfo.value['height'] as number
 		let itemHeight = letterInfo.value['itemHeight'] as number
-		// let index = this.currentIndex;
+		// let index = currentIndex;
 		let index = 0;
 		// 对H5的pageY进行修正，这是由于uni-app在H5中将触摸点的坐标跟H5的导航栏结合导致的问题
 		// #ifdef H5
@@ -460,7 +460,7 @@
 		// #ifndef APP-NVUE
 		// 非nvue通过detail获取滚动条位移
 		scrollTopNum = e.detail.scrollTop
-		// console.log('scrollTop', scrollTopNum, this.customNavHeight)
+		// console.log('scrollTop', scrollTopNum, customNavHeight)
 		// #endif
 		// 在弹窗中需要加上弹窗距离顶部的高度topOffset
 		scrollTopNum = scrollTopNum + parseInt(getPx(props.customNavHeight))

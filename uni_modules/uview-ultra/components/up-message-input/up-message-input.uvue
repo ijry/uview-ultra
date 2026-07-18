@@ -17,14 +17,18 @@
 	></up-code-input>
 </template>
 
-<script lang="uts">
-function stringValue(value: any | null): string {
-	return value == null ? '' : value.toString()
-}
+<script setup lang="uts">
+	import { computed } from 'vue'
 
-export default {
-	name: 'up-message-input',
-	props: {
+	function stringValue(value: any | null): string {
+		return value == null ? '' : value.toString()
+	}
+
+	defineOptions({
+		name: 'up-message-input'
+	})
+
+	const props = defineProps({
 		maxlength: {
 			type: [Number, String],
 			default: 4
@@ -77,30 +81,32 @@ export default {
 			type: Boolean,
 			default: false
 		}
-	},
-	emits: ['change', 'finish', 'update:modelValue'],
-	computed: {
-		currentValue(): string {
-			const modelText = stringValue(this.modelValue)
-			return modelText.length > 0 ? modelText : stringValue(this.value)
-		},
-		codeInputMode(): string {
-			return this.mode == 'box' ? 'box' : 'line'
-		},
-		activeBorderColor(): string {
-			return this.mode == 'box' ? this.activeColor : this.inactiveColor
-		}
-	},
-	methods: {
-		onChange(value: string): void {
-			this.$emit('change', value)
-		},
-		onFinish(value: string): void {
-			this.$emit('finish', value)
-		},
-		onModelValueUpdate(value: string): void {
-			this.$emit('update:modelValue', value)
-		}
+	})
+
+	const emit = defineEmits(['change', 'finish', 'update:modelValue'])
+
+	const currentValue = computed((): string => {
+		const modelText = stringValue(props.modelValue)
+		return modelText.length > 0 ? modelText : stringValue(props.value)
+	})
+
+	const codeInputMode = computed((): string => {
+		return props.mode == 'box' ? 'box' : 'line'
+	})
+
+	const activeBorderColor = computed((): string => {
+		return props.mode == 'box' ? props.activeColor : props.inactiveColor
+	})
+
+	const onChange = (value: string): void => {
+		emit('change', value)
 	}
-}
+
+	const onFinish = (value: string): void => {
+		emit('finish', value)
+	}
+
+	const onModelValueUpdate = (value: string): void => {
+		emit('update:modelValue', value)
+	}
 </script>

@@ -63,198 +63,196 @@
 	</up-popup>
 </template>
 
-<script>
-	import { createProvinceData } from "@/common/province";
-	import { createCityData } from "@/common/city";
-	import { createAreaData } from "@/common/area";
-	/**
-	 * city-select 省市区级联选择器
-	 * @property {String Number} z-index 弹出时的z-index值（默认1075）
-	 * @property {Boolean} mask-close-able 是否允许通过点击遮罩关闭Picker（默认true）
-	 * @property {String} default-region 默认选中的地区，中文形式
-	 * @property {String} default-code 默认选中的地区，编号形式
-	 */
-	export default {
-		name: 'u-city-select',
-		props: {
-			// 通过双向绑定控制组件的弹出与收起
-			modelValue: {
-				type: Boolean,
-				default: false
-			},
-			// 默认显示的地区，可传类似["河北省", "秦皇岛市", "北戴河区"]
-			defaultRegion: {
-				type: Array,
-				default(): string[] {
-					return [] as string[];
-				}
-			},
-			// 默认显示地区的编码，defaultRegion和areaCode同时存在，areaCode优先，可传类似["13", "1303", "130304"]
-			areaCode: {
-				type: Array,
-				default(): string[] {
-					return [] as string[];
-				}
-			},
-			// 是否允许通过点击遮罩关闭Picker
-			maskCloseAble: {
-				type: Boolean,
-				default: true
-			},
-			// 弹出的z-index值
-			zIndex: {
-				type: [String, Number],
-				default: 0
+<script setup lang="uts">
+	import { computed, onMounted, ref } from 'vue'
+	import { createProvinceData } from "@/common/province"
+	import { createCityData } from "@/common/city"
+	import { createAreaData } from "@/common/area"
+
+	defineOptions({
+		name: 'u-city-select'
+	})
+
+	const props = defineProps({
+		modelValue: {
+			type: Boolean,
+			default: false
+		},
+		defaultRegion: {
+			type: Array,
+			default(): string[] {
+				return [] as string[]
 			}
 		},
-		data() {
-			const provinceList = createProvinceData();
-			const cityList = createCityData();
-			const areaList = createAreaData();
-			return {
-				cityValue: "",
-				isChooseP: false, //是否已经选择了省
-				province: 0, //省级下标
-				provinces: provinceList,
-				cityData: cityList,
-				isChooseC: false, //是否已经选择了市
-				city: 0, //市级下标
-				citys: cityList[0],
-				areaData: areaList,
-				isChooseA: false, //是否已经选择了区
-				area: 0, //区级下标
-				areas: areaList[0][0],
-				tabsIndex: 0,
+		areaCode: {
+			type: Array,
+			default(): string[] {
+				return [] as string[]
 			}
 		},
-		mounted() {
-			this.init();
+		maskCloseAble: {
+			type: Boolean,
+			default: true
 		},
-		computed: {
-			isChange(): boolean {
-				return this.tabsIndex > 1;
-			},
-			genTabsList(): UTSJSONObject[] {
-				let tabsList = [{
-					name: "请选择"
-				}] as UTSJSONObject[];
-				if (this.isChooseP) {
-					console.log(this.province)
-					tabsList[0]['name'] = this.getRegionLabel(this.getProvinces()[this.province]);
-					tabsList[1] = {
-						name: "请选择"
-					};
-				}
-				if (this.isChooseC) {
-					tabsList[1]['name'] = this.getRegionLabel(this.getCitys()[this.city]);
-					tabsList[2] = {
-						name: "请选择"
-					};
-				}
-				if (this.isChooseA) {
-					tabsList[2]['name'] = this.getRegionLabel(this.getAreas()[this.area]);
-				}
-				return tabsList;
-			},
-			uZIndex(): number {
-				// 如果用户有传递z-index值，优先使用
-				return this.zIndex != 0 && this.zIndex != '0' ? parseInt(this.zIndex.toString()) : 1075;
-			}
-		},
-		emits: ['city-change'],
-		methods: {
-			getProvinces(): UTSJSONObject[] {
-				return this.provinces as Array<UTSJSONObject>;
-			},
-			getCitys(): UTSJSONObject[] {
-				return this.citys as UTSJSONObject[];
-			},
-			getAreas(): UTSJSONObject[] {
-				return this.areas as UTSJSONObject[];
-			},
-			getRegionLabel(item: UTSJSONObject): string {
-				return item['label'] as string;
-			},
-			getRegionValue(item: UTSJSONObject): string {
-				return item['value'] as string;
-			},
-			init() {
-				const areaCode = this.areaCode as string[];
-				const defaultRegion = this.defaultRegion as string[];
-				if (areaCode.length == 3) {
-					this.setProvince("", areaCode[0]);
-					this.setCity("", areaCode[1]);
-					this.setArea("", areaCode[2]);
-				} else if (defaultRegion.length == 3) {
-					this.setProvince(defaultRegion[0], "");
-					this.setCity(defaultRegion[1], "");
-					this.setArea(defaultRegion[2], "");
-				};
-			},
-			setProvince(label: string = "", value: string = "") {
-				const provinceList = this.getProvinces();
-				for (let k = 0; k < provinceList.length; k++) {
-					const item = provinceList[k];
-					if (value != "" ? this.getRegionValue(item) == value : this.getRegionLabel(item) == label) {
-						this.provinceChange(k);
-					}
-				}
-			},
-			setCity(label: string = "", value: string = "") {
-				const cityList = this.getCitys();
-				for (let k = 0; k < cityList.length; k++) {
-					const item = cityList[k];
-					if (value != "" ? this.getRegionValue(item) == value : this.getRegionLabel(item) == label) {
-						this.cityChange(k);
-					}
-				}
-			},
-			setArea(label: string = "", value: string = "") {
-				const areaList = this.getAreas();
-				for (let k = 0; k < areaList.length; k++) {
-					const item = areaList[k];
-					if (value != "" ? this.getRegionValue(item) == value : this.getRegionLabel(item) == label) {
-						this.isChooseA = true;
-						this.area = k;
-					}
-				}
-			},
-			close() {
-				this.$emit('update:modelValue', false);
-			},
-			tabsChange(index: number) {
-				this.tabsIndex = index;
-			},
-			provinceChange(index: number) {
-				this.isChooseP = true;
-				this.isChooseC = false;
-				this.isChooseA = false;
-				this.province = index;
-				const cityData = this.cityData as Array<Array<UTSJSONObject>>;
-				this.citys = cityData[index];
-				this.tabsIndex = 1;
-			},
-			cityChange(index: number) {
-				this.isChooseC = true;
-				this.isChooseA = false;
-				this.city = index;
-				const areaData = this.areaData as Array<Array<Array<UTSJSONObject>>>;
-				this.areas = areaData[this.province][index];
-				this.tabsIndex = 2;
-			},
-			areaChange(index: number) {
-				this.isChooseA = true;
-				this.area = index;
-				let result = {} as UTSJSONObject;
-				result['province'] = this.getProvinces()[this.province];
-				result['city'] = this.getCitys()[this.city];
-				result['area'] = this.getAreas()[this.area];
-				this.$emit('city-change', result);
-				this.close();
+		zIndex: {
+			type: [String, Number],
+			default: 0
+		}
+	})
+
+	const emit = defineEmits(['update:modelValue', 'city-change'])
+	const provinceList = createProvinceData()
+	const cityList = createCityData()
+	const areaList = createAreaData()
+	const isChooseP = ref(false)
+	const province = ref(0)
+	const provinces = provinceList
+	const cityData = cityList
+	const isChooseC = ref(false)
+	const city = ref(0)
+	const citys = ref(cityList[0])
+	const areaData = areaList
+	const isChooseA = ref(false)
+	const area = ref(0)
+	const areas = ref(areaList[0][0])
+	const tabsIndex = ref(0)
+
+	function getProvinces(): UTSJSONObject[] {
+		return provinces as Array<UTSJSONObject>
+	}
+
+	function getCitys(): UTSJSONObject[] {
+		return citys.value as UTSJSONObject[]
+	}
+
+	function getAreas(): UTSJSONObject[] {
+		return areas.value as UTSJSONObject[]
+	}
+
+	function getRegionLabel(item: UTSJSONObject): string {
+		return item['label'] as string
+	}
+
+	function getRegionValue(item: UTSJSONObject): string {
+		return item['value'] as string
+	}
+
+	function close() {
+		emit('update:modelValue', false)
+	}
+
+	function tabsChange(_item: UTSJSONObject, index: number) {
+		tabsIndex.value = index
+	}
+
+	function provinceChange(index: number) {
+		isChooseP.value = true
+		isChooseC.value = false
+		isChooseA.value = false
+		province.value = index
+		const cityDataList = cityData as Array<Array<UTSJSONObject>>
+		citys.value = cityDataList[index]
+		tabsIndex.value = 1
+	}
+
+	function cityChange(index: number) {
+		isChooseC.value = true
+		isChooseA.value = false
+		city.value = index
+		const areaDataList = areaData as Array<Array<Array<UTSJSONObject>>>
+		areas.value = areaDataList[province.value][index]
+		tabsIndex.value = 2
+	}
+
+	function areaChange(index: number) {
+		isChooseA.value = true
+		area.value = index
+		const result = {} as UTSJSONObject
+		result['province'] = getProvinces()[province.value]
+		result['city'] = getCitys()[city.value]
+		result['area'] = getAreas()[area.value]
+		emit('city-change', result)
+		close()
+	}
+
+	function setProvince(label: string = "", value: string = "") {
+		const provinceList = getProvinces()
+		for (let k = 0; k < provinceList.length; k++) {
+			const item = provinceList[k]
+			if (value != "" ? getRegionValue(item) == value : getRegionLabel(item) == label) {
+				provinceChange(k)
 			}
 		}
-
 	}
+
+	function setCity(label: string = "", value: string = "") {
+		const cityList = getCitys()
+		for (let k = 0; k < cityList.length; k++) {
+			const item = cityList[k]
+			if (value != "" ? getRegionValue(item) == value : getRegionLabel(item) == label) {
+				cityChange(k)
+			}
+		}
+	}
+
+	function setArea(label: string = "", value: string = "") {
+		const areaList = getAreas()
+		for (let k = 0; k < areaList.length; k++) {
+			const item = areaList[k]
+			if (value != "" ? getRegionValue(item) == value : getRegionLabel(item) == label) {
+				isChooseA.value = true
+				area.value = k
+			}
+		}
+	}
+
+	function init() {
+		const areaCode = props.areaCode as string[]
+		const defaultRegion = props.defaultRegion as string[]
+		if (areaCode.length == 3) {
+			setProvince("", areaCode[0])
+			setCity("", areaCode[1])
+			setArea("", areaCode[2])
+		} else if (defaultRegion.length == 3) {
+			setProvince(defaultRegion[0], "")
+			setCity(defaultRegion[1], "")
+			setArea(defaultRegion[2], "")
+		}
+	}
+
+	const isChange = computed((): boolean => {
+		return tabsIndex.value > 1
+	})
+
+	const genTabsList = computed((): UTSJSONObject[] => {
+		const tabsList = [{
+			name: "请选择"
+		}] as UTSJSONObject[]
+		if (isChooseP.value) {
+			tabsList[0]['name'] = getRegionLabel(getProvinces()[province.value])
+			tabsList[1] = {
+				name: "请选择"
+			}
+		}
+		if (isChooseC.value) {
+			tabsList[1]['name'] = getRegionLabel(getCitys()[city.value])
+			tabsList[2] = {
+				name: "请选择"
+			}
+		}
+		if (isChooseA.value) {
+			tabsList[2]['name'] = getRegionLabel(getAreas()[area.value])
+		}
+		return tabsList
+	})
+
+	const uZIndex = computed((): number => {
+		return props.zIndex != 0 && props.zIndex != '0' ? parseInt(props.zIndex.toString()) : 1075
+	})
+
+	onMounted(() => {
+		init()
+	})
 </script>
 <style lang="scss">
 	.area-box {

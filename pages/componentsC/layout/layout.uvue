@@ -140,12 +140,7 @@
 	<!-- #endif -->
 </template>
 
-<script>
-export default {
-    data() {
-        return {};
-    },
-};
+<script setup lang="uts">
 </script>
 
 <style lang="scss" scoped>

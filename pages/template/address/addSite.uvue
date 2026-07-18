@@ -47,20 +47,16 @@
 	</view>
 </template>
 
-<script>
-export default {
-	data() {
-		return {
-			show: false
-		};
-	},
-	methods: {
-		setDefault() {},
-		showRegionPicker() {
-			this.show = true;
-		}
-	}
-};
+<script setup lang="uts">
+import { ref } from 'vue'
+
+const show = ref(false)
+
+function setDefault() {}
+
+function showRegionPicker() {
+	show.value = true
+}
 </script>
 
 <style lang="scss" scoped>

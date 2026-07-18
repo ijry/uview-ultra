@@ -16,7 +16,8 @@
     <!-- #endif -->
 </template>
 
-<script>
+<script setup lang="uts">
+import { ref } from 'vue'
 import { random } from '@/uni_modules/uview-ultra/libs/function/index';
 
 type LazyLoadItem = {
@@ -89,36 +90,33 @@ function createLazyLoadData(): LazyLoadItem[] {
 
 const LAZY_LOAD_DATA = createLazyLoadData()
 
-export default {
-  data() {
-    return {
-      list: [] as LazyLoadItem[],
-      status: 'loadmore'
-    };
-  },
-  onLoad() {
-    this.getData();
-  },
-  onReachBottom() {
-    this.getData();
-  },
-  methods: {
-    getData() {
-      let index = 0;
-      this.status = 'loading';
-      setTimeout(() => {
-        for (let i = 0; i < 10; i++) {
-          index = random(0, LAZY_LOAD_DATA.length - 1);
-          this.list.push({ src: LAZY_LOAD_DATA[index].src });
-        }
-        this.status = 'loadmore';
-      }, 1500);
-    },
-    statusChange(status: string) {
-    },
-    clickImg(img: string) {
+const list = ref([] as LazyLoadItem[])
+const status = ref('loadmore')
+
+function getData() {
+  let index = 0
+  status.value = 'loading'
+  setTimeout(() => {
+    for (let i = 0; i < 10; i++) {
+      index = random(0, LAZY_LOAD_DATA.length - 1)
+      list.value.push({ src: LAZY_LOAD_DATA[index].src } as LazyLoadItem)
     }
-  }
+    status.value = 'loadmore'
+  }, 1500)
+}
+
+onLoad((_options: OnLoadOptions) => {
+  getData()
+})
+
+onReachBottom(() => {
+  getData()
+})
+
+function statusChange(status: string) {
+}
+
+function clickImg(img: string) {
 }
 </script>
 

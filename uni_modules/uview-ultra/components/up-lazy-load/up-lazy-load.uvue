@@ -11,11 +11,9 @@
     </view>
 </template>
 
-<script lang="uts">
+<script setup lang="uts">
+    import { computed, getCurrentInstance, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
     import { addUnit, guid } from '../../libs/function/index.uts';
-    import { mpMixin } from '../../libs/mixin/mpMixin.uts';
-    import { mixin } from '../../libs/mixin/mixin.uts';
-    import { propsLazyLoad } from "./props";
     
     /**
      * lazyLoad 懒加载
@@ -37,217 +35,289 @@
      * @event {Function} error 图片加载失败时触发
      * @example <up-lazy-load :image="image" :loading-img="loadingImg" :error-img="errorImg"></up-lazy-load>
      */
-    export default {
-        name: 'up-lazy-load',
-        mixins: [mpMixin, mixin, propsLazyLoad],
-        data() {
-            return {
-                isShow: false,
-                opacity: 1,
-                time: this.duration,
-                loadStatus: '', // 默认是懒加载中的状态
-                isError: false, // 图片加载失败
-                elIndex: guid(),
-                contentObserver: null as (any | null),
-                checkTimer: 0
-            }
-        },
-        computed: {
-            wrapStyle(): UTSJSONObject {
-                const style = {} as UTSJSONObject
-                style['opacity'] = this.opacity
-                style['borderRadius'] = this.borderRadius.toString() + 'rpx'
-                style['transition'] = 'opacity ' + (this.toNumber(this.time) / 1000).toString() + 's ease-in-out'
-                return style
-            },
+    defineOptions({
+        name: 'up-lazy-load'
+    })
 
-            imageStyle(): UTSJSONObject {
-                const style = {} as UTSJSONObject
-                style['borderRadius'] = this.borderRadius.toString() + 'rpx'
-                style['height'] = this.imgHeight
-                return style
-            },
+    const props = defineProps({
+		// 用户自定义值，在事件触发时回调，用以区分是哪个图片
+		index: {
+			type: [Number, String],
+			default: ''
+		},
+		// 要显示的图片
+		image: {
+			type: String,
+			default: ''
+		},
+		// 图片裁剪模式
+		imgMode: {
+			type: String,
+			default: 'widthFix'
+		},
+		// 占位图片路径
+		loadingImg: {
+			type: String,
+			default: ''
+		},
+		// 加载失败的错误占位图
+		errorImg: {
+			type: String,
+			default: ''
+		},
+		// 图片进入可见区域前多少像素时，单位rpx，开始加载图片
+		// 负数为图片超出屏幕底部多少距离后触发懒加载，正数为图片顶部距离屏幕底部多少距离时触发(图片还没出现在屏幕上)
+		threshold: {
+			type: [Number, String],
+			default: 100
+		},
+		// 淡入淡出动画的过渡时间
+		duration: {
+			type: [Number, String],
+			default: 500
+		},
+		// 渡效果的速度曲线，各个之间差别不大，因为这是淡入淡出，且时间很短，不是那些变形或者移动的情况，会明显
+		// linear|ease|ease-in|ease-out|ease-in-out|cubic-bezier(n,n,n,n);
+		effect: {
+			type: String,
+			default: 'ease-in-out'
+		},
+		// 是否使用过渡效果
+		isEffect: {
+			type: Boolean,
+			default: true
+		},
+		// 圆角值
+		borderRadius: {
+			type: [Number, String],
+			default: 0
+		},
+		// 图片高度，单位rpx
+		height: {
+			type: [Number, String],
+			default: '200'
+		}
+	})
 
-            // 将threshold从rpx转为px
-            getThreshold(): number {
-                // 先取绝对值，因为threshold可能是负数，最后根据this.threshold是正数或者负数，重新还原
-                const thresholdValue = this.toNumber(this.threshold);
-                const thresholdPx = Math.abs(thresholdValue) * uni.getWindowInfo().windowWidth / 750;
-                return thresholdValue < 0 ? -thresholdPx : thresholdPx;
-            },
-            
-            // 计算图片的高度，可能为auto，带%，或者直接数值
-            imgHeight(): string {
-                return addUnit(this.height);
-            }
-        },
-        watch: {
-            isShow(nVal: boolean) {
-                // 如果是不开启过渡效果，直接返回
-                if (!this.isEffect) return;
-                this.time = 0;
-                // 原来opacity为1(不透明，是为了显示占位图)，改成0(透明，意味着该元素显示的是背景颜色，默认的白色)，再改成1，是为了获得过渡效果
-                this.opacity = 0;
-                // 延时30ms，否则在浏览器H5，过渡效果无效
-                setTimeout(() => {
-                    this.time = this.duration;
-                    this.opacity = 1;
-                }, 30)
-            },
-            
-            // 图片路径发生变化时，需要重新标记一些变量，否则会一直卡在某一个状态，比如isError
-            image(n: string) {
-                if (n == '') {
-                    // 如果传入null或者''，或者undefined，标记为错误状态
-                    this.isError = true;
-                } else {
-                    this.init();
-                    this.isError = false;
-                }
-            }
-        },
-        methods: {
-            // 用于重新初始化
-            init(): void {
-                this.isError = false;
-                this.loadStatus = '';
-            },
-            
-            // 点击图片触发的事件,loadlazy-还是懒加载中状态，loading-图片正在加载，loaded-图片加加载完成
-            clickImg(): void {
-                let whichImg = '';
-                // 如果isShow为false，意味着图片还没开始加载，点击的只能是最开始的占位图
-                if (this.isShow == false) whichImg = 'lazyImg';
-                // 如果isError为true，意味着图片加载失败，这是只剩下错误的占位图，所以点击的只能是错误占位图
-                // 当然，也可以给错误的占位图元素绑定点击事件，看你喜欢~
-                else if (this.isError == true) whichImg = 'errorImg';
-                // 总共三张图片，除了两个占位图，剩下的只能是正常的那张图片了
-                else whichImg = 'realImg';
-                // 只通知当前图片的index
-                this.$emit('click', this.index);
-            },
-            
-            // 图片加载完成事件，可能是加载占位图时触发，也可能是加载真正的图片完成时触发，通过isShow区分
-            imgLoaded(): void {
-                // 占位图加载完成
-                if (this.loadStatus == '') {
-                    this.loadStatus = 'lazyed';
-                }
-                // 真正的图片加载完成 
-                else if (this.loadStatus == 'lazyed') {
-                    this.loadStatus = 'loaded';
-                    this.$emit('load', this.index);
-                }
-            },
-            
-            // 错误的图片加载完成
-            errorImgLoaded(): void {
-                this.$emit('error', this.index);
-            },
-            
-            // 图片加载失败
-            loadError(): void {
-                this.isError = true;
-            },
+    const emit = defineEmits(['click', 'load', 'error'])
+    const instance = getCurrentInstance()!.proxy!
+    const isShow = ref(false)
+    const opacity = ref(1)
+    const time = ref(props.duration)
+    const loadStatus = ref('') // 默认是懒加载中的状态
+    const isError = ref(false) // 图片加载失败
+    const elIndex = guid()
+    const contentObserver = ref<any | null>(null)
+    const checkTimer = ref(0)
 
-            toNumber(value: any | null): number {
-                if (typeof value === 'number') {
-                    return value
-                }
-                if (value == null) {
-                    return 0
-                }
-                const parsed = parseFloat(value.toString())
-                return isNaN(parsed) ? 0 : parsed
-            },
+    const toNumber = (value: any | null): number => {
+        if (typeof value === 'number') {
+            return value
+        }
+        if (value == null) {
+            return 0
+        }
+        const parsed = parseFloat(value.toString())
+        return isNaN(parsed) ? 0 : parsed
+    }
 
-            disconnectObserver(): void {
-                // #ifdef H5 || MP
-                if (this.contentObserver != null) {
-                    this.contentObserver!.disconnect()
-                    this.contentObserver = null
-                }
-                // #endif
-            },
+    const wrapStyle = computed((): UTSJSONObject => {
+        const style = {} as UTSJSONObject
+        style['opacity'] = opacity.value
+        style['borderRadius'] = props.borderRadius.toString() + 'rpx'
+        style['transition'] = 'opacity ' + (toNumber(time.value) / 1000).toString() + 's ease-in-out'
+        return style
+    })
 
-            stopCheckTimer(): void {
-                if (this.checkTimer != 0) {
-                    clearInterval(this.checkTimer)
-                    this.checkTimer = 0
-                }
-            },
+    // 计算图片的高度，可能为auto，带%，或者直接数值
+    const imgHeight = computed((): string => {
+        return addUnit(props.height);
+    })
 
-            startAppLazyCheck(): void {
-                this.stopCheckTimer()
-                this.checkVisible()
-                if (!this.isShow) {
-                    this.checkTimer = setInterval(() => {
-                        this.checkVisible()
-                    }, 160)
-                }
-            },
+    const imageStyle = computed((): UTSJSONObject => {
+        const style = {} as UTSJSONObject
+        style['borderRadius'] = props.borderRadius.toString() + 'rpx'
+        style['height'] = imgHeight.value
+        return style
+    })
 
-            checkVisible(): void {
-                const query = uni.createSelectorQuery().in(this)
-                query.select('.up-lazy-item-' + this.elIndex).boundingClientRect((res: any) => {
-                    const rect = res as NodeInfo | null
-                    if (rect == null) {
-                        return
-                    }
-                    const top = rect.top ?? 0
-                    const bottom = rect.bottom ?? 0
-                    const threshold = this.getThreshold
-                    const windowHeight = uni.getWindowInfo().windowHeight
-                    if (bottom >= -threshold && top <= windowHeight + threshold) {
-                        this.isShow = true
-                        this.stopCheckTimer()
-                    }
-                }).exec()
-            }
-        },
-        
-        beforeUnmount() {
-            // 销毁页面时，可能还没触发某张很底部的懒加载图片，所以把这个事件给去掉
-            this.disconnectObserver();
-            this.stopCheckTimer();
-        },
-        
-        mounted() {
-            // 此uOnReachBottom事件由mixin.js发出，目的是让页面到底时，保证所有图片都进行加载，做到绝对稳定且可靠
-            this.$nextTick(() => {
-                uni.$once('uOnReachBottom', (_event: any) => {
-                    if (!this.isShow) this.isShow = true;
-                });
-            })
-            // mounted的时候，不一定挂载了这个元素，延时30ms，否则会报错或者不报错，但是也没有效果
-           
-            setTimeout(() => {
-                // #ifdef APP
-                this.startAppLazyCheck()
-                // #endif
+    // 将threshold从rpx转为px
+    const getThreshold = computed((): number => {
+        // 先取绝对值，因为threshold可能是负数，最后根据threshold是正数或者负数，重新还原
+        const thresholdValue = toNumber(props.threshold);
+        const thresholdPx = Math.abs(thresholdValue) * uni.getWindowInfo().windowWidth / 750;
+        return thresholdValue < 0 ? -thresholdPx : thresholdPx;
+    })
 
-                // #ifdef H5 || MP
-                // 这里是组件内获取布局状态，不能用uni.createIntersectionObserver，而必须用this.createIntersectionObserver
-                this.disconnectObserver();
-                const contentObserver = uni.createIntersectionObserver(this);
-                // 要理解这里怎么计算的，请看这个：
-                // https://blog.csdn.net/qq_25324335/article/details/83687695
-                contentObserver.relativeToViewport({
-                    bottom: this.getThreshold,
-                }).observe('.up-lazy-item-' + this.elIndex, (res: UTSJSONObject) => {
-                    // console.log('relativeToViewport', res)
-                    if (res.intersectionRatio > 0) {
-                        // 懒加载状态改变
-                        this.isShow = true;
-                        // 如果图片已经加载，去掉监听，减少性能的消耗
-                        this.disconnectObserver();
-                    }
-                })
-                this.contentObserver = contentObserver;
-                // #endif
-            }, 30)
+    // 用于重新初始化
+    const init = (): void => {
+        isError.value = false;
+        loadStatus.value = '';
+    }
+
+    // 点击图片触发的事件,loadlazy-还是懒加载中状态，loading-图片正在加载，loaded-图片加加载完成
+    const clickImg = (): void => {
+        // 只通知当前图片的index
+        emit('click', props.index);
+    }
+
+    // 图片加载完成事件，可能是加载占位图时触发，也可能是加载真正的图片完成时触发，通过isShow区分
+    const imgLoaded = (): void => {
+        // 占位图加载完成
+        if (loadStatus.value == '') {
+            loadStatus.value = 'lazyed';
+        }
+        // 真正的图片加载完成
+        else if (loadStatus.value == 'lazyed') {
+            loadStatus.value = 'loaded';
+            emit('load', props.index);
         }
     }
+
+    // 错误的图片加载完成
+    const errorImgLoaded = (): void => {
+        emit('error', props.index);
+    }
+
+    // 图片加载失败
+    const loadError = (): void => {
+        isError.value = true;
+    }
+
+    const disconnectObserver = (): void => {
+        // #ifdef H5 || MP
+        if (contentObserver.value != null) {
+            contentObserver.value!.disconnect()
+            contentObserver.value = null
+        }
+        // #endif
+    }
+
+    const stopCheckTimer = (): void => {
+        if (checkTimer.value != 0) {
+            clearInterval(checkTimer.value)
+            checkTimer.value = 0
+        }
+    }
+
+    const checkVisible = (): void => {
+        const query = uni.createSelectorQuery().in(instance)
+        query.select('.up-lazy-item-' + elIndex).boundingClientRect((res: any) => {
+            const rect = res as NodeInfo | null
+            if (rect == null) {
+                return
+            }
+            const top = rect.top ?? 0
+            const bottom = rect.bottom ?? 0
+            const threshold = getThreshold.value
+            const windowHeight = uni.getWindowInfo().windowHeight
+            if (bottom >= -threshold && top <= windowHeight + threshold) {
+                isShow.value = true
+                stopCheckTimer()
+            }
+        }).exec()
+    }
+
+    const startAppLazyCheck = (): void => {
+        stopCheckTimer()
+        checkVisible()
+        if (!isShow.value) {
+            checkTimer.value = setInterval(() => {
+                checkVisible()
+            }, 160)
+        }
+    }
+
+    watch(isShow, () => {
+        // 如果是不开启过渡效果，直接返回
+        if (!props.isEffect) return;
+        time.value = 0;
+        // 原来opacity为1(不透明，是为了显示占位图)，改成0(透明，意味着该元素显示的是背景颜色，默认的白色)，再改成1，是为了获得过渡效果
+        opacity.value = 0;
+        // 延时30ms，否则在浏览器H5，过渡效果无效
+        setTimeout(() => {
+            time.value = props.duration;
+            opacity.value = 1;
+        }, 30)
+    })
+
+    // 图片路径发生变化时，需要重新标记一些变量，否则会一直卡在某一个状态，比如isError
+    watch((): string => props.image, (n: string) => {
+        if (n == '') {
+            // 如果传入null或者''，或者undefined，标记为错误状态
+            isError.value = true;
+        } else {
+            init();
+            isError.value = false;
+        }
+    })
+
+    onBeforeUnmount(() => {
+        // 销毁页面时，可能还没触发某张很底部的懒加载图片，所以把这个事件给去掉
+        disconnectObserver();
+        stopCheckTimer();
+    })
+
+    onMounted(() => {
+        // 此uOnReachBottom事件由mixin.js发出，目的是让页面到底时，保证所有图片都进行加载，做到绝对稳定且可靠
+        nextTick(() => {
+            uni.$once('uOnReachBottom', (_event: any) => {
+                if (!isShow.value) isShow.value = true;
+            });
+        })
+        // mounted的时候，不一定挂载了这个元素，延时30ms，否则会报错或者不报错，但是也没有效果
+
+        setTimeout(() => {
+            // #ifdef APP
+            startAppLazyCheck()
+            // #endif
+
+            // #ifdef H5 || MP
+            // 这里是组件内获取布局状态，不能用uni.createIntersectionObserver，而必须用this.createIntersectionObserver
+            disconnectObserver();
+            const observer = uni.createIntersectionObserver(instance);
+            // 要理解这里怎么计算的，请看这个：
+            // https://blog.csdn.net/qq_25324335/article/details/83687695
+            observer.relativeToViewport({
+                bottom: getThreshold.value,
+            }).observe('.up-lazy-item-' + elIndex, (res: UTSJSONObject) => {
+                // console.log('relativeToViewport', res)
+                if (res.intersectionRatio > 0) {
+                    // 懒加载状态改变
+                    isShow.value = true;
+                    // 如果图片已经加载，去掉监听，减少性能的消耗
+                    disconnectObserver();
+                }
+            })
+            contentObserver.value = observer;
+            // #endif
+        }, 30)
+    })
+
+    defineExpose({
+        isShow,
+        opacity,
+        time,
+        loadStatus,
+        isError,
+        elIndex,
+        contentObserver,
+        checkTimer,
+        wrapStyle,
+        imageStyle,
+        getThreshold,
+        imgHeight,
+        init,
+        clickImg,
+        imgLoaded,
+        errorImgLoaded,
+        loadError,
+        toNumber,
+        disconnectObserver,
+        stopCheckTimer,
+        startAppLazyCheck,
+        checkVisible
+    })
 </script>
 
 <style scoped lang="scss">

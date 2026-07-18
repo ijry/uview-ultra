@@ -119,41 +119,38 @@
 	<!-- #endif -->
 </template>
 
-<script>
-	export default {
-		data() {
-			return {
-				modelShow: false,
-				popupShow: false,
-				sliderValue: 4,
-				useNative: false,
-				value1: 30,
-				value2: 30,
-				value3: 30,
-				value4: 30,
-				value5: 30,
-				value6: [10, 20]
-			}
-		},
-		watch: {
-			value1(n: number) {
-				// console.log(n);
-			}
-		},
-		methods: {
-			moving(value: number) {
-				// console.log('moving', value)
-			},
-			click(value: number) {
-				// console.log('click', value)
-			},
-			end(value: number) {
-				// console.log('end', value)
-			},
-			start(value: number) {
-				// console.log('start', value)
-			}
-		}
+<script setup lang="uts">
+	import { ref, watch } from 'vue'
+
+	const modelShow = ref(false)
+	const popupShow = ref(false)
+	const sliderValue = ref(4)
+	const useNative = ref(false)
+	const value1 = ref(30)
+	const value2 = ref(30)
+	const value3 = ref(30)
+	const value4 = ref(30)
+	const value5 = ref(30)
+	const value6 = ref([10, 20] as Array<number>)
+
+	watch(value1, (n: number) => {
+		// console.log(n)
+	})
+
+	function moving(value: number) {
+		// console.log('moving', value)
+	}
+
+	function click(value: number) {
+		// console.log('click', value)
+	}
+
+	function end(value: number) {
+		// console.log('end', value)
+	}
+
+	function start(value: number) {
+		// console.log('start', value)
 	}
 </script>
 

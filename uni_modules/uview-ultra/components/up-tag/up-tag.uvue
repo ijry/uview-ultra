@@ -9,10 +9,7 @@
 				class="up-tag"
 				:class="[`up-tag--${shape}`, !plain ? `up-tag--${type}` : '', plain ? `up-tag--${type}--plain` : '', `up-tag--${size}`, (plain && plainFill) ?  `up-tag--${type}--plain--fill` : '']"
 				@tap.stop="clickHandler"
-				:style="[{
-					marginRight: closable ? '10px' : 0,
-					marginTop: closable ? '10px' : 0,
-				}, style]"
+				:style="tagStyle"
 			>
 				<slot name="icon">
 					<view
@@ -20,7 +17,7 @@
 						v-if="icon"
 					>
 						<image
-							v-if="testImage(icon)"
+							v-if="iconIsImage"
 							:src="icon"
 							:style="[imgStyle]"
 						></image>
@@ -47,7 +44,7 @@
 				:class="[`up-tag__close--${size}`]"
 				v-if="closable"
 				@tap.stop="closeHandler"
-				:style="{backgroundColor: closeColor}"
+				:style="closeStyle"
 			>
 				<up-icon
 					name="close"
@@ -59,11 +56,10 @@
 	</up-transition>
 </template>
 
-<script>
-	import { propsTag } from './props';
-	import { mpMixin } from '../../libs/mixin/mpMixin';
-	import { mixin } from '../../libs/mixin/mixin';
-	import {image as testImage} from '../../libs/function/test';
+<script setup lang="uts">
+	import { computed } from 'vue'
+	import defProps from './tag.uts'
+	import { image as isImageSource } from '../../libs/function/test';
 	/**
 	 * Tag 标签
 	 * @description tag组件一般用于标记和选择，我们提供了更加丰富的表现形式，能够较全面的涵盖您的使用场景
@@ -87,73 +83,175 @@
 	 * @event {Function(index)} close closable为true时，点击标签关闭按钮触发 index: 传递的index参数值	
 	 * @example <up-tag text="标签" type="error" plain plainFill></up-tag>
 	 */
-	export default {
-		name: 'up-tag',
-		mixins: [mpMixin, mixin, propsTag],
-		data() {
-			return {
+	defineOptions({
+		name: 'up-tag'
+	})
 
-			}
+	const props = defineProps({
+		// 标签类型info、primary、success、warning、error
+		type: {
+			type: String,
+			default: defProps.getString('tag.type')
 		},
-		computed: {
-			style(): any {
-				const style = {}
-				if (this.bgColor != '') {
-					style['backgroundColor'] = this.bgColor
-				}
-				if (this.color != '') {
-					style['color'] = this.color
-				}
-				if(this.borderColor != '') {
-					style['borderColor'] = this.borderColor
-				}
-				return style
-			},
-			// nvue下，文本颜色无法继承父元素
-			textColor(): any {
-				const style = {}
-				if (this.color != '') {
-					style['color'] = this.color
-				}
-				return style
-			},
-			imgStyle(): any {
-				const width = this.size === 'large' ? '17px' : this.size === 'medium' ? '15px' : '13px'
-				return {
-					width,
-					height: width
-				}
-			},
-			// 文本的样式
-			closeSize(): string {
-				const size = this.size === 'large' ? '15px' : this.size === 'medium' ? '13px' : '12px'
-				return size
-			},
-			// 图标大小
-			iconSize(): string {
-				const size = this.size === 'large' ? '21px' : this.size === 'medium' ? '19px' : '16px'
-				return size
-			},
-			// 图标颜色
-			elIconColor(): string {
-				return this.iconColor != '' ? this.iconColor : this.plain ? this.type : '#ffffff'
-			}
+		// 不可用
+		disabled: {
+			type: [Boolean, String],
+			default: defProps.getAny('tag.disabled')
 		},
-		emits: ["click", "close"],
-		methods: {
-			testImage(str: string): boolean {
-				return testImage(str)
-			},
-			// 点击关闭按钮
-			closeHandler(): void {
-				this.$emit('close', this.$props['name'].toString())
-			},
-			// 点击标签
-			clickHandler(): void {
-				this.$emit('click', this.$props['name'].toString())
-			}
+		// 标签的大小，large，medium，mini
+		size: {
+			type: String,
+			default: defProps.getString('tag.size')
+		},
+		// tag的形状，circle（两边半圆形）, square（方形，带圆角）
+		shape: {
+			type: String,
+			default: defProps.getString('tag.shape')
+		},
+		// 标签文字
+		text: {
+			type: [String, Number],
+			default: defProps.getAny('tag.text')
+		},
+		// 背景颜色，默认为空字符串，即不处理
+		bgColor: {
+			type: String,
+			default: defProps.getString('tag.bgColor')
+		},
+		// 标签字体颜色，默认为空字符串，即不处理
+		color: {
+			type: String,
+			default: defProps.getString('tag.color')
+		},
+		// 标签的边框颜色
+		borderColor: {
+			type: String,
+			default: defProps.getString('tag.borderColor')
+		},
+		// 关闭按钮图标的颜色
+		closeColor: {
+			type: String,
+			default: defProps.getString('tag.closeColor')
+		},
+		// 点击时返回的索引值，用于区分例遍的数组哪个元素被点击了
+		name: {
+			type: [String, Number],
+			default: defProps.getAny('tag.name')
+		},
+		// 镂空时是否填充背景色
+		plainFill: {
+			type: Boolean,
+			default: defProps.getBoolean('tag.plainFill')
+		},
+		// 是否镂空
+		plain: {
+			type: Boolean,
+			default: defProps.getBoolean('tag.plain')
+		},
+		// 是否可关闭
+		closable: {
+			type: Boolean,
+			default: defProps.getBoolean('tag.closable')
+		},
+		// 是否显示
+		show: {
+			type: Boolean,
+			default: defProps.getBoolean('tag.show')
+		},
+		// 内置图标，或绝对路径的图片
+		icon: {
+			type: String,
+			default: defProps.getString('tag.icon')
+		},
+		iconColor: {
+			type: String,
+			default: defProps.getString('tag.iconColor')
 		}
+	})
+
+	const emit = defineEmits(['click', 'close'])
+
+	const style = computed((): UTSJSONObject => {
+		const style = {} as UTSJSONObject
+		if (props.bgColor != '') {
+			style['backgroundColor'] = props.bgColor
+		}
+		if (props.color != '') {
+			style['color'] = props.color
+		}
+		if(props.borderColor != '') {
+			style['borderColor'] = props.borderColor
+		}
+		return style
+	})
+
+	const tagStyle = computed((): UTSJSONObject => {
+		const base = {
+			marginRight: props.closable ? '10px' : 0,
+			marginTop: props.closable ? '10px' : 0
+		} as UTSJSONObject
+		return UTSJSONObject.assign(base, style.value)
+	})
+
+	const closeStyle = computed((): UTSJSONObject => {
+		return {
+			backgroundColor: props.closeColor
+		} as UTSJSONObject
+	})
+
+	const iconIsImage = computed((): boolean => {
+		return isImageSource(props.icon)
+	})
+
+	// nvue下，文本颜色无法继承父元素
+	const textColor = computed((): UTSJSONObject => {
+		const style = {} as UTSJSONObject
+		if (props.color != '') {
+			style['color'] = props.color
+		}
+		return style
+	})
+
+	const imgStyle = computed((): UTSJSONObject => {
+		const width = props.size === 'large' ? '17px' : props.size === 'medium' ? '15px' : '13px'
+		return {
+			width,
+			height: width
+		} as UTSJSONObject
+	})
+
+	// 文本的样式
+	const closeSize = computed((): string => {
+		return props.size === 'large' ? '15px' : props.size === 'medium' ? '13px' : '12px'
+	})
+
+	// 图标大小
+	const iconSize = computed((): string => {
+		return props.size === 'large' ? '21px' : props.size === 'medium' ? '19px' : '16px'
+	})
+
+	// 图标颜色
+	const elIconColor = computed((): string => {
+		return props.iconColor != '' ? props.iconColor : props.plain ? props.type : '#ffffff'
+	})
+
+	// 点击关闭按钮
+	const closeHandler = (): void => {
+		emit('close', props.name.toString())
 	}
+
+	// 点击标签
+	const clickHandler = (): void => {
+		emit('click', props.name.toString())
+	}
+
+	defineExpose({
+		iconIsImage,
+		tagStyle,
+		closeStyle,
+		closeHandler,
+		clickHandler
+	})
 </script>
 
 <style

@@ -42,24 +42,20 @@
 	</view>
 </template>
 
-<script>
-export default {
-  data() {
-    return {
-      selectedColor: '#ff0000',
-      selectedColor2: '#00ff00',
-      commonColors: ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#00ffff', '#ff00ff', '#ffffff', '#000000']
-    };
-  },
-  methods: {
-    confirmColor(color: string) {
-      this.selectedColor = color;
-    },
-    confirmColor2(color: string) {
-      this.selectedColor2 = color;
-    }
-  }
-};
+<script setup lang="uts">
+import { ref } from 'vue'
+
+const selectedColor = ref('#ff0000')
+const selectedColor2 = ref('#00ff00')
+const commonColors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#00ffff', '#ff00ff', '#ffffff', '#000000']
+
+function confirmColor(color: string) {
+  selectedColor.value = color
+}
+
+function confirmColor2(color: string) {
+  selectedColor2.value = color
+}
 </script>
 
 <style>

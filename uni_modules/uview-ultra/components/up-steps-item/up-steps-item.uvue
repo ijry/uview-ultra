@@ -59,12 +59,12 @@
 	</view>
 </template>
 
-<script>
-	import { propsStepsItem } from './props';
-	import { mpMixin } from '../../libs/mixin/mpMixin';
-	import { mixin } from '../../libs/mixin/mixin';
-	import { sleep, error } from '../../libs/function/index';
-	import color from '../../libs/config/color';
+<script setup lang="uts">
+	import { computed, getCurrentInstance, onMounted, ref } from 'vue'
+	import defProps from './stepsItem.uts'
+	import { sleep, error, upGetRect } from '../../libs/function/index'
+	import color from '../../libs/config/color'
+	import { useUltraUI } from '../../libs/composable/useUltraUI'
 	/**
 	 * StepsItem 步骤条的子组件
 	 * @description 本组件需要和up-steps配合使用
@@ -75,219 +75,239 @@
 	 * @property {Boolean}			error			当前步骤是否处于失败状态  (默认 false )
 	 * @example <up-steps current="0"><up-steps-item title="已出库" desc="10:35" ></up-steps-item></up-steps>
 	 */
-	export default {
-		name: 'up-steps-item',
-		mixins: [mpMixin, mixin, propsStepsItem],
-		data() {
-			return {
-				index: 0,
-				childLength: 0,
-				showLine: false,
-				size: {
-					height: 0,
-					width: 0
-				},
-				parentData: {
-					direction: 'row',
-					current: 0,
-					activeColor: '',
-					inactiveColor: '',
-					activeIcon: '',
-					inactiveIcon: '',
-					dot: false
-				} as UTSJSONObject
-			}
-		},
-		watch: {
-			parentData() {
-			}
-		},
-		created() {
-			this.init()
-		},
-		computed: {
-			lineStyle2() {
-				const style = {}
-				// @ts-ignore
-				if (this.parentData['direction'].toString() === 'row') {
-					if (this.index == 0) {
-						style['width'] = '0px'
-						style['left'] = (this.size['width'] as number / 2).toString() + 'px'
-						// @ts-ignore
-					} else if (this.index == (this.parent!.$data['children'] as ComponentPublicInstance[]).length - 1) {
-						style['width'] = '0px'
-						style['left'] = '0px'
-					} else {
-						style['width'] = (this.size['width'] as number / 2).toString() + 'px'
-						style['left'] = '0px'
-					}
-				}
+	defineOptions({
+		name: 'up-steps-item'
+	})
 
-				// @ts-ignore
-				if (this.parent != null
-				// @ts-ignore
-					&& this.parent.$data['children'] != null
-					// @ts-ignore
-					&& this.index + 1 < (this.parent.$data['children'] as ComponentPublicInstance[]).length) {
-					// @ts-ignore
-					const nextChild = (this.parent.$data['children'] as ComponentPublicInstance[])[this.index + 1];
-					// @ts-ignore
-					if (nextChild != null && nextChild.$props['error'] as boolean) {
-						style['backgroundColor'] = color['error']
-						// @ts-ignore
-					} else if ((this.index - 1) < parseInt(this.parentData['current'].toString())) {
-						style['backgroundColor'] = this.parentData['activeColor']
-					} else {
-						style['backgroundColor'] = this.parentData['inactiveColor']
-					}
-				}
-				return style
-			},
-			lineStyle() {
-				const style = {}
-				// @ts-ignore
-				if (this.parentData['direction'].toString() === 'row') {
-					if (this.index == 0) {
-						style['width'] = (this.size['width'] as number).toString() + 'px'
-						style['left'] = (this.size['width'] as number / 2).toString() + 'px'
-						// @ts-ignore
-					} else if (this.index == (this.parent!.$data['children'] as ComponentPublicInstance[]).length - 1) {
-						style['width'] = (this.size['width'] as number / 2).toString() + 'px'
-						style['left'] = '0px'
-					} else {
-						style['width'] = (this.size['width'] as number).toString() + 'px'
-						style['left'] = '0px'
-					}
-				} else {
-					style['height'] = this.size['height'].toString() + 'px'
-					// style['top'] = (this.size['height'] / 2).toString() + 'px'
-				}
-				
-				// @ts-ignore
-				if (this.parent != null
-				// @ts-ignore
-					&& this.parent.$data['children'] != null
-					// @ts-ignore
-					&& this.index + 1 < (this.parent.$data['children'] as ComponentPublicInstance[]).length) {
-					// @ts-ignore
-					const nextChild = (this.parent.$data['children'] as ComponentPublicInstance[])[this.index + 1];
-					// @ts-ignore
-					if (nextChild != null && nextChild.$props['error'] as boolean) {
-						style['backgroundColor'] = color['error']
-						// @ts-ignore
-					} else if (this.index < parseInt(this.parentData['current'].toString())) {
-						style['backgroundColor'] = this.parentData['activeColor']
-					} else {
-						style['backgroundColor'] = this.parentData['inactiveColor']
-					}
-				}
-				return style
-			},
-			itemStyleInner(): any {
-				return {
-					// @ts-ignore
-					...this.itemStyle
-				}
-			},
-			statusClass() {
-				let index = this.index
-				// @ts-ignore
-				let error = this.error
-				// @ts-ignore
-				let current = parseInt(this.parentData['current'].toString())
-				if (current == index) {
-					return error == true ? 'error' : 'process'
-				} else if (error) {
-					return 'error'
-				} else if (current > index) {
-					return 'finish'
-				} else {
-					return 'wait'
-				}
-			},
-			statusColor() {
-				let colorTmp = '#f1f1f1'
-				switch (this.statusClass) {
-					case 'finish':
-						colorTmp = this.parentData['activeColor'] as string
-						break
-					case 'error':
-						colorTmp = color['error'] as string
-						break
-					case 'process':
-						colorTmp = this.parentData['dot'] as boolean ? this.parentData['activeColor'] as string : 'transparent'
-						break
-					default:
-						colorTmp = this.parentData['inactiveColor'] as string
-						break
-				}
-				return colorTmp
-			},
-			contentStyle(): any {
-				const style = {}
-				// @ts-ignore
-				if (this.parentData['direction'].toString() === 'column') {
-					// @ts-ignore
-					style['marginLeft'] = this.parentData['dot'].toString() == 'true' ? '2px' : '6px'
-					// @ts-ignore
-					style['marginTop'] = this.parentData['dot'].toString() == 'true' ? '0px' : '6px'
-				} else {
-					// @ts-ignore
-					style['marginTop'] = this.parentData['dot'].toString() == 'true' ? '2px' : '6px'
-					// @ts-ignore
-					style['marginLeft'] = this.parentData['dot'].toString() == 'true' ? '2px' : '6px'
-				}
+	const props = defineProps({
+		title: {
+			type: [String, Number],
+			default: defProps.getString('stepsItem.title')
+		},
+		desc: {
+			type: [String, Number],
+			default: defProps.getString('stepsItem.desc')
+		},
+		iconSize: {
+			type: [String, Number],
+			default: defProps.getNumber('stepsItem.iconSize')
+		},
+		error: {
+			type: Boolean,
+			default: defProps.getBoolean('stepsItem.error')
+		},
+		itemStyle: {
+			type: Object,
+			default: () => ({})
+		}
+	})
 
-				return style
-			}
-		},
-		mounted() {
-			// @ts-ignore
-			if (this.parent != null) {
-				// @ts-ignore
-				this.parent?.$callMethod('updateFromChild')
-			}
-			sleep().then(() => {
-				this.getStepsItemRect()
-			})
-		},
-		methods: {
-			init() {
-				// 初始化数据
-				this.updateParentData()
-				// @ts-ignore
-				if (this.parent == null) {
-					return error('up-steps-item必须要搭配up-steps组件使用')
-				}
-				// @ts-ignore
-				(this.parent.$data['children'] as ComponentPublicInstance[]).forEach((child: ComponentPublicInstance, index: number) => {
-					if (child == this) {
-						this.index = index
-					}
-				})
-				// @ts-ignore
-				this.childLength = (this.parent.$data['children'] as ComponentPublicInstance[]).length
-			},
-			updateParentData() {
-				// 此方法在mixin中
-				// @ts-ignore
-				this.getParentData('up-steps')
-			},
-			// 父组件数据发生变化
-			updateFromParent() {
-				this.init()
-			},
-			// 获取组件的尺寸，用于设置横线的位置
-			getStepsItemRect() {
-				// @ts-ignore
-				this.upGetRect('.up-steps-item').then((size: NodeInfo) => {
-					// console.log(size)
-					this.size['width'] = size.width != null ? size.width : 0
-					this.size['height'] = size.height != null ? size.height : 0
-				})
+	const { parent, parentData, getParentData } = useUltraUI({
+		direction: 'row',
+		current: 0,
+		activeColor: '',
+		inactiveColor: '',
+		activeIcon: '',
+		inactiveIcon: '',
+		dot: false,
+		children: [] as ComponentPublicInstance[]
+	})
+	const instance = getCurrentInstance()!.proxy!
+
+	const index = ref(0)
+	const childLength = ref(0)
+	const size = ref({
+		height: 0,
+		width: 0
+	} as UTSJSONObject)
+
+	const getChildren = (): ComponentPublicInstance[] => {
+		const list = parentData.value['children']
+		if (list != null) {
+			return list as ComponentPublicInstance[]
+		}
+		return [] as ComponentPublicInstance[]
+	}
+
+	const getSizeWidth = (): number => {
+		const width = size.value['width']
+		return width != null ? parseFloat(width.toString()) : 0
+	}
+
+	const getSizeHeight = (): number => {
+		const height = size.value['height']
+		return height != null ? parseFloat(height.toString()) : 0
+	}
+
+	const childHasError = (child: ComponentPublicInstance | null): boolean => {
+		if (child != null && child.$props != null && child.$props['error'] != null) {
+			return child.$props['error'] as boolean
+		}
+		return false
+	}
+
+	const lineStyle2 = computed((): UTSJSONObject => {
+		const style = {} as UTSJSONObject
+		const children = getChildren()
+		const width = getSizeWidth()
+		if (parentData.value['direction'].toString() === 'row') {
+			if (index.value == 0) {
+				style['width'] = '0px'
+				style['left'] = (width / 2).toString() + 'px'
+			} else if (index.value == children.length - 1) {
+				style['width'] = '0px'
+				style['left'] = '0px'
+			} else {
+				style['width'] = (width / 2).toString() + 'px'
+				style['left'] = '0px'
 			}
 		}
+
+		if (parent.value != null && index.value + 1 < children.length) {
+			const nextChild = children[index.value + 1]
+			if (childHasError(nextChild)) {
+				style['backgroundColor'] = color['error']
+			} else if ((index.value - 1) < parseInt(parentData.value['current'].toString())) {
+				style['backgroundColor'] = parentData.value['activeColor']
+			} else {
+				style['backgroundColor'] = parentData.value['inactiveColor']
+			}
+		}
+		return style
+	})
+
+	const lineStyle = computed((): UTSJSONObject => {
+		const style = {} as UTSJSONObject
+		const children = getChildren()
+		const width = getSizeWidth()
+		if (parentData.value['direction'].toString() === 'row') {
+			if (index.value == 0) {
+				style['width'] = width.toString() + 'px'
+				style['left'] = (width / 2).toString() + 'px'
+			} else if (index.value == children.length - 1) {
+				style['width'] = (width / 2).toString() + 'px'
+				style['left'] = '0px'
+			} else {
+				style['width'] = width.toString() + 'px'
+				style['left'] = '0px'
+			}
+		} else {
+			style['height'] = getSizeHeight().toString() + 'px'
+			// style['top'] = (size['height'] / 2).toString() + 'px'
+		}
+
+		if (parent.value != null && index.value + 1 < children.length) {
+			const nextChild = children[index.value + 1]
+			if (childHasError(nextChild)) {
+				style['backgroundColor'] = color['error']
+			} else if (index.value < parseInt(parentData.value['current'].toString())) {
+				style['backgroundColor'] = parentData.value['activeColor']
+			} else {
+				style['backgroundColor'] = parentData.value['inactiveColor']
+			}
+		}
+		return style
+	})
+
+	const itemStyleInner = computed((): UTSJSONObject => {
+		return props.itemStyle as UTSJSONObject
+	})
+
+	const statusClass = computed((): string => {
+		const current = parseInt(parentData.value['current'].toString())
+		if (current == index.value) {
+			return props.error == true ? 'error' : 'process'
+		} else if (props.error) {
+			return 'error'
+		} else if (current > index.value) {
+			return 'finish'
+		} else {
+			return 'wait'
+		}
+	})
+
+	const statusColor = computed((): string => {
+		let colorTmp = '#f1f1f1'
+		switch (statusClass.value) {
+			case 'finish':
+				colorTmp = parentData.value['activeColor'] as string
+				break
+			case 'error':
+				colorTmp = color['error'] as string
+				break
+			case 'process':
+				colorTmp = parentData.value['dot'] as boolean ? parentData.value['activeColor'] as string : 'transparent'
+				break
+			default:
+				colorTmp = parentData.value['inactiveColor'] as string
+				break
+		}
+		return colorTmp
+	})
+
+	const contentStyle = computed((): UTSJSONObject => {
+		const style = {} as UTSJSONObject
+		const isDot = parentData.value['dot'].toString() == 'true'
+		if (parentData.value['direction'].toString() === 'column') {
+			style['marginLeft'] = isDot ? '2px' : '6px'
+			style['marginTop'] = isDot ? '0px' : '6px'
+		} else {
+			style['marginTop'] = isDot ? '2px' : '6px'
+			style['marginLeft'] = isDot ? '2px' : '6px'
+		}
+
+		return style
+	})
+
+	const updateParentData = (): void => {
+		getParentData('up-steps', instance, false)
 	}
+
+	const init = (): void => {
+		// 初始化数据
+		updateParentData()
+		if (parent.value == null) {
+			return error('up-steps-item必须要搭配up-steps组件使用')
+		}
+		const children = getChildren()
+		children.forEach((child: ComponentPublicInstance, idx: number) => {
+			if (child == instance) {
+				index.value = idx
+			}
+		})
+		childLength.value = children.length
+	}
+
+	// 父组件数据发生变化
+	const updateFromParent = (): void => {
+		init()
+	}
+
+	// 获取组件的尺寸，用于设置横线的位置
+	const getStepsItemRect = (): void => {
+		upGetRect('.up-steps-item', false, instance).then((nodeSize: NodeInfo) => {
+			size.value['width'] = nodeSize.width != null ? nodeSize.width : 0
+			size.value['height'] = nodeSize.height != null ? nodeSize.height : 0
+		})
+	}
+
+	init()
+
+	onMounted(() => {
+		if (parent.value != null) {
+			parent.value?.$callMethod('updateFromChild')
+		}
+		sleep().then(() => {
+			getStepsItemRect()
+		})
+	})
+
+	defineExpose({
+		init,
+		updateParentData,
+		updateFromParent,
+		getStepsItemRect
+	})
 </script>
 
 <style lang="scss" scoped>

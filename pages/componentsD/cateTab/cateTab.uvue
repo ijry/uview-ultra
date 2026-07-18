@@ -12,25 +12,20 @@
     </view>
  </template>
 
-<script>
-export default {
-  data() {
-    return {
-      height: 'calc(100vh - 150px)',
-      tabList: [] as UTSJSONObject[]
-    };
-  },
-  created() {
-    setTimeout(() => {
-      this.tabList = [
-        { title: '热销', children: [{ title: '招牌套餐', icon: 'https://uview-plus.jiangruyi.com/uview/ext/59c256f85a8c3757.jpg', price: 88 }] },
-        { title: '新品', children: [{ title: '时令新品', icon: 'https://uview-plus.jiangruyi.com/uview/ext/59c256f85a8c3757.jpg', price: 99 }] },
-        { title: '饮品', children: [{ title: '经典饮品', icon: 'https://uview-plus.jiangruyi.com/uview/ext/59c256f85a8c3757.jpg', price: 18 }] },
-        { title: '甜点', children: [{ title: '人气甜点', icon: 'https://uview-plus.jiangruyi.com/uview/ext/59c256f85a8c3757.jpg', price: 28 }] }
-      ] as UTSJSONObject[];
-    }, 1000);
-  }
-}
+<script setup lang="uts">
+import { ref } from 'vue'
+
+const height = 'calc(100vh - 150px)'
+const tabList = ref([] as UTSJSONObject[])
+
+setTimeout(() => {
+  tabList.value = [
+    { title: '热销', children: [{ title: '招牌套餐', icon: 'https://uview-plus.jiangruyi.com/uview/ext/59c256f85a8c3757.jpg', price: 88 }] },
+    { title: '新品', children: [{ title: '时令新品', icon: 'https://uview-plus.jiangruyi.com/uview/ext/59c256f85a8c3757.jpg', price: 99 }] },
+    { title: '饮品', children: [{ title: '经典饮品', icon: 'https://uview-plus.jiangruyi.com/uview/ext/59c256f85a8c3757.jpg', price: 18 }] },
+    { title: '甜点', children: [{ title: '人气甜点', icon: 'https://uview-plus.jiangruyi.com/uview/ext/59c256f85a8c3757.jpg', price: 28 }] }
+  ] as UTSJSONObject[]
+}, 1000)
 </script>
 
 <style lang='scss' scoped>

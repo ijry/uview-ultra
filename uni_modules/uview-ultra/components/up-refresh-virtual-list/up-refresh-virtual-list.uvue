@@ -21,65 +21,74 @@
   </up-pull-refresh>
 </template>
 
-<script>
+<script setup lang="uts">
 import type { PropType } from 'vue';
+import { ref } from 'vue';
 
 function createListData(): Array<UTSJSONObject> {
   return [] as Array<UTSJSONObject>;
 }
 
-export default {
-  name: 'up-refresh-virtual-list',
-  props: {
-    listData: {
-      type: Array as PropType<Array<UTSJSONObject>>,
-      default(): Array<UTSJSONObject> {
-        return createListData();
-      }
-    },
-    itemHeight: {
-      type: Number,
-      default: 50
-    },
-    height: {
-      type: [String, Number],
-      default: '100%'
-    },
-    buffer: {
-      type: Number,
-      default: 4
-    },
-    keyField: {
-      type: String,
-      default: 'id'
+defineOptions({
+  name: 'up-refresh-virtual-list'
+})
+
+defineProps({
+  listData: {
+    type: Array as PropType<Array<UTSJSONObject>>,
+    default(): Array<UTSJSONObject> {
+      return [] as Array<UTSJSONObject>;
     }
   },
-  emits: ['refresh', 'scroll'],
-  data() {
-    return {
-      refreshing: false,
-      scrollTop: 0
-    }
+  itemHeight: {
+    type: Number,
+    default: 50
   },
-  methods: {
-    handleRefresh(): void {
-      this.refreshing = true
-      this.$emit('refresh')
-    },
-    handleScroll(scrollTop: number): void {
-      this.scrollTop = scrollTop
-      this.$emit('scroll', scrollTop)
-    },
-    finishRefresh(): void {
-      this.refreshing = false
-    },
-    scrollTo(top: number): void {
-      this.scrollTop = top
-    },
-    scrollToTop(): void {
-      this.scrollTo(0)
-    }
+  height: {
+    type: [String, Number],
+    default: '100%'
+  },
+  buffer: {
+    type: Number,
+    default: 4
+  },
+  keyField: {
+    type: String,
+    default: 'id'
   }
+})
+
+const emit = defineEmits(['refresh', 'scroll'])
+
+const refreshing = ref(false)
+const scrollTop = ref(0)
+
+const handleRefresh = (): void => {
+  refreshing.value = true
+  emit('refresh')
 }
+
+const handleScroll = (scrollTopValue: number): void => {
+  scrollTop.value = scrollTopValue
+  emit('scroll', scrollTopValue)
+}
+
+const finishRefresh = (): void => {
+  refreshing.value = false
+}
+
+const scrollTo = (top: number): void => {
+  scrollTop.value = top
+}
+
+const scrollToTop = (): void => {
+  scrollTo(0)
+}
+
+defineExpose({
+  finishRefresh,
+  scrollTo,
+  scrollToTop
+})
 </script>
 

@@ -29,7 +29,7 @@
 	<!-- #endif -->
 </template>
 
-<script lang="uts">
+<script setup lang="uts">
 	type groupListItem = {
 	  path: string
 	  icon: string
@@ -41,29 +41,30 @@
 	  groupName_en: string
 	  list: Array<groupListItem>
 	}
-	import list from "./components.config";
-	export default {
-		data() {
-			return {
-				list: JSON.parse<groupType[]>(JSON.stringify(list)) as groupType[],
-				desc: 'uview-ultra 是全面兼容的uni-app-x/uni-app/nvue/鸿蒙等全生态的框架，全面的组件和便捷的工具与兼容的API会让开发体验保持一致。',
-			}
-		},
-		created() {
-		},
-		computed: {
-		},
-		methods: {
-			getIcon(path: string): string {
-				return '/static/uv/demo/' + path + '.png';
-			},
-			openPage(detail: UTSJSONObject) {
-				const path = detail['name']
-				uni.navigateTo({
-					url: path as string
-				})
-			},
+	import componentsConfig from "./components.config"
+
+	const list = JSON.parse<groupType[]>(JSON.stringify(componentsConfig)) as groupType[]
+	const desc = 'uview-ultra 是全面兼容的uni-app-x/uni-app/nvue/鸿蒙等全生态的框架，全面的组件和便捷的工具与兼容的API会让开发体验保持一致。'
+
+	function getIcon(path: string): string {
+		let iconName = path
+		if (path == 'navbarMini') {
+			iconName = 'navbar'
 		}
+		if (path == 'select') {
+			iconName = 'picker'
+		}
+		if (path == 'cateTab') {
+			iconName = 'tabs'
+		}
+		return '/static/uv/demo/' + iconName + '.png'
+	}
+
+	function openPage(detail: UTSJSONObject) {
+		const path = detail['name']
+		uni.navigateTo({
+			url: path as string
+		})
 	}
 </script>
 

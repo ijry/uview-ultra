@@ -3,9 +3,9 @@
         <textarea
             class="up-textarea__field"
             :value="innerValue"
-            :style="{ height: addUnit(height) }"
+            :style="fieldStyle"
             :placeholder="placeholder"
-            :placeholder-style="addStyle(placeholderStyle)"
+            :placeholder-style="placeholderStyleValue"
             :placeholder-class="placeholderClass"
             :disabled="disabled"
             :focus="focus"
@@ -32,9 +32,7 @@
 		<!-- #ifndef MP-ALIPAY -->
         <text
             class="up-textarea__count"
-            :style="{
-                'background-color': disabled ? 'transparent' : '#fff',
-            }"
+            :style="countStyle"
             v-if="count"
             >{{ valueLength }}/{{ maxlength }}</text
         >
@@ -42,11 +40,11 @@
     </view>
 </template>
 
-<script>
-import { propsTextarea } from "./props";
-import { mpMixin } from '../../libs/mixin/mpMixin';
-import { mixin } from '../../libs/mixin/mixin';
-import { addStyle, addUnit, deepMerge, formValidate, os } from '../../libs/function/index';
+<script setup lang="uts">
+import { computed, getCurrentInstance, nextTick, ref, watch } from 'vue'
+import defProps from './textarea.uts'
+import defPropsInput from '../up-input/input.uts'
+import { addStyle, addUnit, deepMerge, formValidate } from '../../libs/function/index.uts';
 /**
  * Textarea 文本域
  * @author jry ijry@qq.com
@@ -88,139 +86,291 @@ import { addStyle, addUnit, deepMerge, formValidate, os } from '../../libs/funct
 const defaultFormat = function(value: string): string {
     return value
 }
-export default {
-    name: "up-textarea",
-    mixins: [mpMixin, mixin, propsTextarea],
-	data() {
-		return {
-			// 输入框的值
-			innerValue: "",
-			// 是否处于获得焦点状态
-			focused: false,
-			// value是否第一次变化，在watch中，由于加入immediate属性，会在第一次触发，此时不应该认为value发生了变化
-			firstChange: true,
-			// value绑定值的变化是由内部还是外部引起的
-			changeFromInner: false,
-			// 过滤处理方法
-			innerFormatter: defaultFormat as Function
-		}
+
+defineOptions({
+    name: 'up-textarea'
+})
+
+const props = defineProps({
+	// 输入框的内容
+	modelValue: {
+		type: [String, Number],
+		default: defProps.getAny('textarea.value')
 	},
-	created() {
+	// 输入框为空时占位符
+	placeholder: {
+		type: [String],
+		default: defProps.getString('textarea.placeholder')
 	},
-	watch: {
-        modelValue: {
-	        immediate: true,
-	        handler(newVal: any, oldVal: any) {
-	            this.innerValue = this.normalizeValue(newVal);
-	            /* #ifdef H5 */
-	            // 在H5中，外部value变化后，修改input中的值，不会触发@input事件，此时手动调用值变化方法
-	            if (
-	                this.firstChange === false &&
-	                this.changeFromInner === false
-	            ) {
-	                this.valueChange();
-	            }
-	            /* #endif */
-	            this.firstChange = false;
-	            // 重置changeFromInner的值为false，标识下一次引起默认为外部引起的
-	            this.changeFromInner = false;
-	        }
-	    }
+	// 指定placeholder的样式类，注意页面或组件的style中写了scoped时，需要在类名前写::v-deep
+	placeholderClass: {
+		type: String,
+		default: defPropsInput.getString('input.placeholderClass')
 	},
-    computed: {
-        // 字数统计安全取值，避免 v-model 为 null/undefined/number 时访问 length 报错
-        valueLength(): number {
-            return this.normalizeValue(this.innerValue).length
-        },
-        // 组件的类名
-        textareaClass(): string {
-            let classes: string[] = [],
-                { border, disabled } = this;
-            if (border === "surround") {
-                (classes = classes.concat(["up-border", "up-textarea--radius"]));
-            }
-            if (border === "bottom") {
-                (classes = classes.concat([
-                    "up-border-bottom",
-                    "up-textarea--no-radius",
-                ]));
-            }
-            if (disabled) {
-                classes.push("up-textarea--disabled");
-            }
-            return classes.join(" ");
-        },
-        // 组件的样式
-        textareaStyle(): any {
-            const style = {};
-            return deepMerge(style, addStyle(this.customStyle));
-        },
-    },
-    // #ifdef VUE3
-    emits: ['update:modelValue', 'linechange', 'focus', 'blur', 'change', 'confirm', 'keyboardheightchange'],
-    // #endif
-    methods: {
-        addStyle(style: any): any {
-			return addStyle(style)
-		},
-        addUnit(str: any): string {
-			return addUnit(str)
-		},
-		normalizeValue(value: any): string {
-			if (value === null || typeof value === 'undefined') return ''
-			return value.toString()
-		},
-		// 在微信小程序中，不支持将函数当做props参数，故只能通过ref形式调用
-		setFormatter(e: Function) {
-			this.innerFormatter = e
-		},
-        onFocus(e: UniTextareaFocusEvent): void {
-            this.$emit("focus", e)
-        },
-        onBlur(e: UniTextareaBlurEvent): void {
-            this.$emit("blur", e)
-            // 尝试调用up-form的验证方法
-            formValidate(this, "blur")
-        },
-        onLinechange(e: UniTextareaLineChangeEvent): void {
-            this.$emit("linechange", e)
-        },
-        onInput(e: UniInputEvent): void {
-			let value = this.normalizeValue(e.detail.value)
-			// 格式化过滤方法
-            // todox
-            // const formatter = this.formatter || this.innerFormatter
-			// const formatter = this.innerFormatter
-			// todo
-			// const formatValue = formatter(value)
-			const formatValue = this.normalizeValue(value)
-			// 为了避免props的单向数据流特性，需要先将innerValue值设置为当前值，再在$nextTick中重新赋予设置后的值才有效
-			this.innerValue = value
-			this.$nextTick(() => {
-				this.innerValue = formatValue;
-				this.valueChange();
-			})
-        },
-		// 内容发生变化，进行处理
-		valueChange(): void {
-		    const value = this.innerValue;
-		    this.$nextTick(() => {
-                this.$emit("update:modelValue", value);
-		        // 标识value值的变化是由内部引起的
-		        this.changeFromInner = true;
-		        this.$emit("change", value);
-		        // 尝试调用up-form的验证方法
-		        formValidate(this, "change");
-		    });
-		},
-        onConfirm(e: UniInputConfirmEvent) {
-            this.$emit("confirm", e);
-        },
-        onKeyboardheightchange(e: UniInputKeyboardHeightChangeEvent) {
-            this.$emit("keyboardheightchange", e);
-        },
-    },
-};
+	// 指定placeholder的样式
+	placeholderStyle: {
+		type: [String, Object],
+		default: defPropsInput.getString('input.placeholderStyle')
+	},
+	// 输入框高度
+	height: {
+		type: [String, Number],
+		default: defProps.getAny('textarea.height')
+	},
+	// 设置键盘右下角按钮的文字，仅微信小程序，App和H5有效
+	confirmType: {
+		type: String,
+		default: defProps.getString('textarea.confirmType')
+	},
+	// 是否禁用
+	disabled: {
+		type: Boolean,
+		default: defProps.getBoolean('textarea.disabled')
+	},
+	// 是否显示统计字数
+	count: {
+		type: Boolean,
+		default: defProps.getBoolean('textarea.count')
+	},
+	// 是否自动获取焦点，nvue不支持，H5取决于浏览器的实现
+	focus: {
+		type: Boolean,
+		default: defProps.getBoolean('textarea.focus')
+	},
+	// 是否自动增加高度
+	autoHeight: {
+		type: Boolean,
+		default: defProps.getBoolean('textarea.autoHeight')
+	},
+	// 如果textarea是在一个position:fixed的区域，需要显示指定属性fixed为true
+	fixed: {
+		type: Boolean,
+		default: defProps.getBoolean('textarea.fixed')
+	},
+	// 指定光标与键盘的距离
+	cursorSpacing: {
+		type: Number,
+		default: defProps.getNumber('textarea.cursorSpacing')
+	},
+	// 指定focus时的光标位置
+	cursor: {
+		type: [String, Number],
+		default: defProps.getAny('textarea.cursor')
+	},
+	// 是否显示键盘上方带有”完成“按钮那一栏，
+	showConfirmBar: {
+		type: Boolean,
+		default: defProps.getBoolean('textarea.showConfirmBar')
+	},
+	// 光标起始位置，自动聚焦时有效，需与selection-end搭配使用
+	selectionStart: {
+		type: Number,
+		default: defProps.getNumber('textarea.selectionStart')
+	},
+	// 光标结束位置，自动聚焦时有效，需与selection-start搭配使用
+	selectionEnd: {
+		type: Number,
+		default: defProps.getNumber('textarea.selectionEnd')
+	},
+	// 键盘弹起时，是否自动上推页面
+	adjustPosition: {
+		type: Boolean,
+		default: defProps.getBoolean('textarea.adjustPosition')
+	},
+	// 是否去掉 iOS 下的默认内边距，只微信小程序有效
+	disableDefaultPadding: {
+		type: Boolean,
+		default: defProps.getBoolean('textarea.disableDefaultPadding')
+	},
+	// focus时，点击页面的时候不收起键盘，只微信小程序有效
+	holdKeyboard: {
+		type: Boolean,
+		default: defProps.getBoolean('textarea.holdKeyboard')
+	},
+	// 最大输入长度，设置为 -1 的时候不限制最大长度
+	maxlength: {
+		type: [String, Number],
+		default: defProps.getAny('textarea.maxlength')
+	},
+	// 边框类型，surround-四周边框，bottom-底部边框
+	border: {
+		type: String,
+		default: defProps.getString('textarea.border')
+	},
+	// 用于处理或者过滤输入框内容的方法
+	formatter: {
+		type: [Function],
+		default: defProps.getAny('textarea.formatter')
+	},
+	// 是否忽略组件内对文本合成系统事件的处理
+	ignoreCompositionEvent: {
+		type: Boolean,
+		default: true
+	},
+    customStyle: {
+        type: [Object, String],
+        default: () => ({})
+    }
+})
+
+const emit = defineEmits(['update:modelValue', 'linechange', 'focus', 'blur', 'change', 'confirm', 'keyboardheightchange'])
+const instance = getCurrentInstance()!.proxy!
+// 输入框的值
+const innerValue = ref('')
+// 是否处于获得焦点状态
+const focused = ref(false)
+// value是否第一次变化，在watch中，由于加入immediate属性，会在第一次触发，此时不应该认为value发生了变化
+const firstChange = ref(true)
+// value绑定值的变化是由内部还是外部引起的
+const changeFromInner = ref(false)
+// 过滤处理方法
+const innerFormatter = ref<Function>(defaultFormat as Function)
+
+const normalizeValue = (value: any): string => {
+	if (value === null || typeof value === 'undefined') return ''
+	return value.toString()
+}
+
+// 内容发生变化，进行处理
+const valueChange = (): void => {
+    const value = innerValue.value;
+    nextTick(() => {
+        emit('update:modelValue', value);
+        // 标识value值的变化是由内部引起的
+        changeFromInner.value = true;
+        emit('change', value);
+        // 尝试调用up-form的验证方法
+        formValidate(instance, 'change');
+    });
+}
+
+watch((): any => props.modelValue, (newVal: any) => {
+    innerValue.value = normalizeValue(newVal);
+    /* #ifdef H5 */
+    // 在H5中，外部value变化后，修改input中的值，不会触发@input事件，此时手动调用值变化方法
+    if (
+        firstChange.value === false &&
+        changeFromInner.value === false
+    ) {
+        valueChange();
+    }
+    /* #endif */
+    firstChange.value = false;
+    // 重置changeFromInner的值为false，标识下一次引起默认为外部引起的
+    changeFromInner.value = false;
+}, { immediate: true })
+
+// 字数统计安全取值，避免 v-model 为 null/undefined/number 时访问 length 报错
+const valueLength = computed((): number => {
+    return normalizeValue(innerValue.value).length
+})
+
+// 组件的类名
+const textareaClass = computed((): string => {
+    let classes: string[] = []
+    if (props.border === 'surround') {
+        (classes = classes.concat(['up-border', 'up-textarea--radius']));
+    }
+    if (props.border === 'bottom') {
+        (classes = classes.concat([
+            'up-border-bottom',
+            'up-textarea--no-radius',
+        ]));
+    }
+    if (props.disabled) {
+        classes.push('up-textarea--disabled');
+    }
+    return classes.join(' ');
+})
+
+// 组件的样式
+const textareaStyle = computed((): UTSJSONObject => {
+    const style = {} as UTSJSONObject
+    return deepMerge(style, addStyle(props.customStyle)) as UTSJSONObject
+})
+
+const fieldStyle = computed((): UTSJSONObject => {
+    return {
+        height: addUnit(props.height)
+    } as UTSJSONObject
+})
+
+const placeholderStyleValue = computed((): UTSJSONObject => {
+    return addStyle(props.placeholderStyle) as UTSJSONObject
+})
+
+const countStyle = computed((): UTSJSONObject => {
+    return {
+        backgroundColor: props.disabled ? 'transparent' : '#fff'
+    } as UTSJSONObject
+})
+
+// 在微信小程序中，不支持将函数当做props参数，故只能通过ref形式调用
+const setFormatter = (e: Function): void => {
+	innerFormatter.value = e
+}
+
+const onFocus = (e: UniTextareaFocusEvent): void => {
+    emit('focus', e)
+}
+
+const onBlur = (e: UniTextareaBlurEvent): void => {
+    emit('blur', e)
+    // 尝试调用up-form的验证方法
+    formValidate(instance, 'blur')
+}
+
+const onLinechange = (e: UniTextareaLineChangeEvent): void => {
+    emit('linechange', e)
+}
+
+const onInput = (e: UniInputEvent): void => {
+	let value = normalizeValue(e.detail.value)
+	// 格式化过滤方法
+    // todox
+    // const formatter = props.formatter || innerFormatter.value
+	// const formatter = innerFormatter.value
+	// todo
+	// const formatValue = formatter(value)
+	const formatValue = normalizeValue(value)
+	// 为了避免props的单向数据流特性，需要先将innerValue值设置为当前值，再在$nextTick中重新赋予设置后的值才有效
+	innerValue.value = value
+	nextTick(() => {
+		innerValue.value = formatValue;
+		valueChange();
+	})
+}
+
+const onConfirm = (e: UniInputConfirmEvent): void => {
+    emit('confirm', e);
+}
+
+const onKeyboardheightchange = (e: UniInputKeyboardHeightChangeEvent): void => {
+    emit('keyboardheightchange', e);
+}
+
+defineExpose({
+    innerValue,
+    focused,
+    firstChange,
+    changeFromInner,
+    innerFormatter,
+    valueLength,
+    textareaClass,
+    textareaStyle,
+    fieldStyle,
+    placeholderStyleValue,
+    countStyle,
+    normalizeValue,
+    setFormatter,
+    onFocus,
+    onBlur,
+    onLinechange,
+    onInput,
+    valueChange,
+    onConfirm,
+    onKeyboardheightchange
+})
 </script>
 
 <style lang="scss" scoped>

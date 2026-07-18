@@ -89,24 +89,20 @@
 	<!-- #endif -->
 </template>
 
-<script>
-	export default {
-		data() {
-			return {
-				src: 'https://cdn.uviewui.com/uview/album/1.jpg',
-				src1:''
-			}
-		},
-		onLoad() {
-			setTimeout(()=>{
-				this.src1 = this.src
-			},3000)
-		},
-		methods: {
-			click(e: any) {
-				console.log('click');
-			}
-		}
+<script setup lang="uts">
+	import { ref } from 'vue'
+
+	const src = 'https://cdn.uviewui.com/uview/album/1.jpg'
+	const src1 = ref('')
+
+	onLoad((_options: OnLoadOptions) => {
+		setTimeout(() => {
+			src1.value = src
+		}, 3000)
+	})
+
+	function click(e: any) {
+		console.log('click')
 	}
 </script>
 

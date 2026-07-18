@@ -168,21 +168,17 @@
 	</view>
 </template>
 
-<script>
-	export default {
-		onLoad() {},
-		methods: {
-			test() {
-				console.log('test')
-			},
-			clickHandler() {
-				// #ifndef MP-WEIXIN
-				uni.showToast({
-					title: '请在微信小程序内查看效果'
-				});
-				// #endif
-			}
-		},
+<script setup lang="uts">
+	function test() {
+		console.log('test')
+	}
+
+	function clickHandler() {
+		// #ifndef MP-WEIXIN
+		uni.showToast({
+			title: '请在微信小程序内查看效果'
+		})
+		// #endif
 	}
 </script>
 

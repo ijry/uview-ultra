@@ -223,51 +223,52 @@
 	<!-- #endif -->
 </template>
 
-<script>
-import { toast } from '@/uni_modules/uview-ultra/index.uts';
+<script setup lang="uts">
+import { ref } from 'vue'
+import { toast } from '@/uni_modules/uview-ultra/index.uts'
 
-export default {
-  data() {
-    return {
-      value1: 0,
-      value2: 1,
-      value3: 'play-right',
-      value4: 0,
-      value5: 0,
-      value6: 0,
-      value7: 3
-    };
-  },
-  methods: {
-    change2(name: number) {
-      this.value2 = name;
-    },
-    change3(name: string) {
-      this.value3 = name;
-    },
-    change4(name: number) {
-      this.value4 = name;
-    },
-    change6(name: number) {
-      this.value6 = name;
-    },
-    change7(name: number) {
-      this.value7 = name;
-    },
-    change5(name: number) {
-      if (name == 1) {
-        return toast('?????');
-      }
-      this.value5 = name;
-    },
-    change1(e: number) {
-      this.value1 = e;
-      console.log('change1', e);
-    },
-    click1(e: number) {
-      console.log('click1', e);
-    }
+const value1 = ref(0)
+const value2 = ref(1)
+const value3 = ref('play-right')
+const value4 = ref(0)
+const value5 = ref(0)
+const value6 = ref(0)
+const value7 = ref(3)
+
+function change2(name: number) {
+  value2.value = name
+}
+
+function change3(name: string) {
+  value3.value = name
+}
+
+function change4(name: number) {
+  value4.value = name
+}
+
+function change6(name: number) {
+  value6.value = name
+}
+
+function change7(name: number) {
+  value7.value = name
+}
+
+function change5(name: number) {
+  if (name == 1) {
+    return toast('?????')
   }
+  value5.value = name
+}
+
+function change1(e: number) {
+  value1.value = e
+  console.log('change1', e)
+}
+
+function click1(e: number) {
+  console.log('click1', e)
 }
 </script>
 

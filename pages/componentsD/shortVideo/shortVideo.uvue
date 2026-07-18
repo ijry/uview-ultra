@@ -64,147 +64,150 @@
 	</view>
 </template>
 
-<script>
-export default {
-		data() {
-			return {
-				currentTab: 0,
-				currentVideo: 0,
-				tabsList: [
-					{ name: '推荐' },
-					{ name: '关注' },
-					{ name: '朋友' },
-					{ name: '本地' }
-				] as Array<UTSJSONObject>,
-				videoList: [
-					{
-						videoUrl: 'https://uview-plus.jiangruyi.com/big/rjtsdl.MP4',
-						progress: 0,
-						bgColor: '#000',
-						author: {
-							avatar: '/static/avatar1.jpg',
-							name: '创作者1',
-							desc: '这是一段视频描述'
-						},
-						isLiked: false,
-						likeCount: 128,
-						commentCount: 25,
-						shareCount: 12,
-						collectCount: 8,
-						isCollected: false
-					},
-					{
-						videoUrl: 'https://uview-plus.jiangruyi.com/big/shanghai.mp4',
-						progress: 0,
-						bgColor: '#000',
-						author: {
-							avatar: '/static/avatar2.jpg',
-							name: '创作者2',
-							desc: '记录美好生活'
-						},
-						isLiked: true,
-						likeCount: 863,
-						commentCount: 96,
-						shareCount: 32,
-						collectCount: 45,
-						isCollected: true
-					},
-					{
-						videoUrl: 'https://uview-plus.jiangruyi.com/big/shanghai.mp4',
-						progress: 0,
-						bgColor: '#000',
-						author: {
-							avatar: '/static/avatar3.jpg',
-							name: '创作者3',
-							desc: '生活需要仪式感'
-						},
-						isLiked: false,
-						likeCount: 562,
-						commentCount: 47,
-						shareCount: 21,
-						collectCount: 19,
-						isCollected: false
-					}
-				] as Array<UTSJSONObject>
-			}
+<script setup lang="uts">
+import { ref } from 'vue'
+
+const currentTab = ref(0)
+const currentVideo = ref(0)
+const tabsList = [
+	{ name: '推荐' },
+	{ name: '关注' },
+	{ name: '朋友' },
+	{ name: '本地' }
+] as Array<UTSJSONObject>
+const videoList = ref([
+	{
+		videoUrl: 'https://uview-plus.jiangruyi.com/big/rjtsdl.MP4',
+		progress: 0,
+		bgColor: '#000',
+		author: {
+			avatar: '/static/avatar1.jpg',
+			name: '创作者1',
+			desc: '这是一段视频描述'
 		},
-		methods: {
-			onTabChange(index: number): void {
-				this.currentTab = index;
-			},
-			onVideoChange(index: number): void {
-				this.currentVideo = index;
-			},
-			getEventIndex(e: UTSJSONObject): number {
-				const index = e['index']
-				if (typeof index === 'number') {
-					return index
-				}
-				if (index == null) {
-					return 0
-				}
-				const parsed = parseInt(index.toString())
-				return isNaN(parsed) ? 0 : parsed
-			},
-			getListItem(index: number): UTSJSONObject | null {
-				if (index < 0 || index >= this.videoList.length) {
-					return null
-				}
-				return this.videoList[index] as UTSJSONObject
-			},
-			getBooleanValue(value: any | null): boolean {
-				if (typeof value === 'boolean') {
-					return value
-				}
-				return value != null && value.toString() == 'true'
-			},
-			getNumberValue(value: any | null): number {
-				if (typeof value === 'number') {
-					return value
-				}
-				if (value == null) {
-					return 0
-				}
-				const parsed = parseFloat(value.toString())
-				return isNaN(parsed) ? 0 : parsed
-			},
-			onLike(e: UTSJSONObject): void {
-				const index = this.getEventIndex(e);
-				const item = this.getListItem(index);
-				if (item == null) return
-				// 更新点赞状态和数量
-				const liked = !this.getBooleanValue(item['isLiked']);
-				item['isLiked'] = liked;
-				item['likeCount'] = this.getNumberValue(item['likeCount']) + (liked ? 1 : -1);
-			},
-			onComment(_e: UTSJSONObject): void {
-				uni.showToast({
-					title: '评论功能',
-					icon: 'none'
-				});
-			},
-			onShare(_e: UTSJSONObject): void {
-				uni.showToast({
-					title: '分享功能',
-					icon: 'none'
-				});
-			},
-			onCollect(e: UTSJSONObject): void {
-				const index = this.getEventIndex(e);
-				const item = this.getListItem(index);
-				if (item == null) return
-				// 更新收藏状态和数量
-				const collected = !this.getBooleanValue(item['isCollected']);
-				item['isCollected'] = collected;
-				item['collectCount'] = this.getNumberValue(item['collectCount']) + (collected ? 1 : -1);
-			},
-			goNext(): void {
-				uni.switchTab({
-					url: '/pages/example/components'
-				});
-			}
-		}
+		isLiked: false,
+		likeCount: 128,
+		commentCount: 25,
+		shareCount: 12,
+		collectCount: 8,
+		isCollected: false
+	},
+	{
+		videoUrl: 'https://uview-plus.jiangruyi.com/big/shanghai.mp4',
+		progress: 0,
+		bgColor: '#000',
+		author: {
+			avatar: '/static/avatar2.jpg',
+			name: '创作者2',
+			desc: '记录美好生活'
+		},
+		isLiked: true,
+		likeCount: 863,
+		commentCount: 96,
+		shareCount: 32,
+		collectCount: 45,
+		isCollected: true
+	},
+	{
+		videoUrl: 'https://uview-plus.jiangruyi.com/big/shanghai.mp4',
+		progress: 0,
+		bgColor: '#000',
+		author: {
+			avatar: '/static/avatar3.jpg',
+			name: '创作者3',
+			desc: '生活需要仪式感'
+		},
+		isLiked: false,
+		likeCount: 562,
+		commentCount: 47,
+		shareCount: 21,
+		collectCount: 19,
+		isCollected: false
 	}
+] as Array<UTSJSONObject>)
+
+function onTabChange(index: number): void {
+	currentTab.value = index
+}
+
+function onVideoChange(index: number): void {
+	currentVideo.value = index
+}
+
+function getEventIndex(e: UTSJSONObject): number {
+	const index = e['index']
+	if (typeof index === 'number') {
+		return index
+	}
+	if (index == null) {
+		return 0
+	}
+	const parsed = parseInt(index.toString())
+	return isNaN(parsed) ? 0 : parsed
+}
+
+function getListItem(index: number): UTSJSONObject | null {
+	if (index < 0 || index >= videoList.value.length) {
+		return null
+	}
+	return videoList.value[index] as UTSJSONObject
+}
+
+function getBooleanValue(value: any | null): boolean {
+	if (typeof value === 'boolean') {
+		return value
+	}
+	return value != null && value.toString() == 'true'
+}
+
+function getNumberValue(value: any | null): number {
+	if (typeof value === 'number') {
+		return value
+	}
+	if (value == null) {
+		return 0
+	}
+	const parsed = parseFloat(value.toString())
+	return isNaN(parsed) ? 0 : parsed
+}
+
+function onLike(e: UTSJSONObject): void {
+	const index = getEventIndex(e)
+	const item = getListItem(index)
+	if (item == null) return
+	const liked = !getBooleanValue(item['isLiked'])
+	item['isLiked'] = liked
+	item['likeCount'] = getNumberValue(item['likeCount']) + (liked ? 1 : -1)
+}
+
+function onComment(_e: UTSJSONObject): void {
+	uni.showToast({
+		title: '评论功能',
+		icon: 'none'
+	})
+}
+
+function onShare(_e: UTSJSONObject): void {
+	uni.showToast({
+		title: '分享功能',
+		icon: 'none'
+	})
+}
+
+function onCollect(e: UTSJSONObject): void {
+	const index = getEventIndex(e)
+	const item = getListItem(index)
+	if (item == null) return
+	const collected = !getBooleanValue(item['isCollected'])
+	item['isCollected'] = collected
+	item['collectCount'] = getNumberValue(item['collectCount']) + (collected ? 1 : -1)
+}
+
+function goNext(): void {
+	uni.switchTab({
+		url: '/pages/example/components'
+	})
+}
 </script>
 
 <style scoped>

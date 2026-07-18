@@ -149,7 +149,10 @@ export function $parent(name = undefined) {
  */
 export function addStyle(customStyle, target = 'object') {
 	// 字符串转字符串，对象转对象情形，直接返回
-	if (testEmpty(customStyle) || typeof(customStyle) === 'object' && target === 'object' || target === 'string' &&
+	if (testEmpty(customStyle)) {
+		return target === 'object' ? {} : ''
+	}
+	if (typeof(customStyle) === 'object' && target === 'object' || target === 'string' &&
 		typeof(customStyle) === 'string') {
 		return customStyle
 	}
@@ -164,8 +167,14 @@ export function addStyle(customStyle, target = 'object') {
 		for (let i = 0; i < styleArray.length; i++) {
 			// 'font-size:20px;color:red;'，如此最后字符串有";"的话，会导致styleArray最后一个元素为空字符串，这里需要过滤
 			if (styleArray[i]) {
-				const item = styleArray[i].split(':')
-				style[trim(item[0])] = trim(item[1])
+				const splitIndex = styleArray[i].indexOf(':')
+				if (splitIndex > -1) {
+					const key = trim(styleArray[i].substring(0, splitIndex))
+					const value = trim(styleArray[i].substring(splitIndex + 1))
+					if (key) {
+						style[key] = value
+					}
+				}
 			}
 		}
 		return style

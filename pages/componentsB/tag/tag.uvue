@@ -306,48 +306,47 @@
 	<!-- #endif -->
 </template>
 
-<script>
-	export default {
-		data() {
-			return {
-				close1: true,
-				close2: true,
-				close3: true,
-				radios: [{
-						checked: true
-					},
-					{
-						checked: false
-					},
-					{
-						checked: false
-					}
-				],
-				checkboxs: [{
-						checked: true
-					},
-					{
-						checked: false
-					},
-					{
-						checked: false
-					}
-				]
-			}
+<script setup lang="uts">
+	import { ref } from 'vue'
+
+	const close1 = ref(true)
+	const close2 = ref(true)
+	const close3 = ref(true)
+	const radios = ref([
+		{
+			checked: true
 		},
-		methods: {
-			radioClick(name: string): void {
-				this.radios.map((item, index) => {
-					item['checked'] = index === parseInt(name) ? true : false
-				})
-			},
-			checkboxClick(name: string): void {
-				if (this.checkboxs[parseInt(name)]?.['checked'] as Boolean) {
-					this.checkboxs[parseInt(name)]['checked'] = false
-				} else {
-					this.checkboxs[parseInt(name)]['checked'] = true
-				}
-			}
+		{
+			checked: false
+		},
+		{
+			checked: false
+		}
+	])
+	const checkboxs = ref([
+		{
+			checked: true
+		},
+		{
+			checked: false
+		},
+		{
+			checked: false
+		}
+	])
+
+	function radioClick(name: string): void {
+		radios.value.map((item, index) => {
+			item['checked'] = index === parseInt(name) ? true : false
+		})
+	}
+
+	function checkboxClick(name: string): void {
+		const index = parseInt(name)
+		if (checkboxs.value[index]?.['checked'] as Boolean) {
+			checkboxs.value[index]['checked'] = false
+		} else {
+			checkboxs.value[index]['checked'] = true
 		}
 	}
 </script>

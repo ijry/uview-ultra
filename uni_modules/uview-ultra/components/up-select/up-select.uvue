@@ -15,7 +15,7 @@
 				</slot>
 			</view>
 			<up-overlay :show="isOpen" @click="overlayClick" v-if="overlay" :zIndex="zIndex" :duration="duration + 50"
-				:customStyle="overlayStyle" :opacity="overlayOpacity" @touchmove.stop.prevent="noop"></up-overlay>
+				:customStyle="overlayStyle" :opacity="overlayOpacity" @touchmove.stop.prevent="stopOverlayTouchMove"></up-overlay>
 			<view class="up-select__options__wrap"
 				:style="optionsWrapStyle">
 				<view class="up-select__options" v-if="isOpen">
@@ -35,11 +35,10 @@
 	</view>
 </template>
 
-<script>
+<script setup lang="uts">
+import { computed, getCurrentInstance, nextTick, onMounted, ref } from 'vue'
 import type { PropType } from 'vue';
-import { mpMixin } from '../../libs/mixin/mpMixin.uts';
-import { mixin } from '../../libs/mixin/mixin.uts';
-import { getWindowInfo } from '../../libs/function/index.uts';
+import { getWindowInfo, upGetRect } from '../../libs/function/index.uts';
 
 function createOptions(): UTSJSONObject[] {
 	return [] as UTSJSONObject[];
@@ -64,173 +63,200 @@ function normalizeNumber(value: any | null, fallback: number = 0): number {
 	return isNaN(parsed) ? fallback : parsed;
 }
 
-export default {
-	name: 'up-select',
-	mixins: [mpMixin, mixin],
-	emits: ['update:current', 'select'],
-	props: {
-		maxHeight: {
-			type: String,
-			default: '90vh'
-		},
-		overlay: {
-			type: Boolean,
-			default: true
-		},
-		overlayOpacity: {
-			type: Number,
-			default: 0.01
-		},
-		overlayStyle: {
-			type: Object as PropType<UTSJSONObject>,
-			default(): UTSJSONObject {
-				return createEmptyObject();
-			}
-		},
-		duration: {
-			type: Number,
-			default: 300
-		},
-		label: {
-			type: String,
-			default: '选项'
-		},
-		options: {
-			type: Array as PropType<UTSJSONObject[]>,
-			default(): UTSJSONObject[] {
-				return createOptions();
-			}
-		},
-		keyName: {
-			type: String,
-			default: 'id'
-		},
-		labelName: {
-			type: String,
-			default: 'name'
-		},
-		showOptionsLabel: {
-			type: Boolean,
-			default: false
-		},
-		current: {
-			type: [String, Number],
-			default: ''
-		},
-		zIndex: {
-			type: Number,
-			default: 11000
-		},
-		itemColor: {
-			type: String,
-			default: '#333333'
-		},
-		iconColor: {
-			type: String,
-			default: ''
-		},
-		iconSize: {
-			type: String,
-			default: '13px'
-		},
-		disabled: {
-			type: Boolean,
-			default: false
+defineOptions({
+	name: 'up-select'
+})
+
+const props = defineProps({
+	maxHeight: {
+		type: String,
+		default: '90vh'
+	},
+	overlay: {
+		type: Boolean,
+		default: true
+	},
+	overlayOpacity: {
+		type: Number,
+		default: 0.01
+	},
+	overlayStyle: {
+		type: Object as PropType<UTSJSONObject>,
+		default(): UTSJSONObject {
+			return {} as UTSJSONObject;
 		}
 	},
-	data() {
-		return {
-			isOpen: false,
-			optionsWrapLeft: 'auto',
-			optionsWrapRight: 'auto',
-			optionsWrapTop: '0px',
-			optionsWrapMinWidth: '100px',
-			optionsWrapMaxHeight: '90vh'
+	duration: {
+		type: Number,
+		default: 300
+	},
+	label: {
+		type: String,
+		default: '选项'
+	},
+	options: {
+		type: Array as PropType<UTSJSONObject[]>,
+		default(): UTSJSONObject[] {
+			return [] as UTSJSONObject[];
 		}
 	},
-	mounted() {
-		if (this.maxHeight != null && this.maxHeight != '') {
-			this.optionsWrapMaxHeight = this.maxHeight
-		}
+	keyName: {
+		type: String,
+		default: 'id'
 	},
-	computed: {
-		currentLabel(): string {
-			const options = this.options as UTSJSONObject[];
-			for (let i = 0; i < options.length; i++) {
-				const item = options[i] as UTSJSONObject;
-				if (valueToString(item[this.keyName]) == valueToString(this.current)) {
-					return valueToString(item[this.labelName]);
-				}
-			}
-			return '';
-		},
-		optionsWrapStyle(): UTSJSONObject {
-			return {
-				overflowY: 'auto',
-				position: 'fixed',
-				zIndex: this.zIndex + 1,
-				left: this.optionsWrapLeft,
-				right: this.optionsWrapRight,
-				top: this.optionsWrapTop,
-				minWidth: this.optionsWrapMinWidth,
-				maxHeight: this.optionsWrapMaxHeight
-			} as UTSJSONObject
-		}
+	labelName: {
+		type: String,
+		default: 'name'
 	},
-	methods: {
-		getOptionClass(item: UTSJSONObject): string {
-			return valueToString(item[this.keyName]) == valueToString(this.current) ? 'active' : ''
-		},
-		getOptionLabel(item: UTSJSONObject): string {
-			return valueToString(item[this.labelName])
-		},
-		openSelect(): void {
-			if (this.disabled) {
-				return;
-			}
-			this.isOpen = true;
-			this.$nextTick(() => {
-				if (this.isOpen) {
-					this.adjustOptionsWrapPosition();
-				}
-			});
-		},
-		closeSelect(): void {
-			this.isOpen = false;
-		},
-		overlayClick(): void {
-			this.isOpen = false;
-		},
-		selectItem(item: UTSJSONObject): void {
-			this.isOpen = false;
-			this.$emit('update:current', item[this.keyName]);
-			this.$emit('select', item);
-		},
-		adjustOptionsWrapPosition(): void {
-			const wi = getWindowInfo();
-			const windowWidth = wi.windowWidth;
-			const windowHeight = wi.windowHeight;
-			this.$uGetRect('.up-select__label').then((rect: NodeInfo) => {
-				const left = normalizeNumber(rect.left, 0);
-				const top = normalizeNumber(rect.top, 0);
-				const width = Math.max(100, normalizeNumber(rect.width, 100));
-				const height = normalizeNumber(rect.height, 0);
-				const dropdownTop = top + height;
-				const availableHeight = Math.max(80, windowHeight - dropdownTop - 8);
-				this.optionsWrapTop = dropdownTop.toString() + 'px';
-				this.optionsWrapMinWidth = width.toString() + 'px';
-				this.optionsWrapMaxHeight = availableHeight.toString() + 'px';
-				if (left + width > windowWidth) {
-					this.optionsWrapLeft = 'auto';
-					this.optionsWrapRight = '0px';
-				} else {
-					this.optionsWrapLeft = left.toString() + 'px';
-					this.optionsWrapRight = 'auto';
-				}
-			});
+	showOptionsLabel: {
+		type: Boolean,
+		default: false
+	},
+	current: {
+		type: [String, Number],
+		default: ''
+	},
+	zIndex: {
+		type: Number,
+		default: 11000
+	},
+	itemColor: {
+		type: String,
+		default: '#333333'
+	},
+	iconColor: {
+		type: String,
+		default: ''
+	},
+	iconSize: {
+		type: String,
+		default: '13px'
+	},
+	disabled: {
+		type: Boolean,
+		default: false
+	}
+})
+
+const emit = defineEmits(['update:current', 'select'])
+const instance = getCurrentInstance()!.proxy!
+const isOpen = ref(false)
+const optionsWrapLeft = ref('auto')
+const optionsWrapRight = ref('auto')
+const optionsWrapTop = ref('0px')
+const optionsWrapMinWidth = ref('100px')
+const optionsWrapMaxHeight = ref('90vh')
+
+const currentLabel = computed((): string => {
+	const options = props.options as UTSJSONObject[];
+	for (let i = 0; i < options.length; i++) {
+		const item = options[i] as UTSJSONObject;
+		if (valueToString(item[props.keyName]) == valueToString(props.current)) {
+			return valueToString(item[props.labelName]);
 		}
 	}
+	return '';
+})
+
+const optionsWrapStyle = computed((): UTSJSONObject => {
+	return {
+		overflowY: 'auto',
+		position: 'fixed',
+		zIndex: props.zIndex + 1,
+		left: optionsWrapLeft.value,
+		right: optionsWrapRight.value,
+		top: optionsWrapTop.value,
+		minWidth: optionsWrapMinWidth.value,
+		maxHeight: optionsWrapMaxHeight.value
+	} as UTSJSONObject
+})
+
+const getOptionClass = (item: UTSJSONObject): string => {
+	return valueToString(item[props.keyName]) == valueToString(props.current) ? 'active' : ''
 }
+
+const getOptionLabel = (item: UTSJSONObject): string => {
+	return valueToString(item[props.labelName])
+}
+
+const adjustOptionsWrapPosition = (): void => {
+	const wi = getWindowInfo();
+	const windowWidth = wi.windowWidth;
+	const windowHeight = wi.windowHeight;
+	upGetRect('.up-select__label', false, instance).then((rect: NodeInfo) => {
+		const left = normalizeNumber(rect.left, 0);
+		const top = normalizeNumber(rect.top, 0);
+		const width = Math.max(100, normalizeNumber(rect.width, 100));
+		const height = normalizeNumber(rect.height, 0);
+		const dropdownTop = top + height;
+		const availableHeight = Math.max(80, windowHeight - dropdownTop - 8);
+		optionsWrapTop.value = dropdownTop.toString() + 'px';
+		optionsWrapMinWidth.value = width.toString() + 'px';
+		optionsWrapMaxHeight.value = availableHeight.toString() + 'px';
+		if (left + width > windowWidth) {
+			optionsWrapLeft.value = 'auto';
+			optionsWrapRight.value = '0px';
+		} else {
+			optionsWrapLeft.value = left.toString() + 'px';
+			optionsWrapRight.value = 'auto';
+		}
+	});
+}
+
+const openSelect = (): void => {
+	if (props.disabled) {
+		return;
+	}
+	isOpen.value = true;
+	nextTick(() => {
+		if (isOpen.value) {
+			adjustOptionsWrapPosition();
+		}
+	});
+}
+
+const closeSelect = (): void => {
+	isOpen.value = false;
+}
+
+const overlayClick = (): void => {
+	isOpen.value = false;
+}
+
+const selectItem = (item: UTSJSONObject): void => {
+	isOpen.value = false;
+	emit('update:current', item[props.keyName]);
+	emit('select', item);
+}
+
+const stopOverlayTouchMove = (e: UniEvent): void => {
+	e.stopPropagation()
+}
+
+onMounted(() => {
+	if (props.maxHeight != null && props.maxHeight != '') {
+		optionsWrapMaxHeight.value = props.maxHeight
+	}
+})
+
+defineExpose({
+	isOpen,
+	optionsWrapLeft,
+	optionsWrapRight,
+	optionsWrapTop,
+	optionsWrapMinWidth,
+	optionsWrapMaxHeight,
+	currentLabel,
+	optionsWrapStyle,
+	getOptionClass,
+	getOptionLabel,
+	openSelect,
+	closeSelect,
+	overlayClick,
+	selectItem,
+	adjustOptionsWrapPosition,
+	stopOverlayTouchMove
+})
 </script>
 
 <style lang="scss" scoped>

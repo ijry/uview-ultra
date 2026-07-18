@@ -40,14 +40,18 @@
   </view>
 </template>
 
-<script>
+<script setup lang="uts">
+import { computed, getCurrentInstance } from 'vue'
+
 function valueToString(value: any): string {
   return value == null ? '' : value.toString();
 }
 
-export default {
-  name: 'tree-node',
-  props: {
+defineOptions({
+  name: 'tree-node'
+})
+
+const componentProps = defineProps({
     node: {
       type: Object,
       required: true
@@ -72,83 +76,97 @@ export default {
       type: Number,
       default: 0
     }
-  },
-  computed: {
-    childrenKey(): string {
-      const props = this.props as UTSJSONObject;
-      const childrenKey = props['children'];
-      return valueToString(childrenKey) == '' ? 'children' : valueToString(childrenKey);
-    },
-    hasChildren(): boolean {
-      const node = this.node as UTSJSONObject;
-      const children = node[this.childrenKey] as UTSJSONObject[] | null;
-      return Array.isArray(children) && children.length > 0;
-    },
-    isExpanded(): boolean {
-      const node = this.node as UTSJSONObject;
-      const expanded = node['expanded'];
-      if (expanded == null) {
-        return false;
-      }
-      return expanded as boolean;
+})
+
+const emit = defineEmits(['node-click', 'check-change'])
+const instance = getCurrentInstance()!.proxy!
+
+const childrenKey = computed((): string => {
+  const props = componentProps.props as UTSJSONObject;
+  const childrenKey = props['children'];
+  return valueToString(childrenKey) == '' ? 'children' : valueToString(childrenKey);
+})
+
+const hasChildren = computed((): boolean => {
+  const node = componentProps.node as UTSJSONObject;
+  const children = node[childrenKey.value] as UTSJSONObject[] | null;
+  return Array.isArray(children) && children.length > 0;
+})
+
+const isExpanded = computed((): boolean => {
+  const node = componentProps.node as UTSJSONObject;
+  const expanded = node['expanded'];
+  if (expanded == null) {
+    return false;
+  }
+  return expanded as boolean;
+})
+
+const updateChildCheckStatus = (node: UTSJSONObject, checked: boolean): void => {
+  const children = node[childrenKey.value] as UTSJSONObject[] | null;
+  if (!Array.isArray(children) || children.length == 0) {
+    return;
+  }
+  for (let i = 0; i < children.length; i++) {
+    const child = children[i] as UTSJSONObject;
+    child['checked'] = checked;
+    updateChildCheckStatus(child, checked);
+  }
+}
+
+const updateParentCheckStatus = (): void => {
+  let parent = instance.$parent as ComponentPublicInstance | null;
+  while (parent != null) {
+    const parentNode = parent.$props['node'] as UTSJSONObject | null;
+    if (parentNode == null) {
+      break;
     }
-  },
-  emits: ['node-click', 'check-change'],
-  methods: {
-    toggle(): void {
-      const node = this.node as UTSJSONObject;
-      if (this.expandOnClickNode && this.hasChildren) {
-        const expanded = node['expanded'];
-        node['expanded'] = expanded == null ? true : !(expanded as boolean);
-      }
-      this.$emit('node-click', node);
-    },
-    toggleCheck(checked: boolean): void {
-      const node = this.node as UTSJSONObject;
-      node['checked'] = checked;
-      if (!this.checkStrictly) {
-        this.updateChildCheckStatus(node, checked);
-        this.updateParentCheckStatus();
-      }
-      this.$emit('check-change', node);
-    },
-    updateChildCheckStatus(node: UTSJSONObject, checked: boolean): void {
-      const children = node[this.childrenKey] as UTSJSONObject[] | null;
-      if (!Array.isArray(children) || children.length == 0) {
-        return;
-      }
+    const children = parentNode[childrenKey.value] as UTSJSONObject[] | null;
+    if (!Array.isArray(children) || children.length == 0) {
+      parentNode['checked'] = false;
+    } else {
+      let allChecked = true;
       for (let i = 0; i < children.length; i++) {
         const child = children[i] as UTSJSONObject;
-        child['checked'] = checked;
-        this.updateChildCheckStatus(child, checked);
-      }
-    },
-    updateParentCheckStatus(): void {
-      let parent = this.$parent as ComponentPublicInstance | null;
-      while (parent != null) {
-        const parentNode = parent.$props['node'] as UTSJSONObject | null;
-        if (parentNode == null) {
+        if (child['checked'] != true) {
+          allChecked = false;
           break;
         }
-        const children = parentNode[this.childrenKey] as UTSJSONObject[] | null;
-        if (!Array.isArray(children) || children.length == 0) {
-          parentNode['checked'] = false;
-        } else {
-          let allChecked = true;
-          for (let i = 0; i < children.length; i++) {
-            const child = children[i] as UTSJSONObject;
-            if (child['checked'] != true) {
-              allChecked = false;
-              break;
-            }
-          }
-          parentNode['checked'] = allChecked;
-        }
-        parent = parent.$parent as ComponentPublicInstance | null;
       }
+      parentNode['checked'] = allChecked;
     }
+    parent = parent.$parent as ComponentPublicInstance | null;
   }
-};
+}
+
+const toggle = (): void => {
+  const node = componentProps.node as UTSJSONObject;
+  if (componentProps.expandOnClickNode && hasChildren.value) {
+    const expanded = node['expanded'];
+    node['expanded'] = expanded == null ? true : !(expanded as boolean);
+  }
+  emit('node-click', node);
+}
+
+const toggleCheck = (checked: boolean): void => {
+  const node = componentProps.node as UTSJSONObject;
+  node['checked'] = checked;
+  if (!componentProps.checkStrictly) {
+    updateChildCheckStatus(node, checked);
+    updateParentCheckStatus();
+  }
+  emit('check-change', node);
+}
+
+defineExpose({
+  childrenKey,
+  hasChildren,
+  isExpanded,
+  toggle,
+  toggleCheck,
+  updateChildCheckStatus,
+  updateParentCheckStatus
+})
 </script>
 
 <style scoped>

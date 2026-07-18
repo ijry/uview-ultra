@@ -61,101 +61,104 @@
 	<!-- #endif -->
 </template>
 
-<script>
-	import { toast } from '@/uni_modules/uview-ultra/libs/function/index.uts';
-	export default {
-		data() { 
-			return {
-				value1: '',
-				value2: '2',
-				mask: true,
-				options1: [{
-						label: '默认排序',
-						value: 1,
-					},
-					{
-						label: '距离优先',
-						value: 2,
-					},
-					{
-						label: '价格优先',
-						value: 3,
-					}
-				],
-				options2: [{
-						label: '去冰',
-						value: 1,
-					},
-					{
-						label: '加冰',
-						value: 2,
-					},
-					{
-						label: '正常温',
-						value: 3,
-					},
-					{
-						label: '加热',
-						value: 4,
-					},
-					{
-						label: '极寒风暴',
-						value: 5,
-					}
-				],
-				list: [{
-						label: '琪花瑶草',
-						active: true,
-					},
-					{
-						label: '清词丽句',
-						active: false,
-					},
-					{
-						label: '宛转蛾眉',
-						active: false,
-					},
-					{
-						label: '煦色韶光',
-						active: false,
-					},
-					{
-						label: '鱼沉雁落',
-						active: false,
-					},
-					{
-						label: '章台杨柳',
-						active: false,
-					},
-					{
-						label: '霞光万道',
-						active: false,
-					}
-				],
-				borderBottom: false,
-				activeColor: '#2979ff'
-			}
+<script setup lang="uts">
+	import { ref } from 'vue'
+	import { toast } from '@/uni_modules/uview-ultra/libs/function/index.uts'
+
+	const value1 = ref('')
+	const value2 = ref('2')
+	const mask = ref(true)
+	const options1 = [
+		{
+			label: '默认排序',
+			value: 1,
 		},
-		methods: {
-			borderChange(index: number) {
-				this.borderBottom = index == 0 ? true : false;
-			},
-			activeColorChange(index: number) {
-				this.activeColor = ['#2979ff', '#ff9900', '#19be6b'][index];
-			},
-			change(index: number) {
-				toast(`点击了第${index}项`);
-			},
-			closeDropdown() {
-				// this.$refs['upDropdownRef'].close();
-			},
-			tagClick(index: number) {
-				this.list[index]['active'] = !(this.list[index]['active'] as boolean);
-			},
-			maskChange(index: number) {
-				this.mask = index == 0 ? true : false;
-			}
+		{
+			label: '距离优先',
+			value: 2,
+		},
+		{
+			label: '价格优先',
+			value: 3,
 		}
+	]
+	const options2 = [
+		{
+			label: '去冰',
+			value: 1,
+		},
+		{
+			label: '加冰',
+			value: 2,
+		},
+		{
+			label: '正常温',
+			value: 3,
+		},
+		{
+			label: '加热',
+			value: 4,
+		},
+		{
+			label: '极寒风暴',
+			value: 5,
+		}
+	]
+	const list = ref([
+		{
+			label: '琪花瑶草',
+			active: true,
+		},
+		{
+			label: '清词丽句',
+			active: false,
+		},
+		{
+			label: '宛转蛾眉',
+			active: false,
+		},
+		{
+			label: '煦色韶光',
+			active: false,
+		},
+		{
+			label: '鱼沉雁落',
+			active: false,
+		},
+		{
+			label: '章台杨柳',
+			active: false,
+		},
+		{
+			label: '霞光万道',
+			active: false,
+		}
+	])
+	const borderBottom = ref(false)
+	const activeColor = ref('#2979ff')
+
+	function borderChange(index: number) {
+		borderBottom.value = index == 0 ? true : false
+	}
+
+	function activeColorChange(index: number) {
+		activeColor.value = ['#2979ff', '#ff9900', '#19be6b'][index]
+	}
+
+	function change(index: number) {
+		toast(`点击了第${index}项`)
+	}
+
+	function closeDropdown() {
+		// upDropdownRef.value?.$callMethod('close')
+	}
+
+	function tagClick(index: number) {
+		list.value[index]['active'] = !(list.value[index]['active'] as boolean)
+	}
+
+	function maskChange(index: number) {
+		mask.value = index == 0 ? true : false
 	}
 </script>
 

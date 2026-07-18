@@ -67,122 +67,120 @@
 	<!-- #endif -->
 </template>
 
-<script>
-	export default {
-		data() {
-			return {
-				show: false,
-				popupData: {
-					overlay: true,
-					mode: 'bottom',
-					borderRadius: '',
-					closeable: true,
-					closeOnClickOverlay: true
-				} as UTSJSONObject | null,
-				list: [{
-						popupData: {
-							overlay: true,
-							mode: 'top',
-							closeOnClickOverlay: true
-						} as UTSJSONObject,
-						title: '顶部弹出',
-						iconUrl: 'https://cdn.uviewui.com/uview/demo/popup/modeTop.png'
-					},
-					{
-						popupData: {
-							overlay: true,
-							mode: 'right',
-							closeOnClickOverlay: true
-						} as UTSJSONObject,
-						title: '右侧弹出',
-						iconUrl: 'https://cdn.uviewui.com/uview/demo/popup/modeRight.png'
-					},
-					{
-						popupData: {
-							overlay: true,
-							mode: 'bottom',
-							closeOnClickOverlay: true
-						} as UTSJSONObject,
-						title: '底部弹出',
-						iconUrl: 'https://cdn.uviewui.com/uview/demo/popup/modeBottom.png'
-					},
-					{
-						popupData: {
-							overlay: true,
-							mode: 'left',
-							closeOnClickOverlay: true
-						} as UTSJSONObject,
-						title: '左侧弹出',
-						iconUrl: 'https://cdn.uviewui.com/uview/demo/popup/modeLeft.png'
-					},
-					{
-						popupData: {
-							overlay: true,
-							mode: 'center',
-							round: 10,
-							closeOnClickOverlay: true
-						} as UTSJSONObject,
-						title: '居中弹出',
-						iconUrl: 'https://cdn.uviewui.com/uview/demo/popup/modeCenter.png'
-					},
-					{
-						popupData: {
-							overlay: true,
-							mode: 'bottom',
-							round: 10,
-							closeOnClickOverlay: true
-						} as UTSJSONObject,
-						title: '显示圆角',
-						iconUrl: 'https://cdn.uviewui.com/uview/demo/popup/showRadis.png'
-					},
-					{
-						popupData: {
-							overlay: true,
-							mode: 'bottom',
-							closeable: false,
-							closeOnClickOverlay: false
-						} as UTSJSONObject,
-						title: '禁止点击遮罩关闭',
-						iconUrl: 'https://cdn.uviewui.com/uview/demo/popup/noClose.png'
-					},
-					{
-						popupData: {
-							overlay: true,
-							mode: 'bottom',
-							closeable: true,
-							closeOnClickOverlay: true
-						} as UTSJSONObject,
-						title: '显示关闭按钮',
-						iconUrl: 'https://cdn.uviewui.com/uview/demo/popup/showCloseBtn.png'
-					}
-				]
-			}
+<script setup lang="uts">
+	import { ref } from 'vue'
+
+	const show = ref(false)
+	const popupData = ref({
+		overlay: true,
+		mode: 'bottom',
+		borderRadius: '',
+		closeable: true,
+		closeOnClickOverlay: true
+	} as UTSJSONObject | null)
+	const list = [
+		{
+			popupData: {
+				overlay: true,
+				mode: 'top',
+				closeOnClickOverlay: true
+			} as UTSJSONObject,
+			title: '顶部弹出',
+			iconUrl: 'https://cdn.uviewui.com/uview/demo/popup/modeTop.png'
 		},
-		methods: {
-			openPopup(popupData?: UTSJSONObject): void {
-				this.popupData = popupData as UTSJSONObject
-				// sleep().then(() => {
-				 	this.show = !this.show
-				// })
-			},
-			navigateBack(): void {
-				uni.navigateBack()
-			},
-			getMode(data?: UTSJSONObject): string {
-				let str = data!!.getString('mode')
-				if (str == null) {
-					str = ''
-				}
-				return str
-			},
-			open(): void {
-				// console.log('open');
-			},
-			close(): void {
-				this.show = false
-				console.log('close');
-			}
+		{
+			popupData: {
+				overlay: true,
+				mode: 'right',
+				closeOnClickOverlay: true
+			} as UTSJSONObject,
+			title: '右侧弹出',
+			iconUrl: 'https://cdn.uviewui.com/uview/demo/popup/modeRight.png'
+		},
+		{
+			popupData: {
+				overlay: true,
+				mode: 'bottom',
+				closeOnClickOverlay: true
+			} as UTSJSONObject,
+			title: '底部弹出',
+			iconUrl: 'https://cdn.uviewui.com/uview/demo/popup/modeBottom.png'
+		},
+		{
+			popupData: {
+				overlay: true,
+				mode: 'left',
+				closeOnClickOverlay: true
+			} as UTSJSONObject,
+			title: '左侧弹出',
+			iconUrl: 'https://cdn.uviewui.com/uview/demo/popup/modeLeft.png'
+		},
+		{
+			popupData: {
+				overlay: true,
+				mode: 'center',
+				round: 10,
+				closeOnClickOverlay: true
+			} as UTSJSONObject,
+			title: '居中弹出',
+			iconUrl: 'https://cdn.uviewui.com/uview/demo/popup/modeCenter.png'
+		},
+		{
+			popupData: {
+				overlay: true,
+				mode: 'bottom',
+				round: 10,
+				closeOnClickOverlay: true
+			} as UTSJSONObject,
+			title: '显示圆角',
+			iconUrl: 'https://cdn.uviewui.com/uview/demo/popup/showRadis.png'
+		},
+		{
+			popupData: {
+				overlay: true,
+				mode: 'bottom',
+				closeable: false,
+				closeOnClickOverlay: false
+			} as UTSJSONObject,
+			title: '禁止点击遮罩关闭',
+			iconUrl: 'https://cdn.uviewui.com/uview/demo/popup/noClose.png'
+		},
+		{
+			popupData: {
+				overlay: true,
+				mode: 'bottom',
+				closeable: true,
+				closeOnClickOverlay: true
+			} as UTSJSONObject,
+			title: '显示关闭按钮',
+			iconUrl: 'https://cdn.uviewui.com/uview/demo/popup/showCloseBtn.png'
 		}
+	]
+
+	function openPopup(data?: UTSJSONObject): void {
+		popupData.value = data as UTSJSONObject
+		// sleep().then(() => {
+		show.value = !show.value
+		// })
+	}
+
+	function navigateBack(): void {
+		uni.navigateBack()
+	}
+
+	function getMode(data?: UTSJSONObject | null): string {
+		if (data == null) return ''
+		const mode = data.getString('mode')
+		return mode == null ? '' : mode
+	}
+
+	function open(): void {
+		// console.log('open')
+	}
+
+	function close(): void {
+		show.value = false
+		console.log('close')
 	}
 </script>
 

@@ -30,7 +30,9 @@
 	</view>
 </template>
 
-<script lang="uts">
+<script setup lang="uts">
+	import { computed, ref } from 'vue'
+
 	function emptyPosition(): UTSJSONObject {
 		return {} as UTSJSONObject
 	}
@@ -54,90 +56,96 @@
 	 * @event {Function}			click			点击触发器时触发
 	 * @example <up-popover text="提示内容"><template #trigger><up-button>点击</up-button></template></up-popover>
 	 */
-	export default {
-		name: 'up-popover',
-		props: {
-			text: {
-				type: [String, Number],
-				default: ''
-			},
-			color: {
-				type: String,
-				default: '#333'
-			},
-			bgColor: {
-				type: String,
-				default: '#f7f7f7'
-			},
-			popupBgColor: {
-				type: String,
-				default: '#f7f7f7'
-			},
-			placement: {
-				type: String,
-				default: 'top'
-			},
-			triggerMode: {
-				type: String,
-				default: 'click'
-			},
-			show: {
-				type: Boolean,
-				default: false
-			},
-			zIndex: {
-				type: [Number, String],
-				default: 10070
-			},
-			forcePosition: {
-				type: Object,
-				default(): UTSJSONObject {
-					return emptyPosition()
-				}
-			},
-			direction: {
-				type: String,
-				default: 'top'
+	defineOptions({
+		name: 'up-popover'
+	})
+
+	const props = defineProps({
+		text: {
+			type: [String, Number],
+			default: ''
+		},
+		color: {
+			type: String,
+			default: '#333'
+		},
+		bgColor: {
+			type: String,
+			default: '#f7f7f7'
+		},
+		popupBgColor: {
+			type: String,
+			default: '#f7f7f7'
+		},
+		placement: {
+			type: String,
+			default: 'top'
+		},
+		triggerMode: {
+			type: String,
+			default: 'click'
+		},
+		show: {
+			type: Boolean,
+			default: false
+		},
+		zIndex: {
+			type: [Number, String],
+			default: 10070
+		},
+		forcePosition: {
+			type: Object,
+			default(): UTSJSONObject {
+				return {} as UTSJSONObject
 			}
 		},
-		emits: ['open', 'close', 'click'],
-		data() {
-			return {
-				innerShow: false
-			}
-		},
-		computed: {
-			textValue(): string {
-				return this.text.toString()
-			},
-			displayShow(): boolean {
-				return this.show || this.innerShow
-			}
-		},
-		methods: {
-			onOpen(): void {
-				this.innerShow = true
-				this.$emit('open');
-			},
-			onClose(): void {
-				this.innerShow = false
-				this.$emit('close');
-			},
-			onClick(): void {
-				this.$emit('click');
-			},
-			// 打开popover
-			open(): void {
-				this.innerShow = true
-				this.$emit('open')
-			},
-			// 关闭popover
-			close(): void {
-				this.innerShow = false
-				this.$emit('close')
-			}
+		direction: {
+			type: String,
+			default: 'top'
 		}
+	})
+
+	const emit = defineEmits(['open', 'close', 'click'])
+	const innerShow = ref(false)
+
+	const textValue = computed((): string => {
+		return props.text.toString()
+	})
+
+	const displayShow = computed((): boolean => {
+		return props.show || innerShow.value
+	})
+
+	const onOpen = (): void => {
+		innerShow.value = true
+		emit('open')
 	}
+
+	const onClose = (): void => {
+		innerShow.value = false
+		emit('close')
+	}
+
+	const onClick = (): void => {
+		emit('click')
+	}
+
+	// 打开popover
+	const open = (): void => {
+		innerShow.value = true
+		emit('open')
+	}
+
+	// 关闭popover
+	const close = (): void => {
+		innerShow.value = false
+		emit('close')
+	}
+
+	defineExpose({
+		open,
+		close
+	})
 </script>
 
 <style lang="scss" scoped>	

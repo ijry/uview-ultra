@@ -33,21 +33,17 @@
 	</view>
 </template>
 
-<script lang="uts">
-export default {
-	data() {
-		return {
-			boxValue: '',
-			lineValue: ''
-		}
-	},
-	methods: {
-		onChange(value: string): void {
-			console.log('message input change:', value)
-		},
-		onFinish(value: string): void {
-			console.log('message input finish:', value)
-		}
-	}
+<script setup lang="uts">
+import { ref } from 'vue'
+
+const boxValue = ref('')
+const lineValue = ref('')
+
+function onChange(value: string): void {
+	console.log('message input change:', value)
+}
+
+function onFinish(value: string): void {
+	console.log('message input finish:', value)
 }
 </script>

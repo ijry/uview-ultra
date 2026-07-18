@@ -1,15 +1,7 @@
 <template>
 	<view
 	    class="up-loadmore"
-	    :style="[
-			addStyle(customStyle),
-			{
-				backgroundColor: bgColor,
-				marginBottom: addUnit(marginBottom),
-				marginTop: addUnit(marginTop),
-				height: addUnit(height),
-			},
-		]"
+	    :style="rootStyle"
 	>
 		<up-line
 		    length="140rpx"
@@ -36,7 +28,7 @@
 			<!-- 如果没有更多的状态下，显示内容为dot（粗点），加载特定样式 -->
 			<text
 			    class="up-line-11"
-			    :style="[loadTextStyle]"
+			    :style="loadTextStyle"
 			    :class="[(status == 'nomore' && isDot == true) ? 'up-loadmore__content__dot-text' : 'up-loadmore__content__text']"
 			    @tap="loadMore"
 			>{{ showText }}</text>
@@ -51,10 +43,9 @@
 	</view>
 </template>
 
-<script lang="uts">
-import { propsLoadmore } from './props.uts'
-import { mpMixin } from '../../libs/mixin/mpMixin.uts'
-import { mixin } from '../../libs/mixin/mixin.uts'
+<script setup lang="uts">
+import { computed } from 'vue'
+import defProps from './loadmore'
 import { addUnit, addStyle } from '../../libs/function/index.uts'
 
 /**
@@ -82,48 +73,143 @@ import { addUnit, addStyle } from '../../libs/function/index.uts'
  * @event {Function} loadmore status为loadmore时，点击组件会发出此事件
  * @example <up-loadmore :status="status" icon-type="iconType" load-text="loadText" />
  */
-export default {
-	name: "up-loadmore",
-	mixins: [mpMixin, mixin, propsLoadmore],
-	data() {
-		return {
-			// 粗点
-			dotText: "●"
-		}
+defineOptions({
+	name: 'up-loadmore'
+})
+
+const props = defineProps({
+	// 组件状态，loadmore-加载前的状态，loading-加载中的状态，nomore-没有更多的状态
+	status: {
+		type: String,
+		default: defProps.getString('loadmore.status')
 	},
-	computed: {
-		// 加载的文字显示的样式
-		loadTextStyle() {
-			return {
-				color: this.color,
-				fontSize: addUnit(this.fontSize),
-				// lineHeight: addUnit(this.fontSize),
-				backgroundColor: this.bgColor,
-			}
-		},
-		// 显示的提示文字
-		showText() {
-			let text = '';
-			if (this.status == 'loadmore') text = this.loadmoreText
-			else if (this.status == 'loading') text = this.loadingText
-			else if (this.status == 'nomore' && this.isDot) text = this.dotText;
-			else text = this.nomoreText;
-			return text;
-		}
+	// 组件背景色
+	bgColor: {
+		type: String,
+		default: defProps.getString('loadmore.bgColor')
 	},
-	emits: ["loadmore"],
-	methods: {
-		addStyle(e: any) {
-			return addStyle(e)
-		},
-		addUnit(e: any) {
-			return addUnit(e)
-		},
-		loadMore() {
-			// 只有在"加载更多"的状态下才发送点击事件，内容不满一屏时无法触发底部上拉事件，所以需要点击来触发
-			if (this.status == 'loadmore') this.$emit('loadmore');
-		}
+	// 是否显示加载中的图标
+	icon: {
+		type: Boolean,
+		default: defProps.getBoolean('loadmore.icon')
+	},
+	// 字体大小
+	fontSize: {
+		type: [String, Number],
+		default: defProps.getNumber('loadmore.fontSize')
+	},
+	// 图标大小
+	iconSize: {
+		type: [String, Number],
+		default: defProps.getNumber('loadmore.iconSize')
+	},
+	// 字体颜色
+	color: {
+		type: String,
+		default: defProps.getString('loadmore.color')
+	},
+	// 加载中状态的图标，spinner-花朵状图标，circle-圆圈状，semicircle-半圆
+	loadingIcon: {
+		type: String,
+		default: defProps.getString('loadmore.loadingIcon')
+	},
+	// 加载前的提示语
+	loadmoreText: {
+		type: String,
+		default: defProps.getString('loadmore.loadmoreText')
+	},
+	// 加载中提示语
+	loadingText: {
+		type: String,
+		default: defProps.getString('loadmore.loadingText')
+	},
+	// 没有更多的提示语
+	nomoreText: {
+		type: String,
+		default: defProps.getString('loadmore.nomoreText')
+	},
+	// 在"没有更多"状态下，是否显示粗点
+	isDot: {
+		type: Boolean,
+		default: defProps.getBoolean('loadmore.isDot')
+	},
+	// 加载中图标的颜色
+	iconColor: {
+		type: String,
+		default: defProps.getString('loadmore.iconColor')
+	},
+	// 上边距
+	marginTop: {
+		type: [String, Number],
+		default: defProps.getNumber('loadmore.marginTop')
+	},
+	// 下边距
+	marginBottom: {
+		type: [String, Number],
+		default: defProps.getNumber('loadmore.marginBottom')
+	},
+	// 高度，单位px
+	height: {
+		type: [String, Number],
+		default: defProps.getString('loadmore.height')
+	},
+	// 是否显示左边分割线
+	line: {
+		type: Boolean,
+		default: defProps.getBoolean('loadmore.line')
+	},
+	// 线条颜色
+	lineColor: {
+		type: String,
+		default: defProps.getString('loadmore.lineColor')
+	},
+	// 是否虚线，true-虚线，false-实线
+	dashed: {
+		type: Boolean,
+		default: defProps.getBoolean('loadmore.dashed')
+	},
+	customStyle: {
+		type: [Object, String],
+		default: () => ({})
 	}
+})
+
+const emit = defineEmits(['loadmore'])
+// 粗点
+const dotText = '●'
+
+const rootStyle = computed((): UTSJSONObject => {
+	const style = addStyle(props.customStyle) as UTSJSONObject
+	style['backgroundColor'] = props.bgColor
+	style['marginBottom'] = addUnit(props.marginBottom)
+	style['marginTop'] = addUnit(props.marginTop)
+	style['height'] = addUnit(props.height)
+	return style
+})
+
+// 加载的文字显示的样式
+const loadTextStyle = computed((): UTSJSONObject => {
+	return {
+		color: props.color,
+		fontSize: addUnit(props.fontSize),
+		// lineHeight: addUnit(props.fontSize),
+		backgroundColor: props.bgColor
+	} as UTSJSONObject
+})
+
+// 显示的提示文字
+const showText = computed((): string => {
+	let text = ''
+	if (props.status == 'loadmore') text = props.loadmoreText
+	else if (props.status == 'loading') text = props.loadingText
+	else if (props.status == 'nomore' && props.isDot) text = dotText
+	else text = props.nomoreText
+	return text
+})
+
+const loadMore = (): void => {
+	// 只有在"加载更多"的状态下才发送点击事件，内容不满一屏时无法触发底部上拉事件，所以需要点击来触发
+	if (props.status == 'loadmore') emit('loadmore')
 }
 </script>
 

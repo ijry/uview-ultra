@@ -159,36 +159,26 @@
 	<!-- #endif -->
 </template>
 
-<script>
-	export default {
-		data() {
-			return {
-				src1: './static/uview/album/1.jpg',
-				src2: './static/uview/album/2.jpg',
-				src3: './static/uview/album/3.jpg',
-				src4: './static/uview/album/4.jpg',
-				src5: './static/uview/album/5.jpg',
-				src6: './static/uview/album/6.jpg',
-				src7: './static/uview/album/noExist.jpg',
-				urls: [
-					'./static/uview/album/1.jpg',
-					'./static/uview/album/2.jpg',
-					'./static/uview/album/3.jpg',
-					'./static/uview/album/4.jpg',
-					'./static/uview/album/7.jpg',
-					'./static/uview/album/6.jpg',
-					'./static/uview/album/5.jpg'
-				]
-			}
-		},
-		onLoad() {
+<script setup lang="uts">
+	const src1 = './static/uview/album/1.jpg'
+	const src2 = './static/uview/album/2.jpg'
+	const src3 = './static/uview/album/3.jpg'
+	const src4 = './static/uview/album/4.jpg'
+	const src5 = './static/uview/album/5.jpg'
+	const src6 = './static/uview/album/6.jpg'
+	const src7 = './static/uview/album/noExist.jpg'
+	const urls = [
+		'./static/uview/album/1.jpg',
+		'./static/uview/album/2.jpg',
+		'./static/uview/album/3.jpg',
+		'./static/uview/album/4.jpg',
+		'./static/uview/album/7.jpg',
+		'./static/uview/album/6.jpg',
+		'./static/uview/album/5.jpg'
+	]
 
-		},
-		methods: {
-			click(name: string) {
-				console.log('click', name);
-			}
-		},
+	function click(name: string) {
+		console.log('click', name)
 	}
 </script>
 

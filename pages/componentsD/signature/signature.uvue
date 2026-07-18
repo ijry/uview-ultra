@@ -52,46 +52,45 @@
     </view>
 </template>
 
-<script>
-export default {
-    data() {
-        return {
-            signatureImage1: '',
-            signatureImage2: ''
-        };
-    },
-    methods: {
-        onConfirm1(tempFilePath: any | null) {
-            this.signatureImage1 = tempFilePath == null ? '' : tempFilePath.toString();
-            console.log('签名图片路径1:', tempFilePath);
-        },
-        onError1(err: any | null) {
-            console.error('签名导出错误1:', err);
-            uni.showToast({
-                title: '签名导出失败',
-                icon: 'none'
-            });
-        },
-        clearSignature1() {
-            this.signatureImage1 = '';
-        },
-        
-        onConfirm2(tempFilePath: any | null) {
-            this.signatureImage2 = tempFilePath == null ? '' : tempFilePath.toString();
-            console.log('签名图片路径2:', tempFilePath);
-        },
-        onError2(err: any | null) {
-            console.error('签名导出错误2:', err);
-            uni.showToast({
-                title: '签名导出失败',
-                icon: 'none'
-            });
-        },
-        clearSignature2() {
-            this.signatureImage2 = '';
-        },
-    }
-};
+<script setup lang="uts">
+import { ref } from 'vue'
+
+const signatureImage1 = ref('')
+const signatureImage2 = ref('')
+
+function onConfirm1(tempFilePath: any | null) {
+    signatureImage1.value = tempFilePath == null ? '' : tempFilePath.toString()
+    console.log('签名图片路径1:', tempFilePath)
+}
+
+function onError1(err: any | null) {
+    console.error('签名导出错误1:', err)
+    uni.showToast({
+        title: '签名导出失败',
+        icon: 'none'
+    })
+}
+
+function clearSignature1() {
+    signatureImage1.value = ''
+}
+
+function onConfirm2(tempFilePath: any | null) {
+    signatureImage2.value = tempFilePath == null ? '' : tempFilePath.toString()
+    console.log('签名图片路径2:', tempFilePath)
+}
+
+function onError2(err: any | null) {
+    console.error('签名导出错误2:', err)
+    uni.showToast({
+        title: '签名导出失败',
+        icon: 'none'
+    })
+}
+
+function clearSignature2() {
+    signatureImage2.value = ''
+}
 </script>
 
 <style lang="scss" scoped>

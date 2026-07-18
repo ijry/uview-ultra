@@ -7,11 +7,10 @@
 	</view>
 </template>
 
-<script>
-	import { propsStatusBar } from './props';
-	import { mpMixin } from '../../libs/mixin/mpMixin';
-	import { mixin } from '../../libs/mixin/mixin';
-	import { addUnit, addStyle, deepMerge, sys } from '../../libs/function/index';
+<script setup lang="uts">
+	import { computed } from 'vue'
+	import defProps from './statusBar.uts'
+	import { addUnit, addStyle, deepMerge } from '../../libs/function/index'
 	/**
 	 * StatbusBar 状态栏占位
 	 * @author jry ijry@qq.com
@@ -21,23 +20,28 @@
 	 * @property {String | Object}	customStyle		自定义样式 
 	 * @example <up-status-bar></up-status-bar>
 	 */
-	export default {
-		name: 'up-status-bar',
-		mixins: [mpMixin, mixin, propsStatusBar],
-		data() {
-			return {
-			}
+	defineOptions({
+		name: 'up-status-bar'
+	})
+
+	const props = defineProps({
+		bgColor: {
+			type: String,
+			default: defProps.getString('statusBar.bgColor')
 		},
-		computed: {
-			style(): any {
-				const style = {}
-				// 状态栏高度，由于某些安卓和微信开发工具无法识别css的顶部状态栏变量，所以使用js获取的方式
-				style['height'] = addUnit(uni.getSystemInfoSync().statusBarHeight, 'px')
-				style['backgroundColor'] = this.bgColor
-				return deepMerge(style, addStyle(this.customStyle))
-			}
-		},
-	}
+		customStyle: {
+			type: [Object, String],
+			default: () => ({})
+		}
+	})
+
+	const style = computed((): UTSJSONObject => {
+		const style = {} as UTSJSONObject
+		// 状态栏高度，由于某些安卓和微信开发工具无法识别css的顶部状态栏变量，所以使用js获取的方式
+		style['height'] = addUnit(uni.getSystemInfoSync().statusBarHeight, 'px')
+		style['backgroundColor'] = props.bgColor
+		return deepMerge(style, addStyle(props.customStyle))
+	})
 </script>
 
 <style lang="scss" scoped>

@@ -109,22 +109,17 @@
 	<!-- #endif -->
 </template>
 
-<script>
-	export default {
-		data() {
-			return {}
-		},
-		methods: {
-			open(e: any) {
-				// console.log('open', e)
-			},
-			close(e: any) {
-				// console.log('close', e)
-			},
-			change(e: any) {
-				// console.log('change', e)
-			}
-		}
+<script setup lang="uts">
+	function open(e: any) {
+		// console.log('open', e)
+	}
+
+	function close(e: any) {
+		// console.log('close', e)
+	}
+
+	function change(e: any) {
+		// console.log('change', e)
 	}
 </script>
 

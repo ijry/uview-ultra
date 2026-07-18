@@ -11,13 +11,10 @@
 	</view>
 </template>
 
-<script>
-import { nextTick } from 'vue'
-import { propsTransition } from './props';
-import { mpMixin } from '../../libs/mixin/mpMixin';
-import { mixin } from '../../libs/mixin/mixin';
-import { addStyle } from '../../libs/function/index';
-import { sleep } from '../../libs/function/index';
+<script setup lang="uts">
+import { computed, nextTick, ref, watch } from 'vue'
+import defProps from './transition.uts'
+import { addStyle, sleep } from '../../libs/function/index.uts'
 /**
  * transition  动画组件
  * @description
@@ -35,9 +32,6 @@ import { sleep } from '../../libs/function/index';
  * @event {Function} after-leave	离开后触发
  * @example
  */
-// 定义一个一定时间后自动成功的promise，让调用nextTick方法处，进入下一个then方法
-const waitTick = () => new Promise(resolve => setTimeout(resolve, 1000 / 50))
-
 // 定义类名，通过给元素动态切换类名，赋予元素一定的css动画样式
 const getClassNames = function (name: string): UTSJSONObject {
 	return {
@@ -47,106 +41,135 @@ const getClassNames = function (name: string): UTSJSONObject {
 		'leave-to': `up-${name}-leave-to up-${name}-leave-active`
 	}
 }
-export default {
-	name: 'up-transition',
-	data() {
-		return {
-			inited: false, // 是否显示/隐藏组件
-			viewStyle: {}, // 组件内部的样式
-			status: '', // 记录组件动画的状态
-			transitionEnded: false, // 组件是否结束的标记
-			display: false, // 组件是否展示
-			classes: '', // 应用的类名
-		}
-	},
-	emits: ['click', 'beforeEnter', 'enter', 'afterEnter', 'beforeLeave', 'leave', 'afterLeave'],
-	computed: {
-	    mergeStyle(): UTSJSONObject {
-	        const { viewStyle, customStyle } = this
-			const duration = this.duration != null ? this.duration.toString() : '0'
-	        return {
-	            transitionDuration: `${duration}ms`,
-	            // display: `${this.display ? '' : 'none'}`,
-				transitionTimingFunction: this.timingFunction as string,
-				// 避免自定义样式影响到动画属性，所以写在viewStyle前面
-	            ...addStyle(customStyle) as UTSJSONObject,
-	            ...viewStyle
-	        }
-	    }
-	},
-	// 将mixin挂在到组件中，实际上为一个vue格式对象。
-	mixins: [mpMixin, mixin, propsTransition],
-	watch: {
-		show: {
-			handler(newVal: Boolean): void {
-				if (newVal) {
-					this.vueEnter()
-				} else {
-					this.vueLeave()
-				}
-			},
-			// 表示同时监听初始化时的props的show的意思
-			immediate: true
-		}
-	},
-	methods: {
-	    // 组件被点击发出事件
-	    clickHandler() {
-	        this.$emit('click')
-	    },
-	    // vue版本的组件进场处理
-	    async vueEnter() {
-	        // 动画进入时的类名
-	        const classNames = getClassNames(this.mode)
-	        // 定义状态和发出动画进入前事件
-	        this.status = 'enter'
-	        this.$emit('beforeEnter')
-	        this.inited = true
-	        this.display = true
-	        this.classes = classNames['enter']!!.toString()
-			await nextTick()
-			await sleep(20)
-			// 标识动画尚未结束
-			this.$emit('enter')
-			this.transitionEnded = false
-			// 组件动画进入后触发的事件
-			this.$emit('afterEnter')
-			// 赋予组件enter-to类名
-			this.classes = classNames['enter-to']!!.toString()
-	    },
-	    // 动画离场处理
-	    async vueLeave() {
-	        // 如果不是展示状态，无需执行逻辑
-	        if (!this.display) return
-	        const classNames = getClassNames(this.mode)
-	        // 标记离开状态和发出事件
-	        this.status = 'leave'
-	        this.$emit('beforeLeave')
-	        // 获得类名
-	        this.classes = classNames['leave']!!.toString()
 
-	        await nextTick()
-			// 动画正在离场的状态
-			this.transitionEnded = false
-			this.$emit('leave')
-			 // 组件执行动画，到了执行的执行时间后，执行一些额外处理
-			 setTimeout(this.onTransitionEnd, parseInt(this.duration != null ? this.$props['duration'].toString() : '0'))
-			 this.classes = classNames['leave-to']!!.toString()
-	    },
-	    // 完成过渡后触发
-	    onTransitionEnd() {
-	        // 如果已经是结束的状态，无需再处理
-	        if (this.transitionEnded) return
-	        this.transitionEnded = true
-	        // 发出组件动画执行后的事件
-	        this.$emit(this.status === 'leave' ? 'afterLeave' : 'afterEnter')
-	        if (!this.show && this.display) {
-	            this.display = false
-	            this.inited = false
-	        }
-	    }
+defineOptions({
+	name: 'up-transition'
+})
+
+const props = defineProps({
+	// 是否展示组件
+	show: {
+		type: Boolean,
+		default: defProps.getBoolean('transition.show')
+	},
+	// 使用的动画模式
+	mode: {
+		type: String,
+		default: defProps.getString('transition.mode')
+	},
+	// 动画的执行时间，单位ms
+	duration: {
+		type: [Number, String],
+		default: defProps.getNumber('transition.duration')
+	},
+	// 使用的动画过渡函数
+	timingFunction: {
+		type: String,
+		default: defProps.getString('transition.timingFunction')
+	},
+	customStyle: {
+		type: [Object, String],
+		default(): UTSJSONObject {
+			return {} as UTSJSONObject
+		}
+	}
+})
+
+const emit = defineEmits(['click', 'beforeEnter', 'enter', 'afterEnter', 'beforeLeave', 'leave', 'afterLeave'])
+
+const inited = ref(false) // 是否显示/隐藏组件
+const viewStyle = ref({} as UTSJSONObject) // 组件内部的样式
+const status = ref('') // 记录组件动画的状态
+const transitionEnded = ref(false) // 组件是否结束的标记
+const display = ref(false) // 组件是否展示
+const classes = ref('') // 应用的类名
+
+const mergeStyle = computed((): UTSJSONObject => {
+	const duration = props.duration != null ? props.duration.toString() : '0'
+	const style = {
+		transitionDuration: `${duration}ms`,
+		// display: `${display.value ? '' : 'none'}`,
+		transitionTimingFunction: props.timingFunction
+	} as UTSJSONObject
+	let customStyle = {} as any
+	if (props.customStyle != null) {
+		customStyle = props.customStyle as any
+	}
+	// 避免自定义样式影响到动画属性，所以写在viewStyle前面
+	const mergedStyle = UTSJSONObject.assign(style, addStyle(customStyle) as UTSJSONObject)
+	return UTSJSONObject.assign(mergedStyle, viewStyle.value)
+})
+
+// 组件被点击发出事件
+const clickHandler = (): void => {
+	emit('click')
+}
+
+// 完成过渡后触发
+const onTransitionEnd = (): void => {
+	// 如果已经是结束的状态，无需再处理
+	if (transitionEnded.value) return
+	transitionEnded.value = true
+	// 发出组件动画执行后的事件
+	if (status.value === 'leave') {
+		emit('afterLeave')
+	} else {
+		emit('afterEnter')
+	}
+	if (!props.show && display.value) {
+		display.value = false
+		inited.value = false
 	}
 }
+
+// vue版本的组件进场处理
+const vueEnter = async (): Promise<void> => {
+	// 动画进入时的类名
+	const classNames = getClassNames(props.mode)
+	// 定义状态和发出动画进入前事件
+	status.value = 'enter'
+	emit('beforeEnter')
+	inited.value = true
+	display.value = true
+	classes.value = classNames['enter']!!.toString()
+	await nextTick()
+	await sleep(20)
+	// 标识动画尚未结束
+	emit('enter')
+	transitionEnded.value = false
+	// 组件动画进入后触发的事件
+	emit('afterEnter')
+	// 赋予组件enter-to类名
+	classes.value = classNames['enter-to']!!.toString()
+}
+
+// 动画离场处理
+const vueLeave = async (): Promise<void> => {
+	// 如果不是展示状态，无需执行逻辑
+	if (!display.value) return
+	const classNames = getClassNames(props.mode)
+	// 标记离开状态和发出事件
+	status.value = 'leave'
+	emit('beforeLeave')
+	// 获得类名
+	classes.value = classNames['leave']!!.toString()
+
+	await nextTick()
+	// 动画正在离场的状态
+	transitionEnded.value = false
+	emit('leave')
+	// 组件执行动画，到了执行的执行时间后，执行一些额外处理
+	setTimeout(onTransitionEnd, parseInt(props.duration != null ? props.duration.toString() : '0'))
+	classes.value = classNames['leave-to']!!.toString()
+}
+
+watch((): boolean => props.show, (newVal: boolean) => {
+	if (newVal) {
+		vueEnter()
+	} else {
+		vueLeave()
+	}
+}, { immediate: true })
 </script>
 
 <style lang="scss" scoped>

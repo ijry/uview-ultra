@@ -7,11 +7,12 @@
 	</view>
 </template>
 
-<script>
-	import { propsRadioGroup } from './props';
-	import { mpMixin } from '../../libs/mixin/mpMixin';
-	import { mixin } from '../../libs/mixin/mixin';
-	import { bem } from '../../libs/function/index';
+<script setup lang="uts">
+	import { computed, watch } from 'vue';
+	import defProps from './radioGroup.uts';
+	import defPropsRadio from '../up-radio/radio.uts';
+	import { bem } from '../../libs/function/index.uts';
+	import { useUltraUI } from '../../libs/composable/useUltraUI.uts';
 	/**
 	 * radioRroup 单选框父组件
 	 * @author jry ijry@qq.com
@@ -37,62 +38,157 @@
 	 * @event {Function} change 任一个radio状态发生变化时触发
 	 * @example <up-radio-group v-model="value"></up-radio-group>
 	 */
-	export default {
-		name: 'up-radio-group',
-		mixins: [mpMixin, mixin, propsRadioGroup],
-		computed: {
-			// 这里computed的变量，都是子组件up-radio需要用到的，由于头条小程序的兼容性差异，子组件无法实时监听父组件参数的变化
-			// 所以需要手动通知子组件，这里返回一个parentData变量，供watch监听，在其中去通知每一个子组件重新从父组件(up-radio-group)
-			// 拉取父组件新的变化后的参数
-			parentChangeData(): any {
-                return [this.modelValue, this.disabled, this.inactiveColor, this.activeColor, this.size, this.labelDisabled, this.shape,
-					this.iconSize, this.borderBottom, this.placement
-				]
-			},
-			bemClass(): any {
-				return bem('radio-group', [this.placement], [])
-			},
+	const { children, getChildren, addChild } = useUltraUI()
+
+	defineOptions({
+		name: 'up-radio-group'
+	})
+
+	const props = defineProps({
+		// 绑定的值
+		modelValue: {
+			type: [String, Number, Boolean],
+			default: (defProps['radioGroup'] as UTSJSONObject)['value']
 		},
-		watch: {
-			// 当父组件需要子组件需要共享的参数发生了变化，手动通知子组件
-			parentChangeData() {
-				//if (this?.children?.length != null && this?.children?.length > 0) {
-					this.children.map(child => {
-						// 判断子组件(up-radio)如果有init方法的话，就就执行(执行的结果是子组件重新从父组件拉取了最新的值)
-						// if (typeof(child.init) === 'function') {
-						// 	child.init()
-						// }
-					})
-				//}
-			},
+		// 是否禁用全部radio
+		disabled: {
+			type: Boolean,
+			default: (defProps['radioGroup'] as UTSJSONObject)['disabled']
 		},
-		data() {
-			return {
-				children: [] as Array<ComponentPublicInstance>
-			}
+		// 形状，circle-圆形，square-方形
+		shape: {
+			type: String,
+			default: (defProps['radioGroup'] as UTSJSONObject)['shape']
 		},
-		created() {
+		// 选中状态下的颜色，如设置此值，将会覆盖parent的activeColor值
+		activeColor: {
+			type: String,
+			default: (defProps['radioGroup'] as UTSJSONObject)['activeColor']
 		},
-		// #ifdef VUE3
-		emits: ['update:modelValue', 'change'],
-    	// #endif
-		methods: {
-			// 将其他的radio设置为未选中的状态
-			unCheckedOther(childInstance: ComponentPublicInstance) {
-				this.children.map(child => {
-					// 所有子radio中，被操作组件实例的checked的值无需修改
-					if (childInstance !== child) {
-						child.$data['checked'] = false
-					}
-				})
-				const name = childInstance.$props['name']
-				// 通过emit事件，设置父组件通过v-model双向绑定的值
-                this.$emit("update:modelValue", name);
-				// 发出事件
-				this.$emit('change', name)
-			},
+		// 未选中的颜色
+		inactiveColor: {
+			type: String,
+			default: (defProps['radioGroup'] as UTSJSONObject)['inactiveColor']
+		},
+		// 标识符
+		name: {
+			type: String,
+			default: (defProps['radioGroup'] as UTSJSONObject)['name']
+		},
+		// 整个组件的尺寸，默认px
+		size: {
+			type: [String, Number],
+			default: (defProps['radioGroup'] as UTSJSONObject)['size']
+		},
+		// 布局方式，row-横向，column-纵向
+		placement: {
+			type: String,
+			default: (defProps['radioGroup'] as UTSJSONObject)['placement']
+		},
+		// label的文本
+		label: {
+			type: [String],
+			default: (defProps['radioGroup'] as UTSJSONObject)['label']
+		},
+		// label的颜色 （默认 '#303133' ）
+		labelColor: {
+			type: [String],
+			default: (defProps['radioGroup'] as UTSJSONObject)['labelColor']
+		},
+		// label的字体大小，px单位
+		labelSize: {
+			type: [String, Number],
+			default: (defProps['radioGroup'] as UTSJSONObject)['labelSize']
+		},
+		// 是否禁止点击文本操作checkbox(默认 false )
+		labelDisabled: {
+			type: Boolean,
+			default: (defProps['radioGroup'] as UTSJSONObject)['labelDisabled']
+		},
+		// 图标颜色
+		iconColor: {
+			type: String,
+			default: (defProps['radioGroup'] as UTSJSONObject)['iconColor']
+		},
+		// 图标的大小，单位px
+		iconSize: {
+			type: [String, Number],
+			default: (defProps['radioGroup'] as UTSJSONObject)['iconSize']
+		},
+		// 竖向配列时，是否显示下划线
+		borderBottom: {
+			type: Boolean,
+			default: (defProps['radioGroup'] as UTSJSONObject)['borderBottom']
+		},
+		// 图标与文字的对齐方式
+		iconPlacement: {
+			type: String,
+			default: (defPropsRadio['radio'] as UTSJSONObject)['iconPlacement']
 		}
+	})
+
+	const emit = defineEmits(['update:modelValue', 'change'])
+
+	// 这里computed的变量，都是子组件up-radio需要用到的，由于头条小程序的兼容性差异，子组件无法实时监听父组件参数的变化
+	const parentDataSelf = computed((): UTSJSONObject => {
+		return {
+			modelValue: props.modelValue,
+			disabled: props.disabled,
+			inactiveColor: props.inactiveColor,
+			activeColor: props.activeColor,
+			size: props.size,
+			labelColor: props.labelColor,
+			labelDisabled: props.labelDisabled,
+			labelSize: props.labelSize,
+			shape: props.shape,
+			iconColor: props.iconColor,
+			iconSize: props.iconSize,
+			iconPlacement: props.iconPlacement,
+			borderBottom: props.borderBottom,
+			placement: props.placement,
+		} as UTSJSONObject
+	})
+
+	const bemClass = computed((): any => {
+		return bem('radio-group', [props.placement], [])
+	})
+
+	// 将其他的radio设置为未选中的状态
+	const unCheckedOther = (childInstance: ComponentPublicInstance): void => {
+		children.value.map((child: ComponentPublicInstance) => {
+			// 所有子radio中，被操作组件实例的checked的值无需修改
+			if (childInstance !== child) {
+				child.$callMethod('setChecked', false)
+			}
+		})
+		const name = childInstance.$props['name']
+		// 通过emit事件，设置父组件通过v-model双向绑定的值
+		emit("update:modelValue", name)
+		// 发出事件
+		emit('change', name)
 	}
+
+	watch(parentDataSelf, () => {
+		children.value.map((child: ComponentPublicInstance) => {
+			child.$callMethod('init')
+		})
+	}, { deep: true })
+
+	const getProps = (): UTSJSONObject => {
+		return parentDataSelf.value
+	}
+
+	const getRefs = (): UTSJSONObject => {
+		return {} as UTSJSONObject
+	}
+
+	defineExpose({
+		unCheckedOther,
+		getChildren,
+		addChild,
+		getProps,
+		getRefs
+	})
 </script>
 
 <style lang="scss" scoped>

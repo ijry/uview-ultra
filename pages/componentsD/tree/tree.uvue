@@ -85,149 +85,159 @@
   </view>
 </template>
 
-<script>
-export default {
-  data() {
-    return {
-      checkedKeysText: '2-1-1',
-      expandedKeys: ['1'],
-      defaultCheckedKeys: ['2-1-1'],
-      defaultProps: {
-        label: 'label',
-        children: 'children',
-        nodeKey: 'id',
-        disabled: 'disabled'
+<script setup lang="uts">
+import { ref } from 'vue'
+
+const checkTree = ref<ComponentPublicInstance | null>(null)
+const checkedKeysText = ref('2-1-1')
+const expandedKeys = ['1']
+const defaultCheckedKeys = ['2-1-1']
+const defaultProps = {
+  label: 'label',
+  children: 'children',
+  nodeKey: 'id',
+  disabled: 'disabled'
+}
+const treeData = [
+  {
+    id: '1',
+    label: '一级 1',
+    children: [
+      {
+        id: '1-1',
+        label: '二级 1-1',
+        children: [
+          { id: '1-1-1', label: '三级 1-1-1' },
+          { id: '1-1-2', label: '三级 1-1-2' }
+        ]
       },
-      treeData: [
-        {
-          id: '1',
-          label: '一级 1',
-          children: [
-            {
-              id: '1-1',
-              label: '二级 1-1',
-              children: [
-                { id: '1-1-1', label: '三级 1-1-1' },
-                { id: '1-1-2', label: '三级 1-1-2' }
-              ]
-            },
-            { id: '1-2', label: '二级 1-2' }
-          ]
-        },
-        {
-          id: '2',
-          label: '一级 2',
-          children: [
-            { id: '2-1', label: '二级 2-1' },
-            { id: '2-2', label: '二级 2-2' }
-          ]
-        }
-      ],
-      customTreeData: [
-        {
-          id: 'custom-1',
-          label: '设计资源',
-          tag: '目录',
-          children: [
-            { id: 'custom-1-1', label: '组件规范', tag: '文档' },
-            { id: 'custom-1-2', label: '图标资产', tag: '资源' }
-          ]
-        }
-      ],
-      checkTreeData: [
-        {
-          id: '2',
-          label: '表单组件',
-          children: [
-            {
-              id: '2-1',
-              label: '输入组件',
-              children: [
-                { id: '2-1-1', label: 'Input 输入框' },
-                { id: '2-1-2', label: 'Textarea 文本域' }
-              ]
-            },
-            {
-              id: '2-2',
-              label: '选择组件',
-              children: [
-                { id: '2-2-1', label: 'Select 选择器' },
-                { id: '2-2-2', label: 'Picker 选择器', disabled: true }
-              ]
-            }
-          ]
-        }
-      ],
-      accordionTreeData: [
-        {
-          id: 'a',
-          label: '导航组件',
-          children: [
-            { id: 'a-1', label: 'Navbar 导航栏' },
-            { id: 'a-2', label: 'Tabbar 底部导航栏' }
-          ]
-        },
-        {
-          id: 'b',
-          label: '反馈组件',
-          children: [
-            { id: 'b-1', label: 'Toast 消息提示' },
-            { id: 'b-2', label: 'Notify 通知' }
-          ]
-        }
-      ]
-    };
+      { id: '1-2', label: '二级 1-2' }
+    ]
   },
-  methods: {
-    getTreeNode(node: any | null): UTSJSONObject | null {
-      return node == null ? null : node as UTSJSONObject;
-    },
-    getTreeNodeLabel(node: any | null): string {
-      const item = this.getTreeNode(node);
-      return item == null ? '' : item['label'] as string;
-    },
-    hasTreeNodeTag(node: any | null): boolean {
-      const item = this.getTreeNode(node);
-      return item != null && item['tag'] != null && item['tag'].toString() != '';
-    },
-    getTreeNodeTag(node: any | null): string {
-      const item = this.getTreeNode(node);
-      return item == null ? '' : item['tag'] as string;
-    },
-    hasTreeNodeChildren(node: any | null): boolean {
-      const item = this.getTreeNode(node);
-      if (item == null || item['children'] == null) return false;
-      return (item['children'] as UTSJSONObject[]).length > 0;
-    },
-    getExpandedText(expanded: any | null): string {
-      return expanded == true ? '已展开' : '已收起';
-    },
-    getTreeLevel(level: any | null): string {
-      return level == null ? '' : level.toString();
-    },
-    handleNodeClick(node: UTSJSONObject) {
-      console.log('点击节点:', node);
-    },
-    handleNodeExpand(node: UTSJSONObject) {
-      console.log('展开节点:', node);
-    },
-    handleCheckChange(node: UTSJSONObject, checked: boolean) {
-      console.log('勾选状态变化:', node, checked);
-    },
-    handleCheck(node: UTSJSONObject, state: UTSJSONObject) {
-      this.checkedKeysText = (state['checkedKeys'] as string[]).join('、');
-    },
-    setCheckedKeys() {
-      const checkTree = this.$refs['checkTree'] as ComponentPublicInstance;
-      checkTree.$callMethod('setCheckedKeys', ['2-1-2', '2-2-1']);
-      this.checkedKeysText = (checkTree.$callMethod('getCheckedKeys') as string[]).join('、');
-    },
-    getCheckedKeys() {
-      const checkTree = this.$refs['checkTree'] as ComponentPublicInstance;
-      this.checkedKeysText = (checkTree.$callMethod('getCheckedKeys') as string[]).join('、');
-    }
+  {
+    id: '2',
+    label: '一级 2',
+    children: [
+      { id: '2-1', label: '二级 2-1' },
+      { id: '2-2', label: '二级 2-2' }
+    ]
   }
-};
+]
+const customTreeData = [
+  {
+    id: 'custom-1',
+    label: '设计资源',
+    tag: '目录',
+    children: [
+      { id: 'custom-1-1', label: '组件规范', tag: '文档' },
+      { id: 'custom-1-2', label: '图标资产', tag: '资源' }
+    ]
+  }
+]
+const checkTreeData = [
+  {
+    id: '2',
+    label: '表单组件',
+    children: [
+      {
+        id: '2-1',
+        label: '输入组件',
+        children: [
+          { id: '2-1-1', label: 'Input 输入框' },
+          { id: '2-1-2', label: 'Textarea 文本域' }
+        ]
+      },
+      {
+        id: '2-2',
+        label: '选择组件',
+        children: [
+          { id: '2-2-1', label: 'Select 选择器' },
+          { id: '2-2-2', label: 'Picker 选择器', disabled: true }
+        ]
+      }
+    ]
+  }
+]
+const accordionTreeData = [
+  {
+    id: 'a',
+    label: '导航组件',
+    children: [
+      { id: 'a-1', label: 'Navbar 导航栏' },
+      { id: 'a-2', label: 'Tabbar 底部导航栏' }
+    ]
+  },
+  {
+    id: 'b',
+    label: '反馈组件',
+    children: [
+      { id: 'b-1', label: 'Toast 消息提示' },
+      { id: 'b-2', label: 'Notify 通知' }
+    ]
+  }
+]
+
+function getTreeNode(node: any | null): UTSJSONObject | null {
+  return node == null ? null : node as UTSJSONObject
+}
+
+function getTreeNodeLabel(node: any | null): string {
+  const item = getTreeNode(node)
+  return item == null ? '' : item['label'] as string
+}
+
+function hasTreeNodeTag(node: any | null): boolean {
+  const item = getTreeNode(node)
+  return item != null && item['tag'] != null && item['tag'].toString() != ''
+}
+
+function getTreeNodeTag(node: any | null): string {
+  const item = getTreeNode(node)
+  return item == null ? '' : item['tag'] as string
+}
+
+function hasTreeNodeChildren(node: any | null): boolean {
+  const item = getTreeNode(node)
+  if (item == null || item['children'] == null) return false
+  return (item['children'] as UTSJSONObject[]).length > 0
+}
+
+function getExpandedText(expanded: any | null): string {
+  return expanded == true ? '已展开' : '已收起'
+}
+
+function getTreeLevel(level: any | null): string {
+  return level == null ? '' : level.toString()
+}
+
+function handleNodeClick(node: UTSJSONObject) {
+  console.log('点击节点:', node)
+}
+
+function handleNodeExpand(node: UTSJSONObject) {
+  console.log('展开节点:', node)
+}
+
+function handleCheckChange(node: UTSJSONObject, checked: boolean) {
+  console.log('勾选状态变化:', node, checked)
+}
+
+function handleCheck(node: UTSJSONObject, state: UTSJSONObject) {
+  checkedKeysText.value = (state['checkedKeys'] as string[]).join('、')
+}
+
+function setCheckedKeys() {
+  const tree = checkTree.value
+  if (tree == null) return
+  tree.$callMethod('setCheckedKeys', ['2-1-2', '2-2-1'])
+  checkedKeysText.value = (tree.$callMethod('getCheckedKeys') as string[]).join('、')
+}
+
+function getCheckedKeys() {
+  const tree = checkTree.value
+  if (tree == null) return
+  checkedKeysText.value = (tree.$callMethod('getCheckedKeys') as string[]).join('、')
+}
 </script>
 
 <style lang="scss" scoped>

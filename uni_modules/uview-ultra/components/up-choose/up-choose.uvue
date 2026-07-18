@@ -38,103 +38,101 @@
 	</scroll-view>
 </template>
 
-<script>
-	export default {
-	    name: 'up-choose',
-	    props: {
-			options:{
-				type: Array,
-				default: ()=>{
-					return [];
-				}
-			},
-			modelValue: {
-				type: [Number,String,Array],
-				default: false
-			},
-			type: {
-			    type: [String],
-			    default: 'radio'
-			},
-			itemWidth: {
-			    type: [String],
-			    default: 'auto'
-			},
-			itemHeight: {
-			    type: [String],
-			    default: '50px'
-			},
-            itemPadding: {
-                type: [String],
-			    default: '8px'
-            },
-			labelName: {
-			    type: String,
-			    default: 'title'
-			},
-			valueName: {
-			    type: String,
-			    default: 'value'
-			},
-			customClick: {
-			    type: Boolean,
-			    default: false
-			},
-			// 是否换行
-			wrap: {
-				type: Boolean,
-				default: true
-			}
-	    },
-	    data() {
-	        return {
-				currentIndex: -1
-	        }
-	    },
-		watch: {
-			modelValue: {
-				immediate: true,
-				handler(newVal: any) {
-					this.currentIndex = this.normalizeIndex(newVal)
-				}
+<script setup lang="uts">
+	import { ref, watch } from 'vue'
+
+	defineOptions({
+		name: 'up-choose'
+	})
+
+	const props = defineProps({
+		options: {
+			type: Array,
+			default(): Array<UTSJSONObject> {
+				return [] as Array<UTSJSONObject>
 			}
 		},
-        emits: ['update:modelValue', 'custom-click'],
-	    methods: {
-			normalizeIndex(value: any): number {
-				if (typeof value === 'number') {
-					return value
-				}
-				if (typeof value === 'string' && value.length > 0) {
-					const parsed = parseInt(value)
-					if (!isNaN(parsed)) {
-						return parsed
-					}
-				}
-				return -1
-			},
-			getItemLabel(item: any | null): string {
-				if (item == null) {
-					return ''
-				}
-				const data = item as UTSJSONObject | null
-				if (data == null) {
-					return ''
-				}
-				const value = data[this.labelName]
-				if (value == null) {
-					return ''
-				}
-				return value.toString()
-			},
-	        change(index: number){
-				if (this.customClick) {
-					this.$emit('custom-click', index);
-				} else {
-					this.currentIndex = index;
-					this.$emit('update:modelValue', index);
-				}
+		modelValue: {
+			type: [Number, String, Array],
+			default: false
+		},
+		type: {
+			type: String,
+			default: 'radio'
+		},
+		itemWidth: {
+			type: String,
+			default: 'auto'
+		},
+		itemHeight: {
+			type: String,
+			default: '50px'
+		},
+		itemPadding: {
+			type: String,
+			default: '8px'
+		},
+		labelName: {
+			type: String,
+			default: 'title'
+		},
+		valueName: {
+			type: String,
+			default: 'value'
+		},
+		customClick: {
+			type: Boolean,
+			default: false
+		},
+		// 是否换行
+		wrap: {
+			type: Boolean,
+			default: true
+		}
+	})
+
+	const emit = defineEmits(['update:modelValue', 'custom-click'])
+
+	const currentIndex = ref(-1)
+
+	const normalizeIndex = (value: any): number => {
+		if (typeof value === 'number') {
+			return value
+		}
+		if (typeof value === 'string' && value.length > 0) {
+			const parsed = parseInt(value)
+			if (!isNaN(parsed)) {
+				return parsed
 			}
-	    }
+		}
+		return -1
 	}
+
+	const getItemLabel = (item: any | null): string => {
+		if (item == null) {
+			return ''
+		}
+		const data = item as UTSJSONObject | null
+		if (data == null) {
+			return ''
+		}
+		const value = data[props.labelName]
+		if (value == null) {
+			return ''
+		}
+		return value.toString()
+	}
+
+	const change = (index: number): void => {
+		if (props.customClick) {
+			emit('custom-click', index)
+		} else {
+			currentIndex.value = index
+			emit('update:modelValue', index)
+		}
+	}
+
+	watch((): any => props.modelValue, (newVal: any) => {
+		currentIndex.value = normalizeIndex(newVal)
+	}, { immediate: true })
 </script>

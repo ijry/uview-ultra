@@ -51,11 +51,10 @@
   </view>
 </template>
 
-<script>
-export default {
-    data() {
-        return {
-            basicContent: `# 标题1
+<script setup lang="uts">
+import { ref, onBeforeUnmount } from 'vue'
+
+const basicContent = `# 标题1
 这是段落文本，包含**粗体**和*斜体*文本。
 
 ## 标题2
@@ -70,9 +69,8 @@ export default {
 
 ---
 
-段落中的行内代码： \`console.log('Hello World')\``,
-            
-            codeContent: `# 代码示例
+段落中的行内代码： \`console.log('Hello World')\``
+const codeContent = `# 代码示例
 
 以下是一个JavaScript函数：
 
@@ -91,10 +89,8 @@ def hello(name):
     print(f"Hello, {name}!")
 
 hello("World")
-\`\`\``,
-            
-            // 流式内容相关数据
-            fullAIContent: `# AI助手回答
+\`\`\``
+const fullAIContent = `# AI助手回答
 
 你好！我是AI助手，正在为你逐步生成回答内容...
 
@@ -138,66 +134,56 @@ methods: {
 
 ---
 
-*内容生成完毕*`,
-            streamingContent: '',
-            isStreaming: false,
-            streamTimer: null as number | null,
-            streamIndex: 0
-        };
-    },
-    methods: {
-        // 开始/停止流式显示
-        toggleStreaming() {
-            if (this.isStreaming) {
-                this.stopStreaming();
-            } else {
-                this.startStreaming();
-            }
-        },
-        
-        // 开始流式显示
-        startStreaming() {
-            if (this.isStreaming) return;
-            
-            // 如果是重新开始，重置索引
-            if (this.streamIndex >= this.fullAIContent.length) {
-                this.streamIndex = 0;
-                this.streamingContent = '';
-            }
-            
-            this.isStreaming = true;
-            this.streamTimer = setInterval(() => {
-                if (this.streamIndex < this.fullAIContent.length) {
-                    this.streamingContent += this.fullAIContent[this.streamIndex];
-                    this.streamIndex++;
-                } else {
-                    this.stopStreaming();
-                }
-            }, 50) as number; // 50ms间隔，模拟AI逐步输出
-        },
-        
-        // 停止流式显示
-        stopStreaming() {
-            if (this.streamTimer != null) {
-                clearInterval(this.streamTimer ?? 0);
-                this.streamTimer = null;
-            }
-            this.isStreaming = false;
-        },
-        
-        // 重置流式显示
-        resetStreaming() {
-            this.stopStreaming();
-            this.streamingContent = '';
-            this.streamIndex = 0;
-        }
-    },
-    
-    // 组件销毁前清理定时器
-    beforeDestroy() {
-        this.stopStreaming();
+*内容生成完毕*`
+const streamingContent = ref('')
+const isStreaming = ref(false)
+const streamTimer = ref(null as number | null)
+const streamIndex = ref(0)
+
+function stopStreaming() {
+    if (streamTimer.value != null) {
+        clearInterval(streamTimer.value ?? 0)
+        streamTimer.value = null
     }
-};
+    isStreaming.value = false
+}
+
+function startStreaming() {
+    if (isStreaming.value) return
+
+    if (streamIndex.value >= fullAIContent.length) {
+        streamIndex.value = 0
+        streamingContent.value = ''
+    }
+
+    isStreaming.value = true
+    streamTimer.value = setInterval(() => {
+        if (streamIndex.value < fullAIContent.length) {
+            streamingContent.value += fullAIContent[streamIndex.value]
+            streamIndex.value++
+        } else {
+            stopStreaming()
+        }
+    }, 50) as number
+}
+
+function toggleStreaming() {
+    if (isStreaming.value) {
+        stopStreaming()
+    } else {
+        startStreaming()
+    }
+}
+
+function resetStreaming() {
+    stopStreaming()
+    streamingContent.value = ''
+    streamIndex.value = 0
+}
+
+onBeforeUnmount(() => {
+    stopStreaming()
+})
 </script>
 
 <style lang="scss" scoped>

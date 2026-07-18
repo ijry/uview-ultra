@@ -4,11 +4,7 @@
 		:zoom="zoom"
 		:show="show"
 		:class="[customClass]"
-		:customStyle="{
-			borderRadius: '6px', 
-			overflow: 'hidden',
-			marginTop: `-${addUnit(negativeTop)}`
-		}"
+		:customStyle="popupStyle"
 		:closeOnClickOverlay="closeOnClickOverlay"
 		:safeAreaInsetBottom="false"
 		:duration="duration"
@@ -16,9 +12,7 @@
 	>
 		<view
 			class="up-modal"
-			:style="{
-				width: addUnit(width),
-			}"
+			:style="modalStyle"
 		>
 			<view
 				class="up-modal__title"
@@ -29,7 +23,7 @@
 				:style="contentStyleCpu"
 			>
 				<slot>
-					<text class="up-modal__content__text" :style="{textAlign: contentTextAlign}">
+					<text class="up-modal__content__text" :style="contentTextStyle">
 						{{ content }}
 					</text>
 				</slot>
@@ -44,9 +38,7 @@
 				<up-line></up-line>
 				<view
 					class="up-modal__button-group"
-					:style="{
-						flexDirection: buttonReverse ? 'row-reverse' : 'row'
-					}"
+					:style="buttonGroupStyle"
 				>
 					<view
 						class="up-modal__button-group__wrapper up-modal__button-group__wrapper--cancel"
@@ -58,9 +50,7 @@
 					>
 						<text
 							class="up-modal__button-group__wrapper__text"
-							:style="{
-								color: cancelColor
-							}"
+							:style="cancelTextStyle"
 						>{{ cancelText }}</text>
 					</view>
 					<up-line
@@ -79,9 +69,7 @@
 						<text
 							v-else
 							class="up-modal__button-group__wrapper__text"
-							:style="{
-								color: confirmColor
-							}"
+							:style="confirmTextStyle"
 						>{{ confirmText }}</text>
 					</view>
 				</view>
@@ -93,11 +81,10 @@
 	</up-popup>
 </template>
 
-<script lang="uts">
-	import { propsModal } from './props';
-	import { mpMixin } from '../../libs/mixin/mpMixin';
-	import { mixin } from '../../libs/mixin/mixin';
-	import { addUnit } from '../../libs/function/index';
+<script setup lang="uts">
+	import { computed, ref, watch } from 'vue'
+	import defProps from './modal.uts'
+	import { addUnit } from '../../libs/function/index.uts';
 	
 	/**
 	 * Modal 模态框
@@ -125,75 +112,225 @@
 	 * @event {Function} close		点击遮罩关闭出发，closeOnClickOverlay为true有效
 	 * @example <up-modal :show="show" />
 	 */
-	export default {
-		name: 'up-modal',
-		mixins: [mpMixin, mixin, propsModal],
-		data() {
-			return {
-				loading: false
-			}
+	defineOptions({
+		name: 'up-modal'
+	})
+
+	const props = defineProps({
+		// 是否展示modal
+		show: {
+			type: Boolean,
+			default: defProps.getBoolean('modal.show')
 		},
-		watch: {
-			show(n: Boolean) {
-				// 为了避免第一次打开modal，又使用了异步关闭的loading
-				// 第二次打开modal时，loading依然存在的情况
-				if (n && this.loading) this.loading = false
-			}
+		// 标题
+		title: {
+			type: String,
+			default: defProps.getString('modal.title')
 		},
-		emits: ["confirm", "cancel", "close", "update:show", 'cancelOnAsync'],
-		computed: {
-			contentStyleCpu(): UTSJSONObject {
-				let style = this.contentStyle as UTSJSONObject;
-				style['paddingTop'] = `${this.title != '' ? 12 : 25}px`
-				return style;
-			}
+		// 弹窗内容
+		content: {
+			type: String,
+			default: defProps.getString('modal.content')
 		},
-		methods: {
-			addUnit(val: any): any {
-				return addUnit(val)
-			},
-			// 点击确定按钮
-			confirmHandler() {
-				// 如果配置了异步关闭，将按钮值为loading状态
-				if (this.asyncClose) {
-					this.loading = true;
-				} else {
-					this.$emit('update:show', false)
-				}
-				this.$emit('confirm')
-			},
-			// 点击取消按钮
-			cancelHandler() {
-				// 如果点击了确定按钮，确定按钮正在请求接口执行异步操作，那么限制不能取消。
-				if (this.asyncClose && this.loading) {
-					if (this.asyncCloseTip != '') {
-						uni.showToast({
-							title: this.asyncCloseTip,
-							icon: 'none'
-						});
-					}
-					this.$emit('cancelOnAsync')
-				} else {
-					// 如果配置了取消时异步关闭
-					if (!this.asyncCancelClose) {
-						this.$emit('update:show', false)
-					}
-				}
-				this.$emit('cancel')
-			},
-			// 点击遮罩
-			// 从原理上来说，modal的遮罩点击，并不是真的点击到了遮罩
-			// 因为modal依赖于popup的中部弹窗类型，中部弹窗比较特殊，虽有然遮罩，但是为了让弹窗内容能flex居中
-			// 多了一个透明的遮罩，此透明的遮罩会覆盖在灰色的遮罩上，所以实际上是点击不到灰色遮罩的，popup内部在
-			// 透明遮罩的子元素做了.stop处理，所以点击内容区，也不会导致误触发
-			clickHandler() {
-				if (this.closeOnClickOverlay) {
-					this.$emit('update:show', false)
-					this.$emit('close')
-				}
+		// 确认文案
+		confirmText: {
+			type: String,
+			default: defProps.getString('modal.confirmText')
+		},
+		// 取消文案
+		cancelText: {
+			type: String,
+			default: defProps.getString('modal.cancelText')
+		},
+		// 是否显示确认按钮
+		showConfirmButton: {
+			type: Boolean,
+			default: defProps.getBoolean('modal.showConfirmButton')
+		},
+		// 是否显示取消按钮
+		showCancelButton: {
+			type: Boolean,
+			default: defProps.getBoolean('modal.showCancelButton')
+		},
+		// 确认按钮颜色
+		confirmColor: {
+			type: String,
+			default: defProps.getString('modal.confirmColor')
+		},
+		// 取消文字颜色
+		cancelColor: {
+			type: String,
+			default: defProps.getString('modal.cancelColor')
+		},
+		// 对调确认和取消的位置
+		buttonReverse: {
+			type: Boolean,
+			default: defProps.getBoolean('modal.buttonReverse')
+		},
+		// 是否开启缩放效果
+		zoom: {
+			type: Boolean,
+			default: defProps.getBoolean('modal.zoom')
+		},
+		// 是否异步关闭，只对确定按钮有效
+		asyncClose: {
+			type: Boolean,
+			default: defProps.getBoolean('modal.asyncClose')
+		},
+		// 是否允许点击遮罩关闭modal
+		closeOnClickOverlay: {
+			type: Boolean,
+			default: defProps.getBoolean('modal.closeOnClickOverlay')
+		},
+		// 给一个负的margin-top，往上偏移，避免和键盘重合的情况
+		negativeTop: {
+			type: [String, Number],
+			default: defProps.getAny('modal.negativeTop')
+		},
+		// modal宽度，不支持百分比，可以数值，px，rpx单位
+		width: {
+			type: [String, Number],
+			default: defProps.getAny('modal.width')
+		},
+		// 确认按钮的样式，circle-圆形，square-方形，如设置，将不会显示取消按钮
+		confirmButtonShape: {
+			type: String,
+			default: defProps.getString('modal.confirmButtonShape')
+		},
+		// 弹窗动画过度时间
+		duration: {
+			type: Number,
+			default: defProps.getNumber('modal.duration')
+		},
+		// 文案对齐方式
+		contentTextAlign: {
+			type: String,
+			default: defProps.getString('modal.contentTextAlign')
+		},
+		// 异步确定时如果点击了取消时候的提示文案
+		asyncCloseTip: {
+			type: String,
+			default: defProps.getString('modal.asyncCloseTip')
+		},
+		// 是否异步关闭，只对取消按钮有效
+		asyncCancelClose: {
+			type: Boolean,
+			default: defProps.getBoolean('modal.asyncCancelClose')
+		},
+		// 内容样式
+		contentStyle: {
+			type: Object,
+			default: defProps.getAny('modal.contentStyle')
+		},
+		customClass: {
+			type: String,
+			default: ''
+		}
+	})
+
+	const emit = defineEmits(['confirm', 'cancel', 'close', 'update:show', 'cancelOnAsync'])
+	const loading = ref(false)
+
+	const popupStyle = computed((): UTSJSONObject => {
+		const style = {} as UTSJSONObject
+		style['borderRadius'] = '6px'
+		style['overflow'] = 'hidden'
+		style['marginTop'] = '-' + addUnit(props.negativeTop)
+		return style
+	})
+
+	const modalStyle = computed((): UTSJSONObject => {
+		const style = {} as UTSJSONObject
+		style['width'] = addUnit(props.width)
+		return style
+	})
+
+	const contentTextStyle = computed((): UTSJSONObject => {
+		const style = {} as UTSJSONObject
+		style['textAlign'] = props.contentTextAlign
+		return style
+	})
+
+	const buttonGroupStyle = computed((): UTSJSONObject => {
+		const style = {} as UTSJSONObject
+		style['flexDirection'] = props.buttonReverse ? 'row-reverse' : 'row'
+		return style
+	})
+
+	const cancelTextStyle = computed((): UTSJSONObject => {
+		const style = {} as UTSJSONObject
+		style['color'] = props.cancelColor
+		return style
+	})
+
+	const confirmTextStyle = computed((): UTSJSONObject => {
+		const style = {} as UTSJSONObject
+		style['color'] = props.confirmColor
+		return style
+	})
+
+	watch((): boolean => props.show, (n: boolean) => {
+		// 为了避免第一次打开modal，又使用了异步关闭的loading
+		// 第二次打开modal时，loading依然存在的情况
+		if (n && loading.value) loading.value = false
+	})
+
+	const contentStyleCpu = computed((): UTSJSONObject => {
+		let style = props.contentStyle as UTSJSONObject;
+		style['paddingTop'] = `${props.title != '' ? 12 : 25}px`
+		return style;
+	})
+
+	// 点击确定按钮
+	const confirmHandler = (): void => {
+		// 如果配置了异步关闭，将按钮值为loading状态
+		if (props.asyncClose) {
+			loading.value = true;
+		} else {
+			emit('update:show', false)
+		}
+		emit('confirm')
+	}
+
+	// 点击取消按钮
+	const cancelHandler = (): void => {
+		// 如果点击了确定按钮，确定按钮正在请求接口执行异步操作，那么限制不能取消。
+		if (props.asyncClose && loading.value) {
+			if (props.asyncCloseTip != '') {
+				uni.showToast({
+					title: props.asyncCloseTip,
+					icon: 'none'
+				});
+			}
+			emit('cancelOnAsync')
+		} else {
+			// 如果配置了取消时异步关闭
+			if (!props.asyncCancelClose) {
+				emit('update:show', false)
 			}
 		}
+		emit('cancel')
 	}
+
+	// 点击遮罩
+	// 从原理上来说，modal的遮罩点击，并不是真的点击到了遮罩
+	// 因为modal依赖于popup的中部弹窗类型，中部弹窗比较特殊，虽有然遮罩，但是为了让弹窗内容能flex居中
+	// 多了一个透明的遮罩，此透明的遮罩会覆盖在灰色的遮罩上，所以实际上是点击不到灰色遮罩的，popup内部在
+	// 透明遮罩的子元素做了.stop处理，所以点击内容区，也不会导致误触发
+	const clickHandler = (): void => {
+		if (props.closeOnClickOverlay) {
+			emit('update:show', false)
+			emit('close')
+		}
+	}
+
+	defineExpose({
+		loading,
+		contentStyleCpu,
+		confirmHandler,
+		cancelHandler,
+		clickHandler
+	})
 </script>
 
 <style lang="scss" scoped>

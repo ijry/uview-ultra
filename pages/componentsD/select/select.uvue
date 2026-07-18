@@ -29,19 +29,15 @@
   </view>
 </template>
 
-<script>
-export default {
-  data() {
-    return {
-      cateId: '',
-      scenesList: [
-        { id: '1', name: '分类1' },
-        { id: '2', name: '分类2' },
-        { id: '3', name: '分类3' }
-      ] as UTSJSONObject[]
-    };
-  }
-}
+<script setup lang="uts">
+import { ref } from 'vue'
+
+const cateId = ref('')
+const scenesList = [
+  { id: '1', name: '分类1' },
+  { id: '2', name: '分类2' },
+  { id: '3', name: '分类3' }
+] as UTSJSONObject[]
 </script>
 
 <style lang="scss" scoped>

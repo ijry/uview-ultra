@@ -148,8 +148,7 @@ export class Parser implements I_Parser {
 						tokens: textToken.tokens != null ? (textToken.tokens as NodesToken[]) : null,
 						escaped: textToken.escaped != null ? (textToken.escaped as boolean) : null
 					} as NodesToken);
-					const nextToken = tokens[i + 1];
-					while (i + 1 < tokens.length && nextToken.type == 'text') {
+					while (i + 1 < tokens.length && tokens[i + 1].type == 'text') {
 						textToken = tokens[++i];
 						body += '\n' + this.renderer.text({
 							type: 'text',

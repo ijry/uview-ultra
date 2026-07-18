@@ -2,11 +2,11 @@ import App from './App.uvue'
 
 import { createSSRApp } from 'vue'
 
-import ultraUI from '@/uni_modules/uview-ultra/index.uts'
+import { install as installUltraUI } from '@/uni_modules/uview-ultra/index.uts'
 
 export function createApp() {
 	const app = createSSRApp(App)
-	app.use(ultraUI)
+	installUltraUI(app)
 	return {
 		app
 	}

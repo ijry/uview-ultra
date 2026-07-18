@@ -78,48 +78,43 @@
   </view>
 </template>
 
-<script>
-export default {
-  data() {
-    return {
-      list: [
-        { id: 1, label: '项目 A' },
-        { id: 2, label: '项目 B' },
-        { id: 3, label: '项目 C' },
-        { id: 4, label: '项目 D' },
-        { id: 5, label: '项目 E' },
-        { id: 6, label: '项目 F' },
-        { id: 7, label: '项目 G' },
-        { id: 8, label: '项目 H' }
-      ] as UTSJSONObject[],
-      list2: [
-        { id: 1, label: '横向 A' },
-        { id: 2, label: '横向 B' },
-        { id: 3, label: '横向 C' },
-        { id: 4, label: '横向 D' },
-        { id: 5, label: '横向 E' },
-        { id: 6, label: '横向 F' },
-        { id: 7, label: '横向 G' },
-        { id: 8, label: '横向 H' }
-      ] as UTSJSONObject[]
-    };
-  },
-  methods: {
-    getDisplayIndex(index: any | null): number {
-      return (index == null ? 0 : index as number) + 1;
-    },
-    getItemLabel(item: any | null): string {
-      const data = item as UTSJSONObject | null;
-      if (data == null) {
-        return '';
-      }
-      const label = data['label'];
-      return label == null ? '' : label.toString();
-    },
-    handleDragEnd(sortedList: UTSJSONObject[]) {
-      console.log('排序结束:', sortedList);
-    }
+<script setup lang="uts">
+const list = [
+  { id: 1, label: '项目 A' },
+  { id: 2, label: '项目 B' },
+  { id: 3, label: '项目 C' },
+  { id: 4, label: '项目 D' },
+  { id: 5, label: '项目 E' },
+  { id: 6, label: '项目 F' },
+  { id: 7, label: '项目 G' },
+  { id: 8, label: '项目 H' }
+] as UTSJSONObject[]
+const list2 = [
+  { id: 1, label: '横向 A' },
+  { id: 2, label: '横向 B' },
+  { id: 3, label: '横向 C' },
+  { id: 4, label: '横向 D' },
+  { id: 5, label: '横向 E' },
+  { id: 6, label: '横向 F' },
+  { id: 7, label: '横向 G' },
+  { id: 8, label: '横向 H' }
+] as UTSJSONObject[]
+
+function getDisplayIndex(index: any | null): number {
+  return (index == null ? 0 : index as number) + 1
+}
+
+function getItemLabel(item: any | null): string {
+  const data = item as UTSJSONObject | null
+  if (data == null) {
+    return ''
   }
+  const label = data['label']
+  return label == null ? '' : label.toString()
+}
+
+function handleDragEnd(sortedList: UTSJSONObject[]) {
+  console.log('排序结束:', sortedList)
 }
 </script>
 

@@ -56,7 +56,7 @@ class UPUtils {
 	}
 }
 const uputils = new UPUtils()
-const install = (app: VueApp): void => {
+export function install(app: VueApp): void {
 	app.config.globalProperties.$u = uputils
     app.config.globalProperties.$up = uputils
     app.mixin(mixin)

@@ -7,10 +7,10 @@
 	</view>
 </template>
 
-<script>
-	import { propsSteps } from './props';
-	import { mpMixin } from '../../libs/mixin/mpMixin';
-	import { mixin } from '../../libs/mixin/mixin';
+<script setup lang="uts">
+	import { computed, watch } from 'vue'
+	import defProps from './steps.uts'
+	import { useUltraUI } from '../../libs/composable/useUltraUI'
 	/**
 	 * Steps 步骤条
 	 * @description 该组件一般用于完成一个任务要分几个步骤，标识目前处于第几步的场景。
@@ -24,46 +24,105 @@
 	 * @property {Boolean}			dot				是否显示点类型 (默认 false )
 	 * @example <up-steps current="0"><up-steps-item title="已出库" desc="10:35" ></up-steps-item></up-steps>
 	 */
-	export default {
-		name: 'up-steps',
-		mixins: [mpMixin, mixin, propsSteps],
-		data() {
-			return {
-			}
+	defineOptions({
+		name: 'up-steps'
+	})
+
+	const props = defineProps({
+		// 排列方向
+		direction: {
+			type: String,
+			default: defProps.getString('steps.direction')
 		},
-		watch: {
-			children() {
-				this.updateChildData()
-			},
-			parentData() {
-				this.updateChildData()
-			}
+		// 设置第几个步骤
+		current: {
+			type: [String, Number],
+			default: defProps.getNumber('steps.current')
 		},
-		computed: {
-			// 监听参数的变化，通过watch中，手动去更新子组件的数据，否则子组件不会自动变化
-			parentDataCpu() {
-				return [this.current, this.direction, this.activeColor, this.inactiveColor, this.activeIcon, this.inactiveIcon, this.dot]
-			}
+		// 激活状态颜色
+		activeColor: {
+			type: String,
+			default: defProps.getString('steps.activeColor')
 		},
-		methods: {
-			// 更新子组件的数据
-			updateChildData() {
-				// @ts-ignore
-				this.children.map((child: ComponentPublicInstance) => {
-					// 先判断子组件是否存在对应的方法
-					child.$callMethod('updateFromParent')
-				})
-			},
-			// 接受子组件的通知，去修改其他子组件的数据
-			updateFromChild() {
-				this.updateChildData()
-			}
+		// 未激活状态颜色
+		inactiveColor: {
+			type: String,
+			default: defProps.getString('steps.inactiveColor')
 		},
-		created() {
-			// @ts-ignore
-			this.children = []
+		// 激活状态的图标
+		activeIcon: {
+			type: String,
+			default: defProps.getString('steps.activeIcon')
+		},
+		// 未激活状态图标
+		inactiveIcon: {
+			type: String,
+			default: defProps.getString('steps.inactiveIcon')
+		},
+		// 是否显示点类型
+		dot: {
+			type: Boolean,
+			default: defProps.getBoolean('steps.dot')
+		}
+	})
+
+	const { children, getChildren, addChild } = useUltraUI()
+
+	// 监听参数的变化，通过watch中，手动去更新子组件的数据，否则子组件不会自动变化
+	const parentDataCpu = computed((): Array<any> => {
+		return [props.current, props.direction, props.activeColor, props.inactiveColor, props.activeIcon, props.inactiveIcon, props.dot]
+	})
+
+	const updateChildData = (): void => {
+		// @ts-ignore
+		if (children.value.length > 0) {
+			children.value.map((child: ComponentPublicInstance) => {
+				// 先判断子组件是否存在对应的方法
+				child.$callMethod('updateFromParent')
+			})
 		}
 	}
+
+	// 接受子组件的通知，去修改其他子组件的数据
+	const updateFromChild = (): void => {
+		updateChildData()
+	}
+
+	const getProps = (): UTSJSONObject => {
+		return {
+			direction: props.direction,
+			current: props.current,
+			activeColor: props.activeColor,
+			inactiveColor: props.inactiveColor,
+			activeIcon: props.activeIcon,
+			inactiveIcon: props.inactiveIcon,
+			dot: props.dot
+		}
+	}
+
+	const getRefs = (): UTSJSONObject => {
+		return {
+			children: children.value
+		}
+	}
+
+	watch(children, () => {
+		updateChildData()
+	}, { deep: true })
+
+	watch(parentDataCpu, () => {
+		updateChildData()
+	})
+
+	defineExpose({
+		getChildren,
+		addChild,
+		children,
+		updateChildData,
+		updateFromChild,
+		getProps,
+		getRefs
+	})
 </script>
 
 <style lang="scss" scoped>

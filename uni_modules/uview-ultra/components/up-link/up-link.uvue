@@ -2,15 +2,14 @@
 	<text
 	    class="up-link"
 	    @tap.stop="openLink"
-	    :style="[linkStyle, addStyle(customStyle)]"
+	    :style="rootStyle"
 	>{{text}}</text>
 </template>
 
-<script>
-	import { propsLink } from './props';
-	import { mpMixin } from '../../libs/mixin/mpMixin';
-	import { mixin } from '../../libs/mixin/mixin';
-	import { addStyle, addUnit, getPx, toast } from '../../libs/function/index';
+<script setup lang="uts">
+	import { computed } from 'vue'
+	import defProps from './link.uts'
+	import { addStyle, addUnit, getPx } from '../../libs/function/index'
 	/**
 	 * link 超链接
 	 * @author jry ijry@qq.com 2024
@@ -27,53 +26,99 @@
 	 * 
 	 * @example <up-link href="http://www.uviewui.com">蜀道难，难于上青天</up-link>
 	 */
-	export default {
-		name: "up-link",
-		mixins: [mpMixin, mixin, propsLink],
-		computed: {
-			linkStyle(): any{
-				const style = {
-					color: this.color,
-					fontSize: addUnit(this.fontSize),
-					// line-height设置为比字体大小多2px
-					lineHeight: addUnit(parseInt(getPx(this.fontSize)) + 2),
-					textDecoration: this.underLine ? 'underline' : 'none'
-				}
-				// if (this.underLine) {
-				// 	style.borderBottomColor = this.lineColor || this.color
-				// 	style.borderBottomWidth = '1px'
-				// }
-				return style
-			}
+	defineOptions({
+		name: 'up-link'
+	})
+
+	const props = defineProps({
+		color: {
+			type: String,
+			default: defProps.getString('link.color')
 		},
-		emits: ["click"],
-		methods: {
-			addStyle(style: any): any {
-				return addStyle(style)
-			},
-			openLink(): void {
-				// #ifdef APP
-				// todo
-				//plus.runtime.openURL(this.href)
-				// #endif
-				// #ifdef H5
-				window.open(this.href)
-				// #endif
-				// #ifdef MP
-				// todo
-				// uni.setClipboardData({
-				// 	data: this.href,
-				// 	success: () => {
-				// 		uni.hideToast();
-				// 		this.$nextTick(() => {
-				// 			toast(this.mpTips);
-				// 		})
-				// 	}
-				// });
-				// #endif
-				this.$emit('click')
-			}
+		fontSize: {
+			type: [String],
+			default: defProps.getString('link.fontSize')
+		},
+		underLine: {
+			type: Boolean,
+			default: defProps.getBoolean('link.underLine')
+		},
+		href: {
+			type: String,
+			default: defProps.getString('link.href')
+		},
+		mpTips: {
+			type: String,
+			default: defProps.getString('link.mpTips')
+		},
+		lineColor: {
+			type: String,
+			default: defProps.getString('link.lineColor')
+		},
+		text: {
+			type: String,
+			default: defProps.getString('link.text')
+		},
+		customStyle: {
+			type: [Object, String],
+			default: () => ({})
 		}
+	})
+
+	const emit = defineEmits(['click'])
+
+	const linkStyle = computed((): UTSJSONObject => {
+		const style = {} as UTSJSONObject
+		style['color'] = props.color
+		style['fontSize'] = addUnit(props.fontSize)
+		// line-height设置为比字体大小多2px
+		style['lineHeight'] = addUnit(parseInt(getPx(props.fontSize)) + 2)
+		style['textDecoration'] = props.underLine ? 'underline' : 'none'
+		// if (props.underLine) {
+		// 	style.borderBottomColor = props.lineColor || props.color
+		// 	style.borderBottomWidth = '1px'
+		// }
+		return style
+	})
+
+	const rootStyle = computed((): UTSJSONObject => {
+		const style = {} as UTSJSONObject
+		const base = linkStyle.value
+		const baseKeys = UTSJSONObject.keys(base)
+		for (let i = 0; i < baseKeys.length; i++) {
+			const key = baseKeys[i]
+			style[key] = base[key]
+		}
+		const custom = addStyle(props.customStyle) as UTSJSONObject
+		const customKeys = UTSJSONObject.keys(custom)
+		for (let i = 0; i < customKeys.length; i++) {
+			const key = customKeys[i]
+			style[key] = custom[key]
+		}
+		return style
+	})
+
+	const openLink = (): void => {
+		// #ifdef APP
+		// todo
+		//plus.runtime.openURL(props.href)
+		// #endif
+		// #ifdef H5
+		window.open(props.href)
+		// #endif
+		// #ifdef MP
+		// todo
+		// uni.setClipboardData({
+		// 	data: props.href,
+		// 	success: () => {
+		// 		uni.hideToast();
+		// 		uni.$nextTick(() => {
+		// 			// toast(props.mpTips);
+		// 		})
+		// 	}
+		// });
+		// #endif
+		emit('click')
 	}
 </script>
 

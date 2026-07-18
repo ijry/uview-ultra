@@ -315,28 +315,24 @@
 	<!-- #endif -->
 </template>
 
-<script lang="uts">
-	export default {
-		data() {
-			return {
-				type: 'default',
-				disabled: false
-			}
-		},
-		onLoad() {
-			setTimeout(() => {
-				this.type = 'primary'
-				this.disabled = true
-			}, 2000)
-		},
-		methods: {
-			click() {
-				uni.showToast({
-					title: 'clicked'
-				})
-				console.log('click');
-			}
-		}
+<script setup lang="uts">
+	import { ref } from 'vue'
+
+	const type = ref('default')
+	const disabled = ref(false)
+
+	onLoad((_options: OnLoadOptions) => {
+		setTimeout(() => {
+			type.value = 'primary'
+			disabled.value = true
+		}, 2000)
+	})
+
+	function click() {
+		uni.showToast({
+			title: 'clicked'
+		})
+		console.log('click')
 	}
 </script>
 

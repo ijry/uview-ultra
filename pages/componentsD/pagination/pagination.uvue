@@ -53,31 +53,27 @@
 	</view>
 </template>
 
-<script>
-export default {
-		data() {
-			return {
-			  currentPage: 1,
-			  pageSize: 10,
-			  total: 100,
-			  pageSizes: [
-				{ label: '10条/页', value: 10 },
-				{ label: '20条/页', value: 20 },
-				{ label: '30条/页', value: 30 }
-			  ]
-			}
-		},
-		methods: {
-			handleCurrentChange(page: number) {
-			  console.log('当前页:', page);
-			  this.currentPage = page;
-			},
-			handleSizeChange(size: number) {
-			  console.log('每页条数:', size);
-			  this.pageSize = size;
-			}
-		}
-	}
+<script setup lang="uts">
+import { ref } from 'vue'
+
+const currentPage = ref(1)
+const pageSize = ref(10)
+const total = 100
+const pageSizes = [
+  { label: '10条/页', value: 10 },
+  { label: '20条/页', value: 20 },
+  { label: '30条/页', value: 30 }
+]
+
+function handleCurrentChange(page: number) {
+  console.log('当前页:', page)
+  currentPage.value = page
+}
+
+function handleSizeChange(size: number) {
+  console.log('每页条数:', size)
+  pageSize.value = size
+}
 </script>
 
 <style lang="scss" scoped>

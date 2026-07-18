@@ -76,132 +76,98 @@
 	</view>
 </template>
 
-<script>
-	import { sleep } from '@/uni_modules/uview-ultra/libs/function/index'
-	export default {
-		data() {
-			return {
-				index: '0',
-				loading: false,
-				columnData: [
-					['深圳', '厦门', '上海', '拉萨'],
-					['得州', '华盛顿', '纽约', '阿拉斯加']
-				],
-				columns1: [
-					['中国', '美国', '日本']
-				],
-				columns2: [
-					['中国', '美国', '日本']
-				],
-				columns3: [
-					['中国', '美国'],
-					['深圳', '厦门', '上海', '拉萨']
-				],
-				columns4: [
-					['中国', '美国'],
-					['深圳', '厦门', '上海', '拉萨']
-				],
-				columns5: [
-					['中国', '美国', '日本']
-				],
-				columns6: [
-					['中国', '美国', '日本']
-				],
-				columns7: [
-					[{
-						label: '苹果',
-						value: 1
-					}, {
-						label: '橘子',
-						value: 2
-					},
-					{
-						label: '香蕉',
-						value: 3
-					}]
-				],
-				show1: false,
-				show2: false,
-				show3: false,
-				show4: false,
-				show5: false,
-				show6: false,
-				list: [{
-						title: '基础使用',
-						iconUrl: 'https://cdn.uviewui.com/uview/demo/picker/2.png'
-					},
-					{
-						title: '设置默认项',
-						iconUrl: 'https://cdn.uviewui.com/uview/demo/picker/5.png'
-					},
-					{
-						title: '多列联动',
-						iconUrl: 'https://cdn.uviewui.com/uview/demo/picker/1.png'
-					},
-					{
-						title: '加载中状态(切换第一列)',
-						iconUrl: 'https://cdn.uviewui.com/uview/demo/picker/3.png'
-					},
-					{
-						title: '设置标题',
-						iconUrl: 'https://cdn.uviewui.com/uview/demo/picker/4.png'
-					}, {
-						title: '允许点击遮罩关闭',
-						iconUrl: 'https://cdn.uviewui.com/uview/demo/picker/6.png'
-					},
-				]
-			}
-		},
-		methods: {
-			changeHandler1(e: UTSJSONObject): void {
-				this.change(e)
-				let columnIndex = e.getNumber('columnIndex')
-				let value = e.getArray('value')
-				let values = e.getArray('values')
-				let index = e.getNumber('index')
-				let picker = this.$refs['uPicker3']
-				if (columnIndex == 0) {
-					// picker.setColumnValues(1, this.columnData[index])
-				}
-			},
-			changeHandler2(e: UTSJSONObject): void {
-				this.change(e)
-				let columnIndex = e.getNumber('columnIndex')
-				let value = e.getArray('value')
-				let values = e.getArray('values')
-				let index = e.getNumber('index')
-				let picker = this.$refs['uPicker4']
-				if (columnIndex == 0) {
-					this.loading = true
-					//sleep(1500).then(() => {
-						// picker.setColumnValues(1, this.columnData[index])
-						this.loading = false
-					//})
-				}
-			},
-			navigateBack(): void {
-				uni.navigateBack()
-			},
-			change(e: any): void {
-				// console.log('change', e);
-			},
-			showPicker(index: number): void {
-				this.index = (parseInt(index.toString()) + 1).toString()
-				this.$data[`show${this.index}`] = true
-			},
-			close(): void {
-				// console.log('close');
-				this.$data[`show${this.index}`] = false
-			},
-			confirm(e: any): void {
-				// console.log('confirm', e);
-				this.$data[`show${this.index}`] = false
-			},
-			cancel(): void {
-				// console.log('cancel');
-				this.$data[`show${this.index}`] = false
-			}
-		},
+<script setup lang="uts">
+	import { ref } from 'vue'
+
+	const currentIndex = ref(0)
+	const loading = ref(false)
+	const uPicker3 = ref<ComponentPublicInstance | null>(null)
+	const uPicker4 = ref<ComponentPublicInstance | null>(null)
+	const columnData = [
+		['深圳', '厦门', '上海', '拉萨'],
+		['得州', '华盛顿', '纽约', '阿拉斯加']
+	]
+	const columns1 = [['中国', '美国', '日本']]
+	const columns2 = [['中国', '美国', '日本']]
+	const columns3 = [
+		['中国', '美国'],
+		['深圳', '厦门', '上海', '拉萨']
+	]
+	const columns4 = [
+		['中国', '美国'],
+		['深圳', '厦门', '上海', '拉萨']
+	]
+	const columns5 = [['中国', '美国', '日本']]
+	const columns6 = [['中国', '美国', '日本']]
+	const show1 = ref(false)
+	const show2 = ref(false)
+	const show3 = ref(false)
+	const show4 = ref(false)
+	const show5 = ref(false)
+	const show6 = ref(false)
+	const list = [
+		{ title: '基础使用', iconUrl: 'https://cdn.uviewui.com/uview/demo/picker/2.png' },
+		{ title: '设置默认项', iconUrl: 'https://cdn.uviewui.com/uview/demo/picker/5.png' },
+		{ title: '多列联动', iconUrl: 'https://cdn.uviewui.com/uview/demo/picker/1.png' },
+		{ title: '加载中状态(切换第一列)', iconUrl: 'https://cdn.uviewui.com/uview/demo/picker/3.png' },
+		{ title: '设置标题', iconUrl: 'https://cdn.uviewui.com/uview/demo/picker/4.png' },
+		{ title: '允许点击遮罩关闭', iconUrl: 'https://cdn.uviewui.com/uview/demo/picker/6.png' },
+	]
+
+	function change(e: any): void {
+		// console.log('change', e)
+	}
+
+	function changeHandler1(e: UTSJSONObject): void {
+		change(e)
+		const columnIndex = e.getNumber('columnIndex')
+		const index = e.getNumber('index')
+		if (columnIndex == 0 && index != null) {
+			// uPicker3.value?.$callMethod('setColumnValues', 1, columnData[index])
+		}
+	}
+
+	function changeHandler2(e: UTSJSONObject): void {
+		change(e)
+		const columnIndex = e.getNumber('columnIndex')
+		const index = e.getNumber('index')
+		if (columnIndex == 0 && index != null) {
+			loading.value = true
+			// sleep(1500).then(() => {
+			// 	uPicker4.value?.$callMethod('setColumnValues', 1, columnData[index])
+			loading.value = false
+			// })
+		}
+	}
+
+	function navigateBack(): void {
+		uni.navigateBack()
+	}
+
+	function setShow(index: number, value: boolean): void {
+		if (index == 1) show1.value = value
+		if (index == 2) show2.value = value
+		if (index == 3) show3.value = value
+		if (index == 4) show4.value = value
+		if (index == 5) show5.value = value
+		if (index == 6) show6.value = value
+	}
+
+	function showPicker(index: number): void {
+		currentIndex.value = index + 1
+		setShow(currentIndex.value, true)
+	}
+
+	function close(): void {
+		setShow(currentIndex.value, false)
+	}
+
+	function confirm(e: any): void {
+		setShow(currentIndex.value, false)
+	}
+
+	function cancel(): void {
+		setShow(currentIndex.value, false)
 	}
 </script>
 

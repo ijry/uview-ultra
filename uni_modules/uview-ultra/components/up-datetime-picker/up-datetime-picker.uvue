@@ -618,8 +618,8 @@
 			}
 			const timeArr = value.toString().split(':')
 			let hour = timeArr[0]
-			let minute = timeArr[1]
-			let second = timeArr[2]
+			let minute = timeArr.length > 1 ? timeArr[1] : '0'
+			let second = timeArr.length > 2 ? timeArr[2] : '0'
 			// 对时间补零，同时控制在最小值和最大值之间
 			const hourNum = parseInt(hour)
 			const minuteNum = parseInt(minute)

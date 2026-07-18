@@ -36,11 +36,10 @@
 	</view>
 </template>
 
-<script lang="uts">
-	import { propsNavbarMini } from './props';
-	import { mpMixin } from '../../libs/mixin/mpMixin';
-	import { mixin } from '../../libs/mixin/mixin';
-	import { addUnit, addStyle, getPx } from '../../libs/function/index';
+<script setup lang="uts">
+	import { computed } from 'vue'
+	import defProps from './navbarMini'
+	import { addUnit } from '../../libs/function/index'
 	/**
 	 * NavbarMini 迷你导航栏
 	 * @description 此组件一般用于在全屏页面中，典型的如微信小程序左上角。
@@ -60,45 +59,83 @@
 	 * @event {Function} rightClick		点击右侧区域
 	 * @example <up-navbar-mini @click-left="onClickBack"></up-navbar-mini>
 	 */
-	export default {
-		name: 'up-navbar-mini',
-		mixins: [mpMixin, mixin, propsNavbarMini],
-		data() {
-			return {
-			}
+	defineOptions({
+		name: 'up-navbar-mini'
+	})
+
+	const props = defineProps({
+		// 是否开启顶部安全区适配
+		safeAreaInsetTop: {
+			type: Boolean,
+			default: defProps.getBoolean('navbarMini.safeAreaInsetTop')
 		},
-		computed: {
-			contentStyle(): UTSJSONObject {
-				return {
-					height: addUnit(this.height),
-					backgroundColor: this.bgColor,
-				}
-			}
+		// 是否固定在顶部
+		fixed: {
+			type: Boolean,
+			default: defProps.getBoolean('navbarMini.fixed')
 		},
-		emits: ["leftClick", "homeClick"],
-		methods: {
-			addStyle(val: any): any {
-				return addStyle(val)
-			},
-			addUnit(val: any): string {
-				return addUnit(val)
-			},
-			getPx(val: any): string {
-				return getPx(val)
-			},
-			// 点击左侧区域
-			leftClick(): void {
-				// 如果配置了autoBack，自动返回上一页
-				this.$emit('leftClick')
-				if(this.autoBack) {
-					uni.navigateBack()
-				}
-			},
-			homeClick(): void {
-				if (this.homeUrl != '') {
-					uni.reLaunch({ url: this.homeUrl })
-				}
-			}
+		// 左边的图标
+		leftIcon: {
+			type: String,
+			default: defProps.getString('navbarMini.leftIcon')
+		},
+		// 背景颜色
+		bgColor: {
+			type: String,
+			default: defProps.getString('navbarMini.bgColor')
+		},
+		// 导航栏高度
+		height: {
+			type: [String, Number],
+			default: defProps.getString('navbarMini.height')
+		},
+		// 图标的大小
+		iconSize: {
+			type: [String, Number],
+			default: defProps.getString('navbarMini.iconSize')
+		},
+		// 图标的颜色
+		iconColor: {
+			type: String,
+			default: defProps.getString('navbarMini.iconColor')
+		},
+		// 点击左侧区域(返回图标)，是否自动返回上一页
+		autoBack: {
+			type: Boolean,
+			default: defProps.getBoolean('navbarMini.autoBack')
+		},
+		// 首页路径
+		homeUrl: {
+			type: String,
+			default: defProps.getString('navbarMini.homeUrl')
+		},
+		customClass: {
+			type: String,
+			default: ''
+		}
+	})
+
+	const emit = defineEmits(['leftClick', 'homeClick'])
+
+	const contentStyle = computed((): UTSJSONObject => {
+		return {
+			height: addUnit(props.height),
+			backgroundColor: props.bgColor
+		} as UTSJSONObject
+	})
+
+	// 点击左侧区域
+	const leftClick = (): void => {
+		// 如果配置了autoBack，自动返回上一页
+		emit('leftClick')
+		if (props.autoBack) {
+			uni.navigateBack()
+		}
+	}
+
+	const homeClick = (): void => {
+		if (props.homeUrl != '') {
+			uni.reLaunch({ url: props.homeUrl })
 		}
 	}
 </script>

@@ -20,47 +20,44 @@
 	</view>
 </template>
 
-<script>
-	import list from "./template.config";
-	export default {
-		data() {
-			return {
-				list: list,
-				// desc: '收集众多的常用页面和布局，减少开发者的重复工作，让你专注逻辑，事半功倍'
-			}
-		},
-		computed: {
-			getIcon(path: string): string {
-				return './static/uview/demo/' + path + '.png';
-			},
-			desc(): string {
-				return this.$t('template.desc');
-			}
-		},
-		onShow() {
-			uni.setNavigationBarTitle({
-				title: this.$t('nav.template')
-			});
-		},
-		methods: {
-			$t(val: string): string {
-				return val;
-			},
-			openPage(path: string): any {
-				// this.$u.route({
-				// 	url: path.indexOf('/page') == 0 ? path : '/pages/template/' + path + '/index'
-				// })
-				return ''
-			},
-			getGroupTitle(item: UTSJSONObject): any {
-				return ''
-				//return this.$i18n.locale == 'zh-Hans' ? item.groupName : item.groupName_en
-			},
-			getFieldTitle(item: any): any {
-				return ''
-				//return this.$i18n.locale == 'zh-Hans' ? item.title : item.title_en
-			}
-		}
+<script setup lang="uts">
+	import { computed } from 'vue'
+	import { onShow } from '@dcloudio/uni-app'
+	import list from "./template.config"
+
+	function $t(val: string): string {
+		return val
+	}
+
+	function getIcon(path: string): string {
+		return './static/uview/demo/' + path + '.png'
+	}
+
+	const desc = computed((): string => {
+		return $t('template.desc')
+	})
+
+	onShow(() => {
+		uni.setNavigationBarTitle({
+			title: $t('nav.template')
+		})
+	})
+
+	function openPage(path: string): any {
+		// route({
+		// 	url: path.indexOf('/page') == 0 ? path : '/pages/template/' + path + '/index'
+		// })
+		return ''
+	}
+
+	function getGroupTitle(item: UTSJSONObject): any {
+		return ''
+		//return locale == 'zh-Hans' ? item.groupName : item.groupName_en
+	}
+
+	function getFieldTitle(item: any): any {
+		return ''
+		//return locale == 'zh-Hans' ? item.title : item.title_en
 	}
 </script>
 

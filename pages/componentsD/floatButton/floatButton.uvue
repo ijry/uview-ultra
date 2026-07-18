@@ -47,16 +47,13 @@
    </view>
 </template>
 
-<script>
-export default {
-  methods: {
-    navigateBack() {
-      uni.navigateBack({ delta: 1 });
-    },
-    itemClick(e: UTSJSONObject) {
-      console.log(e);
-    }
-  }
+<script setup lang="uts">
+function navigateBack() {
+  uni.navigateBack({ delta: 1 })
+}
+
+function itemClick(e: UTSJSONObject) {
+  console.log(e)
 }
 </script>
 

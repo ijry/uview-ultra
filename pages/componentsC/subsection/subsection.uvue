@@ -63,34 +63,29 @@
 	<!-- #endif -->
 </template>
 
-<script>
-	export default {
-		data() {
-			return {
-				current1: 0,
-				current2: 0,
-				current3: 0,
-				current4: 1,
-				list: ['未付款', '待评价', '已付款'],
-				// 或者如下，也可以配置keyName参数修改对象键值
-				// list: [{name: '未付款'}, {name: '待评价'}, {name: '已付款'}],
-				current: 1
-			}
-		},
-		methods: {
-			change1(index: number) {
-				this.current1 = index
-			},
-			change2(index: number) {
-				this.current2 = index
-			},
-			change3(index: number) {
-				this.current3 = index
-			},
-			change4(index: number) {
-				this.current4 = index
-			}
-		},
+<script setup lang="uts">
+	import { ref } from 'vue'
+
+	const current1 = ref(0)
+	const current2 = ref(0)
+	const current3 = ref(0)
+	const current4 = ref(1)
+	const list = ['未付款', '待评价', '已付款']
+
+	function change1(index: number) {
+		current1.value = index
+	}
+
+	function change2(index: number) {
+		current2.value = index
+	}
+
+	function change3(index: number) {
+		current3.value = index
+	}
+
+	function change4(index: number) {
+		current4.value = index
 	}
 </script>
 

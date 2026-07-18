@@ -86,7 +86,8 @@
   </view>
 </template>
 
-<script>
+<script setup lang="uts">
+import { ref, watch } from 'vue'
 import type { PropType } from 'vue'
 
 function createLoadmoreProps(): UTSJSONObject {
@@ -109,9 +110,11 @@ function stringValue(value: any | null): string {
   return value == null ? '' : value.toString()
 }
 
-export default {
-  name: 'up-pull-refresh',
-  props: {
+defineOptions({
+  name: 'up-pull-refresh'
+})
+
+const props = defineProps({
     refreshing: {
       type: Boolean,
       default: false
@@ -135,7 +138,9 @@ export default {
     loadmoreProps: {
       type: Object as PropType<UTSJSONObject>,
       default(): UTSJSONObject {
-        return createLoadmoreProps()
+        return {
+          status: 'loadmore'
+        } as UTSJSONObject
       }
     },
     useScrollView: {
@@ -154,103 +159,125 @@ export default {
       type: [Number, String],
       default: 0
     }
-  },
-  emits: ['refresh', 'loadmore', 'scroll'],
-  data() {
-    return {
-      isRefreshing: false,
-      refreshStatus: 'pull',
-      refreshDistance: 0,
-      startY: 0,
-      currentY: 0,
-      currentScrollTop: 0,
-      touching: false,
-      contentTranslateY: 0
+})
+
+const emit = defineEmits(['refresh', 'loadmore', 'scroll'])
+const isRefreshing = ref(false)
+const refreshStatus = ref('pull')
+const refreshDistance = ref(0)
+const startY = ref(0)
+const currentY = ref(0)
+const currentScrollTop = ref(0)
+const touching = ref(false)
+const contentTranslateY = ref(0)
+
+const getLoadmoreStatus = (): string => {
+  return stringValue((props.loadmoreProps as UTSJSONObject)['status'])
+}
+
+const resetRefresh = (): void => {
+  refreshDistance.value = 0
+  contentTranslateY.value = 0
+}
+
+const startRefresh = (): void => {
+  isRefreshing.value = true
+  refreshStatus.value = 'refreshing'
+  refreshDistance.value = props.threshold
+  contentTranslateY.value = props.threshold
+}
+
+const finishRefresh = (): void => {
+  isRefreshing.value = false
+  refreshStatus.value = 'pull'
+  resetRefresh()
+}
+
+const isScrollViewAtTop = (): boolean => {
+  return currentScrollTop.value <= 0
+}
+
+const onTouchStart = (e: UniTouchEvent): void => {
+  if (isRefreshing.value) {
+    return
+  }
+  touching.value = true
+  startY.value = getTouchPageY(e)
+  currentY.value = startY.value
+  refreshStatus.value = 'pull'
+}
+
+const onTouchMove = (e: UniTouchEvent): void => {
+  if (!touching.value || isRefreshing.value) {
+    return
+  }
+  currentY.value = getTouchPageY(e)
+  const diff = currentY.value - startY.value
+  if (diff > 0 && isScrollViewAtTop()) {
+    refreshDistance.value = Math.min(diff * props.damping, props.maxDistance)
+    contentTranslateY.value = refreshDistance.value
+    if (refreshDistance.value >= props.threshold) {
+      refreshStatus.value = 'release'
+    } else {
+      refreshStatus.value = 'pull'
     }
-  },
-  watch: {
-    refreshing: {
-      handler(newVal: boolean) {
-        if (newVal) {
-          this.startRefresh()
-        } else {
-          this.finishRefresh()
-        }
-      }
-    }
-  },
-  methods: {
-    getLoadmoreStatus(): string {
-      return stringValue((this.loadmoreProps as UTSJSONObject)['status'])
-    },
-    onTouchStart(e: UniTouchEvent): void {
-      if (this.isRefreshing) {
-        return
-      }
-      this.touching = true
-      this.startY = getTouchPageY(e)
-      this.currentY = this.startY
-      this.refreshStatus = 'pull'
-    },
-    onTouchMove(e: UniTouchEvent): void {
-      if (!this.touching || this.isRefreshing) {
-        return
-      }
-      this.currentY = getTouchPageY(e)
-      const diff = this.currentY - this.startY
-      if (diff > 0 && this.isScrollViewAtTop()) {
-        this.refreshDistance = Math.min(diff * this.damping, this.maxDistance)
-        this.contentTranslateY = this.refreshDistance
-        if (this.refreshDistance >= this.threshold) {
-          this.refreshStatus = 'release'
-        } else {
-          this.refreshStatus = 'pull'
-        }
-        e.preventDefault()
-        e.stopPropagation()
-      }
-    },
-    onTouchEnd(): void {
-      if (!this.touching) {
-        return
-      }
-      this.touching = false
-      if (this.refreshDistance >= this.threshold && !this.isRefreshing) {
-        this.startRefresh()
-        this.$emit('refresh')
-      } else {
-        this.resetRefresh()
-      }
-    },
-    startRefresh(): void {
-      this.isRefreshing = true
-      this.refreshStatus = 'refreshing'
-      this.refreshDistance = this.threshold
-      this.contentTranslateY = this.threshold
-    },
-    finishRefresh(): void {
-      this.isRefreshing = false
-      this.refreshStatus = 'pull'
-      this.resetRefresh()
-    },
-    resetRefresh(): void {
-      this.refreshDistance = 0
-      this.contentTranslateY = 0
-    },
-    isScrollViewAtTop(): boolean {
-      return this.currentScrollTop <= 0
-    },
-    handleScroll(e: UniScrollEvent): void {
-      this.currentScrollTop = e.detail.scrollTop
-      this.$emit('scroll', e)
-    },
-    handleScrollToLower(_e: UniEvent): void {
-      if (this.showLoadmore && this.getLoadmoreStatus() == 'loadmore') {
-        this.$emit('loadmore')
-      }
-    }
+    e.preventDefault()
+    e.stopPropagation()
   }
 }
+
+const onTouchEnd = (): void => {
+  if (!touching.value) {
+    return
+  }
+  touching.value = false
+  if (refreshDistance.value >= props.threshold && !isRefreshing.value) {
+    startRefresh()
+    emit('refresh')
+  } else {
+    resetRefresh()
+  }
+}
+
+const handleScroll = (e: UniScrollEvent): void => {
+  currentScrollTop.value = e.detail.scrollTop
+  emit('scroll', e)
+}
+
+const handleScrollToLower = (_e: UniEvent): void => {
+  if (props.showLoadmore && getLoadmoreStatus() == 'loadmore') {
+    emit('loadmore')
+  }
+}
+
+watch((): boolean => props.refreshing, (newVal: boolean) => {
+  if (newVal) {
+    startRefresh()
+  } else {
+    finishRefresh()
+  }
+})
+
+defineExpose({
+  isRefreshing,
+  refreshStatus,
+  refreshDistance,
+  startY,
+  currentY,
+  currentScrollTop,
+  touching,
+  contentTranslateY,
+  getLoadmoreStatus,
+  onTouchStart,
+  onTouchMove,
+  onTouchEnd,
+  startRefresh,
+  finishRefresh,
+  resetRefresh,
+  isScrollViewAtTop,
+  handleScroll,
+  handleScrollToLower
+})
 </script>
 
 <style scoped lang="scss">

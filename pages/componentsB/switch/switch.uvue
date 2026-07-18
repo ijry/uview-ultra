@@ -136,45 +136,40 @@
 	</view>
 </template>
 
-<script>
-	export default {
-		data() {
-			return {
-				value1: false,
-				value2: true,
-				value3: false,
-				value4: true,
-				value5: false,
-				value6: true,
-				value7: false,
-				value8: true,
-				value9: true,
-				value10: true,
-				value11: false,
-				value12: true,
-				value13: true,
+<script setup lang="uts">
+	import { ref, watch } from 'vue'
+
+	const value1 = ref(false)
+	const value2 = ref(true)
+	const value3 = ref(false)
+	const value4 = ref(true)
+	const value5 = ref(false)
+	const value6 = ref(true)
+	const value7 = ref(false)
+	const value8 = ref(true)
+	const value9 = ref(true)
+	const value10 = ref(true)
+	const value11 = ref(false)
+	const value12 = ref(true)
+	const value13 = ref(true)
+
+	watch(value1, (newValue: boolean) => {
+		console.log('v-model', newValue)
+	})
+
+	function change(e: any) {
+		console.log('change', e)
+	}
+
+	function asyncChange(e: boolean) {
+		uni.showModal({
+			content: e ? '确定要打开吗' : '确定要关闭吗',
+			success: (res) => {
+				if (res.confirm) {
+					value13.value = e
+				}
 			}
-		},
-		watch: {
-			value1(newValue: boolean, oldValue: boolean) {
-				console.log('v-model', newValue);
-			}
-		},
-		methods: {
-			change(e: any) {
-				console.log('change', e);
-			},
-			asyncChange(e: boolean) {
-				uni.showModal({
-					content: e ? '确定要打开吗' : '确定要关闭吗',
-					success: (res) => {
-						if (res.confirm) {
-							this.value13 = e
-						}
-					}
-				})
-			}
-		}
+		})
 	}
 </script>
 

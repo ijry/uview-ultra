@@ -136,16 +136,9 @@
 	</scroll-view>
 	<!-- #endif -->
 </template>
-<script>
-	export default {
-		data() {
-			return {}
-		},
-		methods: {
-			click() {
-				console.log('Cell is clicked.');
-			}
-		}
+<script setup lang="uts">
+	function click() {
+		console.log('Cell is clicked.')
 	}
 </script>
 

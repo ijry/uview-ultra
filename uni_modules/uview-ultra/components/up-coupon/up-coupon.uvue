@@ -50,110 +50,122 @@
 	</view>
 </template>
 
-<script>
-	export default {
-		name: 'up-coupon',
-		props: {
-			// 金额
-			amount: {
-				type: [String, Number],
-				default: ''
-			},
-			// 金额单位
-			unit: {
-				type: String,
-				default: '￥'
-			},
-			// 单位位置
-			unitPosition: {
-				type: String,
-				default: 'left'
-			},
-			// 使用限制
-			limit: {
-				type: String,
-				default: ''
-			},
-			// 标题
-			title: {
-				type: String,
-				default: '优惠券'
-			},
-			// 描述
-			desc: {
-				type: String,
-				default: ''
-			},
-			// 有效期
-			time: {
-				type: String,
-				default: ''
-			},
-			// 操作按钮文字
-			actionText: {
-				type: String,
-				default: '使用'
-			},
-			// 形状：coupon-优惠券, envelope-红包, card-卡片
-			shape: {
-				type: String,
-				default: 'coupon'
-			},
-			// 尺寸：small, medium, large
-			size: {
-				type: String,
-				default: 'medium'
-			},
-			// 是否圆形按钮
-			circle: {
-				type: Boolean,
-				default: false
-			},
-			// 是否禁用
-			disabled: {
-				type: Boolean,
-				default: false
-			},
-			// 背景颜色
-			bgColor: {
-				type: String,
-				default: ''
-			},
-			// 文字颜色
-			color: {
-				type: String,
-				default: ''
-			},
-            // 内置背景类型
-            type: {
-				type: String,
-				default: ''
-			},
+<script setup lang="uts">
+	import { computed } from 'vue';
+
+	defineOptions({
+		name: 'up-coupon'
+	})
+
+	const props = defineProps({
+		// 金额
+		amount: {
+			type: [String, Number],
+			default: ''
 		},
-		computed: {
-			couponStyle() {
-				const style = {} as UTSJSONObject;
-				if (this.bgColor.length > 0) style['background'] = this.bgColor;
-				if (this.color.length > 0) style['color'] = this.color;
-				return style;
-			},
-			dotCount() {
-				// 根据尺寸计算锯齿数量
-				if (this.size == 'small') return 8;
-				if (this.size == 'large') return 12;
-				return 10;
-			}
+		// 金额单位
+		unit: {
+			type: String,
+			default: '￥'
 		},
-		methods: {
-			hasType(): boolean {
-				return this.type.length > 0;
-			},
-			handleClick() {
-				if (this.disabled) return;
-				this.$emit('click');
-			}
-		}
+		// 单位位置
+		unitPosition: {
+			type: String,
+			default: 'left'
+		},
+		// 使用限制
+		limit: {
+			type: String,
+			default: ''
+		},
+		// 标题
+		title: {
+			type: String,
+			default: '优惠券'
+		},
+		// 描述
+		desc: {
+			type: String,
+			default: ''
+		},
+		// 有效期
+		time: {
+			type: String,
+			default: ''
+		},
+		// 操作按钮文字
+		actionText: {
+			type: String,
+			default: '使用'
+		},
+		// 形状：coupon-优惠券, envelope-红包, card-卡片
+		shape: {
+			type: String,
+			default: 'coupon'
+		},
+		// 尺寸：small, medium, large
+		size: {
+			type: String,
+			default: 'medium'
+		},
+		// 是否圆形按钮
+		circle: {
+			type: Boolean,
+			default: false
+		},
+		// 是否禁用
+		disabled: {
+			type: Boolean,
+			default: false
+		},
+		// 背景颜色
+		bgColor: {
+			type: String,
+			default: ''
+		},
+		// 文字颜色
+		color: {
+			type: String,
+			default: ''
+		},
+		// 内置背景类型
+		type: {
+			type: String,
+			default: ''
+		},
+	})
+
+	const emit = defineEmits(['click'])
+
+	const couponStyle = computed((): UTSJSONObject => {
+		const style = {} as UTSJSONObject
+		if (props.bgColor.length > 0) style['background'] = props.bgColor
+		if (props.color.length > 0) style['color'] = props.color
+		return style
+	})
+
+	const dotCount = computed((): number => {
+		// 根据尺寸计算锯齿数量
+		if (props.size == 'small') return 8
+		if (props.size == 'large') return 12
+		return 10
+	})
+
+	const hasType = (): boolean => {
+		return props.type.length > 0
 	}
+
+	const handleClick = (): void => {
+		if (props.disabled) return
+		emit('click')
+	}
+
+	defineExpose({
+		couponStyle,
+		dotCount,
+		hasType,
+		handleClick
+	})
 </script>
 
 <style lang="scss" scoped>

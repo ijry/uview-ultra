@@ -53,35 +53,31 @@
 	</view>
 </template>
 
-<script>
-	export default {
-		data() {
-			return {
-				mode: false,
-				borderColor: '#e4e7ed',
-				align: 'center',
-				index: 0,
-				key: 0
-			}
-		},
-		methods: {
-			modeChange(index: number) {
-				// #ifdef MP-WEIXIN
-				uni.showToast({
-					title: '微信小程序暂不支持单元格合并'
-				})
-				return;
-				// #endif
-				this.mode = index == 0 ? true : false;
-				this.key ++;
-			},
-			borderColorChange(index: number) {
-				this.borderColor = index == 0 ? '#e4e7ed' : index == 1 ? '#2979ff' : '#ff9900';
-			},
-			alignChange(index: number) {
-				this.align = index == 0 ? 'left' : index == 1 ? 'center' : 'right';
-			}
-		}
+<script setup lang="uts">
+	import { ref } from 'vue'
+
+	const mode = ref(false)
+	const borderColor = ref('#e4e7ed')
+	const align = ref('center')
+	const key = ref(0)
+
+	function modeChange(index: number) {
+		// #ifdef MP-WEIXIN
+		uni.showToast({
+			title: '微信小程序暂不支持单元格合并'
+		})
+		return
+		// #endif
+		mode.value = index == 0 ? true : false
+		key.value++
+	}
+
+	function borderColorChange(index: number) {
+		borderColor.value = index == 0 ? '#e4e7ed' : index == 1 ? '#2979ff' : '#ff9900'
+	}
+
+	function alignChange(index: number) {
+		align.value = index == 0 ? 'left' : index == 1 ? 'center' : 'right'
 	}
 </script>
 

@@ -127,13 +127,9 @@
 	</view>
 </template>
 
-<script>
-export default {
-  methods: {
-    getActionBorderRadius(circle: any | null): string {
-      return circle == true ? '50rpx' : '6rpx';
-    }
-  }
+<script setup lang="uts">
+function getActionBorderRadius(circle: any | null): string {
+  return circle == true ? '50rpx' : '6rpx'
 }
 </script>
 

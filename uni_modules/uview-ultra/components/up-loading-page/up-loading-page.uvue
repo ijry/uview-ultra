@@ -1,17 +1,7 @@
 <template>
     <up-transition
         :show="loading"
-        :custom-style="{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: bgColor,
-            display: 'flex',
-            zIndex: zIndex,
-            ...customStyleParse
-        }"
+        :custom-style="transitionStyle"
     >
         <view class="up-loading-page">
             <view class="up-loading-page__warpper">
@@ -21,25 +11,19 @@
                         :src="image"
                         class="up-loading-page__warpper__loading-icon__img"
                         mode="widthFit"
-						:style="{
-							width: addUnit(iconSize),
-						    height: addUnit(iconSize)
-						}"
+						:style="imageStyle"
                     ></image>
                     <up-loading-icon
                         v-else
                         :mode="loadingMode"
-                        :size="addUnit(iconSize)"
+                        :size="iconSizeValue"
                         :color="loadingColor"
                     ></up-loading-icon>
                 </view>
                 <slot>
                     <text
                         class="up-loading-page__warpper__text"
-                        :style="{
-                            fontSize: addUnit(fontSize),
-                            color: color,
-                        }"
+                        :style="textStyle"
                         >{{ loadingText }}</text
                     >
                 </slot>
@@ -48,11 +32,10 @@
     </up-transition>
 </template>
 
-<script>
-import { propsLoadingPage } from "./props";
-import { mpMixin } from '../../libs/mixin/mpMixin';
-import { mixin } from '../../libs/mixin/mixin';
-import { addUnit } from '../../libs/function/index';
+<script setup lang="uts">
+import { computed } from 'vue'
+import defProps from './loadingPage'
+import { addStyle, addUnit } from '../../libs/function/index'
 /**
  * loadingPage 加载动画
  * @author jry ijry@qq.com
@@ -71,23 +54,107 @@ import { addUnit } from '../../libs/function/index';
  * @property {Object}			customStyle		自定义样式
  * @example <up-loading mode="circle"></up-loading>
  */
-export default {
-    name: "up-loading-page",
-    mixins: [mpMixin, mixin, propsLoadingPage],
-    data() {
-        return {};
+defineOptions({
+    name: 'up-loading-page'
+})
+
+const props = defineProps({
+    // 提示内容
+    loadingText: {
+        type: [String, Number],
+        default: defProps.getString('loadingPage.loadingText')
     },
-	computed: {
-		customStyleParse(): UTSJSONObject {
-			return this.customStyle as UTSJSONObject
-		}
-	},
-    methods: {
-        addUnit(str: any): string {
-            return addUnit(str)
-        }
+    // 文字上方用于替换loading动画的图片
+    image: {
+        type: String,
+        default: defProps.getString('loadingPage.image')
+    },
+    // 加载动画的模式，circle-圆形，spinner-花朵形，semicircle-半圆形
+    loadingMode: {
+        type: String,
+        default: defProps.getString('loadingPage.loadingMode')
+    },
+    // 是否加载中
+    loading: {
+        type: Boolean,
+        default: defProps.getBoolean('loadingPage.loading')
+    },
+    // 背景色
+    bgColor: {
+        type: String,
+        default: defProps.getString('loadingPage.bgColor')
+    },
+    // 文字颜色
+    color: {
+        type: String,
+        default: defProps.getString('loadingPage.color')
+    },
+    // 文字大小
+    fontSize: {
+        type: [String, Number],
+        default: defProps.getNumber('loadingPage.fontSize')
+    },
+    // 图标大小
+    iconSize: {
+        type: [String, Number],
+        default: defProps.getNumber('loadingPage.iconSize')
+    },
+    // 加载中图标的颜色，只能rgb或者十六进制颜色值
+    loadingColor: {
+        type: String,
+        default: defProps.getString('loadingPage.loadingColor')
+    },
+    // 层级
+    zIndex: {
+        type: Number,
+        default: defProps.getNumber('loadingPage.zIndex')
+    },
+    customStyle: {
+        type: [Object, String],
+        default: () => ({})
     }
-};
+})
+
+const customStyleParse = computed((): UTSJSONObject => {
+    return addStyle(props.customStyle) as UTSJSONObject
+})
+
+const transitionStyle = computed((): UTSJSONObject => {
+    const style = {} as UTSJSONObject
+    style['position'] = 'fixed'
+    style['top'] = 0
+    style['left'] = 0
+    style['right'] = 0
+    style['bottom'] = 0
+    style['backgroundColor'] = props.bgColor
+    style['display'] = 'flex'
+    style['zIndex'] = props.zIndex
+    const custom = customStyleParse.value
+    const keys = UTSJSONObject.keys(custom)
+    for (let i = 0; i < keys.length; i++) {
+        const key = keys[i]
+        style[key] = custom[key]
+    }
+    return style
+})
+
+const iconSizeValue = computed((): string => {
+    return addUnit(props.iconSize)
+})
+
+const imageStyle = computed((): UTSJSONObject => {
+    const style = {} as UTSJSONObject
+    style['width'] = iconSizeValue.value
+    style['height'] = iconSizeValue.value
+    return style
+})
+
+const textStyle = computed((): UTSJSONObject => {
+    const style = {} as UTSJSONObject
+    style['fontSize'] = addUnit(props.fontSize)
+    style['color'] = props.color
+    return style
+})
 </script>
 
 <style lang="scss" scoped>

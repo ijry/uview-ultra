@@ -22,49 +22,45 @@
   </view>
 </template>
 
-<script>
-export default {
-  data() {
-    return {
-      currentCity: '',
-      indexList: ['热', '全'] as Array<string>,
-      cityList: [[{
-        name: '北京',
-        value: 'beijing'
-      }, {
-        name: '上海',
-        value: 'shanghai'
-      }, {
-        name: '广州',
-        value: 'guangzhou'
-      }] as Array<UTSJSONObject>, [{
-        name: '北京',
-        value: 'beijing'
-      }, {
-        name: '上海',
-        value: 'shanghai'
-      }, {
-        name: '广州',
-        value: 'guangzhou'
-      }, {
-        name: '深圳',
-        value: 'shenzhen'
-      }, {
-        name: '杭州',
-        value: 'hangzhou'
-      }] as Array<UTSJSONObject>] as Array<Array<UTSJSONObject>>
-    };
-  },
-  methods: {
-    locationSuccess(_e: UTSJSONObject): void {
-      this.currentCity = '南京';
-    },
-    selectCity(e: UTSJSONObject): void {
-      const city = e['locationCity']
-      this.currentCity = city == null ? '' : city.toString()
-    }
-  }
-};
+<script setup lang="uts">
+import { ref } from 'vue'
+
+const currentCity = ref('')
+const indexList = ['热', '全'] as Array<string>
+const cityList = [[{
+  name: '北京',
+  value: 'beijing'
+}, {
+  name: '上海',
+  value: 'shanghai'
+}, {
+  name: '广州',
+  value: 'guangzhou'
+}] as Array<UTSJSONObject>, [{
+  name: '北京',
+  value: 'beijing'
+}, {
+  name: '上海',
+  value: 'shanghai'
+}, {
+  name: '广州',
+  value: 'guangzhou'
+}, {
+  name: '深圳',
+  value: 'shenzhen'
+}, {
+  name: '杭州',
+  value: 'hangzhou'
+}] as Array<UTSJSONObject>] as Array<Array<UTSJSONObject>>
+
+function locationSuccess(_e: UTSJSONObject): void {
+  currentCity.value = '南京'
+}
+
+function selectCity(e: UTSJSONObject): void {
+  const city = e['locationCity']
+  currentCity.value = city == null ? '' : city.toString()
+}
 </script>
 
 <style lang="scss" scoped>

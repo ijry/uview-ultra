@@ -147,15 +147,11 @@
 	<!-- #endif -->
 </template>
 
-<script>
-	export default {
-		data() {
-			return {
-				switch1: true,
-				switch2: false
-			}
-		}
-	}
+<script setup lang="uts">
+	import { ref } from 'vue'
+
+	const switch1 = ref(true)
+	const switch2 = ref(false)
 </script>
 
 <style lang="scss">

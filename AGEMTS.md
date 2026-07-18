@@ -58,3 +58,6 @@
   - `D:\Repos\xyito\config\ultraUI.md`
 - 发布命令、版本号 bump、发布说明等，均以该文档为准；禁止跳过文档自行编造发布流程。
 
+## 7) uview-plus说明
+
+uview-plus一般是指的同一个父目录下的uview-plus文件夹项目， 文档一般也在同一父目录下。

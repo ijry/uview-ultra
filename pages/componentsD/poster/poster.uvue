@@ -24,7 +24,9 @@
 	</view>
 </template>
 
-<script lang="uts">
+<script setup lang="uts">
+import { ref } from 'vue'
+
 function createPosterConfig(): UTSJSONObject {
 	return {
 		css: {
@@ -98,59 +100,55 @@ function createPosterConfig(): UTSJSONObject {
 	} as UTSJSONObject
 }
 
-export default {
-	data() {
-		return {
-			posterConfig: createPosterConfig(),
-			posterImageUrl: ''
-		}
-	},
-	methods: {
-		generatePoster(): void {
-			uni.showLoading({
-				title: '海报生成中...'
-			})
-			const poster = this.$refs['poster'] as ComponentPublicInstance | null
-			if (poster == null) {
-				uni.hideLoading()
-				uni.showToast({
-					title: '海报组件未就绪',
-					icon: 'none'
-				})
-				return
-			}
-			const result = poster.$callMethod('exportImage')
-			if (result == null) {
-				uni.hideLoading()
-				uni.showToast({
-					title: '海报生成失败',
-					icon: 'none'
-				})
-				return
-			}
-			;(result as Promise<UTSJSONObject>).then((res: UTSJSONObject) => {
-				this.posterImageUrl = res['path'] == null ? '' : res['path'].toString()
-				uni.hideLoading()
-				uni.showToast({
-					title: '海报生成成功',
-					icon: 'success'
-				})
-			}).catch((error: any | null) => {
-				this.onPosterError(error)
-			})
-		},
-		onPosterExport(result: UTSJSONObject): void {
-			this.posterImageUrl = result['path'] == null ? '' : result['path'].toString()
-		},
-		onPosterError(error: any | null): void {
-			console.error('海报生成失败:', error)
-			uni.hideLoading()
-			uni.showToast({
-				title: '海报生成失败',
-				icon: 'none'
-			})
-		}
+const posterConfig = createPosterConfig()
+const posterImageUrl = ref('')
+const poster = ref<ComponentPublicInstance | null>(null)
+
+function onPosterError(error: any | null): void {
+	console.error('海报生成失败:', error)
+	uni.hideLoading()
+	uni.showToast({
+		title: '海报生成失败',
+		icon: 'none'
+	})
+}
+
+function generatePoster(): void {
+	uni.showLoading({
+		title: '海报生成中...'
+	})
+	const posterInstance = poster.value
+	if (posterInstance == null) {
+		uni.hideLoading()
+		uni.showToast({
+			title: '海报组件未就绪',
+			icon: 'none'
+		})
+		return
 	}
+	const result = posterInstance.$callMethod('exportImage')
+	if (result == null) {
+		uni.hideLoading()
+		uni.showToast({
+			title: '海报生成失败',
+			icon: 'none'
+		})
+		return
+	}
+	;(result as Promise<UTSJSONObject>).then((res: UTSJSONObject) => {
+		posterImageUrl.value = res['path'] == null ? '' : res['path'].toString()
+		uni.hideLoading()
+		uni.showToast({
+			title: '海报生成成功',
+			icon: 'success'
+		})
+	}).catch((error: any | null) => {
+		onPosterError(error)
+	})
+}
+
+function onPosterExport(result: UTSJSONObject): void {
+	posterImageUrl.value = result['path'] == null ? '' : result['path'].toString()
 }
 </script>
 

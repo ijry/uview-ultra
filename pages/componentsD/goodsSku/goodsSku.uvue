@@ -79,90 +79,53 @@
 	</view>
 </template>
 
-<script>
-export default {
-	data() {
-		return {
-			result: '',
-			// 商品信息
-			goodsInfo: {
-				image: 'https://uview-plus.jiangruyi.com/uview/ext/200.jpg',
-				price: 99.00,
-				stock: 100
-			} as UTSJSONObject,
-			// SKU树形结构
-			skuTree: [
-				{
-					label: '颜色',
-					name: 'color',
-					children: [
-						{ id: 1, name: '红色' },
-						{ id: 2, name: '蓝色' },
-						{ id: 3, name: '黑色' }
-					]
-				},
-				{
-					label: '尺寸',
-					name: 'size',
-					children: [
-						{ id: 1, name: 'S' },
-						{ id: 2, name: 'M' },
-						{ id: 3, name: 'L' },
-						{ id: 4, name: 'XL' }
-					]
-				}
-			] as Array<UTSJSONObject>,
-			// SKU列表
-			skuList: [
-				{
-					id: 1,
-					color: 1,
-					size: 1,
-					price: 99.00,
-					stock: 50
-				},
-				{
-					id: 2,
-					color: 1,
-					size: 2,
-					price: 99.00,
-					stock: 40
-				},
-				{
-					id: 3,
-					color: 2,
-					size: 1,
-					price: 109.00,
-					stock: 30
-				},
-				{
-					id: 4,
-					color: 2,
-					size: 3,
-					price: 109.00,
-					stock: 20
-				},
-				{
-					id: 5,
-					color: 3,
-					size: 4,
-					price: 89.00,
-					stock: 60
-				}
-			] as Array<UTSJSONObject>
-		};
+<script setup lang="uts">
+import { ref } from 'vue'
+
+const result = ref('')
+const goodsInfo = {
+	image: 'https://uview-plus.jiangruyi.com/uview/ext/200.jpg',
+	price: 99.00,
+	stock: 100
+} as UTSJSONObject
+const skuTree = [
+	{
+		label: '颜色',
+		name: 'color',
+		children: [
+			{ id: 1, name: '红色' },
+			{ id: 2, name: '蓝色' },
+			{ id: 3, name: '黑色' }
+		]
 	},
-	methods: {
-		confirmSku(e: UTSJSONObject): void {
-			const sku = e['sku'] as UTSJSONObject | null;
-			const price = sku == null ? '' : this.toText(sku['price'])
-			this.result = `选择了: ${this.toText(e['selectedText'])}, 数量: ${this.toText(e['num'])}, 价格: ${price}`;
-		},
-		toText(value: any | null): string {
-			return value == null ? '' : value.toString()
-		}
+	{
+		label: '尺寸',
+		name: 'size',
+		children: [
+			{ id: 1, name: 'S' },
+			{ id: 2, name: 'M' },
+			{ id: 3, name: 'L' },
+			{ id: 4, name: 'XL' }
+		]
 	}
-};
+] as Array<UTSJSONObject>
+const skuList = [
+	{ id: 1, color: 1, size: 1, price: 99.00, stock: 50 },
+	{ id: 2, color: 1, size: 2, price: 99.00, stock: 40 },
+	{ id: 3, color: 2, size: 1, price: 109.00, stock: 30 },
+	{ id: 4, color: 2, size: 3, price: 109.00, stock: 20 },
+	{ id: 5, color: 3, size: 4, price: 89.00, stock: 60 }
+] as Array<UTSJSONObject>
+
+function toText(value: any | null): string {
+	return value == null ? '' : value.toString()
+}
+
+function confirmSku(e: UTSJSONObject): void {
+	const sku = e['sku'] as UTSJSONObject | null
+	const price = sku == null ? '' : toText(sku['price'])
+	result.value = `选择了: ${toText(e['selectedText'])}, 数量: ${toText(e['num'])}, 价格: ${price}`
+}
 </script>
 
 <style lang="scss" scoped>

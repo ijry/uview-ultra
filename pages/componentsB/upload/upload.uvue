@@ -119,79 +119,84 @@
 	<!-- #endif -->
 </template>
 
-<script>
-	export default {
-		data() {
-			return {
-				fileList1: [] as UTSJSONObject[],
-				fileList2: [] as UTSJSONObject[],
-				fileList3: [{
-					url: 'https://cdn.uviewui.com/uview/swiper/1.jpg',
-				}] as UTSJSONObject[],
-				fileList4: [{
-						url: 'https://cdn.uviewui.com/uview/swiper/1.jpg',
-					},
-					{
-						url: 'https://cdn.uviewui.com/uview/swiper/1.jpg',
-					}
-				] as UTSJSONObject[],
-				fileList5: [] as UTSJSONObject[],
-				fileList6: [] as UTSJSONObject[],
-				fileList7: [] as UTSJSONObject[]
-			}
+<script setup lang="uts">
+	import { ref } from 'vue'
+
+	const fileList1 = ref([] as UTSJSONObject[])
+	const fileList2 = ref([] as UTSJSONObject[])
+	const fileList3 = ref([{
+		url: 'https://cdn.uviewui.com/uview/swiper/1.jpg',
+	}] as UTSJSONObject[])
+	const fileList4 = ref([
+		{
+			url: 'https://cdn.uviewui.com/uview/swiper/1.jpg',
 		},
-		onLoad() {
-		},
-		methods: {
-			// 删除图片
-			deletePic(event: UTSJSONObject) {
-				(this.$data[`fileList${event.name}`] as UTSJSONObject[]).splice(event['index'] as number, 1)
-			},
-			beforeRead() {
-				console.log('beforeRead')
-			},
-			// 新增图片
-			async afterRead(event: UTSJSONObject) {
-				// 当设置 mutiple 为 true 时, file 为数组格式，否则为对象格式
-				let lists = ([] as UTSJSONObject[]).concat(event.file as UTSJSONObject[])
-				let fileListLen = (this.$data[`fileList${event['name']}`] as UTSJSONObject[]).length
-				lists.map((item: UTSJSONObject) => {
-					(this.$data[`fileList${event['name']}`] as UTSJSONObject[]).push({
-						...item,
-						status: 'uploading',
-						message: '上传中'
-					})
-				})
-				for (let i = 0; i < lists.length; i++) {
-					// const result = await this.uploadFilePromise(lists[i]['url'].toString())
-					// let item1 = (this.$data[`fileList${event['name']}`] as UTSJSONObject[])[fileListLen]
-					// let itemAdd = UTSJSONObject.assign(item1, {
-					// 	status: 'success',
-					// 	message: '',
-					// 	url: result['data'] as string
-					// }) as UTSJSONObject
-					// (this.$data[`fileList${event['name']}`] as UTSJSONObject[]).splice(fileListLen, 1, itemAdd)
-					// fileListLen++
+		{
+			url: 'https://cdn.uviewui.com/uview/swiper/1.jpg',
+		}
+	] as UTSJSONObject[])
+	const fileList5 = ref([] as UTSJSONObject[])
+	const fileList6 = ref([] as UTSJSONObject[])
+
+	function getFileList(name: any | null): UTSJSONObject[] {
+		const key = name == null ? '' : name.toString()
+		if (key == '1') return fileList1.value
+		if (key == '2') return fileList2.value
+		if (key == '3') return fileList3.value
+		if (key == '4') return fileList4.value
+		if (key == '5') return fileList5.value
+		if (key == '6') return fileList6.value
+		return fileList1.value
+	}
+
+	function deletePic(event: UTSJSONObject) {
+		getFileList(event['name']).splice(event['index'] as number, 1)
+	}
+
+	function beforeRead() {
+		console.log('beforeRead')
+	}
+
+	async function afterRead(event: UTSJSONObject) {
+		const targetList = getFileList(event['name'])
+		const lists = ([] as UTSJSONObject[]).concat(event['file'] as UTSJSONObject[])
+		let fileListLen = targetList.length
+		lists.map((item: UTSJSONObject) => {
+			targetList.push({
+				...item,
+				status: 'uploading',
+				message: '上传中'
+			})
+		})
+		for (let i = 0; i < lists.length; i++) {
+			// const result = await uploadFilePromise(lists[i]['url'].toString())
+			// let item1 = targetList[fileListLen]
+			// let itemAdd = UTSJSONObject.assign(item1, {
+			// 	status: 'success',
+			// 	message: '',
+			// 	url: result['data'] as string
+			// }) as UTSJSONObject
+			// targetList.splice(fileListLen, 1, itemAdd)
+			// fileListLen++
+		}
+	}
+
+	function uploadFilePromise(url: string): Promise<UTSJSONObject | null> {
+		return new Promise((resolve, reject) => {
+			uni.uploadFile({
+				url: 'http://www.example.com/upload',
+				filePath: url,
+				name: 'file',
+				formData: {
+					user: 'test'
+				},
+				success: (res: UploadFileSuccess) => {
+					setTimeout(() => {
+						resolve(JSON.parseObject(res.data))
+					}, 1000)
 				}
-			},
-			uploadFilePromise(url: string): Promise<UTSJSONObject|null> {
-				return new Promise((resolve, reject) => {
-					let a = uni.uploadFile({
-						url: 'http://www.example.com/upload', // 仅为示例，非真实的接口地址
-						filePath: url,
-						name: 'file',
-						formData: {
-							user: 'test'
-						},
-						success: (res: UploadFileSuccess ) => {
-							setTimeout(() => {
-								resolve(JSON.parseObject(res.data))
-							}, 1000)
-						}
-					});
-				})
-			},
-		},
+			})
+		})
 	}
 </script>
 

@@ -71,22 +71,17 @@
 	<!-- #endif -->
 </template>
 
-<script>
-	export default {
-		data() {
-			return {
-				value1: '',
-				value2: '统计字数',
-				value3: '',
-				value4: '',
-				value5: ''
-			}
-		},
-		methods: {
-			formatter(value: string): string {
-				return value.replace(/[^0-9]/ig,"")
-			}
-		}
+<script setup lang="uts">
+	import { ref } from 'vue'
+
+	const value1 = ref('')
+	const value2 = ref('统计字数')
+	const value3 = ref('')
+	const value4 = ref('')
+	const value5 = ref('')
+
+	function formatter(value: string): string {
+		return value.replace(/[^0-9]/ig, "")
 	}
 </script>
 

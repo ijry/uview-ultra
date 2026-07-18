@@ -102,124 +102,116 @@
 	<!-- #endif -->
 </template>
 
-<script>
+<script setup lang="uts">
+	import { ref } from 'vue'
 	import { UPSwipeActionItemOption } from '@/uni_modules/uview-ultra/types/index.uts'
-	export default {
-		data() {
-			return {
-				show1: true,
-				moveX: 0,
-				showText: '当前状态：关',
-				showStatus: false,
-				options1: [{
-					text: '删除',
-					style: {
-						backgroundColor: '#f56c6c'
-					}
-				}] as UPSwipeActionItemOption[],
-				options2: [{
-					text: '收藏',
-					style: {
-						backgroundColor: '#3c9cff'
-					}
-				}, {
-					text: '删除',
-					style: {
-						backgroundColor: '#f56c6c'
-					}
-				}] as UPSwipeActionItemOption[],
-				options3: [{
-					text: '收藏',
-					icon: 'star-fill',
-					iconSize: '20',
-					style: {
-						backgroundColor: '#f9ae3d'
-					}
-				}] as UPSwipeActionItemOption[],
-				options4: [{
-					text: '禁用状态',
-					disabled: true,
-					options: [{
-							text: '置顶',
-							style: {
-								backgroundColor: '#3c9cff',
-							}
-						},
-						{
-							text: '取消',
-							style: {
-								backgroundColor: '#f9ae3d',
-							}
-						},
-					]as UPSwipeActionItemOption[],
-				}, {
-					text: '正常状态',
-					disabled: false,
-					options: [{
-							text: '置顶',
-							style: {
-								backgroundColor: '#3c9cff',
-							}
-						},
-						{
-							text: '取消',
-							style: {
-								backgroundColor: '#f9ae3d',
-							}
-						},
-					]as UPSwipeActionItemOption[],
-				}, {
-					text: '自动关闭',
-					disabled: false,
-					options: [{
-							text: '置顶',
-							style: {
-								backgroundColor: '#3c9cff',
-							}
-						},
-						{
-							text: '取消',
-							style: {
-								backgroundColor: '#f9ae3d',
-							}
-						},
-					]as UPSwipeActionItemOption[],
-				}],
-				options5: [{
-					icon: 'trash-fill',
-					style: {
-						backgroundColor: '#f56c6c',
-						width: '40px',
-						height: '40px',
-						borderRadius: '100px',
-						margin: '0 6px'
-					}
-				}, {
-					icon: 'heart-fill',
-					style: {
-						backgroundColor: '#5ac725',
-						width: '40px',
-						height: '40px',
-						borderRadius: '100px',
-						margin: '0 6px'
-					}
-				}] as UPSwipeActionItemOption[]
-			}
-		},
-		methods: {
-			click(index: number) {
-				console.log('click', index);
-				uni.showModal({
-					title: '温馨提示',
-					content: '确定要删除吗？',
-					success: res => {
-						if (res.confirm) {
-							this.show1 = false
-						}
-					}
-				})
-			}
+
+	const show1 = ref(true)
+	const options1 = [{
+		text: '删除',
+		style: {
+			backgroundColor: '#f56c6c'
 		}
+	}] as UPSwipeActionItemOption[]
+	const options2 = [{
+		text: '收藏',
+		style: {
+			backgroundColor: '#3c9cff'
+		}
+	}, {
+		text: '删除',
+		style: {
+			backgroundColor: '#f56c6c'
+		}
+	}] as UPSwipeActionItemOption[]
+	const options3 = [{
+		text: '收藏',
+		icon: 'star-fill',
+		iconSize: '20',
+		style: {
+			backgroundColor: '#f9ae3d'
+		}
+	}] as UPSwipeActionItemOption[]
+	const options4 = [{
+		text: '禁用状态',
+		disabled: true,
+		options: [{
+				text: '置顶',
+				style: {
+					backgroundColor: '#3c9cff',
+				}
+			},
+			{
+				text: '取消',
+				style: {
+					backgroundColor: '#f9ae3d',
+				}
+			},
+		] as UPSwipeActionItemOption[],
+	}, {
+		text: '正常状态',
+		disabled: false,
+		options: [{
+				text: '置顶',
+				style: {
+					backgroundColor: '#3c9cff',
+				}
+			},
+			{
+				text: '取消',
+				style: {
+					backgroundColor: '#f9ae3d',
+				}
+			},
+		] as UPSwipeActionItemOption[],
+	}, {
+		text: '自动关闭',
+		disabled: false,
+		options: [{
+				text: '置顶',
+				style: {
+					backgroundColor: '#3c9cff',
+				}
+			},
+			{
+				text: '取消',
+				style: {
+					backgroundColor: '#f9ae3d',
+				}
+			},
+		] as UPSwipeActionItemOption[],
+	}]
+	const options5 = [{
+		icon: 'trash-fill',
+		style: {
+			backgroundColor: '#f56c6c',
+			width: '40px',
+			height: '40px',
+			borderRadius: '100px',
+			margin: '0 6px'
+		}
+	}, {
+		icon: 'heart-fill',
+		style: {
+			backgroundColor: '#5ac725',
+			width: '40px',
+			height: '40px',
+			borderRadius: '100px',
+			margin: '0 6px'
+		}
+	}] as UPSwipeActionItemOption[]
+
+	function click(index: number) {
+		console.log('click', index)
+		uni.showModal({
+			title: '温馨提示',
+			content: '确定要删除吗？',
+			success: res => {
+				if (res.confirm) {
+					show1.value = false
+				}
+			}
+		})
 	}
 </script>
 

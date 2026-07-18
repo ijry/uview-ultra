@@ -2,10 +2,7 @@
 	<view class="up-read-more">
 		<view
 		    class="up-read-more__content"
-		    :style="{
-				height: isLongContent && status === 'close' ? addUnit(showHeight) : addUnit(contentHeight),
-				textIndent: textIndent
-			}"
+		    :style="contentStyle"
 		>
 			<view
 			    class="up-read-more__content__inner"
@@ -17,7 +14,7 @@
 		</view>
 		<view
 		    class="up-read-more__toggle"
-		    :style="[innerShadowStyle]"
+		    :style="innerShadowStyle"
 		    v-if="isLongContent"
 		>
 			<slot name="toggle">
@@ -35,7 +32,7 @@
 					<view class="up-read-more__toggle__icon">
 						<up-icon
 						    :color="color"
-						    :size="parseInt(getPx(fontSize)) + 2"
+						    :size="iconSize"
 						    :name="status === 'close' ? 'arrow-down' : 'arrow-up'"
 						></up-icon>
 					</view>
@@ -45,11 +42,19 @@
 	</view>
 </template>
 
-<script>
-	import { propsReadMore } from './props';
-	import { mpMixin } from '../../libs/mixin/mpMixin';
-	import { mixin } from '../../libs/mixin/mixin';
-	import { addUnit, guid, getPx, sleep } from '../../libs/function/index';
+<script setup lang="uts">
+	import { computed, getCurrentInstance, onBeforeUnmount, onMounted, ref } from 'vue'
+	import defProps from './readMore'
+	import { addUnit, guid, getPx, sleep, upGetRect } from '../../libs/function/index'
+
+	function createShadowStyle(): UTSJSONObject {
+		return {
+			backgroundImage: 'linear-gradient(180deg, rgba(255, 255, 255, 0), #ffffff)',
+			paddingTop: '100px',
+			marginTop: '-100px'
+		} as UTSJSONObject
+	}
+
 	/**
 	 * readMore 阅读更多
 	 * @description 该组件一般用于内容较长，预先收起一部分，点击展开全部内容的场景。
@@ -67,75 +72,157 @@
 	 * @event {Function} close 内容被收起时触发
 	 * @example <up-read-more><rich-text :nodes="content"></rich-text></up-read-more>
 	 */
-	export default {
-		name: 'up-read-more',
-		mixins: [mpMixin, mixin, propsReadMore],
-		data() {
-			return {
-				isLongContent: false, // 是否需要隐藏一部分内容
-				status: 'close', // 当前隐藏与显示的状态，close-收起状态，open-展开状态
-				elId: guid(), // 生成唯一class
-				contentHeight: 100, // 内容高度
+	defineOptions({
+		name: 'up-read-more'
+	})
+
+	const props = defineProps({
+		// 默认的显示占位高度
+		showHeight: {
+			type: [String, Number],
+			default: defProps.getNumber('readMore.showHeight')
+		},
+		// 展开后是否显示"收起"按钮
+		toggle: {
+			type: Boolean,
+			default: defProps.getBoolean('readMore.toggle')
+		},
+		// 关闭时的提示文字
+		closeText: {
+			type: String,
+			default: defProps.getString('readMore.closeText')
+		},
+		// 展开时的提示文字
+		openText: {
+			type: String,
+			default: defProps.getString('readMore.openText')
+		},
+		// 提示的文字颜色
+		color: {
+			type: String,
+			default: defProps.getString('readMore.color')
+		},
+		// 提示文字的大小
+		fontSize: {
+			type: [String, Number],
+			default: defProps.getNumber('readMore.fontSize')
+		},
+		// 是否显示阴影
+		shadowStyle: {
+			type: Object,
+			default(): UTSJSONObject {
+				return {
+					backgroundImage: 'linear-gradient(180deg, rgba(255, 255, 255, 0), #ffffff)',
+					paddingTop: '100px',
+					marginTop: '-100px'
+				} as UTSJSONObject
 			}
 		},
-		computed: {
-			// 展开后无需阴影，收起时才需要阴影样式
-			innerShadowStyle() {
-				if (this.status === 'open') return {}
-				else return this.shadowStyle
-			}
+		// 段落首行缩进的字符个数
+		textIndent: {
+			type: String,
+			default: defProps.getString('readMore.textIndent')
 		},
-		mounted() {
-			this.init()
-		},
-		emits: ["open", "close"],
-		methods: {
-			addUnit(e: any) {
-				return addUnit(e)
-			},
-			getPx(e: any): string {
-				return getPx(e)
-			},
-			async init() {
-				await sleep(150)
-				this.getContentHeight().then((size: NodeInfo) => {
-					this.contentHeight = size.height ?? 0
-					if (this.contentHeight <= 0) {
-						// 安卓上可能还未渲染完，重试
-						setTimeout(() => { this.init() }, 200)
-						return
+		// open和close事件时，将此参数返回在回调参数中
+		name: {
+			type: [String, Number],
+			default: defProps.getString('readMore.name')
+		}
+	})
+
+	const emit = defineEmits(['open', 'close'])
+	const instance = getCurrentInstance()!.proxy!
+
+	const isLongContent = ref(false) // 是否需要隐藏一部分内容
+	const status = ref('close') // 当前隐藏与显示的状态，close-收起状态，open-展开状态
+	const elId = guid() // 生成唯一class
+	const contentHeight = ref(100) // 内容高度
+	const isUnmounted = ref(false)
+	const maxMeasureRetries = 10
+
+	const contentStyle = computed((): UTSJSONObject => {
+		const style = {} as UTSJSONObject
+		style['height'] = isLongContent.value && status.value === 'close' ? addUnit(props.showHeight) : addUnit(contentHeight.value)
+		style['textIndent'] = props.textIndent
+		return style
+	})
+
+	// 展开后无需阴影，收起时才需要阴影样式
+	const innerShadowStyle = computed((): UTSJSONObject => {
+		if (status.value === 'open') return {} as UTSJSONObject
+		const shadowStyleValue = props.shadowStyle as UTSJSONObject | null
+		return shadowStyleValue == null ? createShadowStyle() : shadowStyleValue
+	})
+
+	const iconSize = computed((): number => {
+		return parseInt(getPx(props.fontSize)) + 2
+	})
+
+	const getContentHeight = (): Promise<NodeInfo | null> => {
+		return new Promise(resolve => {
+			upGetRect('.' + elId, false, instance).then((res: NodeInfo) => {
+				resolve(res)
+			})
+		})
+	}
+
+	function measureContent(attempt: number = 0): void {
+		if (isUnmounted.value) return
+		sleep(150).then(() => {
+			if (isUnmounted.value) return
+			getContentHeight().then((size: NodeInfo | null) => {
+				if (isUnmounted.value) return
+				if (size == null) {
+					if (attempt < maxMeasureRetries) {
+						sleep(200).then(() => {
+							if (!isUnmounted.value) measureContent(attempt + 1)
+						})
 					}
-					// 判断高度，如果真实内容高度大于占位高度，则显示收起与展开的控制按钮
-					if (this.contentHeight > parseFloat(getPx(this.showHeight))) {
-						this.isLongContent = true
-						this.status = 'close'
-					} else {
-						// https://github.com/ijry/uview-plus/issues/270
-						this.isLongContent = false
-						this.status = 'close'
+					return
+				}
+				contentHeight.value = size.height ?? 0
+				if (contentHeight.value <= 0) {
+					// 安卓上可能还未渲染完，重试
+					if (attempt < maxMeasureRetries) {
+						sleep(200).then(() => {
+							if (!isUnmounted.value) measureContent(attempt + 1)
+						})
 					}
-				})
-			},
-			// 获取内容的高度
-			async getContentHeight(): Promise<NodeInfo> {
-				return new Promise(resolve => {
-					// @ts-ignore
-					this.upGetRect('.' + this.elId).then((res: NodeInfo) => {
-						resolve(res)
-					})
-				})
-			},
-			// 展开或者收起
-			toggleReadMore() {
-				this.status = this.status === 'close' ? 'open' : 'close'
-				// 如果toggle为false，隐藏"收起"部分的内容
-				if (this.toggle == false) this.isLongContent = false
-				// 发出打开或者收齐的事件
-				// @ts-ignore
-				this.$emit(this.status, this.name)
-			}
+					return
+				}
+				// 判断高度，如果真实内容高度大于占位高度，则显示收起与展开的控制按钮
+				if (contentHeight.value > parseFloat(getPx(props.showHeight))) {
+					isLongContent.value = true
+					status.value = 'close'
+				} else {
+					// https://github.com/ijry/uview-plus/issues/270
+					isLongContent.value = false
+					status.value = 'close'
+				}
+			})
+		})
+	}
+
+	// 展开或者收起
+	const toggleReadMore = (): void => {
+		status.value = status.value === 'close' ? 'open' : 'close'
+		// 如果toggle为false，隐藏"收起"部分的内容
+		if (props.toggle == false) isLongContent.value = false
+		// 发出打开或者收起的事件
+		if (status.value == 'open') {
+			emit('open', props.name)
+		} else {
+			emit('close', props.name)
 		}
 	}
+
+	onMounted(() => {
+		measureContent()
+	})
+
+	onBeforeUnmount(() => {
+		isUnmounted.value = true
+	})
 </script>
 
 <style lang="scss" scoped>

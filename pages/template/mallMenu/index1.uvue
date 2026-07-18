@@ -34,75 +34,70 @@
 	</view>
 </template>
 
-<script>
-	import { createClassifyData } from "@/common/classify.data";
-	export default {
-		data() {
-			return {
-				tabbar: createClassifyData(),
-				scrollTop: 0, //tab标题的滚动条位置
-				current: 0, // 预设当前项的值
-				menuHeight: 0, // 左边菜单的高度
-				menuItemHeight: 0, // 左边菜单item的高度
-			}
-		},
-		computed: {
-			
-		},
-		methods: {
-			getTabbar(): Array<UTSJSONObject> {
-				return this.tabbar as Array<UTSJSONObject>;
-			},
-			getItemName(item: UTSJSONObject): string {
-				return item['name'] as string;
-			},
-			getFoodIcon(item: UTSJSONObject): string {
-				return item['icon'] as string;
-			},
-			getFoods(item: UTSJSONObject): UTSJSONObject[] {
-				return item['foods'] as UTSJSONObject[];
-			},
-			setRectValue(dataVal: string, height: number) {
-				if (dataVal == 'menuHeight') {
-					this.menuHeight = height;
-				} else if (dataVal == 'menuItemHeight') {
-					this.menuItemHeight = height;
-				}
-			},
-			getImg() {
-				return Math.floor(Math.random() * 35);
-			},
-			// 点击左边的栏目切换
-			async swichMenu(index: number) {
-				if(index == this.current) return ;
-				this.current = index;
-				// 如果为0，意味着尚未初始化
-				if(this.menuHeight == 0 || this.menuItemHeight == 0) {
-					await this.getElRect('menu-scroll-view', 'menuHeight');
-					await this.getElRect('u-tab-item', 'menuItemHeight');
-				}
-				// 将菜单菜单活动item垂直居中
-				this.scrollTop = index * this.menuItemHeight + this.menuItemHeight / 2 - this.menuHeight / 2;
-			},
-			// 获取一个目标元素的高度
-			getElRect(elClass: string, dataVal: string): Promise<void> {
-				return new Promise((resolve, reject) => {
-					const query = uni.createSelectorQuery().in(this);
-					query.select('.' + elClass).fields({size: true}, (res: any | null) => {
-						// 如果节点尚未生成，res值为null，循环调用执行
-						if(res == null) {
-							setTimeout(() => {
-								this.getElRect(elClass, dataVal);
-							}, 10);
-							return ;
-						}
-						const rect = res as UTSJSONObject;
-						this.setRectValue(dataVal, rect['height'] as number);
-						resolve();
-					}).exec();
-				})
-			}
+<script setup lang="uts">
+	import { getCurrentInstance, ref } from 'vue'
+	import { createClassifyData } from "@/common/classify.data"
+
+	const instance = getCurrentInstance()!.proxy!
+	const tabbar = createClassifyData()
+	const scrollTop = ref(0)
+	const current = ref(0)
+	const menuHeight = ref(0)
+	const menuItemHeight = ref(0)
+
+	function getTabbar(): Array<UTSJSONObject> {
+		return tabbar as Array<UTSJSONObject>
+	}
+
+	function getItemName(item: UTSJSONObject): string {
+		return item['name'] as string
+	}
+
+	function getFoodIcon(item: UTSJSONObject): string {
+		return item['icon'] as string
+	}
+
+	function getFoods(item: UTSJSONObject): UTSJSONObject[] {
+		return item['foods'] as UTSJSONObject[]
+	}
+
+	function setRectValue(dataVal: string, height: number) {
+		if (dataVal == 'menuHeight') {
+			menuHeight.value = height
+		} else if (dataVal == 'menuItemHeight') {
+			menuItemHeight.value = height
 		}
+	}
+
+	function getImg() {
+		return Math.floor(Math.random() * 35)
+	}
+
+	function getElRect(elClass: string, dataVal: string): Promise<void> {
+		return new Promise((resolve, reject) => {
+			const query = uni.createSelectorQuery().in(instance)
+			query.select('.' + elClass).fields({ size: true }, (res: any | null) => {
+				if (res == null) {
+					setTimeout(() => {
+						getElRect(elClass, dataVal)
+					}, 10)
+					return
+				}
+				const rect = res as UTSJSONObject
+				setRectValue(dataVal, rect['height'] as number)
+				resolve()
+			}).exec()
+		})
+	}
+
+	async function swichMenu(index: number) {
+		if (index == current.value) return
+		current.value = index
+		if (menuHeight.value == 0 || menuItemHeight.value == 0) {
+			await getElRect('menu-scroll-view', 'menuHeight')
+			await getElRect('u-tab-item', 'menuItemHeight')
+		}
+		scrollTop.value = index * menuItemHeight.value + menuItemHeight.value / 2 - menuHeight.value / 2
 	}
 </script>
 

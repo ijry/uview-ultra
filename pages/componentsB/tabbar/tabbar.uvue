@@ -217,38 +217,32 @@
 	</view>
 </template>
 
-<script>
+<script setup lang="uts">
+	import { ref } from 'vue'
 	import { toast } from '@/uni_modules/uview-ultra/index.uts'
-	export default {
-		data() {
-			return {
-				value1: 0 as (string | number | null),
-				value2: 1 as (string | number | null),
-				value3: 'play-right' as (string | number | null),
-				value4: 0 as (string | number | null),
-				value5: 0 as (string | number | null),
-				value6: 0 as (string | number | null),
-				value7: 3 as (string | number | null)
-			}
-		},
-		onLoad() {
 
-		},
-		methods: {
-			change11(e: any) {
-				this.value1 = e
-				console.log('change1', e);
-			},
-			click1(e: any) {
-				console.log('click1', e);
-			},
-			change5(name: any) {
-				if (name == 1) {
-					toast('请您先登录') 
-				} else {
-					this.value5 = name
-				}
-			}
+	const value1 = ref(0 as string | number | null)
+	const value2 = ref(1 as string | number | null)
+	const value3 = ref('play-right' as string | number | null)
+	const value4 = ref(0 as string | number | null)
+	const value5 = ref(0 as string | number | null)
+	const value6 = ref(0 as string | number | null)
+	const value7 = ref(3 as string | number | null)
+
+	function change11(e: any) {
+		value1.value = e
+		console.log('change1', e)
+	}
+
+	function click1(e: any) {
+		console.log('click1', e)
+	}
+
+	function change5(name: any) {
+		if (name == 1) {
+			toast('请您先登录')
+		} else {
+			value5.value = name
 		}
 	}
 </script>

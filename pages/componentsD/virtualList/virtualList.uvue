@@ -26,38 +26,36 @@
   </view>
 </template>
 
-<script>
-export default {
-  data() {
-    return {
-      scrollTop: 0,
-      listData: [] as Array<UTSJSONObject>
-    };
-  },
-  onLoad() {
-    this.loadData()
-  },
-  methods: {
-    loadData(): void {
-      const data = [] as Array<UTSJSONObject>
-      for (let i = 0; i < 10000; i++) {
-        data.push({
-          id: i,
-          name: `Item ${i}`
-        } as UTSJSONObject);
-      }
-      this.listData = data
-    },
-    getItemTitle(item: any | null): string {
-      if (item == null) return ''
-      const data = item as UTSJSONObject
-      const id = data['id']
-      return 'Item ' + (id == null ? '' : id.toString())
-    },
-    onScroll(_scrollTop: number): void {
-    }
+<script setup lang="uts">
+import { ref } from 'vue'
+
+const scrollTop = ref(0)
+const listData = ref([] as Array<UTSJSONObject>)
+
+function loadData(): void {
+  const data = [] as Array<UTSJSONObject>
+  for (let i = 0; i < 10000; i++) {
+    data.push({
+      id: i,
+      name: `Item ${i}`
+    } as UTSJSONObject)
   }
-};
+  listData.value = data
+}
+
+onLoad((_options: OnLoadOptions) => {
+  loadData()
+})
+
+function getItemTitle(item: any | null): string {
+  if (item == null) return ''
+  const data = item as UTSJSONObject
+  const id = data['id']
+  return 'Item ' + (id == null ? '' : id.toString())
+}
+
+function onScroll(_scrollTop: number): void {
+}
 </script>
 
 <style lang="scss" scoped>
