@@ -1,3 +1,10 @@
+## 4.5.1
+fix: 修复日历组件透传弹层属性
+
+- up-calendar 主弹层透传 overlay、duration、overlayStyle、overlayOpacity、zIndex、safeAreaInsetBottom、safeAreaInsetTop、bgColor 等 up-popup 配置。
+- 支持在 pageInline 页面内嵌场景通过 safeAreaInsetBottom=false 关闭底部安全区占位。
+- 同步补齐 Vue、UVue 默认值、props 与类型声明，并对齐 uview-plus 的日历弹层透传实现。
+
 ## 4.5.0
 feat: 发布 4.5.0，完成 uvue Composition API 与 Android UTS 兼容性升级
 

@@ -100,6 +100,46 @@ export const propsCalendar = defineMixin({
             type: Boolean,
             default: calendarProp['show']
         },
+        // 是否显示遮罩
+        overlay: {
+            type: Boolean,
+            default: calendarProp['overlay']
+        },
+        // 动画时长，单位ms
+        duration: {
+            type: [String, Number],
+            default: calendarProp['duration']
+        },
+        // 自定义遮罩的样式
+        overlayStyle: {
+            type: [Object, String],
+            default: calendarProp['overlayStyle']
+        },
+        // 遮罩的透明度，0-1之间
+        overlayOpacity: {
+            type: [Number, String],
+            default: calendarProp['overlayOpacity']
+        },
+        // 层级
+        zIndex: {
+            type: [String, Number],
+            default: calendarProp['zIndex']
+        },
+        // 是否为iPhoneX留出底部安全距离
+        safeAreaInsetBottom: {
+            type: Boolean,
+            default: calendarProp['safeAreaInsetBottom']
+        },
+        // 是否留出顶部安全距离（状态栏高度）
+        safeAreaInsetTop: {
+            type: Boolean,
+            default: calendarProp['safeAreaInsetTop']
+        },
+        // 弹窗背景色，设置为transparent可去除白色背景
+        bgColor: {
+            type: String,
+            default: calendarProp['bgColor']
+        },
         // 是否允许点击遮罩关闭日历
         closeOnClickOverlay: {
             type: Boolean,
@@ -179,6 +219,11 @@ export const propsCalendar = defineMixin({
 		todayColor: {
 			type: String,
 			default: calendarProp['todayColor']
+		},
+		// 是否以内联模式渲染，主要用于 up-calendar-strip 内嵌完整月历
+		pageInline: {
+			type: Boolean,
+			default: calendarProp['pageInline']
 		}
     }
 })

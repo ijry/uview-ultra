@@ -2,7 +2,16 @@
 	<up-popup
 		:show="show"
 		mode="bottom"
-		closeable
+		:overlay="overlay"
+		:duration="duration"
+		:overlayStyle="overlayStyle"
+		:overlayOpacity="overlayOpacity"
+		:zIndex="zIndex"
+		:safeAreaInsetBottom="safeAreaInsetBottom"
+		:safeAreaInsetTop="safeAreaInsetTop"
+		:bgColor="bgColor"
+		:closeable="!pageInline"
+		:pageInline="pageInline"
 		@close="close"
 		:round="round"
 		:closeOnClickOverlay="closeOnClickOverlay"
@@ -197,6 +206,14 @@ const props = defineProps({
 	confirmText: { type: String, default: (defProps['calendar'] as UTSJSONObject)['confirmText'] },
 	confirmDisabledText: { type: String, default: (defProps['calendar'] as UTSJSONObject)['confirmDisabledText'] },
 	show: { type: Boolean, default: (defProps['calendar'] as UTSJSONObject)['show'] },
+	overlay: { type: Boolean, default: (defProps['calendar'] as UTSJSONObject)['overlay'] },
+	duration: { type: [String, Number], default: (defProps['calendar'] as UTSJSONObject)['duration'] },
+	overlayStyle: { type: [Object, String], default: (defProps['calendar'] as UTSJSONObject)['overlayStyle'] },
+	overlayOpacity: { type: [Number, String], default: (defProps['calendar'] as UTSJSONObject)['overlayOpacity'] },
+	zIndex: { type: [String, Number], default: (defProps['calendar'] as UTSJSONObject)['zIndex'] },
+	safeAreaInsetBottom: { type: Boolean, default: (defProps['calendar'] as UTSJSONObject)['safeAreaInsetBottom'] },
+	safeAreaInsetTop: { type: Boolean, default: (defProps['calendar'] as UTSJSONObject)['safeAreaInsetTop'] },
+	bgColor: { type: String, default: (defProps['calendar'] as UTSJSONObject)['bgColor'] },
 	closeOnClickOverlay: { type: Boolean, default: (defProps['calendar'] as UTSJSONObject)['closeOnClickOverlay'] },
 	readonly: { type: Boolean, default: (defProps['calendar'] as UTSJSONObject)['readonly'] },
 	showConfirm: { type: Boolean, default: (defProps['calendar'] as UTSJSONObject)['showConfirm'] },
@@ -212,7 +229,8 @@ const props = defineProps({
 	monthNum: { type: [Number, String], default: 3 },
 	monthSwitch: { type: Boolean, default: (defProps['calendar'] as UTSJSONObject)['monthSwitch'] },
 	showToday: { type: Boolean, default: (defProps['calendar'] as UTSJSONObject)['showToday'] },
-	todayColor: { type: String, default: (defProps['calendar'] as UTSJSONObject)['todayColor'] }
+	todayColor: { type: String, default: (defProps['calendar'] as UTSJSONObject)['todayColor'] },
+	pageInline: { type: Boolean, default: (defProps['calendar'] as UTSJSONObject)['pageInline'] }
 })
 
 const emit = defineEmits(['confirm', 'close'])
