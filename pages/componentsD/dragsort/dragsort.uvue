@@ -1,8 +1,9 @@
 <template>
-    <view class="u-page">
-	  <!-- #ifdef APP -->
-	  <scroll-view style="flex:1">
-	  <!-- #endif -->
+	<view class="u-page">
+	<!-- #ifdef APP -->
+	<scroll-view class="dragsort-scroll" scroll-y="true" :style="scrollStyle">
+	<!-- #endif -->
+    <view class="dragsort-content">
 	  <up-alert class="u-m-b-20" description="PC端查看时需要触摸仿真模式才会正确计算位置"></up-alert>
       <view class="u-page__item">
           <text class="u-page__item__title" style="margin-top: 0;">单列多行模式</text>
@@ -10,8 +11,7 @@
             <up-dragsort :initial-list="list" @drag-end="handleDragEnd">
 			  <template #default="{ item, index }">
 				<view class="custom-item">
-				  <text>序号：{{ getDisplayIndex(index) }}</text> -
-				  <text>{{ getItemLabel(item) }}</text>
+				  <text class="custom-item__text">序号：{{ getDisplayIndex(index) }} - {{ getItemLabel(item) }}</text>
 				</view>
 			  </template>
 			</up-dragsort>
@@ -28,8 +28,7 @@
               </template>
 			  <template #default="{ item, index }">
 				<view class="custom-item">
-				  <text>序号：{{ getDisplayIndex(index) }}</text> -
-				  <text>{{ getItemLabel(item) }}</text>
+				  <text class="custom-item__text">序号：{{ getDisplayIndex(index) }} - {{ getItemLabel(item) }}</text>
 				</view>
 			  </template>
 			</up-dragsort>
@@ -45,10 +44,8 @@
 	            direction="all"
 	            @drag-end="handleDragEnd">
 			  <template #default="{ item, index }">
-				<view class="u-p-r-10">
-					<view class="custom-item-h">
-					<text>{{ getItemLabel(item) }}</text>
-					</view>
+				<view class="grid-item">
+					<text class="custom-item__text">{{ getItemLabel(item) }}</text>
 				</view>
 			  </template>
 			</up-dragsort>
@@ -63,22 +60,31 @@
 	            direction="horizontal"
 	            @drag-end="handleDragEnd">
 			  <template #default="{ item, index }">
-				<view class="u-p-r-10">
-					<view class="custom-item-h">
-					<text>{{ getItemLabel(item) }}</text>
-					</view>
+				<view class="horizontal-item">
+					<text class="custom-item__text">{{ getItemLabel(item) }}</text>
 				</view>
 			  </template>
 			</up-dragsort>
 	      </view>
 	  </view>
-	  <!-- #ifdef APP -->
-	  </scroll-view>
-	  <!-- #endif -->
+    </view>
+	<!-- #ifdef APP -->
+	</scroll-view>
+	<!-- #endif -->
   </view>
 </template>
 
 <script setup lang="uts">
+import { computed } from 'vue'
+import { getWindowInfo } from '@/uni_modules/uview-ultra/libs/function/index.uts'
+
+const scrollStyle = computed((): UTSJSONObject => {
+  const info = getWindowInfo()
+  return {
+    height: `${Math.max(0, info.windowHeight - 24)}px`
+  } as UTSJSONObject
+})
+
 const list = [
   { id: 1, label: '项目 A' },
   { id: 2, label: '项目 B' },
@@ -119,27 +125,46 @@ function handleDragEnd(sortedList: UTSJSONObject[]) {
 </script>
 
 <style lang="scss" scoped>
+  .u-page {
+      box-sizing: border-box;
+      flex: 1;
+  }
+  .dragsort-scroll {
+      width: 100%;
+  }
+  .dragsort-content {
+      box-sizing: border-box;
+      padding-bottom: 80px;
+  }
   .u-page__item {
-      margin-bottom: 15px;
+      margin-bottom: 18px;
   }
   .u-page__item__title {
       margin-bottom: 10px;
   }
   .custom-item {
 	  background-color: #f5f5f5;
-	  padding: 10px;
-	  text-align: center;
+	  height: 48px;
+	  padding: 0 12px;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: center;
 	  box-sizing: border-box;
+      border-radius: 6px;
+  }
+  .custom-item__text {
+      color: #303133;
+      font-size: 14px;
+      line-height: 20px;
   }
   .custom-item-handler {
-	position: absolute;
-	left: 0;
-	top: 0;
-	bottom: 0;
-	padding: 10px;
+	width: 100%;
+	height: 100%;
 	display: flex;
+	flex-direction: row;
 	align-items: center;
-	z-index: 10;
+	justify-content: center;
 	
 
 	.handle {
@@ -151,9 +176,18 @@ function handleDragEnd(sortedList: UTSJSONObject[]) {
 	}
 
   }
-  .custom-item-h {
+  .grid-item,
+  .horizontal-item {
 	  background-color: #f5f5f5;
-	  padding: 10px;
+	  height: 48px;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: center;
 	  box-sizing: border-box;
+      border-radius: 6px;
+  }
+  .horizontal-item {
+      width: 100%;
   }
 </style>
