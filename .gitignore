@@ -13,3 +13,6 @@ deploy.sh
 /stats.html
 /.worktrees
 /.worktrees/
+.claude/
+unpackage/codex-logs/
+unpackage/screenshots/
