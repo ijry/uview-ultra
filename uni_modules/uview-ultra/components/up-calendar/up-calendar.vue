@@ -10,11 +10,13 @@
 		:safeAreaInsetBottom="safeAreaInsetBottom"
 		:safeAreaInsetTop="safeAreaInsetTop"
 		:bgColor="bgColor"
-		:closeable="!pageInline"
+		:closeable="calendarCloseable"
+		:closeIconPos="closeIconPos"
 		:pageInline="pageInline"
 		@close="close"
 		:round="round"
 		:closeOnClickOverlay="closeOnClickOverlay"
+		:zoom="zoom"
 	>
 		<view class="up-calendar">
 			<uHeader
@@ -405,6 +407,9 @@ export default {
 			} else {
 				return false
 			}
+		},
+		calendarCloseable() {
+			return this.closeable === null ? !this.pageInline : this.closeable
 		}
 	},
 	mounted() {

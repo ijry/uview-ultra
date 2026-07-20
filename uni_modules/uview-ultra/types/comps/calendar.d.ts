@@ -133,10 +133,24 @@ declare interface CalendarProps {
    */
   bgColor?: string
   /**
+   * 是否显示关闭图标；未设置时普通弹层显示，pageInline 模式隐藏
+   */
+  closeable?: boolean | null
+  /**
+   * 自定义关闭图标位置
+   * @default "top-right"
+   */
+  closeIconPos?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | string
+  /**
    * 是否允许点击遮罩关闭日历 （注意：关闭事件需要自行处理，只会在开启closeOnClickOverlay后点击遮罩层执行close回调）
    * @default false
    */
   closeOnClickOverlay?: boolean
+  /**
+   * mode=center 时是否开启缩放动画，透传给弹层
+   * @default true
+   */
+  zoom?: boolean
   /**
    * 是否为只读状态，只读状态下禁止选择日期
    * @default false

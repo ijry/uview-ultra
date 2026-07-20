@@ -138,10 +138,25 @@ export const props = defineMixin({
             type: String,
             default: () => defProps.calendar.bgColor
         },
+        // 是否显示关闭图标，未设置时普通弹层显示，pageInline 模式隐藏
+        closeable: {
+            type: [Boolean, null],
+            default: () => defProps.calendar.closeable
+        },
+        // 自定义关闭图标位置
+        closeIconPos: {
+            type: String,
+            default: () => defProps.calendar.closeIconPos
+        },
         // 是否允许点击遮罩关闭日历
         closeOnClickOverlay: {
             type: Boolean,
             default: () => defProps.calendar.closeOnClickOverlay
+        },
+        // mode=center 时是否开启缩放动画，透传给 up-popup
+        zoom: {
+            type: Boolean,
+            default: () => defProps.calendar.zoom
         },
         // 是否为只读状态，只读状态下禁止选择日期
         readonly: {
