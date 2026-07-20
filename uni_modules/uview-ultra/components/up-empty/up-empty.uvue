@@ -32,8 +32,7 @@
 
 <script setup lang="uts">
 import { computed, getCurrentInstance } from 'vue'
-import { mpSharedMpOptions } from '../../libs/composable/useMp'
-import { commonProps, useUltraUI } from '../../libs/composable/useUltraUI'
+import { useUltraUI } from '../../libs/composable/useUltraUI'
 import { addUnit, addStyle } from '../../libs/function/index.uts'
 import { t } from '../../libs/i18n/index.uts'
 import defProps from './empty.uts'
@@ -47,6 +46,22 @@ defineOptions({
 
 // props
 const props = defineProps({
+    customStyle: {
+        type: [Object, String],
+        default: () => ({})
+    },
+    customClass: {
+        type: String,
+        default: ''
+    },
+    url: {
+        type: String,
+        default: ''
+    },
+    linkType: {
+        type: String,
+        default: 'navigateTo'
+    },
 	// 内置图标名称，或图片路径，建议绝对路径
 	icon: {
 		type: String,
@@ -102,8 +117,6 @@ const props = defineProps({
 		type: [String, Number],
 		default: defProps.getNumber('empty.marginTop')
 	},
-	// 自定义样式
-	// ...commonProps
 })
 
 // 定义 emits

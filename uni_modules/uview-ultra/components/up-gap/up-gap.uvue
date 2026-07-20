@@ -4,13 +4,11 @@
 
 <script setup lang="uts">
 import { computed } from 'vue'
-import { mpSharedMpOptions } from '../../libs/composable/useMp'
 import defProps from './gap.uts'
 import { addUnit } from '../../libs/function/index'
 
 // options
 defineOptions({
-  // ...mpSharedMpOptions,
   name: 'up-gap'
 })
 

@@ -11,7 +11,7 @@
 	import { ref, onMounted, getCurrentInstance } from 'vue'
 	import defProps from './td.uts'
 	import { addUnit } from '../../libs/function/index'
-	import { commonProps, useUltraUI } from '../../libs/composable/useUltraUI'
+	import { useUltraUI } from '../../libs/composable/useUltraUI'
 	const { parent, getParent } = useUltraUI({
 		padding: 0,
 		align: '',
@@ -27,6 +27,22 @@
 	
 	// props
 	const props = defineProps({
+	    customStyle: {
+	        type: [Object, String],
+	        default: () => ({})
+	    },
+	    customClass: {
+	        type: String,
+	        default: ''
+	    },
+	    url: {
+	        type: String,
+	        default: ''
+	    },
+	    linkType: {
+	        type: String,
+	        default: 'navigateTo'
+	    },
 		// 宽度，百分比或者具体带单位的值，如30%， 200rpx等，一般使用百分比
 		width: {
 			type: [String],

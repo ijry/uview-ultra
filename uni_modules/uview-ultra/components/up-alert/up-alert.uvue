@@ -7,7 +7,7 @@
 		    class="up-alert"
 		    :class="[`up-alert--${type}--${effect}`]"
 		    @tap.stop="clickHandler"
-		    :style="[$upAddStyle(customStyle)]"
+		    :style="[$up.addStyle(customStyle)]"
 		>
 			<view
 			    class="up-alert__icon"
@@ -55,13 +55,11 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { mpSharedMpOptions } from '../../libs/composable/useMp'
 import { addUnit, addStyle } from '../../libs/function/index'
 import defProps from './alert'
 
 // options
 defineOptions({
-  //...mpSharedMpOptions,
   name: 'up-alert'
 })
 

@@ -63,7 +63,7 @@
 	import defProps from './collapseItem.uts'
 	import { guid, sleep, upGetRect, error } from '../../libs/function/index'
 	import { array as testArray } from '../../libs/function/test'
-	import { commonProps, useUltraUI } from '../../libs/composable/useUltraUI'
+	import { useUltraUI } from '../../libs/composable/useUltraUI'
 	const { parent, parentData, getParentData } = useUltraUI()
 	const instance = getCurrentInstance()!.proxy!
 	
@@ -73,6 +73,22 @@
 	
 	// 定义 props
 	const props = defineProps({
+	    customStyle: {
+	        type: [Object, String],
+	        default: () => ({})
+	    },
+	    customClass: {
+	        type: String,
+	        default: ''
+	    },
+	    url: {
+	        type: String,
+	        default: ''
+	    },
+	    linkType: {
+	        type: String,
+	        default: 'navigateTo'
+	    },
 		title: {
 			type: [String],
 			default: defProps.getString('collapseItem.title')

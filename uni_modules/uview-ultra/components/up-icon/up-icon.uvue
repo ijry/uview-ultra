@@ -37,7 +37,7 @@
 <script setup lang="uts">
 	import icons from './icons.uts'
 	import { addUnit, addStyle } from '../../libs/function/index'
-	import { commonProps, useUltraUI } from '../../libs/composable/useUltraUI'
+	import { useUltraUI } from '../../libs/composable/useUltraUI'
 	import config from '../../libs/config/config';
 	import defProps from './icon'
 	import { computed } from 'vue'
@@ -45,6 +45,22 @@
 	
 	// 定义props
 	const props = defineProps({
+	    customStyle: {
+	        type: [Object, String],
+	        default: () => ({})
+	    },
+	    customClass: {
+	        type: String,
+	        default: ''
+	    },
+	    url: {
+	        type: String,
+	        default: ''
+	    },
+	    linkType: {
+	        type: String,
+	        default: 'navigateTo'
+	    },
 		// 图标类名
 		name: {
 			type: String,

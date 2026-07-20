@@ -41,7 +41,7 @@
 	import { array as testArray } from '../../libs/function/test'
 	import { addStyle, addUnit, deepMerge, formValidate, error } from '../../libs/function/index'
 	import defProps from './checkbox.uts'
-	import { commonProps, useUltraUI } from '../../libs/composable/useUltraUI'
+	import { useUltraUI } from '../../libs/composable/useUltraUI'
 	const { parent, parentData, getParentData } = useUltraUI()
 	const instance = getCurrentInstance()!.proxy!
 	
@@ -51,6 +51,18 @@
 	
 	// 定义 props
 	const props = defineProps({
+	    customClass: {
+	        type: String,
+	        default: ''
+	    },
+	    url: {
+	        type: String,
+	        default: ''
+	    },
+	    linkType: {
+	        type: String,
+	        default: 'navigateTo'
+	    },
 		// checkbox组件的标示符
 		name: {
 			type: [String, Number, Boolean],

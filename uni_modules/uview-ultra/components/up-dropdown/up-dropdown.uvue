@@ -42,7 +42,7 @@
 	import { addUnit, getWindowInfo, upGetRect } from '../../libs/function/index.uts';
 	import defProps from './dropdown.uts'
 	import { UPDropdownMenu} from './types.uts';
-	import { commonProps, useUltraUI } from '../../libs/composable/useUltraUI'
+	import { useUltraUI } from '../../libs/composable/useUltraUI'
 	const { children, getChildren, addChild } = useUltraUI()
 	const instance = getCurrentInstance()!.proxy!
 	
@@ -52,6 +52,22 @@
 	
 	// 定义 props
 	const props = defineProps({
+	    customStyle: {
+	        type: [Object, String],
+	        default: () => ({})
+	    },
+	    customClass: {
+	        type: String,
+	        default: ''
+	    },
+	    url: {
+	        type: String,
+	        default: ''
+	    },
+	    linkType: {
+	        type: String,
+	        default: 'navigateTo'
+	    },
 		// 菜单标题和选项的激活态颜色
 		activeColor: {
 			type: String,

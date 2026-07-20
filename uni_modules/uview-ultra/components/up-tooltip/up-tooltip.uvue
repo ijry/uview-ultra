@@ -343,7 +343,7 @@
 
 	// 查询内容高度
 	function queryRect(refValue: string): Promise<NodeInfo | null> {
-		// $uGetRect为uView自带的节点查询简化方法，详见文档介绍：https://ijry.github.io/uview-plus/js/getRect.html
+		// upGetRect 是节点查询的封装方法
 		return new Promise(resolve => {
 			upGetRect(`#${refValue}`, false, instance).then((size: NodeInfo) => {
 				resolve(size)

@@ -31,7 +31,7 @@
 	import { addUnit, getParentFunc } from '../../libs/function/index.uts';
 	import defProps from './dropdown-item.uts'
 	import { UPDropdownMenu} from '../up-dropdown/types.uts';
-	import { commonProps, useUltraUI } from '../../libs/composable/useUltraUI'
+	import { useUltraUI } from '../../libs/composable/useUltraUI'
 	const { parent, parentData, getParentData } = useUltraUI()
 	const instance = getCurrentInstance()!.proxy!
 	
@@ -44,6 +44,22 @@
 	
 	// 定义 props
 	const props = defineProps({
+	    customStyle: {
+	        type: [Object, String],
+	        default: () => ({})
+	    },
+	    customClass: {
+	        type: String,
+	        default: ''
+	    },
+	    url: {
+	        type: String,
+	        default: ''
+	    },
+	    linkType: {
+	        type: String,
+	        default: 'navigateTo'
+	    },
 		// #ifdef VUE3
 		// 当前选中项的value值
 		modelValue: {

@@ -60,6 +60,14 @@
 	import { empty as _testEmpty } from '../../libs/function/test'
 	// props
 	const props = defineProps({
+		customStyle: {
+			type: [Object, String],
+			default: () => ({})
+		},
+		customClass: {
+			type: String,
+			default: ''
+		},
 		title: {
 			type: String,
 			default: defProps.getString('cell.title')

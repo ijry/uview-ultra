@@ -8,7 +8,7 @@
 <script setup lang="uts">
 	import { watch } from 'vue'
 	import defProps from './collapse.uts'
-	import { commonProps, useUltraUI } from '../../libs/composable/useUltraUI'
+	import { useUltraUI } from '../../libs/composable/useUltraUI'
 	const { children, getChildren, addChild } = useUltraUI()
 	const instance = getCurrentInstance()!.proxy!
 	
@@ -18,6 +18,22 @@
 	
 	// 定义 props
 	const props = defineProps({
+	    customStyle: {
+	        type: [Object, String],
+	        default: () => ({})
+	    },
+	    customClass: {
+	        type: String,
+	        default: ''
+	    },
+	    url: {
+	        type: String,
+	        default: ''
+	    },
+	    linkType: {
+	        type: String,
+	        default: 'navigateTo'
+	    },
 		value: {
 			type: [String, Number, Array],
 			default: () => defProps.getString('collapse.value')

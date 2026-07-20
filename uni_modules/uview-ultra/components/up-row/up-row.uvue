@@ -2,7 +2,7 @@
 	<view
 	    class="up-row"
 		ref="up-row"
-	    :style="[rowStyle, $upAddStyle(props.customStyle)]"
+	    :style="[rowStyle, $up.addStyle(props.customStyle)]"
 	    @tap="clickHandler"
 	>
 		<slot />
@@ -14,7 +14,7 @@
 	import { computed } from 'vue'
 	import defProps from './row'
 	import { addUnit, addStyle, deepMerge, upGetRect, sleep } from '../../libs/function/index'
-	import { commonProps, useUltraUI } from '../../libs/composable/useUltraUI'
+	import { useUltraUI } from '../../libs/composable/useUltraUI'
 	const { children } = useUltraUI()
 	
 	// options
@@ -24,6 +24,22 @@
 	
 	// props
 	const props = defineProps({
+	    customStyle: {
+	        type: [Object, String],
+	        default: () => ({})
+	    },
+	    customClass: {
+	        type: String,
+	        default: ''
+	    },
+	    url: {
+	        type: String,
+	        default: ''
+	    },
+	    linkType: {
+	        type: String,
+	        default: 'navigateTo'
+	    },
 		// 栅格间隔，左右各为此值的一半，单位px
 		gutter: {
 		    type: [String, Number],

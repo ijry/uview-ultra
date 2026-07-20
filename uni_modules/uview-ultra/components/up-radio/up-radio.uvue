@@ -155,7 +155,7 @@
 		},
 		customStyle: {
 			type: [Object, String],
-			default: {}
+			default: () => ({})
 		}
 	})
 

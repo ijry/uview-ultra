@@ -81,6 +81,7 @@ const emit = defineEmits(['change', 'backspace'])
 const dot = '.' // 点
 const timer = ref<number | null>(null) // 长按多次删除的事件监听
 const cardX = 'X' // 身份证的X符号
+const noop = (): void => {}
 
 // 键盘需要显示的内容
 const numList = computed((): Array<string | number> => {

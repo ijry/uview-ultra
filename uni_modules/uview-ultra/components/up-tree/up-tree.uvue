@@ -184,7 +184,7 @@ const componentProps = defineProps({
   },
   customStyle: {
     type: [Object, String],
-    default: {}
+    default: () => ({})
   },
   customClass: {
     type: String,

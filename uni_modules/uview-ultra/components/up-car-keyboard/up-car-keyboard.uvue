@@ -70,7 +70,7 @@
 <script setup lang="uts">
 import type { PropType } from 'vue'
 import { computed, ref } from 'vue'
-import { commonProps, useUltraUI } from '../../libs/composable/useUltraUI';
+import { useUltraUI } from '../../libs/composable/useUltraUI';
 import { randomArray, sleep } from '../../libs/function/index';
 import defProps from './carKeyboard.uts'
 
@@ -81,6 +81,22 @@ defineOptions({
 
 // props
 const props = defineProps({
+    customStyle: {
+        type: [Object, String],
+        default: () => ({})
+    },
+    customClass: {
+        type: String,
+        default: ''
+    },
+    url: {
+        type: String,
+        default: ''
+    },
+    linkType: {
+        type: String,
+        default: 'navigateTo'
+    },
   // 是否打乱键盘的顺序
   random: {
     type: Boolean,

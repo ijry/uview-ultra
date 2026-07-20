@@ -109,19 +109,13 @@
 import type { PropType } from 'vue'
 import { computed, onBeforeUnmount, getCurrentInstance } from 'vue'
 // import { propsActionSheet } from './props'
-import { useOpenType } from '../../libs/composable/useOpenType'
-import { buttonProps } from '../../libs/composable/useButton'
-import { mpSharedMpOptions } from '../../libs/composable/useMp'
-import { commonProps, useUltraUI } from '../../libs/composable/useUltraUI'
-import { addUnit } from '../../libs/function/index'
-import { UPActionSheetItem, UPActionSheetProps } from './types.uts'
+import { useUltraUI } from '../../libs/composable/useUltraUI'
 import defProps from './actionSheet.uts'
-const { onComponentDestroy, preventEvent, noop} = useUltraUI()
+const { onComponentDestroy } = useUltraUI()
 const instance = getCurrentInstance()!.proxy!
 
 // options
 defineOptions({
-  // ...mpSharedMpOptions,
   name: 'up-action-sheet'
 })
 
@@ -184,8 +178,38 @@ const props = defineProps({
 	    type: [String],
 	    default: defProps.getString('actionSheet.wrapMaxHeight')
 	},
-	// 	...commonProps,
-	// 	...buttonProps
+	lang: {
+	    type: String,
+	    default: defProps.getString('actionSheet.lang')
+	},
+	sessionFrom: {
+	    type: String,
+	    default: defProps.getString('actionSheet.sessionFrom')
+	},
+	sendMessageTitle: {
+	    type: String,
+	    default: defProps.getString('actionSheet.sendMessageTitle')
+	},
+	sendMessagePath: {
+	    type: String,
+	    default: defProps.getString('actionSheet.sendMessagePath')
+	},
+	sendMessageImg: {
+	    type: String,
+	    default: defProps.getString('actionSheet.sendMessageImg')
+	},
+	showMessageCard: {
+	    type: Boolean,
+	    default: defProps.getBoolean('actionSheet.showMessageCard')
+	},
+	appParameter: {
+	    type: String,
+	    default: defProps.getString('actionSheet.appParameter')
+	},
+	formType: {
+	    type: String,
+	    default: defProps.getString('actionSheet.formType')
+	}
 })
 
 onMounted(() => {

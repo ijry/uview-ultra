@@ -4,9 +4,9 @@
 		:class="[`up-avatar--${shape}`]"
 		:style="[{
 			backgroundColor: getBackColor,
-			width: $upAddUnit(size),
-			height: $upAddUnit(size),
-		}, $upAddStyle(customStyle)]"
+			width: $up.addUnit(size),
+			height: $up.addUnit(size),
+		}, $up.addStyle(customStyle)]"
 		@tap="clickHandler"
 	>
 		<slot>
@@ -15,8 +15,8 @@
 				v-if="mpAvatar && allowMp"
 				type="userAvatarUrl"
 				:style="[{
-					width: $upAddUnit(size),
-					height: $upAddUnit(size)
+					width: $up.addUnit(size),
+					height: $up.addUnit(size)
 				}]"
 			/>
 			<!-- #endif -->
@@ -49,8 +49,8 @@
 					:mode="mode"
 					@error="errorHandler"
 					:style="[{
-						width: $upAddUnit(size),
-						height: $upAddUnit(size)
+						width: $up.addUnit(size),
+						height: $up.addUnit(size)
 					}]"
 				></image>
 			</template>
@@ -60,17 +60,20 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
-import { mpSharedMpOptions } from '../../libs/composable/useMp'
 import { addStyle, addUnit, random } from '../../libs/function/index'
 import defProps from './avatar'
 
 defineOptions({
-  //...mpSharedMpOptions,
   name: 'up-avatar'
 })
 
 // 定义props
 const props = defineProps({
+    // 自定义样式
+    customStyle: {
+        type: [Object, String],
+        default: () => ({})
+    },
     // 头像图片路径(不能为相对路径)
     src: {
         type: String,

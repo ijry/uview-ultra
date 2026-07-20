@@ -5,7 +5,7 @@
 			inverted ? 'up-badge--inverted' : '',
 			shape === 'horn' ? 'up-badge--horn' : '',
 			inverted ? `up-badge--${type}--inverted` : `up-badge--${type}`]"
-		:style="[$upAddStyle(customStyle), badgeStyle]"
+		:style="[$up.addStyle(customStyle), badgeStyle]"
 	>{{ isDot ? '' : showValue }}</text>
 </template>
 
@@ -44,6 +44,11 @@
 
 	// props
 	const props = defineProps({
+		// 自定义样式
+		customStyle: {
+			type: [Object, String],
+			default: () => ({})
+		},
 		// 是否显示圆点
 		isDot: {
 			type: Boolean,

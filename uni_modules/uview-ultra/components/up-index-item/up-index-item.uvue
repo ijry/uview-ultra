@@ -12,7 +12,7 @@
 	import { ref, onMounted, getCurrentInstance } from 'vue'
 	import { sleep, error, upGetRect } from '../../libs/function/index'
 	import defProps from './indexItem.uts'
-	import { commonProps, useUltraUI } from '../../libs/composable/useUltraUI'
+	import { useUltraUI } from '../../libs/composable/useUltraUI'
 	const { parent, getParent, getParentData } = useUltraUI()
 	
 	const instance = getCurrentInstance()!.proxy!
@@ -23,6 +23,22 @@
 	
 	// 定义 props
 	const props = defineProps({
+	    customStyle: {
+	        type: [Object, String],
+	        default: () => ({})
+	    },
+	    customClass: {
+	        type: String,
+	        default: ''
+	    },
+	    url: {
+	        type: String,
+	        default: ''
+	    },
+	    linkType: {
+	        type: String,
+	        default: 'navigateTo'
+	    },
 		text: {
 			type: [String, Number],
 			default: defProps.getString('indexItem.text')

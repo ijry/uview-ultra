@@ -5,7 +5,7 @@
 	    :class="[
 			'up-col-' + span
 		]"
-	    :style="[colStyle, $upAddStyle(customStyle)]"
+	    :style="[colStyle, $up.addStyle(customStyle)]"
 	    @tap="clickHandler"
 	>
 		<slot></slot>
@@ -17,7 +17,7 @@
 	import { ref, computed, getCurrentInstance } from 'vue'
 	import defProps from './col.uts'
 	import { addStyle, addUnit, deepMerge, getPx } from '../../libs/function/index'
-	import { commonProps, useUltraUI } from '../../libs/composable/useUltraUI'
+	import { useUltraUI } from '../../libs/composable/useUltraUI'
 	const { parent, parentData, getParentData } = useUltraUI({
 		gutter: 0
 	})
@@ -28,6 +28,22 @@
 	
 	// props
 	const props = defineProps({
+	    customStyle: {
+	        type: [Object, String],
+	        default: () => ({})
+	    },
+	    customClass: {
+	        type: String,
+	        default: ''
+	    },
+	    url: {
+	        type: String,
+	        default: ''
+	    },
+	    linkType: {
+	        type: String,
+	        default: 'navigateTo'
+	    },
 		// 占父容器宽度的多少等分，总分为12份
 		span: {
 			type: [String, Number],

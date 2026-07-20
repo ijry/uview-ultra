@@ -19,6 +19,14 @@
 	import defProps from './cellGroup'
 	// props
 	const props = defineProps({
+		customStyle: {
+			type: [Object, String],
+			default: () => ({})
+		},
+		customClass: {
+			type: String,
+			default: ''
+		},
 		title: {
 			type: String,
 			default: defProps.getString('cellGroup.title')
@@ -58,4 +66,3 @@
 		}
     }
 </style>
-

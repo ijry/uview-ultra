@@ -11,7 +11,7 @@
 	import defProps from './form.uts'
 	import Schema from "../../libs/util/async-validator.uts";
 	import { toast, getProperty, setProperty, deepClone } from '../../libs/function/index.uts';
-	import { commonProps, useUltraUI } from '../../libs/composable/useUltraUI'
+	import { useUltraUI } from '../../libs/composable/useUltraUI'
 	const { children, getChildren, addChild } = useUltraUI()
 	const instance = getCurrentInstance()!.proxy!
 	import { UPFormRuleItem } from '../../components/up-form/types.uts'
@@ -27,6 +27,22 @@
 	
 	// 定义props
 	const props = defineProps({
+	    customStyle: {
+	        type: [Object, String],
+	        default: () => ({})
+	    },
+	    customClass: {
+	        type: String,
+	        default: ''
+	    },
+	    url: {
+	        type: String,
+	        default: ''
+	    },
+	    linkType: {
+	        type: String,
+	        default: 'navigateTo'
+	    },
 		// 当前form的需要验证字段的集合
 		model: {
 			type: Object as PropType<any>,

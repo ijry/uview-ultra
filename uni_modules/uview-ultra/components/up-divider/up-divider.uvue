@@ -34,6 +34,11 @@
 	import { addStyle, addUnit } from '../../libs/function/index.uts'
 	
 	const props = defineProps({
+		// 自定义样式
+		customStyle: {
+			type: [Object, String],
+			default: () => ({})
+		},
 		// 是否虚线
 		dashed: {
 			type: Boolean,

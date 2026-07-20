@@ -23,6 +23,14 @@ export default {
         openType: '',
         closeOnClickOverlay: true,
         round: 0,
-        wrapMaxHeight: '600px'
+        wrapMaxHeight: '600px',
+        lang: 'en',
+        sessionFrom: '',
+        sendMessageTitle: '',
+        sendMessagePath: '',
+        sendMessageImg: '',
+        showMessageCard: false,
+        appParameter: '',
+        formType: ''
     }
 } as UTSJSONObject

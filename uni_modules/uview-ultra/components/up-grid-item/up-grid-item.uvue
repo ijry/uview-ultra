@@ -15,10 +15,9 @@
 <script setup lang="uts">
 	import type { PropType } from 'vue'
 	import { ref, nextTick, computed, onMounted, onUnmounted, getCurrentInstance } from 'vue'
-	import { mpSharedMpOptions } from '../../libs/composable/useMp'
 	import { addStyle, deepMerge } from '../../libs/function/index'
 	import defProps from './gridItem.uts'
-	import { commonProps, useUltraUI } from '../../libs/composable/useUltraUI'
+	import { useUltraUI } from '../../libs/composable/useUltraUI'
 	const { parent, parentData, getParentData } = useUltraUI({
 		col: 0, // 父组件划分的宫格数
 		border: true, // 是否显示边框，根据父组件决定
@@ -33,6 +32,22 @@
 	
 	// props
 	const props = defineProps({
+	    customStyle: {
+	        type: [Object, String],
+	        default: () => ({})
+	    },
+	    customClass: {
+	        type: String,
+	        default: ''
+	    },
+	    url: {
+	        type: String,
+	        default: ''
+	    },
+	    linkType: {
+	        type: String,
+	        default: 'navigateTo'
+	    },
 		name: {
 			type: [String, Number],
 			default: defProps.getArray('grid-item.name')

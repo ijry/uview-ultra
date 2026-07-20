@@ -199,7 +199,7 @@
 		// 延时一定时间，以获取dom尺寸
 		await sleep(20)
 		// #ifndef APP-NVUE
-		// 这里需要模拟 $uGetRect 方法
+		// 这里需要模拟 upGetRect 方法
 		// #endif
 	}
 

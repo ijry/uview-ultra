@@ -68,6 +68,10 @@
 	
 	// 定义 props
 	const props = defineProps({
+		customStyle: {
+			type: [Object, String],
+			default: () => ({})
+		},
 		src: {
 			type: String,
 			default: () => defProps.getString('image.src')

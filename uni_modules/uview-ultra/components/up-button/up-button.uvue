@@ -1,6 +1,6 @@
 <template>
 	<view style="position: relative"
-		:style="[baseColor, $upAddStyle(customStyle)]"
+		:style="[baseColor, $up.addStyle(customStyle)]"
 		class="up-button"
 		:hover-class="!disabled && !loading ? 'up-button--active' : ''"
 		:class="bemClass">
@@ -69,6 +69,11 @@ import { addStyle, addUnit, getPx, bem } from '../../libs/function/index'
 import { throttle } from '../../libs/function/throttle'
 import config from '../../libs/config/config'
 const props = defineProps({
+    // 自定义样式
+    customStyle: {
+        type: [Object, String],
+        default: () => ({})
+    },
     // 是否显示按钮的细边框
     hairline: {
         type: Boolean,
