@@ -58,6 +58,7 @@
 	 * @example <up-list @scrolltolower="scrolltolower"></up-list>
 	 */
 	defineOptions({
+		styleIsolation: 'app-and-page',
 		name: 'up-list'
 	})
 

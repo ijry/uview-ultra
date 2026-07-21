@@ -135,6 +135,7 @@ function getPageSizeLabel(item: UTSJSONObject): string {
 }
 
 defineOptions({
+  styleIsolation: 'app-and-page',
   name: 'up-pagination'
 })
 

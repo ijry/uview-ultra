@@ -57,6 +57,10 @@
 </template>
 
 <script setup lang="uts">
+defineOptions({
+	styleIsolation: 'app-and-page'
+})
+
 import type { PropType } from 'vue'
 import { computed, reactive } from 'vue';
 import defProps from './columnNotice';

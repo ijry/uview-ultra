@@ -25,6 +25,7 @@
 	}
 
 	defineOptions({
+		styleIsolation: 'app-and-page',
 		name: 'up-message-input'
 	})
 

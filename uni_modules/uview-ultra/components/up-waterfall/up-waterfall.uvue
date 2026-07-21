@@ -40,6 +40,7 @@
     import { sleep, upGetRect } from '../../libs/function/index.uts';
 
     defineOptions({
+        styleIsolation: 'app-and-page',
         name: 'up-waterfall'
     })
 

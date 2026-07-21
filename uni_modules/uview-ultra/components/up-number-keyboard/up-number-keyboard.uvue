@@ -55,6 +55,7 @@ import { randomArray } from '../../libs/function/index'
  * @example <up-number-keyboard :mode="mode" :dot-disabled="dotDisabled" @change="onChange" @backspace="onBackspace" />
  */
 defineOptions({
+	styleIsolation: 'app-and-page',
 	name: 'up-number-keyboard'
 })
 

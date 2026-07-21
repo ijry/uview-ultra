@@ -97,6 +97,7 @@ import defProps from './keyboard.uts'
  * @example <up-keyboard mode="number" v-model="show"></up-keyboard>
  */
 defineOptions({
+	styleIsolation: 'app-and-page',
 	name: 'up-keyboard'
 })
 

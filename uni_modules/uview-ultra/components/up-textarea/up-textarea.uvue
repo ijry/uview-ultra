@@ -88,6 +88,7 @@ const defaultFormat = function(value: string): string {
 }
 
 defineOptions({
+    styleIsolation: 'app-and-page',
     name: 'up-textarea'
 })
 

@@ -84,6 +84,7 @@
 	 * @example <up-tag text="标签" type="error" plain plainFill></up-tag>
 	 */
 	defineOptions({
+		styleIsolation: 'app-and-page',
 		name: 'up-tag'
 	})
 

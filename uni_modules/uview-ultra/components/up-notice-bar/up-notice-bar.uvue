@@ -64,6 +64,7 @@
 	 * @example <up-notice-bar :more-icon="true" :list="list"></up-notice-bar>
 	 */
 	defineOptions({
+		styleIsolation: 'app-and-page',
 		name: 'up-notice-bar'
 	})
 

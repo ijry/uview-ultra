@@ -19,6 +19,10 @@
 </template>
 
 <script setup>
+defineOptions({
+	styleIsolation: 'app-and-page'
+})
+
 import { ref } from 'vue'
 
 // 定义 props

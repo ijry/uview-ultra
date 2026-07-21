@@ -113,6 +113,7 @@
 	 * @example <up-modal :show="show" />
 	 */
 	defineOptions({
+		styleIsolation: 'app-and-page',
 		name: 'up-modal'
 	})
 

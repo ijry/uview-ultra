@@ -42,6 +42,7 @@
 	import { ref, watch } from 'vue'
 
 	defineOptions({
+		styleIsolation: 'app-and-page',
 		name: 'up-choose'
 	})
 

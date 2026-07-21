@@ -116,6 +116,7 @@ const instance = getCurrentInstance()!.proxy!
 
 // options
 defineOptions({
+  styleIsolation: 'app-and-page',
   name: 'up-action-sheet'
 })
 

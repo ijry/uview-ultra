@@ -52,6 +52,10 @@
 </template>
 
 <script setup lang="uts">
+defineOptions({
+	styleIsolation: 'app-and-page'
+})
+
 import { ref, onBeforeUnmount } from 'vue'
 
 const basicContent = `# 标题1

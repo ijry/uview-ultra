@@ -65,6 +65,7 @@
 	 * @example <up-search placeholder="日照香炉生紫烟" v-model="keyword"></up-search>
 	 */
 	defineOptions({
+		styleIsolation: 'app-and-page',
 		name: 'up-skeleton'
 	})
 

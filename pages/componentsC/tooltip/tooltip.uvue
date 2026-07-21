@@ -67,6 +67,10 @@
 </template>
 
 <script setup lang="uts">
+	defineOptions({
+		styleIsolation: 'app-and-page'
+	})
+
 	const text1 = '长按文本，上方提示'
 	const text2 = '长按文本，下方提示'
 	const text3 = '显示多个扩展按钮'

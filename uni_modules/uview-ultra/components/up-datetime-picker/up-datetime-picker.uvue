@@ -45,6 +45,10 @@
 </template>
 
 <script setup lang="uts">
+	defineOptions({
+		styleIsolation: 'app-and-page'
+	})
+
 	// 导入ref
 	import type { PropType } from 'vue'
 	import { ref, watch, nextTick, onMounted } from 'vue';

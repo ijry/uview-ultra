@@ -60,6 +60,7 @@
 	 * @example <up-navbar-mini @click-left="onClickBack"></up-navbar-mini>
 	 */
 	defineOptions({
+		styleIsolation: 'app-and-page',
 		name: 'up-navbar-mini'
 	})
 

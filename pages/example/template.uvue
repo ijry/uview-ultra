@@ -21,6 +21,10 @@
 </template>
 
 <script setup lang="uts">
+	defineOptions({
+		styleIsolation: 'app-and-page'
+	})
+
 	import { computed } from 'vue'
 	import { onShow } from '@dcloudio/uni-app'
 	import list from "./template.config"

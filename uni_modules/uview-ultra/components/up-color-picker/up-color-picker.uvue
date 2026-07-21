@@ -253,6 +253,7 @@ function createGradientColor(color: string, percent: number): GradientColor {
 }
 
 defineOptions({
+	styleIsolation: 'app-and-page',
 	name: 'up-color-picker'
 })
 

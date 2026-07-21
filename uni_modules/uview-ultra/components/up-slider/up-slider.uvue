@@ -131,6 +131,7 @@
 		width : number
 	}
 	defineOptions({
+		styleIsolation: 'app-and-page',
 		name: 'up-slider'
 	})
 

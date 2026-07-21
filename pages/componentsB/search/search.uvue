@@ -193,6 +193,10 @@
 </template>
 
 <script setup lang="uts">
+	defineOptions({
+		styleIsolation: 'app-and-page'
+	})
+
 	import { ref, watch } from 'vue'
 	import { toast } from '@/uni_modules/uview-ultra/libs/function/index'
 

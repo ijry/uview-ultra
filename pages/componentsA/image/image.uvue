@@ -90,6 +90,10 @@
 </template>
 
 <script setup lang="uts">
+	defineOptions({
+		styleIsolation: 'app-and-page'
+	})
+
 	import { ref } from 'vue'
 
 	const src = 'https://cdn.uviewui.com/uview/album/1.jpg'

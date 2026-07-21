@@ -27,6 +27,7 @@
 	 * @example <up-overlay :show="show" @click="show = false"></up-overlay>
 	 */
 	defineOptions({
+		styleIsolation: 'app-and-page',
 		name: 'up-overlay'
 	})
 

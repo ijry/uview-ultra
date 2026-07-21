@@ -110,6 +110,10 @@
 </template>
 
 <script setup lang="uts">
+	defineOptions({
+		styleIsolation: 'app-and-page'
+	})
+
 	function open(e: any) {
 		// console.log('open', e)
 	}

@@ -67,6 +67,7 @@
 	 * @example <up-toast ref="uToast" />
 	 */
 	defineOptions({
+		styleIsolation: 'app-and-page',
 		name: 'up-toast'
 	})
 

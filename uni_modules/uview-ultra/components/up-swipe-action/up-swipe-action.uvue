@@ -19,6 +19,7 @@
 	const { children, getChildren, addChild } = useUltraUI()
 
 	defineOptions({
+		styleIsolation: 'app-and-page',
 		name: 'up-swipe-action'
 	})
 

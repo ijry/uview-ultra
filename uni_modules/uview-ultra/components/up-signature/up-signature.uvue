@@ -133,6 +133,7 @@ function getTouchPoint(e: UniTouchEvent): SignaturePoint {
 }
 
 defineOptions({
+	styleIsolation: 'app-and-page',
 	name: 'up-signature'
 })
 

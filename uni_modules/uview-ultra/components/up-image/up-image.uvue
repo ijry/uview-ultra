@@ -62,6 +62,10 @@
 </template>
 
 <script setup>
+	defineOptions({
+		styleIsolation: 'app-and-page'
+	})
+
 	import { nextTick, ref, computed, onMounted } from 'vue'
 	import { addUnit, addStyle, deepMerge } from '../../libs/function/index'
 	import defProps from './image'

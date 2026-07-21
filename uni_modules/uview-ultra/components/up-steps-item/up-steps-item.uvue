@@ -76,6 +76,7 @@
 	 * @example <up-steps current="0"><up-steps-item title="已出库" desc="10:35" ></up-steps-item></up-steps>
 	 */
 	defineOptions({
+		styleIsolation: 'app-and-page',
 		name: 'up-steps-item'
 	})
 

@@ -33,6 +33,10 @@
 	</view>
 </template>
 <script setup lang="uts">
+	defineOptions({
+		styleIsolation: 'app-and-page'
+	})
+
 	import { getCurrentInstance, nextTick, onBeforeUnmount, ref } from 'vue'
 	import { onReady } from '@dcloudio/uni-app'
 	import { createClassifyData } from '@/common/classify.data'

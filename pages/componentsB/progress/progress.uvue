@@ -89,6 +89,10 @@
 </template>
 
 <script setup lang="uts">
+	defineOptions({
+		styleIsolation: 'app-and-page'
+	})
+
 	import { ref } from 'vue'
 	import { sleep, range } from '../../../uni_modules/uview-ultra/libs/function/index.uts'
 

@@ -63,6 +63,10 @@
 </template>
 
 <script setup lang="uts">
+defineOptions({
+	styleIsolation: 'app-and-page'
+})
+
 import defProps from './button'
 import { computed } from 'vue'
 import { addStyle, addUnit, getPx, bem } from '../../libs/function/index'

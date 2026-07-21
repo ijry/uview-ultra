@@ -74,6 +74,7 @@
 	 * @example <up-popup v-model="show"><text>出淤泥而不染，濯清涟而不妖</text></up-popup>
 	 */
 	defineOptions({
+		styleIsolation: 'app-and-page',
 		name: 'up-popup'
 	})
 

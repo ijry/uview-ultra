@@ -31,6 +31,7 @@ function stringValue(value: any | null): string {
 }
 
 defineOptions({
+	styleIsolation: 'app-and-page',
 	name: 'up-action-sheet-data'
 })
 

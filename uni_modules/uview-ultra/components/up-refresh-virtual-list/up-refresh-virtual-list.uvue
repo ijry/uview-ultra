@@ -30,6 +30,7 @@ function createListData(): Array<UTSJSONObject> {
 }
 
 defineOptions({
+  styleIsolation: 'app-and-page',
   name: 'up-refresh-virtual-list'
 })
 

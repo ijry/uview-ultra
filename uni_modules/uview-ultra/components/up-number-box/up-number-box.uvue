@@ -129,6 +129,7 @@
 	 * @example <up-number-box v-model="value" @change="valChange"></up-number-box>
 	 */
 	defineOptions({
+		styleIsolation: 'app-and-page',
 		name: 'up-number-box'
 	})
 

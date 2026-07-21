@@ -36,6 +36,7 @@ function makeId(prefix: string): string {
 }
 
 defineOptions({
+    styleIsolation: 'app-and-page',
     name: 'up-canvas'
 })
 

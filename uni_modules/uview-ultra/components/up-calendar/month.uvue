@@ -46,6 +46,7 @@
 	  date: Array<UPCalendarMonthsItemDate>
 	}
 	defineOptions({
+		styleIsolation: 'app-and-page',
 		name: 'up-calendar-month'
 })
 

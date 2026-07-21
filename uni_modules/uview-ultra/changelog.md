@@ -1,3 +1,10 @@
+## 4.5.3
+适配 HBuilderX 5.0+ 样式隔离策略 2.0 向下兼容：
+1. 开启 styleIsolationVersion=2
+2. 组件/页面 uvue 统一 styleIsolation=app-and-page，允许全局与页面 class 影响组件
+3. 修复 defineOptions 尾逗号导致 UTS 编译失败的问题
+4. Android UTS 编译校验通过
+
 ## 4.5.2
 fix: 发布 uview-ultra 4.5.2，修复拖拽层级并清理 UTS mixin
 

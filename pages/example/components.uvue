@@ -30,6 +30,10 @@
 </template>
 
 <script setup lang="uts">
+	defineOptions({
+		styleIsolation: 'app-and-page'
+	})
+
 	type groupListItem = {
 	  path: string
 	  icon: string

@@ -156,6 +156,7 @@ function code39Map(): UTSJSONObject {
 }
 
 defineOptions({
+  styleIsolation: 'app-and-page',
   name: 'up-barcode'
 })
 

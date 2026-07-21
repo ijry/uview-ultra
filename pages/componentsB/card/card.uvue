@@ -64,6 +64,10 @@
 </template>
 
 <script setup lang="uts">
+defineOptions({
+	styleIsolation: 'app-and-page'
+})
+
 import { ref } from 'vue'
 
 const title = ref('素胚勾勒出青花，笔锋浓转淡')

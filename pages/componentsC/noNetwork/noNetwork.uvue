@@ -20,6 +20,10 @@
 </template>
 
 <script setup lang="uts">
+	defineOptions({
+		styleIsolation: 'app-and-page'
+	})
+
 	function disconnected() {
 		console.log('disconnected')
 	}

@@ -121,6 +121,7 @@
 		return defaultValue
 	}
 	defineOptions({
+	styleIsolation: 'app-and-page',
 	name: 'up-goods-sku'
 	})
 

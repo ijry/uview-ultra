@@ -21,6 +21,7 @@
 	 * @example <up-status-bar></up-status-bar>
 	 */
 	defineOptions({
+		styleIsolation: 'app-and-page',
 		name: 'up-status-bar'
 	})
 

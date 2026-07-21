@@ -47,6 +47,10 @@
 </template>
 
 <script setup lang="uts">
+	defineOptions({
+		styleIsolation: 'app-and-page'
+	})
+
 	import type { PropType } from 'vue'
 	import { ref, computed, watch, nextTick, onBeforeUnmount } from 'vue'
 	import defProps from './codeInput.uts'

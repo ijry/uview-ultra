@@ -22,6 +22,7 @@
 	
 	// 定义组件选项
 	defineOptions({
+		styleIsolation: 'app-and-page',
 		name: "up-form"
 	})
 	

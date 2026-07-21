@@ -73,6 +73,10 @@
 </template>
 
 <script setup lang="uts">
+defineOptions({
+	styleIsolation: 'app-and-page'
+})
+
 </script>
 
 <style lang="scss">

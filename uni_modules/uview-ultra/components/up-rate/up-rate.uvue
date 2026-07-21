@@ -93,6 +93,7 @@
 	 * @example <up-rate :count="count" :value="2"></up-rate>
 	 */
 	defineOptions({
+		styleIsolation: 'app-and-page',
 		name: 'up-rate'
 	})
 

@@ -105,6 +105,7 @@ import {
  * @example <up-text text="我用十年青春,赴你最后之约"></up-text>
  */
 defineOptions({
+    styleIsolation: 'app-and-page',
     name: 'up-text'
 })
 

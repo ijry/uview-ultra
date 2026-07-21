@@ -21,6 +21,7 @@
 	 * @example <up-safe-bottom></up-safe-bottom>
 	 */
 	defineOptions({
+		styleIsolation: 'app-and-page',
 		name: 'up-safe-bottom'
 	})
 

@@ -67,6 +67,7 @@ import { addStyle, addUnit, sleep, upGetRect } from '../../libs/function/index.u
  * @example <up-subsection :list="list" :current="curNow" @change="sectionChange"></up-subsection>
  */
 defineOptions({
+    styleIsolation: 'app-and-page',
     name: 'up-subsection'
 })
 

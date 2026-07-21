@@ -53,6 +53,7 @@
 	 * @example <up-no-network></up-no-network>
 	 */
 	defineOptions({
+		styleIsolation: 'app-and-page',
 		name: 'up-no-network'
 	})
 

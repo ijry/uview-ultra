@@ -35,6 +35,10 @@
 </template>
 
 <script setup lang="uts">
+	defineOptions({
+		styleIsolation: 'app-and-page'
+	})
+
 	import { getCurrentInstance, ref } from 'vue'
 	import { createClassifyData } from "@/common/classify.data"
 

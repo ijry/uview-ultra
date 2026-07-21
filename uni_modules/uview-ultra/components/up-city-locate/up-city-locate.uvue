@@ -44,6 +44,7 @@
 	import { onMounted, ref, watch } from 'vue'
 
 	defineOptions({
+		styleIsolation: 'app-and-page',
 		name: 'up-city-locate'
 	})
 

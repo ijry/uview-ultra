@@ -21,6 +21,7 @@
 	
 	// options
 	defineOptions({
+	  styleIsolation: 'app-and-page',
 	  name: 'up-th'
 	})
 	

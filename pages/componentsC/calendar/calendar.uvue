@@ -117,6 +117,10 @@
 	</view>
 </template>
 <script setup lang="uts">
+	defineOptions({
+		styleIsolation: 'app-and-page'
+	})
+
 	import { ref } from 'vue'
 
 	const d = new Date()

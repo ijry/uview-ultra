@@ -24,6 +24,7 @@
 	 * @example <up-line color="red"></up-line>
 	 */
 	defineOptions({
+		styleIsolation: 'app-and-page',
 		name: 'up-line'
 	})
 

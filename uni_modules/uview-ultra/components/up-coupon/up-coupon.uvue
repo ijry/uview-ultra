@@ -54,6 +54,7 @@
 	import { computed } from 'vue';
 
 	defineOptions({
+		styleIsolation: 'app-and-page',
 		name: 'up-coupon'
 	})
 

@@ -57,6 +57,7 @@
 	 * @example <up-popover text="提示内容"><template #trigger><up-button>点击</up-button></template></up-popover>
 	 */
 	defineOptions({
+		styleIsolation: 'app-and-page',
 		name: 'up-popover'
 	})
 

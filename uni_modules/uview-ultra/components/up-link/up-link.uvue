@@ -27,6 +27,7 @@
 	 * @example <up-link href="http://www.uviewui.com">蜀道难，难于上青天</up-link>
 	 */
 	defineOptions({
+		styleIsolation: 'app-and-page',
 		name: 'up-link'
 	})
 

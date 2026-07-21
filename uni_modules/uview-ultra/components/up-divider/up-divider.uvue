@@ -29,6 +29,10 @@
 </template>
 
 <script lang="uts" setup>
+	defineOptions({
+		styleIsolation: 'app-and-page'
+	})
+
 	import { computed } from 'vue'
 	import defProps from './divider'
 	import { addStyle, addUnit } from '../../libs/function/index.uts'

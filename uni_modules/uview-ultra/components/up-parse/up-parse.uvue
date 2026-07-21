@@ -157,6 +157,7 @@ function cloneAttrs(node: UTSJSONObject | null): UTSJSONObject {
 }
 
 defineOptions({
+	styleIsolation: 'app-and-page',
 	name: 'up-parse'
 })
 

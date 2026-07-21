@@ -83,6 +83,7 @@
 	import { addUnit as _addUnit, addStyle as _addStyle, deepMerge, getPx, sleep, getWindowInfo, upGetRect } from '../../libs/function/index.uts';
 
 	defineOptions({
+		styleIsolation: 'app-and-page',
 		name: 'up-tabs'
 	})
 

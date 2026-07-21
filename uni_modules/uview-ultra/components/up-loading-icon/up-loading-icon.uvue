@@ -55,6 +55,7 @@
 	 * @example <up-loading mode="circle"></up-loading>
 	 */
 	defineOptions({
+		styleIsolation: 'app-and-page',
 		name: 'up-loading-icon'
 	})
 

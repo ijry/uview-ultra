@@ -76,6 +76,7 @@ import defProps from './carKeyboard.uts'
 
 // options
 defineOptions({
+  styleIsolation: 'app-and-page',
   name: "up-car-keyboard"
 })
 

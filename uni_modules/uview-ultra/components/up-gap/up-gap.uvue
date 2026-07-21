@@ -9,6 +9,7 @@ import { addUnit } from '../../libs/function/index'
 
 // options
 defineOptions({
+  styleIsolation: 'app-and-page',
   name: 'up-gap'
 })
 

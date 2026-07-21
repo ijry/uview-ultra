@@ -71,6 +71,10 @@
 </template>
 
 <script setup lang="uts">
+defineOptions({
+	styleIsolation: 'app-and-page'
+})
+
 const goodsBaseUrl = 'https://cdn.uviewui.com/uview/goods/'
 const menuBaseUrl = 'https://cdn.uviewui.com/uview/menu/'
 const goodsArr = [

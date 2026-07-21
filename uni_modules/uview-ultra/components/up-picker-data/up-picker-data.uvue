@@ -36,6 +36,7 @@ function createIndexList(): Array<number> {
 }
 
 defineOptions({
+	styleIsolation: 'app-and-page',
 	name: 'up-picker-data'
 })
 

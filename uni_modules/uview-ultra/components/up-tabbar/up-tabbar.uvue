@@ -49,6 +49,7 @@
 	const instance = getCurrentInstance()!.proxy!
 
 	defineOptions({
+		styleIsolation: 'app-and-page',
 		name: 'up-tabbar'
 	})
 

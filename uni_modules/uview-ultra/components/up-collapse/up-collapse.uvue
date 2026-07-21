@@ -13,6 +13,7 @@
 	const instance = getCurrentInstance()!.proxy!
 	
 	defineOptions({
+		styleIsolation: 'app-and-page',
 		name: "up-collapse"
 	})
 	

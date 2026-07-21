@@ -52,6 +52,7 @@
 	 * @example <up-notify message="Hi uView"></up-notify>
 	 */
 	defineOptions({
+		styleIsolation: 'app-and-page',
 		name: 'up-notify'
 	})
 

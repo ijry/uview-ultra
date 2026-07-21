@@ -222,6 +222,7 @@ type RowClassNameCallback = (row: UTSJSONObject, rowIndex: number) => string;
 type HeaderCellClassNameCallback = (col: UTSJSONObject) => string;
 
 defineOptions({
+    styleIsolation: 'app-and-page',
     name: 'up-table2'
 })
 

@@ -70,6 +70,7 @@
 	import { createAreaData } from "@/common/area"
 
 	defineOptions({
+		styleIsolation: 'app-and-page',
 		name: 'u-city-select'
 	})
 

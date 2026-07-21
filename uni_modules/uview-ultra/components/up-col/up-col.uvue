@@ -23,6 +23,7 @@
 	})
 	
 	defineOptions({
+		styleIsolation: 'app-and-page',
 		namne: 'up-col'
 	})
 	

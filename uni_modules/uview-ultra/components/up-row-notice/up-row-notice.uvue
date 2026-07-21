@@ -53,6 +53,10 @@
 </template>
 
 <script setup lang="uts">
+	defineOptions({
+		styleIsolation: 'app-and-page'
+	})
+
 	import { ref, computed, watch, onMounted, onBeforeUnmount, getCurrentInstance } from 'vue'
 	import type { PropType } from 'vue'
 	import defProps from './rowNotice.uts'

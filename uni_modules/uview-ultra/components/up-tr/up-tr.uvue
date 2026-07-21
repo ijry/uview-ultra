@@ -7,6 +7,7 @@
 <script setup lang="uts">
 	// options
 	defineOptions({
+	  styleIsolation: 'app-and-page',
 	  name: 'up-tr'
 	})
 </script>

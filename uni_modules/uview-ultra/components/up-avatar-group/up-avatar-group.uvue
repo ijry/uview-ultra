@@ -38,6 +38,7 @@ import defProps from './avatarGroup'
 import { addUnit } from '../../libs/function/index'
 
 defineOptions({
+  styleIsolation: 'app-and-page',
   name: 'up-avatar-group'
 })
 

@@ -51,6 +51,7 @@
 	 * @example <up-switch v-model="checked" active-color="red" inactive-color="#eee"></up-switch>
 	 */
 	defineOptions({
+		styleIsolation: 'app-and-page',
 		name: 'up-switch'
 	})
 

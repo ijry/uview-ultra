@@ -93,6 +93,7 @@ function valueToBoolean(value: any | null): boolean {
 }
 
 defineOptions({
+  styleIsolation: 'app-and-page',
   name: 'up-tree'
 })
 

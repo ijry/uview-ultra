@@ -64,6 +64,7 @@ function normalizeNumber(value: any | null, fallback: number = 0): number {
 }
 
 defineOptions({
+	styleIsolation: 'app-and-page',
 	name: 'up-select'
 })
 

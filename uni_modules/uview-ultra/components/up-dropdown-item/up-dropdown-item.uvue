@@ -36,9 +36,10 @@
 	const instance = getCurrentInstance()!.proxy!
 	
 	defineOptions({
+		styleIsolation: 'app-and-page',
 		name: 'up-dropdown-item',
 		options: {
-            styleIsolation: 'shared',
+            styleIsolation: 'app-and-page',
         }
 	})
 	

@@ -64,6 +64,7 @@
 	 * @example 
 	 */
 	defineOptions({
+		styleIsolation: 'app-and-page',
 		name: 'up-toolbar'
 	})
 

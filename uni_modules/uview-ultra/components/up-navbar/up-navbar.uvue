@@ -93,6 +93,7 @@
 	 * @example <up-navbar title="剑未配妥，出门已是江湖" left-text="返回" right-text="帮助" @click-left="onClickBack" @click-right="onClickRight"></up-navbar>
 	 */
 	defineOptions({
+		styleIsolation: 'app-and-page',
 		name: 'up-navbar'
 	})
 

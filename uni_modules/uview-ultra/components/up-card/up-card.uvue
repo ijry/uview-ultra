@@ -86,6 +86,7 @@ import defProps from './card.uts'
 
 // options
 defineOptions({
+  styleIsolation: 'app-and-page',
   name: 'up-card'
 })
 

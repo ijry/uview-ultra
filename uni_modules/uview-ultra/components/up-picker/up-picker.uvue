@@ -107,6 +107,7 @@ import { addUnit as addUnitFn } from '../../libs/function/index.uts';
 import { array as testArrayFn } from '../../libs/function/test.uts';
 
 defineOptions({
+	styleIsolation: 'app-and-page',
 	name: 'up-picker'
 })
 

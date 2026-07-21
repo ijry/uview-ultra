@@ -32,6 +32,10 @@
 </template>
 
 <script setup lang="uts">
+defineOptions({
+	styleIsolation: 'app-and-page'
+})
+
 import { computed, ref } from 'vue'
 
 const tel = ref('')

@@ -43,6 +43,7 @@ const getClassNames = function (name: string): UTSJSONObject {
 }
 
 defineOptions({
+	styleIsolation: 'app-and-page',
 	name: 'up-transition'
 })
 

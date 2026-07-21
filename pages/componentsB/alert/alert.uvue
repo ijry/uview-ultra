@@ -139,6 +139,10 @@
 </template>
 
 <script setup lang="uts">
+defineOptions({
+	styleIsolation: 'app-and-page'
+})
+
 const description = ''
 const title = ''
 </script>

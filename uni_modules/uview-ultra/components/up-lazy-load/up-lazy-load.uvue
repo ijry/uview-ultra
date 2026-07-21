@@ -36,6 +36,7 @@
      * @example <up-lazy-load :image="image" :loading-img="loadingImg" :error-img="errorImg"></up-lazy-load>
      */
     defineOptions({
+        styleIsolation: 'app-and-page',
         name: 'up-lazy-load'
     })
 

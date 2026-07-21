@@ -21,6 +21,7 @@
 	 * @example <up-list-item v-for="(item, index) in indexList" :key="index" ></up-list-item>
 	 */
 	defineOptions({
+		styleIsolation: 'app-and-page',
 		name: 'up-list-item'
 	})
 

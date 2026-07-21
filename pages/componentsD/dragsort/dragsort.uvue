@@ -75,6 +75,10 @@
 </template>
 
 <script setup lang="uts">
+defineOptions({
+	styleIsolation: 'app-and-page'
+})
+
 import { computed } from 'vue'
 import { getWindowInfo } from '@/uni_modules/uview-ultra/libs/function/index.uts'
 

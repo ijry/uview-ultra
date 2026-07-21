@@ -24,6 +24,10 @@
 </template>
 
 <script setup lang="uts">
+	defineOptions({
+		styleIsolation: 'app-and-page'
+	})
+
 	import { computed } from "vue";
 	import defProps from './backtop.uts';
 	import { addUnit, addStyle, getPx, deepMerge } from '../../libs/function/index';

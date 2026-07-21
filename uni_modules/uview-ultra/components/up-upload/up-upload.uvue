@@ -238,6 +238,7 @@
 		return isNaN(parsed) ? fallback : parsed
 	}
 	defineOptions({
+		styleIsolation: 'app-and-page',
 		name: 'up-upload'
 		// #ifdef MP-WEIXIN
 		,

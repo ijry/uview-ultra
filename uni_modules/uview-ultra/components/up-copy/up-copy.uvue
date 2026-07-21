@@ -5,6 +5,10 @@
 </template>
 
 <script setup lang="uts">
+defineOptions({
+	styleIsolation: 'app-and-page'
+})
+
 interface Props {
     content?: string | null
     alertStyle?: string | null

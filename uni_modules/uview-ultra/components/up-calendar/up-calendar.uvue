@@ -185,6 +185,7 @@ function watchValueSignature(value: any | null): string {
 }
 
 defineOptions({
+	styleIsolation: 'app-and-page',
 	name: 'up-calendar'
 })
 

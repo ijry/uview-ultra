@@ -34,6 +34,7 @@
 	 * @example <up-sticky offsetTop="200"><view>塞下秋来风景异，衡阳雁去无留意</view></up-sticky>
 	 */
 	defineOptions({
+		styleIsolation: 'app-and-page',
 		name: 'up-sticky'
 	})
 

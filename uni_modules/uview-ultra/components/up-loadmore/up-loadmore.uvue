@@ -74,6 +74,7 @@ import { addUnit, addStyle } from '../../libs/function/index.uts'
  * @example <up-loadmore :status="status" icon-type="iconType" load-text="loadText" />
  */
 defineOptions({
+	styleIsolation: 'app-and-page',
 	name: 'up-loadmore'
 })
 

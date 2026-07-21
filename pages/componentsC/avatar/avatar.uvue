@@ -160,6 +160,10 @@
 </template>
 
 <script setup lang="uts">
+	defineOptions({
+		styleIsolation: 'app-and-page'
+	})
+
 	const src1 = './static/uview/album/1.jpg'
 	const src2 = './static/uview/album/2.jpg'
 	const src3 = './static/uview/album/3.jpg'

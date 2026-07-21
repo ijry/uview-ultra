@@ -124,6 +124,7 @@ function clamp(value: number, min: number, max: number): number {
 }
 
 defineOptions({
+	styleIsolation: 'app-and-page',
 	name: 'up-cropper'
 })
 

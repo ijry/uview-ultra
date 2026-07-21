@@ -218,6 +218,10 @@
 </template>
 
 <script setup lang="ts">
+	defineOptions({
+		styleIsolation: 'app-and-page'
+	})
+
 	import { ref, reactive } from 'vue';
 	import { onReady } from '@dcloudio/uni-app'
 	import { toast, timeFormat } from '@/uni_modules/uview-ultra/libs/function/index.uts'

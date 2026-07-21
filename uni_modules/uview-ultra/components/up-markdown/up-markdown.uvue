@@ -88,6 +88,7 @@ function styleMap(theme: string): UTSJSONObject {
 }
 
 defineOptions({
+  styleIsolation: 'app-and-page',
   name: 'up-markdown'
 })
 

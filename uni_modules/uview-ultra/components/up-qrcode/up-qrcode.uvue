@@ -49,6 +49,7 @@ function getPixelRatio(): number {
 }
 
 defineOptions({
+    styleIsolation: 'app-and-page',
     name: 'up-qrcode'
 })
 

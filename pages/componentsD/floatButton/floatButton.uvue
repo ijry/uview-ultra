@@ -48,6 +48,10 @@
 </template>
 
 <script setup lang="uts">
+defineOptions({
+	styleIsolation: 'app-and-page'
+})
+
 function navigateBack() {
   uni.navigateBack({ delta: 1 })
 }

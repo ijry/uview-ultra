@@ -246,6 +246,12 @@
 	</view>
 </template>
 
+<script setup lang="uts">
+defineOptions({
+	styleIsolation: 'app-and-page'
+})
+</script>
+
 <style lang="scss">
 	.u-page {
 		padding: 15px;

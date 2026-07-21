@@ -54,6 +54,7 @@
 
 <script setup lang="uts">
 	defineOptions({
+		styleIsolation: 'app-and-page',
 		name: 'up-calendar-header'
 	})
 

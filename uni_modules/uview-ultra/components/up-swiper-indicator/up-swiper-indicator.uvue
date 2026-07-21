@@ -43,6 +43,7 @@
 	 * @example	<up-swiper :list="list4" indicator keyName="url" :autoplay="false"></up-swiper>
 	 */
 	defineOptions({
+		styleIsolation: 'app-and-page',
 		name: 'up-swiper-indicator'
 	})
 

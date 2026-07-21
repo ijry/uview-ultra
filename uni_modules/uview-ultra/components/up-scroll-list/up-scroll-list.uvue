@@ -84,6 +84,7 @@ import defProps from './scrollList.uts'
 import { addStyle, addUnit, getPx, sleep, upGetRect } from '../../libs/function/index.uts';
 
 defineOptions({
+	styleIsolation: 'app-and-page',
 	name: 'up-scroll-list'
 })
 

@@ -66,6 +66,10 @@
 </template>
 
 <script setup lang="uts">
+	defineOptions({
+		styleIsolation: 'app-and-page'
+	})
+
 	function click() {
 		console.log('click')
 	}

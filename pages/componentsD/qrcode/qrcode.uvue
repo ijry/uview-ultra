@@ -28,5 +28,9 @@
 </template>
 
 <script setup lang="uts">
+defineOptions({
+	styleIsolation: 'app-and-page'
+})
+
 const logo = '/static/uview/common/logo.png'
 </script>

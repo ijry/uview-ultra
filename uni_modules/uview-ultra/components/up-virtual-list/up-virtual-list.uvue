@@ -45,6 +45,7 @@ function valueToString(value: any | null): string {
 }
 
 defineOptions({
+  styleIsolation: 'app-and-page',
   name: 'up-virtual-list'
 })
 

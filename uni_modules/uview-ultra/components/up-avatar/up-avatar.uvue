@@ -64,6 +64,7 @@ import { addStyle, addUnit, random } from '../../libs/function/index'
 import defProps from './avatar'
 
 defineOptions({
+  styleIsolation: 'app-and-page',
   name: 'up-avatar'
 })
 

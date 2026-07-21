@@ -73,6 +73,7 @@
 	 * @example <up-read-more><rich-text :nodes="content"></rich-text></up-read-more>
 	 */
 	defineOptions({
+		styleIsolation: 'app-and-page',
 		name: 'up-read-more'
 	})
 

@@ -15,6 +15,7 @@
 	 * @example
 	 */
 	defineOptions({
+		styleIsolation: 'app-and-page',
 		name: 'up-picker-column'
 	})
 </script>

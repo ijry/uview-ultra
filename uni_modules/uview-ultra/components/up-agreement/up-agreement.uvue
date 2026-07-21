@@ -34,6 +34,7 @@
     import { ref } from 'vue'
 
     defineOptions({
+        styleIsolation: 'app-and-page',
         name: 'up-agreement'
     })
 

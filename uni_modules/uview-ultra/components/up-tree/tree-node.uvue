@@ -48,6 +48,7 @@ function valueToString(value: any): string {
 }
 
 defineOptions({
+  styleIsolation: 'app-and-page',
   name: 'tree-node'
 })
 
