@@ -1,3 +1,11 @@
+## 4.5.4
+feat: 适配蒸汽模式与 BEM 样式，兼容样式隔离 2.0
+
+- 多组件 uvue/vue 样式改为 BEM，减少深层选择器，适配蒸汽模式（Vapor）与 HBuilderX 样式隔离 2.0
+- 涉及 button、card、choose、select、table2、tree、coupon、dragsort、pagination、scroll-list、swiper-indicator 等组件
+- 若业务侧有自定义样式覆盖内部 class，请按 BEM 命名同步调整
+- 补充 AGEMTS 变更日志同步规则：用户可感知变更后同步写入 uview-plus-doc4 changelog
+
 ## 4.5.3
 适配 HBuilderX 5.0+ 样式隔离策略 2.0 向下兼容：
 1. 开启 styleIsolationVersion=2
