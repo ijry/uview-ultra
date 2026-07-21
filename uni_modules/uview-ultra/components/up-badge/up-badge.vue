@@ -9,85 +9,63 @@
 	>{{ isDot ? '' :showValue }}</text>
 </template>
 
-<script>
-	import { props } from './props.js';
-	import { mpMixin } from '../../libs/mixin/mpMixin.js';
-	import { mixin } from '../../libs/mixin/mixin.js';
-	import { addStyle, addUnit } from '../../libs/function/index.js';
-	/**
-	 * badge 徽标数
-	 * @description 该组件一般用于图标右上角显示未读的消息数量，提示用户点击，有圆点和圆包含文字两种形式。
-	 * @tutorial https://uview-plus.jiangruyi.com/components/badge.html
-	 * 
-	 * @property {Boolean} 			isDot 		是否显示圆点 （默认 false ）
-	 * @property {String | Number} 	value 		显示的内容
-	 * @property {Boolean} 			show 		是否显示 （默认 true ）
-	 * @property {String | Number} 	max 		最大值，超过最大值会显示 '{max}+'  （默认999）
-	 * @property {String} 			type 		主题类型，error|warning|success|primary （默认 'error' ）
-	 * @property {Boolean} 			showZero	当数值为 0 时，是否展示 Badge （默认 false ）
-	 * @property {String} 			bgColor 	背景颜色，优先级比type高，如设置，type参数会失效
-	 * @property {String} 			color 		字体颜色 （默认 '#ffffff' ）
-	 * @property {String} 			shape 		徽标形状，circle-四角均为圆角，horn-左下角为直角 （默认 'circle' ）
-	 * @property {String} 			numberType	设置数字的显示方式，overflow|ellipsis|limit  （默认 'overflow' ）
-	 * @property {Array}} 			offset		设置badge的位置偏移，格式为 [x, y]，也即设置的为top和right的值，absolute为true时有效
-	 * @property {Boolean} 			inverted	是否反转背景和字体颜色（默认 false ）
-	 * @property {Boolean} 			absolute	是否绝对定位（默认 false ）
-	 * @property {Object}			customStyle	定义需要用到的外部样式
-	 * @example <up-badge :type="type" :count="count"></up-badge>
-	 */
-	export default {
+<script setup>
+	import { computed } from 'vue'
+	import { props as badgeProps } from './props.js'
+	import { commonProps } from '../../libs/composable/useUltraUI.js'
+	import { addStyle, addUnit } from '../../libs/function/index.js'
+
+	defineOptions({
 		name: 'up-badge',
-		mixins: [mpMixin, props, mixin],
-		computed: {
-			// 是否将badge中心与父组件右上角重合
-			boxStyle() {
-				let style = {};
-				return style;
-			},
-			// 整个组件的样式
-			badgeStyle() {
-				const style = {}
-				if(this.color) {
-					style.color = this.color
-				}
-				if (this.bgColor && !this.inverted) {
-					style.backgroundColor = this.bgColor
-				}
-				if (this.absolute) {
-					style.position = 'absolute'
-					// 如果有设置offset参数
-					if(this.offset.length) {
-						// top和right分为为offset的第一个和第二个值，如果没有第二个值，则right等于top
-						const top = this.offset[0]
-						const right = this.offset[1] || top
-						style.top = addUnit(top)
-						style.right = addUnit(right)
-					}
-				}
-				return style
-			},
-			showValue() {
-				switch (this.numberType) {
-					case "overflow":
-						return Number(this.value) > Number(this.max) ? this.max + "+" : this.value
-						break;
-					case "ellipsis":
-						return Number(this.value) > Number(this.max) ? "..." : this.value
-						break;
-					case "limit":
-						return Number(this.value) > 999 ? Number(this.value) >= 9999 ?
-							Math.floor(this.value / 1e4 * 100) / 100 + "w" : Math.floor(this.value /
-								1e3 * 100) / 100 + "k" : this.value
-						break;
-					default:
-						return Number(this.value)
-				}
-			},
-		},
-		methods: {
-			addStyle
+		// #ifdef MP-WEIXIN
+		options: {
+			virtualHost: true
 		}
-	}
+		// #endif
+	})
+
+	const props = defineProps({
+		...commonProps,
+		...badgeProps.props
+	})
+
+	// 整个组件的样式
+	const badgeStyle = computed(() => {
+		const style = {}
+		if (props.color) {
+			style.color = props.color
+		}
+		if (props.bgColor && !props.inverted) {
+			style.backgroundColor = props.bgColor
+		}
+		if (props.absolute) {
+			style.position = 'absolute'
+			// 如果有设置offset参数
+			if (props.offset.length) {
+				// top和right分为为offset的第一个和第二个值，如果没有第二个值，则right等于top
+				const top = props.offset[0]
+				const right = props.offset[1] || top
+				style.top = addUnit(top)
+				style.right = addUnit(right)
+			}
+		}
+		return style
+	})
+
+	const showValue = computed(() => {
+		switch (props.numberType) {
+			case 'overflow':
+				return Number(props.value) > Number(props.max) ? props.max + '+' : props.value
+			case 'ellipsis':
+				return Number(props.value) > Number(props.max) ? '...' : props.value
+			case 'limit':
+				return Number(props.value) > 999 ? Number(props.value) >= 9999 ?
+					Math.floor(props.value / 1e4 * 100) / 100 + 'w' : Math.floor(props.value /
+						1e3 * 100) / 100 + 'k' : props.value
+			default:
+				return Number(props.value)
+		}
+	})
 </script>
 
 <style lang="scss" scoped>

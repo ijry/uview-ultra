@@ -85,10 +85,10 @@
 	</view>
 </template>
 
-<script>
-import { props } from './props'
-import { mpMixin } from '../../libs/mixin/mpMixin'
-import { mixin } from '../../libs/mixin/mixin'
+<script setup>
+import { computed, nextTick, ref, watch } from 'vue'
+import { props as calendarStripProps } from './props'
+import { commonProps } from '../../libs/composable/useUltraUI'
 import dayjs from '../up-datetime-picker/dayjs.esm.min.js'
 import test from '../../libs/function/test'
 
@@ -96,298 +96,304 @@ import test from '../../libs/function/test'
  * CalendarStrip 单行日历
  * @description 单行横向日期日历，支持切月、下拉展开完整月历
  */
-export default {
+defineOptions({
 	name: 'up-calendar-strip',
-	mixins: [mpMixin, mixin, props],
-	data() {
+	// #ifdef MP-WEIXIN
+	options: {
+		virtualHost: true
+	}
+	// #endif
+})
+
+const props = defineProps({
+	...commonProps,
+	...calendarStripProps.props
+})
+const emit = defineEmits(['change', 'confirm', 'monthChange', 'toggleFull', 'update:modelValue'])
+
+const innerSelectedDate = ref('')
+const currentMonth = ref('')
+const scrollIntoView = ref('')
+const innerShowFull = ref(false)
+const touchStartX = ref(0)
+const touchStartY = ref(0)
+
+const innerMaxDate = computed(() => (test.number(props.maxDate) ? Number(props.maxDate) : props.maxDate))
+const innerMinDate = computed(() => (test.number(props.minDate) ? Number(props.minDate) : props.minDate))
+const rangeChange = computed(() => [innerMinDate.value, innerMaxDate.value])
+const hasMaxDate = computed(() => !!innerMaxDate.value && dayjs(innerMaxDate.value).isValid())
+const hasMinDate = computed(() => !!innerMinDate.value && dayjs(innerMinDate.value).isValid())
+const minDateDay = computed(() => {
+	if (!hasMinDate.value) return ''
+	return dayjs(innerMinDate.value).format('YYYY-MM-DD')
+})
+const maxDateDay = computed(() => {
+	if (!hasMaxDate.value) return ''
+	return dayjs(innerMaxDate.value).format('YYYY-MM-DD')
+})
+const todayDate = computed(() => dayjs().format('YYYY-MM-DD'))
+const monthLabel = computed(() => {
+	if (!currentMonth.value) return ''
+	const date = dayjs(`${currentMonth.value}-01`)
+	if (props.monthFormat) return date.format(props.monthFormat)
+	if (uni.getLocale() == 'zh-Hans' || uni.getLocale() == 'zh-Hant') {
+		return date.format('YYYY年MM月')
+	}
+	return date.format('MM/YYYY')
+})
+const monthDays = computed(() => {
+	if (!currentMonth.value) return []
+	const start = dayjs(`${currentMonth.value}-01`)
+	const days = start.daysInMonth()
+	return new Array(days).fill(0).map((item, index) => {
+		const date = start.date(index + 1).format('YYYY-MM-DD')
 		return {
-			innerSelectedDate: '',
-			currentMonth: '',
-			scrollIntoView: '',
-			innerShowFull: false,
-			touchStartX: 0,
-			touchStartY: 0
+			day: index + 1,
+			date,
+			week: start.date(index + 1).day(),
+			disabled: isDateDisabled(date),
+			selected: dateSame(date, innerSelectedDate.value),
+			today: dateSame(date, todayDate.value)
 		}
-	},
-	computed: {
-		innerMaxDate() {
-			return test.number(this.maxDate) ? Number(this.maxDate) : this.maxDate
-		},
-		innerMinDate() {
-			return test.number(this.minDate) ? Number(this.minDate) : this.minDate
-		},
-		rangeChange() {
-			return [this.innerMinDate, this.innerMaxDate]
-		},
-		hasMaxDate() {
-			return !!this.innerMaxDate && dayjs(this.innerMaxDate).isValid()
-		},
-		hasMinDate() {
-			return !!this.innerMinDate && dayjs(this.innerMinDate).isValid()
-		},
-		minDateDay() {
-			if (!this.hasMinDate) return ''
-			return dayjs(this.innerMinDate).format('YYYY-MM-DD')
-		},
-		maxDateDay() {
-			if (!this.hasMaxDate) return ''
-			return dayjs(this.innerMaxDate).format('YYYY-MM-DD')
-		},
-		todayDate() {
-			return dayjs().format('YYYY-MM-DD')
-		},
-		monthLabel() {
-			if (!this.currentMonth) return ''
-			const date = dayjs(`${this.currentMonth}-01`)
-			if (this.monthFormat) return date.format(this.monthFormat)
-			if (uni.getLocale() == 'zh-Hans' || uni.getLocale() == 'zh-Hant') {
-				return date.format('YYYY年MM月')
-			}
-			return date.format('MM/YYYY')
-		},
-		monthDays() {
-			if (!this.currentMonth) return []
-			const start = dayjs(`${this.currentMonth}-01`)
-			const days = start.daysInMonth()
-			return new Array(days).fill(0).map((item, index) => {
-				const date = start.date(index + 1).format('YYYY-MM-DD')
-				return {
-					day: index + 1,
-					date,
-					week: start.date(index + 1).day(),
-					disabled: this.isDateDisabled(date),
-					selected: this.dateSame(date, this.innerSelectedDate),
-					today: this.dateSame(date, this.todayDate)
-				}
-			})
-		},
-		switchPrevDisabled() {
-			if (!this.hasMinDate || !this.currentMonth) return false
-			const current = dayjs(`${this.currentMonth}-01`)
-			const minMonth = dayjs(this.minDateDay).startOf('month')
-			return current.isSame(minMonth, 'month') || current.isBefore(minMonth, 'month')
-		},
-		switchNextDisabled() {
-			if (!this.hasMaxDate || !this.currentMonth) return false
-			const current = dayjs(`${this.currentMonth}-01`)
-			const maxMonth = dayjs(this.maxDateDay).startOf('month')
-			return current.isSame(maxMonth, 'month') || current.isAfter(maxMonth, 'month')
-		},
-		panelMinDate() {
-			if (this.hasMinDate) return this.minDateDay
-			const monthNum = Math.max(1, Number(this.fullMonthNum) || 24)
-			const anchor = this.currentMonth || dayjs().format('YYYY-MM')
-			return dayjs(`${anchor}-01`).subtract(monthNum - 1, 'month').startOf('month').format('YYYY-MM-DD')
-		},
-		panelMaxDate() {
-			if (this.hasMaxDate) return this.maxDateDay
-			const monthNum = Math.max(1, Number(this.fullMonthNum) || 24)
-			const anchor = this.currentMonth || dayjs().format('YYYY-MM')
-			return dayjs(`${anchor}-01`).add(monthNum - 1, 'month').endOf('month').format('YYYY-MM-DD')
-		},
-		panelMonthNum() {
-			return this.getMonths(this.panelMinDate, this.panelMaxDate)
-		},
-		pullHintText() {
-			return this.innerShowFull ? this.collapseHint : this.expandHint
+	})
+})
+const switchPrevDisabled = computed(() => {
+	if (!hasMinDate.value || !currentMonth.value) return false
+	const current = dayjs(`${currentMonth.value}-01`)
+	const minMonth = dayjs(minDateDay.value).startOf('month')
+	return current.isSame(minMonth, 'month') || current.isBefore(minMonth, 'month')
+})
+const switchNextDisabled = computed(() => {
+	if (!hasMaxDate.value || !currentMonth.value) return false
+	const current = dayjs(`${currentMonth.value}-01`)
+	const maxMonth = dayjs(maxDateDay.value).startOf('month')
+	return current.isSame(maxMonth, 'month') || current.isAfter(maxMonth, 'month')
+})
+const panelMinDate = computed(() => {
+	if (hasMinDate.value) return minDateDay.value
+	const monthNum = Math.max(1, Number(props.fullMonthNum) || 24)
+	const anchor = currentMonth.value || dayjs().format('YYYY-MM')
+	return dayjs(`${anchor}-01`).subtract(monthNum - 1, 'month').startOf('month').format('YYYY-MM-DD')
+})
+const panelMaxDate = computed(() => {
+	if (hasMaxDate.value) return maxDateDay.value
+	const monthNum = Math.max(1, Number(props.fullMonthNum) || 24)
+	const anchor = currentMonth.value || dayjs().format('YYYY-MM')
+	return dayjs(`${anchor}-01`).add(monthNum - 1, 'month').endOf('month').format('YYYY-MM-DD')
+})
+const panelMonthNum = computed(() => getMonths(panelMinDate.value, panelMaxDate.value))
+const pullHintText = computed(() => (innerShowFull.value ? props.collapseHint : props.expandHint))
+
+watch(() => props.modelValue, (n) => {
+	syncByValue(n, false, 'sync')
+}, { immediate: true })
+
+watch(rangeChange, () => {
+	syncByValue(innerSelectedDate.value || props.modelValue, true, 'range')
+})
+
+function dateSame(date1, date2) {
+	if (!date1 || !date2) return false
+	return dayjs(date1).isSame(dayjs(date2), 'day')
+}
+
+function normalizeDate(value) {
+	if (!value) return ''
+	const parsed = dayjs(value)
+	if (!parsed.isValid()) return ''
+	return parsed.format('YYYY-MM-DD')
+}
+
+function clampDate(date) {
+	let next = normalizeDate(date)
+	if (!next) return ''
+	if (hasMinDate.value && dayjs(next).isBefore(dayjs(minDateDay.value), 'day')) {
+		next = minDateDay.value
+	}
+	if (hasMaxDate.value && dayjs(next).isAfter(dayjs(maxDateDay.value), 'day')) {
+		next = maxDateDay.value
+	}
+	return next
+}
+
+function isDateDisabled(date) {
+	if (!date) return true
+	if (hasMinDate.value && dayjs(date).isBefore(dayjs(minDateDay.value), 'day')) {
+		return true
+	}
+	if (hasMaxDate.value && dayjs(date).isAfter(dayjs(maxDateDay.value), 'day')) {
+		return true
+	}
+	return false
+}
+
+function getDateId(date) {
+	return `up-calendar-strip-day-${dayjs(date).format('YYYYMMDD')}`
+}
+
+function getWeekLabel(week) {
+	const index = week === 0 ? 6 : week - 1
+	return props.weekText[index] || ''
+}
+
+function dayStyle(item) {
+	const style = {}
+	if (item.selected) {
+		style.backgroundColor = props.color
+	}
+	if (!item.selected && item.today && props.showToday) {
+		style.borderColor = props.color
+	}
+	return style
+}
+
+function scrollToDate(date) {
+	if (!date) {
+		scrollIntoView.value = ''
+		return
+	}
+	const target = getDateId(date)
+	scrollIntoView.value = ''
+	nextTick(() => {
+		scrollIntoView.value = target
+	})
+}
+
+function syncByValue(value, emitEvent = false, scene = 'sync') {
+	let next = clampDate(value)
+	if (!next) {
+		next = clampDate(todayDate.value)
+	}
+	if (!next) return
+	setSelectedDate(next, scene, emitEvent)
+}
+
+function setSelectedDate(date, scene = 'tap', emitEvent = true) {
+	const next = clampDate(date)
+	if (!next || isDateDisabled(next)) return
+	const prevDate = innerSelectedDate.value
+	const prevMonth = currentMonth.value
+	innerSelectedDate.value = next
+	currentMonth.value = dayjs(next).format('YYYY-MM')
+	scrollToDate(next)
+	if (!emitEvent) return
+	const payload = {
+		date: next,
+		month: currentMonth.value,
+		scene
+	}
+	if (!dateSame(prevDate, next)) {
+		emit('update:modelValue', next)
+	}
+	emit('change', payload)
+	emit('confirm', payload)
+	if (prevMonth !== currentMonth.value) {
+		emit('monthChange', {
+			month: currentMonth.value,
+			scene
+		})
+	}
+}
+
+function getMonths(minDate, maxDate) {
+	const minYear = dayjs(minDate).year()
+	const minMonth = dayjs(minDate).month() + 1
+	const maxYear = dayjs(maxDate).year()
+	const maxMonth = dayjs(maxDate).month() + 1
+	return Math.max(1, (maxYear - minYear) * 12 + (maxMonth - minMonth) + 1)
+}
+
+function findFirstEnabledDate(month) {
+	const start = dayjs(`${month}-01`)
+	const days = start.daysInMonth()
+	for (let i = 1; i <= days; i++) {
+		const date = start.date(i).format('YYYY-MM-DD')
+		if (!isDateDisabled(date)) {
+			return date
 		}
-	},
-	watch: {
-		modelValue: {
-			immediate: true,
-			handler(n) {
-				this.syncByValue(n, false, 'sync')
-			}
-		},
-		rangeChange() {
-			this.syncByValue(this.innerSelectedDate || this.modelValue, true, 'range')
-		}
-	},
-	emits: ['change', 'confirm', 'monthChange', 'toggleFull', 'update:modelValue'],
-	methods: {
-		dateSame(date1, date2) {
-			if (!date1 || !date2) return false
-			return dayjs(date1).isSame(dayjs(date2), 'day')
-		},
-		normalizeDate(value) {
-			if (!value) return ''
-			const parsed = dayjs(value)
-			if (!parsed.isValid()) return ''
-			return parsed.format('YYYY-MM-DD')
-		},
-		clampDate(date) {
-			let next = this.normalizeDate(date)
-			if (!next) return ''
-			if (this.hasMinDate && dayjs(next).isBefore(dayjs(this.minDateDay), 'day')) {
-				next = this.minDateDay
-			}
-			if (this.hasMaxDate && dayjs(next).isAfter(dayjs(this.maxDateDay), 'day')) {
-				next = this.maxDateDay
-			}
-			return next
-		},
-		isDateDisabled(date) {
-			if (!date) return true
-			if (this.hasMinDate && dayjs(date).isBefore(dayjs(this.minDateDay), 'day')) {
-				return true
-			}
-			if (this.hasMaxDate && dayjs(date).isAfter(dayjs(this.maxDateDay), 'day')) {
-				return true
-			}
-			return false
-		},
-		getDateId(date) {
-			return `up-calendar-strip-day-${dayjs(date).format('YYYYMMDD')}`
-		},
-		getWeekLabel(week) {
-			const index = week === 0 ? 6 : week - 1
-			return this.weekText[index] || ''
-		},
-		dayStyle(item) {
-			const style = {}
-			if (item.selected) {
-				style.backgroundColor = this.color
-			}
-			if (!item.selected && item.today && this.showToday) {
-				style.borderColor = this.color
-			}
-			return style
-		},
-		scrollToDate(date) {
-			if (!date) {
-				this.scrollIntoView = ''
-				return
-			}
-			const target = this.getDateId(date)
-			this.scrollIntoView = ''
-			this.$nextTick(() => {
-				this.scrollIntoView = target
-			})
-		},
-		syncByValue(value, emit = false, scene = 'sync') {
-			let next = this.clampDate(value)
-			if (!next) {
-				next = this.clampDate(this.todayDate)
-			}
-			if (!next) return
-			this.setSelectedDate(next, scene, emit)
-		},
-		setSelectedDate(date, scene = 'tap', emit = true) {
-			const next = this.clampDate(date)
-			if (!next || this.isDateDisabled(next)) return
-			const prevDate = this.innerSelectedDate
-			const prevMonth = this.currentMonth
-			this.innerSelectedDate = next
-			this.currentMonth = dayjs(next).format('YYYY-MM')
-			this.scrollToDate(next)
-			if (!emit) return
-			const payload = {
-				date: next,
-				month: this.currentMonth,
-				scene
-			}
-			if (!this.dateSame(prevDate, next)) {
-				this.$emit('update:modelValue', next)
-			}
-			this.$emit('change', payload)
-			this.$emit('confirm', payload)
-			if (prevMonth !== this.currentMonth) {
-				this.$emit('monthChange', {
-					month: this.currentMonth,
-					scene
-				})
-			}
-		},
-		getMonths(minDate, maxDate) {
-			const minYear = dayjs(minDate).year()
-			const minMonth = dayjs(minDate).month() + 1
-			const maxYear = dayjs(maxDate).year()
-			const maxMonth = dayjs(maxDate).month() + 1
-			return Math.max(1, (maxYear - minYear) * 12 + (maxMonth - minMonth) + 1)
-		},
-		findFirstEnabledDate(month) {
-			const start = dayjs(`${month}-01`)
-			const days = start.daysInMonth()
-			for (let i = 1; i <= days; i++) {
-				const date = start.date(i).format('YYYY-MM-DD')
-				if (!this.isDateDisabled(date)) {
-					return date
-				}
-			}
-			return ''
-		},
-		switchMonth(step = 0) {
-			if (step < 0 && this.switchPrevDisabled) return
-			if (step > 0 && this.switchNextDisabled) return
-			const baseMonth = this.currentMonth || dayjs(this.todayDate).format('YYYY-MM')
-			const target = dayjs(`${baseMonth}-01`).add(step, 'month')
-			const targetMonth = target.format('YYYY-MM')
-			const selectedDay = dayjs(this.innerSelectedDate || this.todayDate).date()
-			const dayInTargetMonth = Math.min(selectedDay, target.daysInMonth())
-			let next = target.date(dayInTargetMonth).format('YYYY-MM-DD')
-			next = this.clampDate(next)
-			if (!next || !dayjs(next).isSame(target, 'month') || this.isDateDisabled(next)) {
-				next = this.findFirstEnabledDate(targetMonth)
-			}
-			if (!next) return
-			this.setSelectedDate(next, 'switch', true)
-		},
-		prevMonth() {
-			this.switchMonth(-1)
-		},
-		nextMonth() {
-			this.switchMonth(1)
-		},
-		onDayTap(item) {
-			if (this.readonly || item.disabled) return
-			this.setSelectedDate(item.date, 'tap', true)
-		},
-		setFullVisible(show, source = 'button') {
-			if (!this.fullCalendar) return
-			if (this.innerShowFull === show) return
-			this.innerShowFull = show
-			this.$emit('toggleFull', {
-				show,
-				source
-			})
-		},
-		toggleFull(source = 'button') {
-			this.setFullVisible(!this.innerShowFull, source)
-		},
-		onPanelConfirm(e) {
-			if (!Array.isArray(e) || !e.length) return
-			this.setSelectedDate(e[0], 'full', true)
-			if (this.collapseAfterSelect) {
-				this.setFullVisible(false, 'auto')
-			}
-		},
-		onTouchStart(event) {
-			if (!this.fullCalendar) return
-			const point = event?.changedTouches?.[0] || event?.touches?.[0]
-			if (!point) return
-			this.touchStartX = point.clientX
-			this.touchStartY = point.clientY
-		},
-		onTouchEnd(event) {
-			if (!this.fullCalendar) return
-			const point = event?.changedTouches?.[0] || event?.touches?.[0]
-			if (!point) return
-			const deltaX = point.clientX - this.touchStartX
-			const deltaY = point.clientY - this.touchStartY
-			const threshold = Number(this.pullDownThreshold) || 40
-			if (Math.abs(deltaY) < threshold || Math.abs(deltaY) <= Math.abs(deltaX)) {
-				return
-			}
-			if (deltaY > 0 && !this.innerShowFull) {
-				this.setFullVisible(true, 'pull-down')
-			}
-			if (deltaY < 0 && this.innerShowFull) {
-				this.setFullVisible(false, 'pull-up')
-			}
-		}
+	}
+	return ''
+}
+
+function switchMonth(step = 0) {
+	if (step < 0 && switchPrevDisabled.value) return
+	if (step > 0 && switchNextDisabled.value) return
+	const baseMonth = currentMonth.value || dayjs(todayDate.value).format('YYYY-MM')
+	const target = dayjs(`${baseMonth}-01`).add(step, 'month')
+	const targetMonth = target.format('YYYY-MM')
+	const selectedDay = dayjs(innerSelectedDate.value || todayDate.value).date()
+	const dayInTargetMonth = Math.min(selectedDay, target.daysInMonth())
+	let next = target.date(dayInTargetMonth).format('YYYY-MM-DD')
+	next = clampDate(next)
+	if (!next || !dayjs(next).isSame(target, 'month') || isDateDisabled(next)) {
+		next = findFirstEnabledDate(targetMonth)
+	}
+	if (!next) return
+	setSelectedDate(next, 'switch', true)
+}
+
+function prevMonth() {
+	switchMonth(-1)
+}
+
+function nextMonth() {
+	switchMonth(1)
+}
+
+function onDayTap(item) {
+	if (props.readonly || item.disabled) return
+	setSelectedDate(item.date, 'tap', true)
+}
+
+function setFullVisible(show, source = 'button') {
+	if (!props.fullCalendar) return
+	if (innerShowFull.value === show) return
+	innerShowFull.value = show
+	emit('toggleFull', {
+		show,
+		source
+	})
+}
+
+function toggleFull(source = 'button') {
+	setFullVisible(!innerShowFull.value, source)
+}
+
+function onPanelConfirm(e) {
+	if (!Array.isArray(e) || !e.length) return
+	setSelectedDate(e[0], 'full', true)
+	if (props.collapseAfterSelect) {
+		setFullVisible(false, 'auto')
+	}
+}
+
+function onTouchStart(event) {
+	if (!props.fullCalendar) return
+	const point = event?.changedTouches?.[0] || event?.touches?.[0]
+	if (!point) return
+	touchStartX.value = point.clientX
+	touchStartY.value = point.clientY
+}
+
+function onTouchEnd(event) {
+	if (!props.fullCalendar) return
+	const point = event?.changedTouches?.[0] || event?.touches?.[0]
+	if (!point) return
+	const deltaX = point.clientX - touchStartX.value
+	const deltaY = point.clientY - touchStartY.value
+	const threshold = Number(props.pullDownThreshold) || 40
+	if (Math.abs(deltaY) < threshold || Math.abs(deltaY) <= Math.abs(deltaX)) {
+		return
+	}
+	if (deltaY > 0 && !innerShowFull.value) {
+		setFullVisible(true, 'pull-down')
+	}
+	if (deltaY < 0 && innerShowFull.value) {
+		setFullVisible(false, 'pull-up')
 	}
 }
 </script>
+
 
 <style lang="scss" scoped>
 @import "../../libs/css/components.scss";

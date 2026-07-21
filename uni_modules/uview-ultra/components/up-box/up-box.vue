@@ -31,12 +31,10 @@
 	</view>
 </template>
 
-<script>
-	import { propsBox } from './props.js';
-	import { mpMixin } from '../../libs/mixin/mpMixin.js';
-	import { mixin } from '../../libs/mixin/mixin.js';
-	import { addStyle } from '../../libs/function/index.js';
-	import test from '../../libs/function/test.js';
+<script setup>
+	import { propsBox } from './props.js'
+	import { commonProps } from '../../libs/composable/useUltraUI.js'
+	import { addStyle } from '../../libs/function/index.js'
 	/**
 	 * box 盒子
 	 * @description box盒子一般为左边一个盒子，右侧两个等高的半盒组成，常用于App首页座位重点突出。
@@ -49,20 +47,19 @@
 	 * @event {Function}			click			点击cell列表时触发
 	 * @example <up-box colors=['blue', 'red', 'yellow'] height="200px"></up-box>
 	 */
-	export default {
+	defineOptions({
 		name: 'up-box',
-		data() {
-			return {
-			}
-		},
-		mixins: [mpMixin, mixin, propsBox],
-		computed: {
-		},
-		emits: [],
-		methods: {
-			addStyle,
+		// #ifdef MP-WEIXIN
+		options: {
+			virtualHost: true
 		}
-	}
+		// #endif
+	})
+
+	defineProps({
+		...commonProps,
+		...propsBox.props
+	})
 </script>
 
 <style lang="scss" scoped>

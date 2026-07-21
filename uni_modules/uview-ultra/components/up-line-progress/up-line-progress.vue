@@ -23,11 +23,11 @@
 	</view>
 </template>
 
-<script>
-	import { props } from './props.js';
-	import { mpMixin } from '../../libs/mixin/mpMixin.js';
-	import { mixin } from '../../libs/mixin/mixin.js';
-	import { addUnit, addStyle, sleep, range } from '../../libs/function/index.js';
+<script setup>
+	import { computed, getCurrentInstance, onMounted, ref, watch } from 'vue'
+	import { props as lineProgressProps } from './props.js'
+	import { commonProps, useUltraUI } from '../../libs/composable/useUltraUI.js'
+	import { addUnit, addStyle, sleep, range } from '../../libs/function/index.js'
 	// #ifdef APP-NVUE
 	const dom = uni.requireNativePlugin('dom')
 	// #endif
@@ -43,68 +43,74 @@
 	 * 
 	 * @example <up-line-progress :percent="70" :show-percent="true"></up-line-progress>
 	 */
-	export default {
-		name: "up-line-progress",
-		mixins: [mpMixin, mixin, props],
-		data() {
-			return {
-				lineWidth: 0,
-			}
-		},
-		watch: {
-			percentage(n) {
-				this.resizeProgressWidth()
-			}
-		},
-		computed: {
-			progressStyle() { 
-				let style = {}
-				style.width = this.lineWidth
-				style.backgroundColor = this.activeColor
-				style.height = addUnit(this.height)
-				return style
-			},
-			innserPercentage() {
-				// 控制范围在0-100之间
-				return range(0, 100, this.percentage)
-			}
-		},
-		mounted() {
-			this.init()
-		},
-		methods: {
-			addStyle,
-			addUnit,
-			init() {
-				sleep(20).then(() => {
-					this.resizeProgressWidth()
-				})
-			},
-			getProgressWidth() {
-				// #ifndef APP-NVUE
-				return this.$uGetRect('.up-line-progress__background')
-				// #endif
-
-				// #ifdef APP-NVUE
-				// 返回一个promise
-				return new Promise(resolve => {
-					dom.getComponentRect(this.$refs['up-line-progress__background'], (res) => {
-						resolve(res.size)
-					})
-				})
-				// #endif
-			},
-			resizeProgressWidth() {
-				this.getProgressWidth().then(size => {
-					const {
-						width
-					} = size
-					// 通过设置的percentage值，计算其所占总长度的百分比
-					this.lineWidth = width * this.innserPercentage / 100 + 'px'
-				})
-			}
+	defineOptions({
+		name: 'up-line-progress',
+		// #ifdef MP-WEIXIN
+		options: {
+			virtualHost: true
 		}
+		// #endif
+	})
+
+	const props = defineProps({
+		...commonProps,
+		...lineProgressProps.props
+	})
+	const instance = getCurrentInstance()
+	const lineWidth = ref(0)
+	const { $uGetRect } = useUltraUI(props)
+
+	const progressStyle = computed(() => {
+		const style = {}
+		style.width = lineWidth.value
+		style.backgroundColor = props.activeColor
+		style.height = addUnit(props.height)
+		return style
+	})
+
+	const innserPercentage = computed(() => {
+		// 控制范围在0-100之间
+		return range(0, 100, props.percentage)
+	})
+
+	function init() {
+		sleep(20).then(() => {
+			resizeProgressWidth()
+		})
 	}
+
+	function getProgressWidth() {
+		// #ifndef APP-NVUE
+		return $uGetRect('.up-line-progress__background')
+		// #endif
+
+		// #ifdef APP-NVUE
+		// 返回一个promise
+		return new Promise(resolve => {
+			dom.getComponentRect(instance.proxy.$refs['up-line-progress__background'], (res) => {
+				resolve(res.size)
+			})
+		})
+		// #endif
+	}
+
+	function resizeProgressWidth() {
+		getProgressWidth().then(size => {
+			const {
+				width
+			} = size
+			// 通过设置的percentage值，计算其所占总长度的百分比
+			lineWidth.value = width * innserPercentage.value / 100 + 'px'
+		})
+	}
+
+	watch(() => props.percentage, () => {
+		resizeProgressWidth()
+	})
+
+	onMounted(() => {
+		init()
+	})
 </script>
 
 <style lang="scss" scoped>

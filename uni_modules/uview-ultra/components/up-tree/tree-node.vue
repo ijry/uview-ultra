@@ -40,80 +40,93 @@
   </view>
 </template>
 
-<script>
-export default {
-  name: 'tree-node',
-  props: {
-    node: {
-      type: Object,
-      required: true
-    },
-    props: {
-      type: Object,
-      required: true
-    },
-    showCheckbox: {
-      type: Boolean,
-      default: false
-    },
-    checkStrictly: {
-      type: Boolean,
-      default: false
-    },
-    expandOnClickNode: {
-      type: Boolean,
-      default: true
-    },
-    depth: {
-        type: Number,
-        default: 0
-    }
-  },
-  computed: {
-    hasChildren() {
-      return this.node[this.props.children] && this.node[this.props.children].length > 0;
-    },
-    isExpanded() {
-        return this.node.expanded === undefined ? false : this.node.expanded;
-    }
-  },
-  emits: ['node-click', 'check-change'],
-  methods: {
-    toggle() {
-      if (this.expandOnClickNode && this.hasChildren) {
-        this.node.expanded = !this.node.expanded;
-      }
-      this.$emit('node-click', this.node);
-    },
-    toggleCheck(checked) {
-      this.node.checked = checked;
-      if (!this.checkStrictly) {
-        this.updateChildCheckStatus(this.node, checked);
-        this.updateParentCheckStatus(this.node);
-      }
-      this.$emit('check-change', this.node);
-    },
-    updateChildCheckStatus(node, checked) {
-      if (node[this.props.children]) {
-        node[this.props.children].forEach(child => {
-          child.checked = checked;
-          this.updateChildCheckStatus(child, checked);
-        });
-      }
-    },
-    updateParentCheckStatus(node) {
-      let parent = this.$parent;
-      while (parent && parent.node) {
-        const allChecked = parent.node[this.props.children].every(
-          child => child.checked
-        );
-        parent.node.checked = allChecked;
-        parent = parent.$parent;
-      }
-    }
-  }
-};
+<script setup>
+import { computed, getCurrentInstance } from 'vue'
+
+defineOptions({
+	name: 'tree-node',
+	// #ifdef MP-WEIXIN
+	options: {
+		virtualHost: true
+	}
+	// #endif
+})
+
+const props = defineProps({
+	node: {
+		type: Object,
+		required: true
+	},
+	props: {
+		type: Object,
+		required: true
+	},
+	showCheckbox: {
+		type: Boolean,
+		default: false
+	},
+	checkStrictly: {
+		type: Boolean,
+		default: false
+	},
+	expandOnClickNode: {
+		type: Boolean,
+		default: true
+	},
+	depth: {
+		type: Number,
+		default: 0
+	}
+})
+const emit = defineEmits(['node-click', 'check-change'])
+const instance = getCurrentInstance()
+
+const hasChildren = computed(() => {
+	return props.node[props.props.children] && props.node[props.props.children].length > 0
+})
+const isExpanded = computed(() => {
+	return props.node.expanded === undefined ? false : props.node.expanded
+})
+
+function toggle() {
+	if (props.expandOnClickNode && hasChildren.value) {
+		props.node.expanded = !props.node.expanded
+	}
+	emit('node-click', props.node)
+}
+
+function toggleCheck(checked) {
+	props.node.checked = checked
+	if (!props.checkStrictly) {
+		updateChildCheckStatus(props.node, checked)
+		updateParentCheckStatus(props.node)
+	}
+	emit('check-change', props.node)
+}
+
+function updateChildCheckStatus(node, checked) {
+	if (node[props.props.children]) {
+		node[props.props.children].forEach(child => {
+			child.checked = checked
+			updateChildCheckStatus(child, checked)
+		})
+	}
+}
+
+function updateParentCheckStatus(node) {
+	let parentVm = instance?.parent
+	while (parentVm) {
+		const parentProxy = parentVm.proxy
+		if (!parentProxy || !parentProxy.node) break
+		const allChecked = parentProxy.node[props.props.children].every(
+			child => child.checked
+		)
+		parentProxy.node.checked = allChecked
+		parentVm = parentVm.parent
+	}
+}
 </script>
+
 
 <style scoped>
 .up-tree-node-content {

@@ -55,13 +55,12 @@
 	</view>
 </template>
 
-<script>
-	import { nextTick } from 'vue';
-	import { props } from './props.js';
-	import { mpMixin } from '../../libs/mixin/mpMixin.js';
-	import { mixin } from '../../libs/mixin/mixin.js';
-	import { guid, sleep, error } from '../../libs/function/index.js';
-	import test from '../../libs/function/test.js';
+<script setup>
+	import { getCurrentInstance, nextTick, onMounted, reactive, ref, toRef, watch } from 'vue'
+	import { props as collapseItemProps } from './props.js'
+	import { commonProps, useUltraUI } from '../../libs/composable/useUltraUI.js'
+	import { guid, sleep, error } from '../../libs/function/index.js'
+	import test from '../../libs/function/test.js'
 	// #ifdef APP-NVUE
 	const animation = uni.requireNativePlugin('animation')
 	const dom = uni.requireNativePlugin('dom')
@@ -83,145 +82,157 @@
 	 * @event {Function}			change 			某个item被打开或者收起时触发
 	 * @example <up-collapse-item :title="item.head" v-for="(item, index) in itemList" :key="index">{{item.body}}</up-collapse-item>
 	 */
-	export default {
-		name: "up-collapse-item",
-		mixins: [mpMixin, mixin, props],
-		data() {
-			return {
-				elId: guid(),
-				// uni.createAnimation的导出数据
-				animationData: {},
-				// 是否展开状态
-				expanded: false,
-				// 根据expanded确定是否显示border，为了控制展开时，cell的下划线更好的显示效果，进行一定时间的延时
-				showBorder: false,
-				// 是否动画中，如果是则不允许继续触发点击
-				animating: false,
-				// 父组件up-collapse的参数
-				parentData: {
-					accordion: false,
-					border: false
-				}
-			};
-		},
-		watch: {
-			expanded(n) {
-				clearTimeout(this.timer)
-				this.timer = null
-				// 这里根据expanded的值来进行一定的延时，是为了cell的下划线更好的显示效果
-				this.timer = setTimeout(() => {
-					this.showBorder = n
-				}, n ? 10 : 290)
+	defineOptions({
+		name: 'up-collapse-item',
+		// #ifdef MP-WEIXIN
+		options: {
+			virtualHost: true
+		}
+		// #endif
+	})
+
+	const props = defineProps({
+		...commonProps,
+		...collapseItemProps.props
+	})
+	const instance = getCurrentInstance()
+	const parentData = reactive({
+		accordion: false,
+		border: false
+	})
+	const { parent, getParentData, $uGetRect } = useUltraUI(props, parentData)
+	const elId = ref(guid())
+	// uni.createAnimation的导出数据
+	const animationData = ref({})
+	// 是否展开状态
+	const expanded = ref(false)
+	// 根据expanded确定是否显示border，为了控制展开时，cell的下划线更好的显示效果，进行一定时间的延时
+	const showBorder = ref(false)
+	// 是否动画中，如果是则不允许继续触发点击
+	const animating = ref(false)
+	const timer = ref(null)
+	const name = toRef(props, 'name')
+
+	// 异步获取内容，或者动态修改了内容时，需要重新初始化
+	async function init() {
+		// 初始化数据
+		updateParentData()
+		if (!parent.value) {
+			return error('up-collapse-item必须要搭配up-collapse组件使用')
+		}
+		const parentProps = typeof parent.value.getProps === 'function'
+			? parent.value.getProps()
+			: parent.value
+		const { value, accordion } = parentProps
+
+		if (accordion) {
+			if (test.array(value)) {
+				return error('手风琴模式下，up-collapse组件的value参数不能为数组')
 			}
-		},
-		mounted() {
-			this.init()
-			// console.log('$slots', this.$slots)
-		},
-		methods: {
-			// 异步获取内容，或者动态修改了内容时，需要重新初始化
-			async init() {
-				// 初始化数据
-				this.updateParentData()
-				if (!this.parent) {
-					return error('up-collapse-item必须要搭配up-collapse组件使用')
-				}
-				const {
-					value,
-					accordion,
-					children = []
-				} = this.parent
-
-				if (accordion) {
-					if (test.array(value)) {
-						return error('手风琴模式下，up-collapse组件的value参数不能为数组')
-					}
-					this.expanded = this.name == value
-				} else {
-					if (!test.array(value) && value !== null) {
-						return error('非手风琴模式下，up-collapse组件的value参数必须为数组')
-					}
-					this.expanded = (value || []).some(item => item == this.name)
-				}
-				// 设置组件的展开或收起状态
-				await nextTick()
-				this.setContentAnimate()
-			},
-			updateParentData() {
-				// 此方法在mixin中
-				this.getParentData('up-collapse')
-			},
-			async setContentAnimate() {
-				// 每次面板打开或者收起时，都查询元素尺寸
-				// 好处是，父组件从服务端获取内容后，变更折叠面板后可以获得最新的高度
-				const rect = await this.queryRect()
-				const height = this.expanded ? rect.height : 0
-				this.animating = true
-				// #ifdef APP-NVUE
-				const ref = this.$refs['animation'].ref
-				animation.transition(ref, {
-					styles: {
-						height: height + 'px'
-					},
-					duration: this.duration,
-					// 必须设置为true，否则会到面板收起或展开时，页面其他元素不会随之调整它们的布局
-					needLayout: true,
-					timingFunction: 'ease-in-out',
-				}, () => {
-					this.animating = false
-				})
-				// #endif
-
-				// #ifndef APP-NVUE
-				const animation = uni.createAnimation({
-					timingFunction: 'ease-in-out',
-				});
-				animation
-					.height(height)
-					.step({
-						duration: this.duration,
-					})
-					.step()
-				// 导出动画数据给面板的animationData值
-				this.animationData = animation.export()
-				// 标识动画结束
-				sleep(this.duration).then(() => {
-					this.animating = false
-				})
-				// #endif
-			},
-			// 点击collapsehead头部
-			clickHandler() {
-				if (this.disabled && this.animating) return
-				// 设置本组件为相反的状态
-				this.parent && this.parent.onChange(this)
-			},
-			// 查询内容高度
-			queryRect() {
-				// #ifndef APP-NVUE
-				// $uGetRect为uView自带的节点查询简化方法，详见文档介绍：https://ijry.github.io/uview-plus/js/getRect.html
-				// 组件内部一般用this.$uGetRect，对外的为uni.$u.getRect，二者功能一致，名称不同
-				return new Promise(resolve => {
-					this.$uGetRect(`#${this.elId}`).then(size => {
-						resolve(size)
-					})
-				})
-				// #endif
-
-				// #ifdef APP-NVUE
-				// nvue下，使用dom模块查询元素高度
-				// 返回一个promise，让调用此方法的主体能使用then回调
-				return new Promise(resolve => {
-					dom.getComponentRect(this.$refs[this.elId], res => {
-						const size = res.size || {}
-						size.height = 'auto'
-						resolve(size)
-					})
-				})
-				// #endif
+			expanded.value = props.name == value
+		} else {
+			if (!test.array(value) && value !== null) {
+				return error('非手风琴模式下，up-collapse组件的value参数必须为数组')
 			}
-		},
-	};
+			expanded.value = (value || []).some(item => item == props.name)
+		}
+		// 设置组件的展开或收起状态
+		await nextTick()
+		setContentAnimate()
+	}
+
+	function updateParentData() {
+		getParentData('up-collapse')
+	}
+
+	async function setContentAnimate() {
+		// 每次面板打开或者收起时，都查询元素尺寸
+		// 好处是，父组件从服务端获取内容后，变更折叠面板后可以获得最新的高度
+		const rect = await queryRect()
+		const height = expanded.value ? rect.height : 0
+		animating.value = true
+		// #ifdef APP-NVUE
+		const ref = instance.proxy.$refs['animation'].ref
+		animation.transition(ref, {
+			styles: {
+				height: height + 'px'
+			},
+			duration: props.duration,
+			// 必须设置为true，否则会到面板收起或展开时，页面其他元素不会随之调整它们的布局
+			needLayout: true,
+			timingFunction: 'ease-in-out',
+		}, () => {
+			animating.value = false
+		})
+		// #endif
+
+		// #ifndef APP-NVUE
+		const animationInstance = uni.createAnimation({
+			timingFunction: 'ease-in-out',
+		})
+		animationInstance
+			.height(height)
+			.step({
+				duration: props.duration,
+			})
+			.step()
+		// 导出动画数据给面板的animationData值
+		animationData.value = animationInstance.export()
+		// 标识动画结束
+		sleep(props.duration).then(() => {
+			animating.value = false
+		})
+		// #endif
+	}
+
+	// 点击collapsehead头部
+	function clickHandler() {
+		if (props.disabled && animating.value) return
+		// 设置本组件为相反的状态
+		parent.value && parent.value.onChange(instance.proxy)
+	}
+
+	// 查询内容高度
+	function queryRect() {
+		// #ifndef APP-NVUE
+		// $uGetRect为uView自带的节点查询简化方法，详见文档介绍：https://ijry.github.io/uview-plus/js/getRect.html
+		// 组件内部一般用$uGetRect，对外的为uni.$u.getRect，二者功能一致，名称不同
+		return $uGetRect(`#${elId.value}`)
+		// #endif
+
+		// #ifdef APP-NVUE
+		// nvue下，使用dom模块查询元素高度
+		// 返回一个promise，让调用此方法的主体能使用then回调
+		return new Promise(resolve => {
+			dom.getComponentRect(instance.proxy.$refs[elId.value], res => {
+				const size = res.size || {}
+				size.height = 'auto'
+				resolve(size)
+			})
+		})
+		// #endif
+	}
+
+	watch(expanded, (n) => {
+		clearTimeout(timer.value)
+		timer.value = null
+		// 这里根据expanded的值来进行一定的延时，是为了cell的下划线更好的显示效果
+		timer.value = setTimeout(() => {
+			showBorder.value = n
+		}, n ? 10 : 290)
+	})
+
+	onMounted(() => {
+		init()
+	})
+
+	defineExpose({
+		name,
+		expanded,
+		init,
+		updateParentData,
+		setContentAnimate
+	})
 </script>
 
 <style lang="scss" scoped>

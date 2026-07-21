@@ -9,7 +9,7 @@
 		>
 			<view
 			    class="up-read-more__content__inner"
-			    ref="up-read-more__content__inner"
+			    ref="contentInnerRef"
 			    :class="[elId]"
 			>
 				<slot></slot>
@@ -45,99 +45,103 @@
 	</view>
 </template>
 
-<script>
-	// #ifdef APP-NVUE
-	const dom = uni.requireNativePlugin('dom')
-	// #endif
-	import { props } from './props';
-	import { mpMixin } from '../../libs/mixin/mpMixin';
-	import { mixin } from '../../libs/mixin/mixin';
-	import { addUnit, guid, getPx, sleep } from '../../libs/function/index';
-	/**
-	 * readMore 阅读更多
-	 * @description 该组件一般用于内容较长，预先收起一部分，点击展开全部内容的场景。
-	 * @tutorial https://uview-plus.jiangruyi.com/components/readMore.html
-	 * @property {String | Number}	showHeight	内容超出此高度才会显示展开全文按钮，单位px（默认 400 ）
-	 * @property {Boolean}			toggle		展开后是否显示收起按钮（默认 false ）
-	 * @property {String}			closeText	关闭时的提示文字（默认 '展开阅读全文' ）
-	 * @property {String}			openText	展开时的提示文字（默认 '收起' ）
-	 * @property {String}			color		提示文字的颜色（默认 '#2979ff' ）
-	 * @property {String | Number}	fontSize	提示文字的大小，单位px （默认 14 ）
-	 * @property {Object}			shadowStyle	显示阴影的样式
-	 * @property {String}			textIndent	段落首行缩进的字符个数 （默认 '2em' ）
-	 * @property {String | Number}	name		用于在 open 和 close 事件中当作回调参数返回
-	 * @event {Function} open 内容被展开时触发
-	 * @event {Function} close 内容被收起时触发
-	 * @example <up-read-more><rich-text :nodes="content"></rich-text></up-read-more>
-	 */
-	export default {
-		name: 'up-read-more',
-		mixins: [mpMixin, mixin, props],
-		data() {
-			return {
-				isLongContent: false, // 是否需要隐藏一部分内容
-				status: 'close', // 当前隐藏与显示的状态，close-收起状态，open-展开状态
-				elId: guid(), // 生成唯一class
-				contentHeight: 100, // 内容高度
-			}
-		},
-		computed: {
-			// 展开后无需阴影，收起时才需要阴影样式
-			innerShadowStyle() {
-				if (this.status === 'open') return {}
-				else return this.shadowStyle
-			}
-		},
-		mounted() {
-			this.init()
-		},
-		emits: ["open", "close"],
-		methods: {
-			addUnit,
-			async init() {
-				this.getContentHeight().then(height => {
-					this.contentHeight = height
-					// 判断高度，如果真实内容高度大于占位高度，则显示收起与展开的控制按钮
-					if (height > getPx(this.showHeight)) {
-						this.isLongContent = true
-						this.status = 'close'
-					} else {
-						// https://github.com/ijry/uview-plus/issues/270
-						this.isLongContent = false
-						this.status = 'close'
-					}
-				})
-			},
-			// 获取内容的高度
-			async getContentHeight() {
-				// 延时一定时间再获取节点
-				await sleep(30)
-				return new Promise(resolve => {
-					// #ifndef APP-NVUE
-					this.$uGetRect('.' + this.elId).then(res => {
-						resolve(res.height)
-					})
-					// #endif
-
-					// #ifdef APP-NVUE
-					const ref = this.$refs['up-read-more__content__inner']
-					dom.getComponentRect(ref, (res) => {
-						resolve(res.size.height)
-					})
-					// #endif
-				})
-			},
-			// 展开或者收起
-			toggleReadMore() {
-				this.status = this.status === 'close' ? 'open' : 'close'
-				// 如果toggle为false，隐藏"收起"部分的内容
-				if (this.toggle == false) this.isLongContent = false
-				// 发出打开或者收齐的事件
-				this.$emit(this.status, this.name)
-			}
-		}
+<script setup>
+// #ifdef APP-NVUE
+const dom = uni.requireNativePlugin('dom')
+// #endif
+import { computed, onMounted, ref } from 'vue'
+import { props as readMoreProps } from './props'
+import { commonProps, useUltraUI } from '../../libs/composable/useUltraUI'
+import { addUnit, guid, getPx, sleep } from '../../libs/function/index'
+/**
+ * readMore 阅读更多
+ * @description 该组件一般用于内容较长，预先收起一部分，点击展开全部内容的场景。
+ * @tutorial https://uview-plus.jiangruyi.com/components/readMore.html
+ * @property {String | Number}	showHeight	内容超出此高度才会显示展开全文按钮，单位px（默认 400 ）
+ * @property {Boolean}			toggle		展开后是否显示收起按钮（默认 false ）
+ * @property {String}			closeText	关闭时的提示文字（默认 '展开阅读全文' ）
+ * @property {String}			openText	展开时的提示文字（默认 '收起' ）
+ * @property {String}			color		提示文字的颜色（默认 '#2979ff' ）
+ * @property {String | Number}	fontSize	提示文字的大小，单位px （默认 14 ）
+ * @property {Object}			shadowStyle	显示阴影的样式
+ * @property {String}			textIndent	段落首行缩进的字符个数 （默认 '2em' ）
+ * @property {String | Number}	name		用于在 open 和 close 事件中当作回调参数返回
+ * @event {Function} open 内容被展开时触发
+ * @event {Function} close 内容被收起时触发
+ * @example <up-read-more><rich-text :nodes="content"></rich-text></up-read-more>
+ */
+defineOptions({
+	name: 'up-read-more',
+	// #ifdef MP-WEIXIN
+	options: {
+		virtualHost: true
 	}
+	// #endif
+})
+
+const props = defineProps({
+	...commonProps,
+	...readMoreProps.props
+})
+const emit = defineEmits(['open', 'close'])
+const { $uGetRect } = useUltraUI(props)
+
+const isLongContent = ref(false)
+const status = ref('close')
+const elId = ref(guid())
+const contentHeight = ref(100)
+const contentInnerRef = ref(null)
+
+const innerShadowStyle = computed(() => {
+	if (status.value === 'open') return {}
+	return props.shadowStyle
+})
+
+onMounted(() => {
+	init()
+})
+
+async function init() {
+	const height = await getContentHeight()
+	contentHeight.value = height
+	if (height > getPx(props.showHeight)) {
+		isLongContent.value = true
+		status.value = 'close'
+	} else {
+		isLongContent.value = false
+		status.value = 'close'
+	}
+}
+
+async function getContentHeight() {
+	await sleep(30)
+	return new Promise((resolve) => {
+		// #ifndef APP-NVUE
+		$uGetRect('.' + elId.value).then((res) => {
+			resolve(res.height)
+		})
+		// #endif
+
+		// #ifdef APP-NVUE
+		const refNode = contentInnerRef.value
+		dom.getComponentRect(refNode, (res) => {
+			resolve(res.size.height)
+		})
+		// #endif
+	})
+}
+
+function toggleReadMore() {
+	status.value = status.value === 'close' ? 'open' : 'close'
+	if (props.toggle == false) isLongContent.value = false
+	emit(status.value, props.name)
+}
+
+defineExpose({
+	init
+})
 </script>
+
 
 <style lang="scss" scoped>
 .up-read-more {

@@ -3,68 +3,73 @@
         <slot>复制</slot>
     </view>
 </template>
-<script>
-export default {
-    name: "up-copy",
-    props: {
-        content: {
-            type: String,
-            default: ''
-        },
-		alertStyle: {
-			type: String,
-			default: 'toast'
-		},
-		notice: {
-			type: String,
-			default: '复制成功'
-		}
-    },
-	emits: ['success'],
-    methods: {
-        handleClick() {
-            let content = this.content;
-			if (!content) {
+<script setup>
+import { commonProps } from '../../libs/composable/useUltraUI.js'
+
+defineOptions({
+	name: 'up-copy',
+	// #ifdef MP-WEIXIN
+	options: {
+		virtualHost: true
+	}
+	// #endif
+})
+
+const props = defineProps({
+	...commonProps,
+	content: {
+		type: String,
+		default: ''
+	},
+	alertStyle: {
+		type: String,
+		default: 'toast'
+	},
+	notice: {
+		type: String,
+		default: '复制成功'
+	}
+})
+const emit = defineEmits(['success'])
+
+function handleClick() {
+	let content = props.content
+	if (!content) {
+		uni.showToast({
+			title: '暂无',
+			icon: 'none',
+			duration: 2000,
+		})
+		return false
+	}
+	content = typeof content === 'string' ? content : content.toString()
+	uni.setClipboardData({
+		data: content,
+		success: function() {
+			if (props.alertStyle == 'modal') {
+				uni.showModal({
+					title: '提示',
+					content: props.notice
+				})
+			} else {
 				uni.showToast({
-				    title: '暂无',
-				    icon: 'none',
-				    duration: 2000,
-				});
-				return false;
+					title: props.notice,
+					icon: 'none'
+				})
 			}
-            content = typeof content === 'string' ? content : content.toString() // 复制内容，必须字符串，数字需要转换为字符串
-            /**
-			* 小程序端 和 app端的复制逻辑
-			*/
-			let that = this;
-            uni.setClipboardData({
-                data: content,
-                success: function() {
-					if (that.alertStyle == 'modal') {
-						uni.showModal({
-							title: '提示',
-							content: that.notice
-						});
-					} else {
-						uni.showToast({
-						    title: that.notice,
-						    icon: 'none'
-						});
-					}
-					that.$emit('success');
-                },
-                fail:function(){
-                    uni.showToast({
-                        title: '复制失败',
-                        icon: 'none',
-                        duration:3000,
-                    });
-                }
-            });
-        }
-    }
+			emit('success')
+		},
+		fail: function() {
+			uni.showToast({
+				title: '复制失败',
+				icon: 'none',
+				duration: 3000,
+			})
+		}
+	})
 }
 </script>
+
 
 <style lang="scss" scoped>
 </style>

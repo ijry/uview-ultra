@@ -66,10 +66,10 @@
                     </template>
                     <!-- #endif -->
                     <!-- #ifndef MP-WEIXIN -->
-                    <table-row 
+                    <table-row
                         v-for="(row, rowIndex) in sortedData"
                         :key="row[rowKey] || rowIndex"
-                        :row="row" 
+                        :row="row"
                         :rowIndex="rowIndex"
                         :parent-row="null"
                         :columns="columns"
@@ -100,7 +100,7 @@
                         <template v-slot:cellChild="scope">
                             <slot name="cell" :row="scope.row" :column="scope.column" :prow="scope.prow"
                                 :rowIndex="scope.rowIndex" :columnIndex="scope.columnIndex" :level="scope.level">
-                            </slot>                      
+                            </slot>
                         </template>
                     </table-row>
                     <!-- #endif -->
@@ -112,7 +112,7 @@
                 </template>
             </view>
         </scroll-view>
-        
+
         <!-- 固定列浮动视图 -->
         <view v-if="showFixedColumnShadow" class="up-table-fixed-shadow" :style="{ height: tableHeight }">
             <!-- 表头 -->
@@ -209,7 +209,7 @@
                             <template v-slot:cellChild="scope">
                                 <slot name="cell" :row="scope.row" :column="scope.column" :prow="scope.prow"
                                     :rowIndex="scope.rowIndex" :columnIndex="scope.columnIndex" :level="scope.level">
-                                </slot>                      
+                                </slot>
                             </template>
                         </table-row>
                     </template>
@@ -220,17 +220,28 @@
     </view>
 </template>
 
-<script>
+<script setup>
 import { addUnit, sleep } from '../../libs/function/index';
 import tableRow from './tableRow.vue'; // 引入递归组件
 
-export default {
-    name: 'up-table2',
-    components: {
-        tableRow // 注册递归组件
-    },
-    props: {
-        data: {
+import { computed, getCurrentInstance, nextTick, ref, watch, onMounted } from 'vue'
+import { commonProps, useUltraUI } from '../../libs/composable/useUltraUI.js'
+
+defineOptions({
+	name: 'up-table2',
+	components: {
+		tableRow
+	},
+	// #ifdef MP-WEIXIN
+	options: {
+		virtualHost: true
+	}
+	// #endif
+})
+
+const props = defineProps({
+	...commonProps,
+data: {
             type: Array,
             required: true,
             default: () => {
@@ -381,65 +392,47 @@ export default {
             type: Function,
             default: null
         }
-    },
-    emits: [
-        'select', 'select-all', 'selection-change',
-        'cell-click', 'row-click', 'row-dblclick',
-        'header-click', 'sort-change', 'filter-change',
-        'current-change', 'expand-change'
-    ],
-    data() {
-        return {
-            scrollWidth: 'auto',
-            // 将setup中的ref转换为data属性
-            expandedKeys: [...this.expandRowKeys],
-            selectedRows: [],
-            sortConditions: [],
-            currentRow: null,
-            scrollLeft: 0, // 新增滚动位置数据
-            showFixedColumnShadow: false, // 是否显示固定列阴影
-            fixedLeftColumns: [], // 左侧固定列
-            tableHeight: 'auto', // 表格高度
-            headerHeight: 'auto', // 新增表头高度属性
-            hasTree: false // 新增属性，用于判断是否存在树形结构
-        }
-    },
-    mounted() {
-        this.getComponentWidth()
-        // 处理currentRowKey初始化
-        if (this.currentRowKey !== null) {
-            const found = this.data.find(item => item[this.rowKey] === this.currentRowKey);
-            if (found) {
-                this.currentRow = found;
-            }
-        }
-        // 获取固定列
-        this.fixedLeftColumns = this.columns.filter(col => col.fixed === 'left');
-    },
-    computed: {
-        // 将setup中的computed转换为computed属性
-        filteredData() {
-            return this.data.filter(row => {
-                return Object.keys(this.filters).every(key => {
-                    const filter = this.filters[key];
+})
+
+const emit = defineEmits(['select', 'select-all', 'selection-change', 'cell-click', 'row-click', 'row-dblclick', 'header-click', 'sort-change', 'filter-change', 'current-change', 'expand-change'])
+const { $uGetRect } = useUltraUI(props)
+const instance = getCurrentInstance()
+const proxy = instance?.proxy
+
+const scrollWidth = ref('auto')
+const expandedKeys = ref([...props.expandRowKeys])
+const selectedRows = ref([])
+const sortConditions = ref([])
+const currentRow = ref(null)
+const scrollLeft = ref(0)
+const showFixedColumnShadow = ref(false)
+const fixedLeftColumns = ref([])
+const tableHeight = ref('auto')
+const headerHeight = ref('auto')
+const hasTree = ref(false) // 新增属性，用于判断是否存在树形结构
+
+const filteredData = computed(() => {
+            return props.data.filter(row => {
+                return Object.keys(props.filters).every(key => {
+                    const filter = props.filters[key];
                     if (!filter) return true;
                     return row[key]?.toString().includes(filter.toString());
                 });
             });
-        },
-        sortedData() {
-            if (!this.sortConditions.length) return this.filteredData;
+        })
+const sortedData = computed(() => {
+            if (!sortConditions.value.length) return filteredData.value;
 
-            const data = [...this.filteredData];
+            const data = [...filteredData.value];
 
             return data.sort((a, b) => {
-                for (const condition of this.sortConditions) {
+                for (const condition of sortConditions.value) {
                     const { field, order } = condition;
                     let valA = a[field];
                     let valB = b[field];
 
-                    if (this.sortMethod) {
-                        const result = this.sortMethod(a, b, field);
+                    if (props.sortMethod) {
+                        const result = props.sortMethod(a, b, field);
                         if (result !== 0) return result * (order === 'ascending' ? 1 : -1);
                     }
 
@@ -448,99 +441,71 @@ export default {
                 }
                 return 0;
             });
-        },
-        flattenedSortedData() {
+        })
+const flattenedSortedData = computed(() => {
             const result = [];
-            const childrenKey = this.treeProps.children;
+            const childrenKey = props.treeProps.children;
 
             const walk = (rows, parentRow = null, level = 1) => {
                 if (!Array.isArray(rows) || rows.length === 0) return;
                 rows.forEach((row, rowIndex) => {
                     result.push({ row, parentRow, level, rowIndex });
                     const children = row && row[childrenKey];
-                    if (children && children.length > 0 && this.isExpanded(row)) {
+                    if (children && children.length > 0 && isExpanded(row)) {
                         walk(children, row, level + 1);
                     }
                 });
             };
 
-            walk(this.sortedData);
+            walk(sortedData.value);
             return result;
-        },
-        // 计算当前应该显示的固定左侧列
-        visibleFixedLeftColumns() {
-            if (this.scrollLeft <= 0) {
+        })
+const visibleFixedLeftColumns = computed(() => {
+            if (scrollLeft.value <= 0) {
                 return [];
             }
-            
+
             let totalWidth = 0;
             let fixedWidth = 0;
             const visibleColumns = [];
-            
+
             // 遍历所有列，不仅仅是固定列
-            for (let i = 0; i < this.columns.length; i++) {
-                const col = this.columns[i];
+            for (let i = 0; i < props.columns.length; i++) {
+                const col = props.columns[i];
                 const colWidth = col.width ? parseInt(col.width) : 100; // 默认宽度100px
-                
+
                 // 如果是固定列且滚动位置足够显示该列
-                if (col.fixed === 'left' && this.scrollLeft > totalWidth - fixedWidth) {
+                if (col.fixed === 'left' && scrollLeft.value > totalWidth - fixedWidth) {
                     visibleColumns.push(col);
                     fixedWidth += colWidth;
                 }
-                
+
                 totalWidth += colWidth;
             }
-            
+
             return visibleColumns;
-        },
-        // 获取mainCol的值，如果未设置则默认为第一列的key
-        computedMainCol() {
-            if (this.mainCol) {
-                return this.mainCol;
+        })
+const computedMainCol = computed(() => {
+            if (props.mainCol) {
+                return props.mainCol;
             }
             // 修改为排除有type值的列
-            const validColumns = this.columns.filter(col => !col.type);
+            const validColumns = props.columns.filter(col => !col.type);
             let mainCol = validColumns && validColumns.length > 0 ? validColumns[0].key : '';
             // console.log('mainCol', mainCol)
             return mainCol;
+        })
+
+function isSelected(row) {
+            return selectedRows.value.some(r => r[props.rowKey] === row[props.rowKey]);
         }
-    },
-    watch: {
-        // 将setup中的watch转换为watch属性
-        expandRowKeys: {
-            handler(newVal) {
-                this.expandedKeys = [...newVal];
-            },
-            immediate: true
-        },
-        currentRowKey: {
-            handler(newVal) {
-                const found = this.data.find(item => item[this.rowKey] === newVal);
-                if (found) {
-                    this.currentRow = found;
-                }
-            },
-            immediate: true
-        },
-        columns: {
-            handler() {
-                // this.fixedLeftColumns = this.columns.filter(col => col.fixed === 'left');
-            },
-            deep: true,
-            immediate: false
-        }
-    },
-    methods: {
-        addUnit,
-        isSelected(row) {
-            return this.selectedRows.some(r => r[this.rowKey] === row[this.rowKey]);
-        },
-        getCellSpan(row, column, rowIndex, columnIndex) {
-            if (typeof this.spanMethod !== 'function') {
+
+function getCellSpan(row, column, rowIndex, columnIndex) {
+            if (typeof props.spanMethod !== 'function') {
                 return { rowspan: 1, colspan: 1 };
             }
 
-            const result = this.spanMethod({
+            const result = props.spanMethod({
                 row,
                 column,
                 rowIndex,
@@ -558,9 +523,10 @@ export default {
             }
 
             return { rowspan: 1, colspan: 1 };
-        },
-        getCellSpanClass(row, column, rowIndex, columnIndex) {
-            const span = this.getCellSpan(row, column, rowIndex, columnIndex);
+        }
+
+function getCellSpanClass(row, column, rowIndex, columnIndex) {
+            const span = getCellSpan(row, column, rowIndex, columnIndex);
             if (span.rowspan === 0 || span.colspan === 0) {
                 return 'up-table-cell-hidden';
             }
@@ -568,13 +534,14 @@ export default {
                 return 'up-table-cell-merged';
             }
             return '';
-        },
-        getCellSpanStyle(row, column, rowIndex, columnIndex) {
-            const span = this.getCellSpan(row, column, rowIndex, columnIndex);
+        }
+
+function getCellSpanStyle(row, column, rowIndex, columnIndex) {
+            const span = getCellSpan(row, column, rowIndex, columnIndex);
             const style = {};
 
             if (span.rowspan > 1) {
-                const currentHeight = parseInt(this.rowHeight);
+                const currentHeight = parseInt(props.rowHeight);
                 if (!isNaN(currentHeight)) {
                     style.height = `${span.rowspan * currentHeight}px`;
                 }
@@ -589,34 +556,35 @@ export default {
             }
 
             return style;
-        },
-        onScroll(e) {
-            this.scrollLeft = e.detail.scrollLeft;
+        }
+
+function onScroll(e) {
+            scrollLeft.value = e.detail.scrollLeft;
             // 获取所有左侧固定列
-            this.fixedLeftColumns = this.columns.filter(col => col.fixed === 'left');
+            fixedLeftColumns.value = props.columns.filter(col => col.fixed === 'left');
             // 计算是否需要显示固定列阴影
-            if (this.fixedLeftColumns.length > 0) {
-                this.showFixedColumnShadow = this.scrollLeft > 0;
+            if (fixedLeftColumns.value.length > 0) {
+                showFixedColumnShadow.value = scrollLeft.value > 0;
             }
-        },
-        
-        getFixedShadowStyle(col, index) {
+        }
+
+function getFixedShadowStyle(col, index) {
             let style = {
                 width: col.width ? addUnit(col.width) : 'auto',
             };
-            
+
             if (col?.style) {
                 style = {...style, ...col?.style};
             }
-            
+
             return style;
-        },
-        
-        getFixedClass(col) {
+        }
+
+function getFixedClass(col) {
             return ''; // 不再使用原来的固定列样式类
-        },
-        
-        headerColStyle(col) {
+        }
+
+function headerColStyle(col) {
             let style = {
                 width: col.width ? addUnit(col.width) : 'auto',
                 flex: col.width ? 'none' : 1
@@ -625,161 +593,194 @@ export default {
                 style = {...style, ...col?.style};
             }
             return style;
-        },
-        
-		setCellStyle(e) {
-			this.cellStyle = e
-		},
-		cellStyleInner(scope) {
+        }
+
+function setCellStyle(e) {
+			props.cellStyle = e
+		}
+
+function cellStyleInner(scope) {
 			let style = {
 				width: scope.column?.width ? addUnit(scope.column.width) : 'auto',
 				flex: scope.column?.width ? 'none' : 1
 			};
             // 只有展开列设置padding
-            if (scope.column.key == this.computedMainCol) {
+            if (scope.column.key == computedMainCol.value) {
                 style.paddingLeft = (16 * (scope.level -1 )) + 2 + 'px'
             }
-			if (this.cellStyle != null) {
-				let styleCalc = this.cellStyle(scope)
+			if (props.cellStyle != null) {
+				let styleCalc = props.cellStyle(scope)
 				if (styleCalc != null) {
 					style = {...style, ...styleCalc}
 				}
 			}
 			return style;
-		},
-        // 获取组件的宽度
-		async getComponentWidth() {
+		}
+
+async function getComponentWidth() {
 			// 延时一定时间，以获取dom尺寸
 			await sleep(30)
-			this.$uGetRect('.up-table-row').then(size => {
-				this.scrollWidth = size.width + 'px'
+			$uGetRect('.up-table-row').then(size => {
+				scrollWidth.value = size.width + 'px'
 			})
-            
+
             // 获取表头高度并设置
-            this.$uGetRect('.up-table-header').then(size => {
+            $uGetRect('.up-table-header').then(size => {
                 if (size.height) {
-                    this.headerHeight = size.height + 'px';
+                    headerHeight.value = size.height + 'px';
                 }
             })
-            
+
             // 遍历数据列表第一层判断是否存在树形结构
-            this.hasTree = this.sortedData.some(item => {
-                return item[this.treeProps.children] && item[this.treeProps.children].length > 0;
+            hasTree.value = sortedData.value.some(item => {
+                return item[props.treeProps.children] && item[props.treeProps.children].length > 0;
             });
-		},
-        // 将setup中的函数转换为methods
-        handleRowClick(row) {
-            if (this.highlightCurrentRow) {
-                const oldRow = this.currentRow;
-                this.currentRow = row;
-                this.$emit('current-change', row, oldRow);
+		}
+
+function handleRowClick(row) {
+            if (props.highlightCurrentRow) {
+                const oldRow = currentRow.value;
+                currentRow.value = row;
+                emit('current-change', row, oldRow);
             }
-            this.$emit('row-click', row);
-        },
-        handleHeaderClick(column) {
+            emit('row-click', row);
+        }
+
+function handleHeaderClick(column) {
             if (!column.sortable) return;
 
-            const index = this.sortConditions.findIndex(c => c.field === column.key);
+            const index = sortConditions.value.findIndex(c => c.field === column.key);
             let newOrder = 'ascending';
 
             if (index >= 0) {
-                if (this.sortConditions[index].order === 'ascending') {
+                if (sortConditions.value[index].order === 'ascending') {
                     newOrder = 'descending';
                 } else {
-                    this.sortConditions.splice(index, 1);
-                    this.$emit('sort-change', this.sortConditions);
+                    sortConditions.value.splice(index, 1);
+                    emit('sort-change', sortConditions.value);
                     return;
                 }
             }
 
-            if (!this.multiSort) {
-                this.sortConditions = [{ field: column.key, order: newOrder }];
+            if (!props.multiSort) {
+                sortConditions.value = [{ field: column.key, order: newOrder }];
             } else {
                 if (index >= 0) {
-                    this.sortConditions[index].order = newOrder;
+                    sortConditions.value[index].order = newOrder;
                 } else {
-                    this.sortConditions.push({ field: column.key, order: newOrder });
+                    sortConditions.value.push({ field: column.key, order: newOrder });
                 }
             }
 
-            this.$emit('sort-change', this.sortConditions);
-        },
-        getSortIcon(field) {
-            const cond = this.sortConditions.find(c => c.field === field);
+            emit('sort-change', sortConditions.value);
+        }
+
+function getSortIcon(field) {
+            const cond = sortConditions.value.find(c => c.field === field);
             if (!cond) return '';
             return cond.order === 'ascending' ? '↑' : '↓';
-        },
-        getSortValue(field) {
-            const cond = this.sortConditions.find(c => c.field === field);
+        }
+
+function getSortValue(field) {
+            const cond = sortConditions.value.find(c => c.field === field);
             if (!cond) return '';
             return cond.order === 'ascending';
-        },
-        toggleSelect(row) {
-            const index = this.selectedRows.findIndex(r => r[this.rowKey] === row[this.rowKey]);
+        }
+
+function toggleSelect(row) {
+            const index = selectedRows.value.findIndex(r => r[props.rowKey] === row[props.rowKey]);
             if (index >= 0) {
                 // 取消选中当前行及其所有子节点
-                this.selectedRows.splice(index, 1);
+                selectedRows.value.splice(index, 1);
                 // 递归取消所有子节点
-                this.unselectChildren(row);
+                unselectChildren(row);
             } else {
                 // 选中当前行及其所有子节点
-                this.selectedRows.push(row);
+                selectedRows.value.push(row);
                 // 递归选中所有子节点
-                this.selectChildren(row);
+                selectChildren(row);
             }
-            console.log(this.selectedRows)
-            this.$emit('selection-change', this.selectedRows);
-            this.$emit('select', row);
-        },
-        toggleExpand(row) {
+            console.log(selectedRows.value)
+            emit('selection-change', selectedRows.value);
+            emit('select', row);
+        }
+
+function toggleExpand(row) {
             // console.log(row)
-            const key = row[this.rowKey];
-            const index = this.expandedKeys.indexOf(key);
+            const key = row[props.rowKey];
+            const index = expandedKeys.value.indexOf(key);
             if (index === -1) {
-                this.expandedKeys.push(key);
+                expandedKeys.value.push(key);
             } else {
-                this.expandedKeys.splice(index, 1);
+                expandedKeys.value.splice(index, 1);
             }
-            this.$emit('expand-change', this.expandedKeys);
-        },
-        isExpanded(row) {
+            emit('expand-change', expandedKeys.value);
+        }
+
+function isExpanded(row) {
             if (!row) {
                 return false;
             }
-            return this.expandedKeys.includes(row[this.rowKey]);
-        },
-        // 新增方法：递归选中所有子节点
-        selectChildren(row) {
-            const children = row[this.treeProps.children];
+            return expandedKeys.value.includes(row[props.rowKey]);
+        }
+
+function selectChildren(row) {
+            const children = row[props.treeProps.children];
             if (children && children.length > 0) {
                 children.forEach(child => {
                     // 检查是否已选中，避免重复添加
-                    const childIndex = this.selectedRows.findIndex(r => r[this.rowKey] === child[this.rowKey]);
+                    const childIndex = selectedRows.value.findIndex(r => r[props.rowKey] === child[props.rowKey]);
                     if (childIndex === -1) {
-                        this.selectedRows.push(child);
+                        selectedRows.value.push(child);
                     }
                     // 递归处理子节点的子节点
-                    this.selectChildren(child);
+                    selectChildren(child);
                 });
             }
-        },
-        // 新增方法：递归取消选中所有子节点
-        unselectChildren(row) {
-            const children = row[this.treeProps.children];
+        }
+
+function unselectChildren(row) {
+            const children = row[props.treeProps.children];
             if (children && children.length > 0) {
                 children.forEach(child => {
-                    const childIndex = this.selectedRows.findIndex(r => r[this.rowKey] === child[this.rowKey]);
+                    const childIndex = selectedRows.value.findIndex(r => r[props.rowKey] === child[props.rowKey]);
                     if (childIndex >= 0) {
-                        this.selectedRows.splice(childIndex, 1);
+                        selectedRows.value.splice(childIndex, 1);
                     }
                     // 递归处理子节点的子节点
-                    this.unselectChildren(child);
+                    unselectChildren(child);
                 });
             }
-        },
-    }
-};
+        }
+
+watch(() => props.expandRowKeys, (newVal) => {
+	expandedKeys.value = [...(newVal || [])]
+}, { immediate: true })
+watch(() => props.currentRowKey, (newVal) => {
+	const found = props.data.find(item => item[props.rowKey] === newVal)
+	if (found) {
+		currentRow.value = found
+	}
+}, { immediate: true })
+watch(() => props.columns, () => {
+	// fixedLeftColumns is refreshed on scroll / mount
+}, { deep: true })
+
+onMounted(() => {
+        getComponentWidth()
+        // 处理currentRowKey初始化
+        if (props.currentRowKey !== null) {
+            const found = props.data.find(item => item[props.rowKey] === props.currentRowKey);
+            if (found) {
+                currentRow.value = found;
+            }
+        }
+        // 获取固定列
+        fixedLeftColumns.value = props.columns.filter(col => col.fixed === 'left');
+    })
+
 </script>
+
 
 <style lang="scss" scoped>
 .up-table2 {
@@ -822,7 +823,7 @@ export default {
         .up-table-cell {
             border-right: 1px solid var(--up-border-color, #ebeef5);
         }
-        
+
         .up-table-cell:last-child {
             border-right: none;
         }
@@ -902,7 +903,7 @@ export default {
     .up-table-cell {
         border-right: 1rpx solid var(--up-border-color, #ebeef5);
     }
-    
+
     .up-table-cell:last-child {
         border-right: none;
     }

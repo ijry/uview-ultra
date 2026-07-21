@@ -9,83 +9,90 @@
 	</view>
 </template>
 
-<script>
+<script setup>
 	// #ifdef APP-NVUE
 	const dom = uni.requireNativePlugin('dom')
 	// #endif
-	import { propsRow } from './props.js';
-	import { mpMixin } from '../../libs/mixin/mpMixin.js';
-	import { mixin } from '../../libs/mixin/mixin.js';
-	import { addUnit, addStyle, deepMerge, sleep } from '../../libs/function/index.js';
-	/**
-	 * Row 栅格系统中的行
-	 * @description 通过基础的 12 分栏，迅速简便地创建布局 
-	 * @tutorial https://ijry.github.io/uview-plus/components/layout.html
-	 * @property {String | Number}	gutter		栅格间隔，左右各为此值的一半，单位px  (默认 0 )
-	 * @property {String}			justify		水平排列方式(微信小程序暂不支持) 可选值为`start`(或`flex-start`)、`end`(或`flex-end`)、`center`、`around`(或`space-around`)、`between`(或`space-between`)  (默认 'start' )
-	 * @property {String}			align		垂直排列方式 (默认 'center' )
-	 * @property {Object}			customStyle	定义需要用到的外部样式
-	 * 
-	 * @event {Function} click row被点击
-	 * @example <up-row justify="space-between" customStyle="margin-bottom: 10px"></up-row>
-	 */
-	export default {
-		name: "up-row",
-		mixins: [mpMixin, mixin, propsRow],
-		data() {
-			return {
-				
-			}
-		},
-		computed: {
-			uJustify() {
-				if (this.justify == 'end' || this.justify == 'start') return 'flex-' + this.justify
-				else if (this.justify == 'around' || this.justify == 'between') return 'space-' + this.justify
-				else return this.justify
-			},
-			uAlignItem() {
-				if (this.align == 'top') return 'flex-start'
-				if (this.align == 'bottom') return 'flex-end'
-				else return this.align
-			},
-			rowStyle() {
-				const style = {
-					alignItems: this.uAlignItem,
-					justifyContent: this.uJustify
-				}
-				// 通过给up-row左右两边的负外边距，消除up-col在有gutter时，第一个和最后一个元素的左内边距和右内边距造成的影响
-				if(this.gutter) {
-					style.marginLeft = addUnit(-Number(this.gutter)/2)
-					style.marginRight = addUnit(-Number(this.gutter)/2)
-				}
-				return deepMerge(style, addStyle(this.customStyle))
-			}
-		},
-		emits: ["click"],
-		methods: {
-			clickHandler(e) {
-				this.$emit('click')
-			},
-			async getComponentWidth() {
-				// 延时一定时间，以确保节点渲染完成
-				await sleep()
-				return new Promise(resolve => {
-					// uView封装的获取节点的方法，详见文档
-					// #ifndef APP-NVUE
-					this.$uGetRect('.up-row').then(res => {
-						resolve(res.width)
-					})
-					// #endif
-					// #ifdef APP-NVUE
-					// nvue的dom模块用于获取节点
-					dom.getComponentRect(this.$refs['up-row'], (res) => {
-						resolve(res.size.width)
-					})
-					// #endif
-				})
-			},
+	import { computed, getCurrentInstance } from 'vue'
+	import { propsRow } from './props.js'
+	import { commonProps, useUltraUI } from '../../libs/composable/useUltraUI.js'
+	import { addUnit, addStyle, deepMerge, sleep } from '../../libs/function/index.js'
+
+	defineOptions({
+		name: 'up-row',
+		// #ifdef MP-WEIXIN
+		options: {
+			virtualHost: true
+		}
+		// #endif
+	})
+
+	const props = defineProps({
+		...commonProps,
+		...propsRow.props
+	})
+	const emit = defineEmits(['click'])
+	const instance = getCurrentInstance()
+	const { children, $uGetRect } = useUltraUI(props)
+
+	const uJustify = computed(() => {
+		if (props.justify == 'end' || props.justify == 'start') return 'flex-' + props.justify
+		else if (props.justify == 'around' || props.justify == 'between') return 'space-' + props.justify
+		else return props.justify
+	})
+
+	const uAlignItem = computed(() => {
+		if (props.align == 'top') return 'flex-start'
+		if (props.align == 'bottom') return 'flex-end'
+		else return props.align
+	})
+
+	const rowStyle = computed(() => {
+		const style = {
+			alignItems: uAlignItem.value,
+			justifyContent: uJustify.value
+		}
+		// 消除 up-col gutter 造成的首尾半间距。
+		if (props.gutter) {
+			style.marginLeft = addUnit(-Number(props.gutter) / 2)
+			style.marginRight = addUnit(-Number(props.gutter) / 2)
+		}
+		return deepMerge(style, addStyle(props.customStyle))
+	})
+
+	function clickHandler() {
+		emit('click')
+	}
+
+	async function getComponentWidth() {
+		await sleep()
+		return new Promise(resolve => {
+			// #ifndef APP-NVUE
+			$uGetRect('.up-row').then(res => {
+				resolve(res.width)
+			})
+			// #endif
+			// #ifdef APP-NVUE
+			dom.getComponentRect(instance.proxy.$refs['up-row'], (res) => {
+				resolve(res.size.width)
+			})
+			// #endif
+		})
+	}
+
+	function getProps() {
+		return {
+			gutter: props.gutter,
+			justify: props.justify,
+			align: props.align
 		}
 	}
+
+	defineExpose({
+		children,
+		getComponentWidth,
+		getProps
+	})
 </script>
 
 <style lang="scss" scoped>

@@ -13,7 +13,7 @@
     .up-table-cell {
         border-right: 1px solid #ebeef5;
     }
-    
+
     .up-table-cell:last-child {
         border-right: none;
     }
@@ -75,7 +75,7 @@
         rowClassName ? rowClassName(row, rowIndex) : '',
         stripe && rowIndex % 2 === 1 ? 'up-table-row-zebra' : ''
         ]" :style="{height: rowHeight}" @click="handleRowClick(row)">
-        <view v-for="(col, colIndex) in columns" :key="col.key" 
+        <view v-for="(col, colIndex) in columns" :key="col.key"
             class="up-table-cell"
             :class="[col.align ? 'up-text-' + col.align : '',
                 cellClassName ? cellClassName(row, col) : '',
@@ -108,8 +108,8 @@
     <!-- 递归渲染更深层的子级 -->
         <template v-if="isExpanded(row) && row[treeProps.children] && row[treeProps.children].length > 0">
             <template v-for="(rowChild, childIndex) in row[treeProps.children]" :key="rowChild[rowKey] != null ? rowChild[rowKey] : childIndex">
-                <table-row 
-                    :row="rowChild" 
+                <table-row
+                    :row="rowChild"
                     :rowIndex="childIndex"
                     :parent-row="row"
                     :columns="columns"
@@ -140,190 +140,190 @@
                 <template v-slot:cellChild="scope">
                     <slot name="cellChild" :row="scope.row" :column="scope.column" :prow="scope.prow"
                         :rowIndex="scope.rowIndex" :columnIndex="scope.columnIndex" :level="level">
-                    </slot>                      
+                    </slot>
                 </template>
                 </table-row>
             </template>
         </template>
 </template>
 
-<script>
-export default {
-    name: 'tableRow',
-    props: {
-        row: {
-            type: Object,
-            required: true
-        },
-        rowIndex: {
-            type: Number,
-            required: true
-        },
-        parentRow: {
-            type: Object,
-            default: null
-        },
-        columns: {
-            type: Array,
-            required: true
-        },
-        treeProps: {
-            type: Object,
-            required: true
-        },
-        rowKey: {
-            type: String,
-            required: true
-        },
-        expandedKeys: {
-            type: Array,
-            required: true
-        },
-        cellStyleInner: {
-            type: Function,
-            required: true
-        },
-        isExpanded: {
-            type: Function,
-            required: true
-        },
-        rowClassName: {
-            type: Function,
-            default: null
-        },
-        stripe: {
-            type: Boolean,
-            default: false
-        },
-        cellClassName: {
-            type: Function,
-            default: null
-        },
-        getFixedClass: {
-            type: Function,
-            required: true
-        },
-        highlightCurrentRow: {
-            type: Boolean,
-            default: false
-        },
-        currentRow: {
-            type: Object,
-            default: null
-        },
-        handleRowClick: {
-            type: Function,
-            required: true
-        },
-        toggleExpand: {
-            type: Function,
-            required: true
-        },
-        level: {
-            type: Number,
-            required: true
-        },
-        // 添加computedMainCol属性
-        computedMainCol: {
-            type: String,
-            required: true
-        },
-        expandWidth: {
-            type: String,
-            required: true
-        },
-        hasTree: {
-            type: Boolean,
-            required: false
-        },
-        selectedRows: {
-            type: Array,
-            required: false
-        },
-        rowHeight: {
-            type: String,
-            required: true
-        },
-        // 添加spanMethod属性
-        spanMethod: {
-            type: Function,
-            default: null
-        }
-    },
-    emits: ['rowClick', 'toggleExpand', 'toggleSelect'],
-    methods: {
-        isSelected(row) {
-            return this.selectedRows.some(r => r[this.rowKey] === row[this.rowKey]);
-        },
-        // 获取单元格的合并信息
-        getCellSpan(rowIndex, columnIndex) {
-            if (typeof this.spanMethod !== 'function') {
-                return { rowspan: 1, colspan: 1 };
-            }
-            
-            const row = this.row;
-            const column = this.columns[columnIndex];
-            
-            const result = this.spanMethod({
-                row,
-                column,
-                rowIndex,
-                columnIndex
-            });
-            
-            if (Array.isArray(result)) {
-                const [rowspan, colspan] = result;
-                return { rowspan: rowspan != null ? rowspan : 1, colspan: colspan != null ? colspan : 1 };
-            } else if (result && typeof result === 'object') {
-                const { rowspan, colspan } = result;
-                return {
-                    rowspan: rowspan != null ? rowspan : 1,
-                    colspan: colspan != null ? colspan : 1
-                };
-            }
-            
-            return { rowspan: 1, colspan: 1 };
-        },
-        // 获取单元格的样式类
-        getCellSpanClass(rowIndex, columnIndex) {
-            const span = this.getCellSpan(rowIndex, columnIndex);
-            
-            // 如果rowspan为0或colspan为0，表示该单元格被合并，需要隐藏
-            if (span.rowspan === 0 || span.colspan === 0) {
-                return 'up-table-cell-hidden';
-            } else if (span.rowspan > 1 || span.colspan > 1) {
-                // 如果有合并，添加合并样式类
-                return 'up-table-cell-merged';
-            }
-            
-            return '';
-        },
-        // 获取单元格的样式
-        getCellSpanStyle(rowIndex, columnIndex) {
-            const span = this.getCellSpan(rowIndex, columnIndex);
-            const style = {};
-            
-            // 设置rowspan
-            if (span.rowspan > 1) {
-                // 正确计算合并后的高度
-                const currentHeight = parseInt(this.rowHeight);
-                if (!isNaN(currentHeight)) {
-                    style.height = `${span.rowspan * currentHeight}px`;
-                }
-            }
-            
-            // 设置colspan
-            if (span.colspan > 1) {
-                style.flex = span.colspan;
-            }
-            
-            // 如果rowspan为0或colspan为0，表示该单元格被合并，需要隐藏
-            if (span.rowspan === 0 || span.colspan === 0) {
-                style.display = 'none';
-            }
-            
-            return style;
-        }
-    }
+<script setup>
+defineOptions({
+	name: 'tableRow',
+	// #ifdef MP-WEIXIN
+	options: {
+		virtualHost: true
+	}
+	// #endif
+})
+
+const props = defineProps({
+	row: {
+		type: Object,
+		required: true
+	},
+	rowIndex: {
+		type: Number,
+		required: true
+	},
+	parentRow: {
+		type: Object,
+		default: null
+	},
+	columns: {
+		type: Array,
+		required: true
+	},
+	treeProps: {
+		type: Object,
+		required: true
+	},
+	rowKey: {
+		type: String,
+		required: true
+	},
+	expandedKeys: {
+		type: Array,
+		required: true
+	},
+	cellStyleInner: {
+		type: Function,
+		required: true
+	},
+	isExpanded: {
+		type: Function,
+		required: true
+	},
+	rowClassName: {
+		type: Function,
+		default: null
+	},
+	stripe: {
+		type: Boolean,
+		default: false
+	},
+	cellClassName: {
+		type: Function,
+		default: null
+	},
+	getFixedClass: {
+		type: Function,
+		required: true
+	},
+	highlightCurrentRow: {
+		type: Boolean,
+		default: false
+	},
+	currentRow: {
+		type: Object,
+		default: null
+	},
+	handleRowClick: {
+		type: Function,
+		required: true
+	},
+	toggleExpand: {
+		type: Function,
+		required: true
+	},
+	level: {
+		type: Number,
+		required: true
+	},
+	// 添加computedMainCol属性
+	computedMainCol: {
+		type: String,
+		required: true
+	},
+	expandWidth: {
+		type: String,
+		required: true
+	},
+	hasTree: {
+		type: Boolean,
+		required: false
+	},
+	selectedRows: {
+		type: Array,
+		required: false
+	},
+	rowHeight: {
+		type: String,
+		required: true
+	},
+	// 添加spanMethod属性
+	spanMethod: {
+		type: Function,
+		default: null
+	}
+})
+const emit = defineEmits(['rowClick', 'toggleExpand', 'toggleSelect'])
+
+function isSelected(row) {
+	return props.selectedRows.some(r => r[props.rowKey] === row[props.rowKey])
+}
+
+function getCellSpan(rowIndex, columnIndex) {
+	if (typeof props.spanMethod !== 'function') {
+		return { rowspan: 1, colspan: 1 }
+	}
+
+	const row = props.row
+	const column = props.columns[columnIndex]
+
+	const result = props.spanMethod({
+		row,
+		column,
+		rowIndex,
+		columnIndex
+	})
+
+	if (Array.isArray(result)) {
+		const [rowspan, colspan] = result
+		return { rowspan: rowspan != null ? rowspan : 1, colspan: colspan != null ? colspan : 1 }
+	} else if (result && typeof result === 'object') {
+		const { rowspan, colspan } = result
+		return {
+			rowspan: rowspan != null ? rowspan : 1,
+			colspan: colspan != null ? colspan : 1
+		}
+	}
+
+	return { rowspan: 1, colspan: 1 }
+}
+
+function getCellSpanClass(rowIndex, columnIndex) {
+	const span = getCellSpan(rowIndex, columnIndex)
+
+	if (span.rowspan === 0 || span.colspan === 0) {
+		return 'up-table-cell-hidden'
+	} else if (span.rowspan > 1 || span.colspan > 1) {
+		return 'up-table-cell-merged'
+	}
+
+	return ''
+}
+
+function getCellSpanStyle(rowIndex, columnIndex) {
+	const span = getCellSpan(rowIndex, columnIndex)
+	const style = {}
+
+	if (span.rowspan > 1) {
+		const currentHeight = parseInt(props.rowHeight)
+		if (!isNaN(currentHeight)) {
+			style.height = `${span.rowspan * currentHeight}px`
+		}
+	}
+
+	if (span.colspan > 1) {
+		style.flex = span.colspan
+	}
+
+	if (span.rowspan === 0 || span.colspan === 0) {
+		style.display = 'none'
+	}
+
+	return style
 }
 </script>
+

@@ -51,12 +51,12 @@
 		</view>
 	</view>
 </template>
-<script>
-	import { props } from './props.js';
-	import { mpMixin } from '../../libs/mixin/mpMixin.js';
-	import { mixin } from '../../libs/mixin/mixin.js';
-	import { addUnit, error, sleep, getPx } from '../../libs/function/index.js';
-	import test from '../../libs/function/test.js';
+<script setup>
+	import { computed, getCurrentInstance, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+	import { props as rowNoticeProps } from './props.js'
+	import { commonProps, useUltraUI } from '../../libs/composable/useUltraUI.js'
+	import { addUnit, error, sleep, getPx } from '../../libs/function/index.js'
+	import test from '../../libs/function/test.js'
 	// #ifdef APP-NVUE
 	const animation = uni.requireNativePlugin('animation')
 	const dom = uni.requireNativePlugin('dom')
@@ -72,213 +72,220 @@
 	 * @property {String}			bgColor			背景颜色 (默认 ''#fdf6ec' )
 	 * @property {String | Number}	fontSize		字体大小，单位px (默认 14 )
 	 * @property {String | Number}	speed			水平滚动时的滚动速度，即每秒滚动多少px(rpx)，这有利于控制文字无论多少时，都能有一个恒定的速度  (默认 80 )
-	 * 
+	 *
 	 * @event {Function} click 点击通告文字触发
 	 * @event {Function} close 点击右侧关闭图标触发
-	 * @example 
+	 * @example
 	 */
-	export default {
+	defineOptions({
 		name: 'up-row-notice',
-		mixins: [mpMixin, mixin, props],
-		data() {
-			return {
-				animationDuration: '0', // 动画执行时间
-				animationPlayState: 'paused', // 动画的开始和结束执行
-				// nvue下，内容发生变化，导致滚动宽度也变化，需要标志为是否需要重新计算宽度
-				// 不能在内容变化时直接重新计算，因为nvue的animation模块上一次的滚动不是刚好结束，会有影响
-				nvueInit: true,
-				show: true
-			};
-		},
-		watch: {
-			text: {
-				immediate: true,
-				handler(newValue, oldValue) {
-					// #ifdef APP-NVUE
-					this.nvueInit = true
-					// #endif
-					// #ifndef APP-NVUE
-					this.vue()
-					// #endif
-					
-					if(!test.string(newValue)) {
-						error('noticebar组件direction为row时，要求text参数为字符串形式')
+		// #ifdef MP-WEIXIN
+		options: {
+			virtualHost: true
+		}
+		// #endif
+	})
+
+	const props = defineProps({
+		...commonProps,
+		...rowNoticeProps.props
+	})
+	const emit = defineEmits(['click', 'close'])
+	const instance = getCurrentInstance()
+	const { $uGetRect } = useUltraUI(props)
+	const animationDuration = ref('0') // 动画执行时间
+	const animationPlayState = ref('paused') // 动画的开始和结束执行
+	// nvue下，内容发生变化，导致滚动宽度也变化，需要标志为是否需要重新计算宽度
+	// 不能在内容变化时直接重新计算，因为nvue的animation模块上一次的滚动不是刚好结束，会有影响
+	const nvueInit = ref(true)
+	const stopAnimation = ref(false)
+	const webviewHide = ref(false)
+
+	// 文字内容的样式
+	const textStyle = computed(() => {
+		const style = {}
+		style.whiteSpace = 'nowrap !important'
+		style.color = props.color
+		style.fontSize = addUnit(props.fontSize)
+		return style
+	})
+
+	const animationStyle = computed(() => {
+		const style = {}
+		style.animationDuration = animationDuration.value
+		style.animationPlayState = animationPlayState.value
+		return style
+	})
+
+	// 内部对用户传入的数据进一步分割，放到多个text标签循环，否则如果用户传入的字符串很长（100个字符以上）
+	// 放在一个text标签中进行滚动，在低端安卓机上，动画可能会出现抖动现象，需要分割到多个text中可解决此问题
+	const innerText = computed(() => {
+		const result = []
+		// 每组text标签的字符长度
+		const len = 20
+		const textArr = props.text.split('')
+		for (let i = 0; i < textArr.length; i += len) {
+			// 对拆分的后的text进行slice分割，得到的为数组再进行join拼接为字符串
+			result.push(textArr.slice(i, i + len).join(''))
+		}
+		return result
+	})
+
+	function updateAnimation() {
+		// #ifdef APP-NVUE
+		nvueInit.value = true
+		// #endif
+		// #ifndef APP-NVUE
+		vue()
+		// #endif
+	}
+
+	function init() {
+		// #ifdef APP-NVUE
+		nvue()
+		// #endif
+
+		// #ifndef APP-NVUE
+		vue()
+		// #endif
+
+		if (!test.string(props.text)) {
+			error('noticebar组件direction为row时，要求text参数为字符串形式')
+		}
+	}
+
+	// vue版处理
+	async function vue() {
+		// #ifndef APP-NVUE
+		let boxWidth = 0
+		let textWidth = 0
+		// 进行一定的延时
+		await sleep()
+		// 查询盒子和文字的宽度
+		textWidth = (await $uGetRect('.up-notice__content__text')).width
+		boxWidth = (await $uGetRect('.up-notice__content')).width
+		// 根据t=s/v(时间=路程/速度)，这里为何不需要加上#up-notice-box的宽度，因为中设置了.up-notice-content样式中设置了padding-left: 100%
+		// 恰巧计算出来的结果中已经包含了#up-notice-box的宽度
+		animationDuration.value = `${textWidth / getPx(props.speed)}s`
+		// 这里必须这样开始动画，否则在APP上动画速度不会改变
+		animationPlayState.value = 'paused'
+		setTimeout(() => {
+			animationPlayState.value = 'running'
+		}, 10)
+		// #endif
+	}
+
+	// nvue版处理
+	async function nvue() {
+		// #ifdef APP-NVUE
+		nvueInit.value = false
+		let boxWidth = 0
+		let textWidth = 0
+		// 进行一定的延时
+		await sleep()
+		// 查询盒子和文字的宽度
+		textWidth = (await getNvueRect('up-notice__content__text')).width
+		boxWidth = (await getNvueRect('up-notice__content')).width
+		// 将文字移动到盒子的右边沿，之所以需要这么做，是因为nvue不支持100%单位，否则可以通过css设置
+		animation.transition(instance.proxy.$refs['up-notice__content__text'], {
+			styles: {
+				transform: `translateX(${boxWidth}px)`
+			},
+		}, () => {
+			// 如果非禁止动画，则开始滚动
+			!stopAnimation.value && loopAnimation(textWidth, boxWidth)
+		})
+		// #endif
+	}
+
+	function loopAnimation(textWidth, boxWidth) {
+		// #ifdef APP-NVUE
+		animation.transition(instance.proxy.$refs['up-notice__content__text'], {
+			styles: {
+				// 目标移动终点为-textWidth，也即当文字的最右边贴到盒子的左边框的位置
+				transform: `translateX(-${textWidth}px)`
+			},
+			// 滚动时间的计算为，时间 = 路程(boxWidth + textWidth) / 速度，最后转为毫秒
+			duration: (boxWidth + textWidth) / getPx(props.speed) * 1000,
+			delay: 10
+		}, () => {
+			animation.transition(instance.proxy.$refs['up-notice__content__text'], {
+				styles: {
+					// 重新将文字移动到盒子的右边沿
+					transform: `translateX(${stopAnimation.value ? 0 : boxWidth}px)`
+				},
+			}, () => {
+				// 如果非禁止动画，则继续下一轮滚动
+				if (!stopAnimation.value) {
+					// 判断是否需要初始化计算尺寸
+					if (nvueInit.value) {
+						nvue()
+					} else {
+						loopAnimation(textWidth, boxWidth)
 					}
 				}
-			},
-			fontSize() {
-				// #ifdef APP-NVUE
-				this.nvueInit = true
-				// #endif
-				// #ifndef APP-NVUE
-				this.vue()
-				// #endif
-			},
-			speed() {
-				// #ifdef APP-NVUE
-				this.nvueInit = true
-				// #endif
-				// #ifndef APP-NVUE
-				this.vue()
-				// #endif
-			}
-		},
-		computed: {
-			// 文字内容的样式
-			textStyle() {
-				let style = {}
-				style.whiteSpace = 'nowrap !important'
-				style.color = this.color
-				style.fontSize = addUnit(this.fontSize)
-				return style
-			},
-			animationStyle() {
-				let style = {}
-				style.animationDuration = this.animationDuration
-				style.animationPlayState = this.animationPlayState
-				return style
-			},
-			// 内部对用户传入的数据进一步分割，放到多个text标签循环，否则如果用户传入的字符串很长（100个字符以上）
-			// 放在一个text标签中进行滚动，在低端安卓机上，动画可能会出现抖动现象，需要分割到多个text中可解决此问题
-			innerText() {
-				let result = [],
-					// 每组text标签的字符长度
-					len = 20
-				const textArr = this.text.split('')
-				for (let i = 0; i < textArr.length; i += len) {
-					// 对拆分的后的text进行slice分割，得到的为数组再进行join拼接为字符串
-					result.push(textArr.slice(i, i + len).join(''))
-				}
-				return result
-			}
-		},
-		mounted() {
-			// #ifdef APP-PLUS
-			// 在APP上(含nvue)，监听当前webview是否处于隐藏状态(进入下一页时即为hide状态)
-			// 如果webivew隐藏了，为了节省性能的损耗，应停止动画的执行，同时也是为了保持进入下一页返回后，滚动位置保持不变
-			var pages = getCurrentPages()
-			var page = pages[pages.length - 1]
-			var currentWebview = page.$getAppWebview()
-			currentWebview.addEventListener('hide', () => {
-				this.webviewHide = true
 			})
-			currentWebview.addEventListener('show', () => {
-				this.webviewHide = false
+		})
+		// #endif
+	}
+
+	function getNvueRect(el) {
+		// #ifdef APP-NVUE
+		// 返回一个promise
+		return new Promise(resolve => {
+			dom.getComponentRect(instance.proxy.$refs[el], (res) => {
+				resolve(res.size)
 			})
-			// #endif
+		})
+		// #endif
+	}
 
-			this.init()
-		},
-		emits: ["click", "close"],
-		methods: {
-			init() {
-				// #ifdef APP-NVUE
-				this.nvue()
-				// #endif
+	// 点击通告栏
+	function clickHandler() {
+		emit('click')
+	}
 
-				// #ifndef APP-NVUE
-				this.vue()
-				// #endif
-				
-				if(!test.string(this.text)) {
-					error('noticebar组件direction为row时，要求text参数为字符串形式')
-				}
-			},
-			// vue版处理
-			async vue() {
-				// #ifndef APP-NVUE
-				let boxWidth = 0,
-					textWidth = 0
-				// 进行一定的延时
-				await sleep()
-				// 查询盒子和文字的宽度
-				textWidth = (await this.$uGetRect('.up-notice__content__text')).width
-				boxWidth = (await this.$uGetRect('.up-notice__content')).width
-				// 根据t=s/v(时间=路程/速度)，这里为何不需要加上#up-notice-box的宽度，因为中设置了.up-notice-content样式中设置了padding-left: 100%
-				// 恰巧计算出来的结果中已经包含了#up-notice-box的宽度
-				this.animationDuration = `${textWidth / getPx(this.speed)}s`
-				// 这里必须这样开始动画，否则在APP上动画速度不会改变
-				this.animationPlayState = 'paused'
-				setTimeout(() => {
-					this.animationPlayState = 'running'
-				}, 10)
-				// #endif
-			},
-			// nvue版处理
-			async nvue() {
-				// #ifdef APP-NVUE
-				this.nvueInit = false
-				let boxWidth = 0,
-					textWidth = 0
-				// 进行一定的延时
-				await sleep()
-				// 查询盒子和文字的宽度
-				textWidth = (await this.getNvueRect('up-notice__content__text')).width
-				boxWidth = (await this.getNvueRect('up-notice__content')).width
-				// 将文字移动到盒子的右边沿，之所以需要这么做，是因为nvue不支持100%单位，否则可以通过css设置
-				animation.transition(this.$refs['up-notice__content__text'], {
-					styles: {
-						transform: `translateX(${boxWidth}px)`
-					},
-				}, () => {
-					// 如果非禁止动画，则开始滚动
-					!this.stopAnimation && this.loopAnimation(textWidth, boxWidth)
-				});
-				// #endif
-			},
-			loopAnimation(textWidth, boxWidth) {
-				// #ifdef APP-NVUE
-				animation.transition(this.$refs['up-notice__content__text'], {
-					styles: {
-						// 目标移动终点为-textWidth，也即当文字的最右边贴到盒子的左边框的位置
-						transform: `translateX(-${textWidth}px)`
-					},
-					// 滚动时间的计算为，时间 = 路程(boxWidth + textWidth) / 速度，最后转为毫秒
-					duration: (boxWidth + textWidth) / getPx(this.speed) * 1000,
-					delay: 10
-				}, () => {
-					animation.transition(this.$refs['up-notice__content__text'], {
-						styles: {
-							// 重新将文字移动到盒子的右边沿
-							transform: `translateX(${this.stopAnimation ? 0 : boxWidth}px)`
-						},
-					}, () => {
-						// 如果非禁止动画，则继续下一轮滚动
-						if (!this.stopAnimation) {
-							// 判断是否需要初始化计算尺寸
-							if (this.nvueInit) {
-								this.nvue()
-							} else {
-								this.loopAnimation(textWidth, boxWidth)
-							}
-						}
-					});
-				})
-				// #endif
-			},
-			getNvueRect(el) {
-				// #ifdef APP-NVUE
-				// 返回一个promise
-				return new Promise(resolve => {
-					dom.getComponentRect(this.$refs[el], (res) => {
-						resolve(res.size)
-					})
-				})
-				// #endif
-			},
-			// 点击通告栏
-			clickHandler(index) {
-				this.$emit('click')
-			},
-			// 点击右侧按钮，需要判断点击的是关闭图标还是箭头图标
-			close() {
-				this.$emit('close')
-			}
-		},
-		beforeUnmount() {
-			this.stopAnimation = true
+	// 点击右侧按钮，需要判断点击的是关闭图标还是箭头图标
+	function close() {
+		emit('close')
+	}
+
+	watch(() => props.text, (newValue) => {
+		updateAnimation()
+		if (!test.string(newValue)) {
+			error('noticebar组件direction为row时，要求text参数为字符串形式')
 		}
-	};
+	}, { immediate: true })
+
+	watch(() => props.fontSize, () => {
+		updateAnimation()
+	})
+
+	watch(() => props.speed, () => {
+		updateAnimation()
+	})
+
+	onMounted(() => {
+		// #ifdef APP-PLUS
+		// 在APP上(含nvue)，监听当前webview是否处于隐藏状态(进入下一页时即为hide状态)
+		// 如果webivew隐藏了，为了节省性能的损耗，应停止动画的执行，同时也是为了保持进入下一页返回后，滚动位置保持不变
+		const pages = getCurrentPages()
+		const page = pages[pages.length - 1]
+		const currentWebview = page.$getAppWebview()
+		currentWebview.addEventListener('hide', () => {
+			webviewHide.value = true
+		})
+		currentWebview.addEventListener('show', () => {
+			webviewHide.value = false
+		})
+		// #endif
+
+		init()
+	})
+
+	onBeforeUnmount(() => {
+		stopAnimation.value = true
+	})
 </script>
 
 <style lang="scss" scoped>

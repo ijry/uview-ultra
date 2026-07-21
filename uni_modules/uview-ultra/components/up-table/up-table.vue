@@ -6,10 +6,10 @@
 	</view>
 </template>
 
-<script>
-	import { props } from './props';
-	import { mpMixin } from '../../libs/mixin/mpMixin';
-	import { mixin } from '../../libs/mixin/mixin';
+<script setup>
+	import { computed, nextTick, ref, toRefs, watch } from 'vue'
+	import { props as tableProps } from './props'
+	import { commonProps } from '../../libs/composable/useUltraUI.js'
 	/**
 	 * Table 表格 
 	 * @description 表格组件一般用于展示大量结构化数据的场景 本组件标签类似HTML的table表格，由table、tr、th、td四个组件组成
@@ -25,78 +25,106 @@
 	 * @event {Function} close 点击关闭按钮时触发
 	 * @example <up-table><up-tr><up-th>学校</up-th </up-tr> <up-tr><up-td>浙江大学</up-td> </up-tr> <up-tr><up-td>清华大学</up-td> </up-tr></up-table>
 	 */
-	export default {
+	defineOptions({
 		name: 'up-table',
-		mixins: [mpMixin, mixin, props],
-		props: {
-			borderColor: {
-				type: String,
-				default: '#e4e7ed'
-			},
-			align: {
-				type: String,
-				default: 'center'
-			},
-			// td的内边距
-			padding: {
-				type: String,
-				default: '5px 3px'
-			},
-			// 字体大小
-			fontSize: {
-				type: [String],
-				default: '14px'
-			},
-			// 字体颜色
-			color: {
-				type: String,
-				default: '#606266'
-			},
-			// th的自定义样式
-			thStyle: {
-				type: Object,
-				default () {
-					return {}
-				}
-			},
-			// table的背景颜色
-			bgColor: {
-				type: String,
-				default: '#ffffff'
+		// #ifdef MP-WEIXIN
+		options: {
+			virtualHost: true
+		}
+		// #endif
+	})
+
+	const props = defineProps({
+		...commonProps,
+		...tableProps.props,
+		borderColor: {
+			type: String,
+			default: '#e4e7ed'
+		},
+		align: {
+			type: String,
+			default: 'center'
+		},
+		// td的内边距
+		padding: {
+			type: String,
+			default: '5px 3px'
+		},
+		// 字体大小
+		fontSize: {
+			type: [String],
+			default: '14px'
+		},
+		// 字体颜色
+		color: {
+			type: String,
+			default: '#606266'
+		},
+		// th的自定义样式
+		thStyle: {
+			type: Object,
+			default() {
+				return {}
 			}
 		},
-		data() {
-			return {
-				show: true
-			}
-		},
-		watch: {
-			align() {
-				this.change();
-			},
-			borderColor() {
-				this.change();
-			}
-		},
-		computed: {
-			tableStyle() {
-				let style = {};
-				style.borderLeft = `solid 1px ${this.borderColor}`;
-				style.borderTop = `solid 1px ${this.borderColor}`;
-				style.backgroundColor = this.bgColor;;
-				return style;
-			}
-		},
-		methods: {
-			change() {
-				this.show = false;
-				this.$nextTick(() => {
-					this.show = true;
-				});
-				// this.$forceUpdate();
-			}
+		// table的背景颜色
+		bgColor: {
+			type: String,
+			default: '#ffffff'
+		}
+	})
+	const {
+		borderColor,
+		align,
+		padding,
+		fontSize,
+		color,
+		thStyle,
+		bgColor
+	} = toRefs(props)
+	const show = ref(true)
+
+	const tableStyle = computed(() => {
+		const style = {}
+		style.borderLeft = `solid 1px ${props.borderColor}`
+		style.borderTop = `solid 1px ${props.borderColor}`
+		style.backgroundColor = props.bgColor
+		return style
+	})
+
+	function change() {
+		show.value = false
+		nextTick(() => {
+			show.value = true
+		})
+	}
+
+	function getProps() {
+		return {
+			borderColor: props.borderColor,
+			align: props.align,
+			padding: props.padding,
+			fontSize: props.fontSize,
+			color: props.color,
+			thStyle: props.thStyle,
+			bgColor: props.bgColor
 		}
 	}
+
+	watch(() => props.align, change)
+	watch(() => props.borderColor, change)
+
+	defineExpose({
+		borderColor,
+		align,
+		padding,
+		fontSize,
+		color,
+		thStyle,
+		bgColor,
+		change,
+		getProps
+	})
 </script>
 
 <style lang="scss" scoped>

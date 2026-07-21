@@ -94,7 +94,7 @@
 					:forbidDays="forbidDays"
 					:forbidDaysToast="forbidDaysToast"
 					:monthFormat="monthFormat"
-					ref="month"
+					ref="monthRef"
 					@monthSelected="monthSelected"
 					@updateMonthTop="onUpdateMonthTop"
 				></uMonth>
@@ -128,7 +128,7 @@
 					:forbidDays="forbidDays"
 					:forbidDaysToast="forbidDaysToast"
 					:monthFormat="monthFormat"
-					ref="month"
+					ref="monthRef"
 					@monthSelected="monthSelected"
 					@updateMonthTop="onUpdateMonthTop"
 				></uMonth>
@@ -176,628 +176,635 @@
 	</up-popup>
 </template>
 
-<script>
-import uHeader from './header.vue'
-import uMonth from './month.vue'
-import { props } from './props.js'
-import util from './util.js'
-import dayjs from '../up-datetime-picker/dayjs.esm.min.js';
-import Calendar from '../../libs/util/calendar.js'
-import { mpMixin } from '../../libs/mixin/mpMixin.js'
-import { mixin } from '../../libs/mixin/mixin.js'
-import { addUnit, range, error, padZero } from '../../libs/function/index.js';
-import test from '../../libs/function/test.js';
-import { t } from '../../libs/i18n/index.js'
+<script setup>
 /**
  * Calendar 日历
  * @description  此组件用于单个选择日期，范围选择日期等，日历被包裹在底部弹起的容器中.
  * @tutorial https://ijry.github.io/uview-plus/components/calendar.html
- *
- * @property {String}				title				标题内容 (默认 日期选择 )
- * @property {Boolean}				showTitle			是否显示标题  (默认 true )
- * @property {Boolean}				showSubtitle		是否显示副标题	(默认 true )
- * @property {String}				mode				日期类型选择  single-选择单个日期，multiple-可以选择多个日期，range-选择日期范围 （ 默认 'single' )
- * @property {String}				startText			mode=range时，第一个日期底部的提示文字  (默认 '开始' )
- * @property {String}				endText				mode=range时，最后一个日期底部的提示文字 (默认 '结束' )
- * @property {Array}				customList			自定义列表
- * @property {String}				color				主题色，对底部按钮和选中日期有效  (默认 ‘#3c9cff' )
- * @property {String | Number}		minDate				最小的可选日期	 (默认 0 )
- * @property {String | Number}		maxDate				最大可选日期  (默认 0 )
- * @property {Array | String| Date}	defaultDate			默认选中的日期，mode为multiple或range是必须为数组格式
- * @property {String | Number}		maxCount			mode=multiple时，最多可选多少个日期  (默认 	Number.MAX_SAFE_INTEGER  )
- * @property {String | Number}		rowHeight			日期行高 (默认 56 )
- * @property {Function}				formatter			日期格式化函数
- * @property {Boolean}				showLunar			是否显示农历  (默认 false )
- * @property {Boolean}				showMark			是否显示月份背景色 (默认 true )
- * @property {String}				confirmText			确定按钮的文字 (默认 '确定' )
- * @property {String}				confirmDisabledText	确认按钮处于禁用状态时的文字 (默认 '确定' )
- * @property {Boolean}				show				是否显示日历弹窗 (默认 false )
- * @property {Boolean}				overlay				是否显示遮罩 (默认 true )
- * @property {String | Number}		duration			动画时长，单位ms (默认 300 )
- * @property {Object | String}		overlayStyle		自定义遮罩的样式
- * @property {Number | String}		overlayOpacity		遮罩透明度，0-1之间 (默认 0.5 )
- * @property {String | Number}		zIndex				弹出层的z-index值 (默认 10075 )
- * @property {Boolean}				safeAreaInsetBottom	是否留出底部安全距离 (默认 true )
- * @property {Boolean}				safeAreaInsetTop	是否留出顶部安全距离（状态栏高度） (默认 false )
- * @property {String}				bgColor				弹窗背景色，设置为transparent可去除白色背景
- * @property {Boolean}				closeOnClickOverlay	是否允许点击遮罩关闭日历 (默认 false )
- * @property {Boolean}				readonly	        是否为只读状态，只读状态下禁止选择日期 (默认 false )
- * @property {String | Number}		maxRange	        日期区间最多可选天数，默认无限制，mode = range时有效
- * @property {String}				rangePrompt	        范围选择超过最多可选天数时的提示文案，mode = range时有效
- * @property {Boolean}				showRangePrompt	    范围选择超过最多可选天数时，是否展示提示文案，mode = range时有效 (默认 true )
- * @property {Boolean}				allowSameDay	    是否允许日期范围的起止时间为同一天，mode = range时有效 (默认 false )
- * @property {String}				rangeResultMode	    区间模式下确认返回值格式，all-返回区间内所有日期，boundary-仅返回起止日期 (默认 'all' )
- * @property {Boolean}				enableTime			是否开启时分秒选择 (默认 false )
- * @property {String}				timePrecision		时间精度，hour-仅时，minute-时分，second-时分秒 (默认 'minute' )
- * @property {String}				defaultTime			默认时间，支持HH/HH:mm/HH:mm:ss，不传则按00:00补齐
- * @property {Number|String}	    round				圆角值，默认无圆角  (默认 0 )
- * @property {Number|String}	    monthNum			最多展示的月份数量  (默认 3 )
- * @property {Boolean}	            monthSwitch			是否启用非滚动的单月切换模式  (默认 false )
- * @property {String}	            todayColor			今天日期的独立高亮颜色，默认跟随主题色
- *
- * @event {Function()} confirm 		点击确定按钮时触发		选择日期相关的返回参数
- * @event {Function()} close 		日历关闭时触发			可定义页面关闭时的回调事件
- * @example <up-calendar  :defaultDate="defaultDateMultiple" :show="show" mode="multiple" @confirm="confirm">
-	</up-calendar>
- * */
-export default {
-	name: 'up-calendar',
-	mixins: [mpMixin, mixin, props],
-	components: {
-		uHeader,
-		uMonth
-	},
-	data() {
-		return {
-			// 需要显示的月份的数组
-			months: [],
-			// 在月份滚动区域中，当前视图中月份的index索引
-			monthIndex: 0,
-			// 月份滚动区域的高度
-			listHeight: 0,
-			// month组件中选择的日期数组
-			selected: [],
-			scrollIntoView: '',
-			scrollIntoViewScroll: '',
-			scrollTop:0,
-			// 月份数据是否已初始化，避免 mounted / watch 重复全量生成
-			monthsInited: false,
-			timePickerShow: false,
-			timePickerTarget: 'single',
-			timePickerValue: [0, 0, 0],
-			hourOptions: [],
-			minuteOptions: [],
-			secondOptions: [],
-			singleTime: '00:00',
-			rangeStartTime: '00:00',
-			rangeEndTime: '00:00',
-			// 过滤处理方法
-			innerFormatter: (value) => value
-		}
-	},
-	watch: {
-		scrollIntoView: {
-			immediate: true,
-			handler(n) {
-				// console.log('scrollIntoView', n)
-			}
-		},
-		selectedChange: {
-			handler(n) {
-				// 仅在初始化后、边界/默认值变化时重建，避免 mounted 与打开弹层重复生成月份
-				if (this.monthsInited) {
-					this.setMonth()
-				}
-			}
-		},
-		timePrecision() {
-			this.initTimeOptions()
-			this.initTimeValues()
-		},
-		defaultTime() {
-			this.initTimeValues()
-		},
-		// 打开弹窗时，设置月份数据
-		show: {
-			immediate: true,
-			handler(n) {
-				if (n) {
-					// 已初始化过则复用月份数据，避免每次打开都全量重建
-					if (!this.monthsInited || !this.months.length) {
-						this.setMonth()
-					}
-				} else {
-					// 关闭时重置scrollIntoView，否则会出现二次打开日历，当前月份数据显示不正确。
-					// scrollIntoView需要有一个值变动过程，才会产生作用。
-					this.scrollIntoView = ''
-				}
-			}
-		}
-	},
-	computed: {
-		// 由于maxDate和minDate可以为字符串(2021-10-10)，或者数值(时间戳)，但是dayjs如果接受字符串形式的时间戳会有问题，这里进行处理
-		innerMaxDate() {
-			return test.number(this.maxDate)
-				? Number(this.maxDate)
-				: this.maxDate
-		},
-		innerMinDate() {
-			return test.number(this.minDate)
-				? Number(this.minDate)
-				: this.minDate
-		},
-		todayDate() {
-			return dayjs().format('YYYY-MM-DD')
-		},
-		todayText() {
-			return t('up.calendar.today')
-		},
-		todayDisabled() {
-			const today = dayjs(this.todayDate)
-			const minDate = this.innerMinDate ? dayjs(this.innerMinDate) : null
-			const maxDate = this.innerMaxDate ? dayjs(this.innerMaxDate) : null
-			if (minDate && today.isBefore(minDate, 'day')) {
-				return true
-			}
-			if (maxDate && today.isAfter(maxDate, 'day')) {
-				return true
-			}
-			return false
-		},
-		// 多个条件的变化，会引起选中日期的变化，这里统一管理监听
-		selectedChange() {
-			return [this.innerMinDate, this.innerMaxDate, this.defaultDate]
-		},
-		subtitle() {
-			// 初始化时，this.months为空数组，所以需要特别判断处理
-			if (this.months.length) {
-				return `${this.months[this.monthIndex].year}年${
-					this.months[this.monthIndex].month
-				}月`
-			} else {
-				return ''
-			}
-		},
-		currentMonths() {
-			if (this.monthSwitch && this.months.length) {
-				return [this.months[this.monthIndex]]
-			}
-			return this.months
-		},
-		switchPrevDisabled() {
-			return this.monthIndex <= 0
-		},
-		switchNextDisabled() {
-			return this.monthIndex >= this.months.length - 1
-		},
-		switchPrevYearDisabled() {
-			return this.monthIndex - 12 < 0
-		},
-		switchNextYearDisabled() {
-			return this.monthIndex + 12 > this.months.length - 1
-		},
-		showTimePanel() {
-			if (!this.enableTime) return false
-			if (this.mode === 'single') return true
-			if (this.mode === 'range' && this.rangeResultMode === 'boundary') {
-				return true
-			}
-			return false
-		},
-		singleDateLabel() {
-			return this.selected[0] || '--'
-		},
-		rangeStartDateLabel() {
-			return this.selected[0] || '--'
-		},
-		rangeEndDateLabel() {
-			if (this.selected.length >= 2) {
-				return this.selected[this.selected.length - 1]
-			}
-			return '--'
-		},
-		buttonDisabled() {
-			// 如果为range类型，且选择的日期个数不足1个时，让底部的按钮出于disabled状态
-			if (this.mode === 'range') {
-				if (this.selected.length <= 1) {
-					return true
-				} else {
-					return false
-				}
-			} else {
-				return false
-			}
-		},
-		calendarCloseable() {
-			return this.closeable === null ? !this.pageInline : this.closeable
-		}
-	},
-	mounted() {
-		this.start = Date.now()
-		this.init()
-	},
-	emits: ["confirm", "close"],
-	methods: {
-		addUnit,
-		padTime(num) {
-			return String(num).padStart(2, '0')
-		},
-		initTimeOptions() {
-			this.hourOptions = Array.from({ length: 24 }, (_, i) => this.padTime(i))
-			this.minuteOptions = Array.from({ length: 60 }, (_, i) => this.padTime(i))
-			this.secondOptions = Array.from({ length: 60 }, (_, i) => this.padTime(i))
-		},
-		parseTimeValue(value = '') {
-			const raw = String(value || '').trim()
-			const parts = raw.length ? raw.split(':') : []
-			const getNumber = (index, max) => {
-				const current = Number(parts[index] || 0)
-				if (Number.isNaN(current)) return 0
-				return Math.max(0, Math.min(max, current))
-			}
-			const hour = getNumber(0, 23)
-			const minute = getNumber(1, 59)
-			const second = getNumber(2, 59)
-			return [hour, minute, second]
-		},
-		getDefaultTimeValue() {
-			const [hour, minute, second] = this.parseTimeValue(this.defaultTime)
-			if (this.timePrecision === 'hour') {
-				return this.padTime(hour)
-			}
-			if (this.timePrecision === 'second') {
-				return `${this.padTime(hour)}:${this.padTime(minute)}:${this.padTime(second)}`
-			}
-			return `${this.padTime(hour)}:${this.padTime(minute)}`
-		},
-		initTimeValues() {
-			const value = this.getDefaultTimeValue()
-			this.singleTime = value
-			this.rangeStartTime = value
-			this.rangeEndTime = value
-		},
-		timeToPickerValue(value = '') {
-			const [hour, minute, second] = this.parseTimeValue(value)
-			return [hour, minute, second]
-		},
-		pickerValueToTime(value = []) {
-			const hour = Number(value[0] || 0)
-			const minute = Number(value[1] || 0)
-			const second = Number(value[2] || 0)
-			if (this.timePrecision === 'hour') {
-				return this.padTime(hour)
-			}
-			if (this.timePrecision === 'second') {
-				return `${this.padTime(hour)}:${this.padTime(minute)}:${this.padTime(second)}`
-			}
-			return `${this.padTime(hour)}:${this.padTime(minute)}`
-		},
-		openTimePicker(target) {
-			this.timePickerTarget = target
-			let currentValue = this.singleTime
-			if (target === 'start') currentValue = this.rangeStartTime
-			if (target === 'end') currentValue = this.rangeEndTime
-			this.timePickerValue = this.timeToPickerValue(currentValue)
-			this.timePickerShow = true
-		},
-		onTimePickerChange(e) {
-			this.timePickerValue = e.detail.value
-		},
-		closeTimePicker() {
-			this.timePickerShow = false
-		},
-		confirmTimePicker() {
-			const value = this.pickerValueToTime(this.timePickerValue)
-			if (this.timePickerTarget === 'single') this.singleTime = value
-			if (this.timePickerTarget === 'start') this.rangeStartTime = value
-			if (this.timePickerTarget === 'end') this.rangeEndTime = value
-			this.timePickerShow = false
-		},
-		timeToSecond(timeText = '') {
-			const [hour, minute, second] = this.parseTimeValue(timeText)
-			return hour * 3600 + minute * 60 + second
-		},
-		validateSameDayRangeTime() {
-			if (!this.enableTime || this.mode !== 'range' || this.rangeResultMode !== 'boundary') {
-				return true
-			}
-			if (this.selected.length < 2) return true
-			const startDate = this.selected[0]
-			const endDate = this.selected[this.selected.length - 1]
-			if (startDate !== endDate) return true
-			const startSeconds = this.timeToSecond(this.rangeStartTime)
-			const endSeconds = this.timeToSecond(this.rangeEndTime)
-			if (endSeconds < startSeconds) {
-				uni.showToast({
-					title: '结束时间不能早于开始时间',
-					icon: 'none'
-				})
-				return false
-			}
-			return true
-		},
-		appendTime(dateText, timeText) {
-			return `${dateText} ${timeText}`
-		},
-		getConfirmValue(selected = this.selected) {
-			let result = selected
-			if (
-				this.mode === 'range' &&
-				this.rangeResultMode === 'boundary' &&
-				selected.length >= 2
-			) {
-				const len = selected.length - 1
-				result = [selected[0], selected[len]]
-			}
-			if (!this.showTimePanel || !this.enableTime) {
-				return result
-			}
-			if (this.mode === 'single' && result.length >= 1) {
-				return [this.appendTime(result[0], this.singleTime)]
-			}
-			if (this.mode === 'range' && this.rangeResultMode === 'boundary' && result.length >= 2) {
-				return [
-					this.appendTime(result[0], this.rangeStartTime),
-					this.appendTime(result[1], this.rangeEndTime)
-				]
-			}
-			return result
-		},
-		// 在微信小程序中，不支持将函数当做props参数，故只能通过ref形式调用
-		setFormatter(e) {
-			this.innerFormatter = e
-		},
-		// month组件内部选择日期后，通过事件通知给父组件
-		monthSelected(e,scene ='init') {
-			this.selected = e
-			if (!this.showConfirm) {
-				// 在不需要确认按钮的情况下，如果为单选，或者范围多选且已选长度大于2，则直接进行返还
-				if (
-					this.mode === 'multiple' ||
-					this.mode === 'single' ||
-					(this.mode === 'range' && this.selected.length >= 2)
-				) {
-				   if( scene === 'init'){
-					 return
-				   }
-				   if( scene === 'tap') {
-					 if (!this.validateSameDayRangeTime()) return
-					 this.$emit('confirm', this.getConfirmValue())
-				   }
-				}
-			}
-		},
-		init() {
-			// 校验maxDate，不能小于minDate。
-			if (
-				this.innerMaxDate &&
-                this.innerMinDate &&
-				new Date(this.innerMaxDate).getTime() < new Date(this.innerMinDate).getTime()
-			) {
-				return error('maxDate不能小于minDate时间')
-			}
-			// 滚动区域的高度
-			let bottomPadding = 0
-			if (!this.pageInline) {
-				bottomPadding = 30
-			}
-			this.listHeight = this.rowHeight * (this.monthSwitch ? 6 : 5) + bottomPadding
-			this.initTimeOptions()
-			this.initTimeValues()
-			this.setMonth()
-		},
-		close() {
-			this.$emit('close')
-		},
-		// 点击确定按钮
-		confirm() {
-			if (!this.buttonDisabled) {
-				if (!this.validateSameDayRangeTime()) return
-				this.$emit('confirm', this.getConfirmValue())
-			}
-		},
-		// 获得两个日期之间的月份数
-		getMonths(minDate, maxDate) {
-			const minYear = dayjs(minDate).year()
-			const minMonth = dayjs(minDate).month() + 1
-			const maxYear = dayjs(maxDate).year()
-			const maxMonth = dayjs(maxDate).month() + 1
-			return (maxYear - minYear) * 12 + (maxMonth - minMonth) + 1
-		},
-		// 设置月份数据
-		setMonth() {
-			// 最小日期的毫秒数
-			const minDate = this.innerMinDate || dayjs().valueOf()
-			// 如果没有指定最大日期，则往后推3个月
-			const maxDate =
-				this.innerMaxDate ||
-				dayjs(minDate)
-					.add(this.monthNum - 1, 'month')
-					.valueOf()
-			// 最大最小月份之间的共有多少个月份，
-			const months = range(
-				1,
-				this.monthNum,
-				this.getMonths(minDate, maxDate)
-			)
-			const minDateStr = dayjs(minDate).format('YYYY-MM-DD')
-			const maxDateStr = dayjs(maxDate).format('YYYY-MM-DD')
-			const formatter = this.formatter || this.innerFormatter
-			// 先清空数组
-			const monthsData = []
-			for (let i = 0; i < months; i++) {
-				// 缓存当月 dayjs，避免每个日期重复创建/add
-				const monthBase = dayjs(minDate).add(i, 'month')
-				const daysInMonth = monthBase.daysInMonth()
-				const monthValue = monthBase.month() + 1
-				const yearValue = monthBase.year()
-				const dateList = []
-				for (let day = 1; day <= daysInMonth; day++) {
-					const dayBase = monthBase.date(day)
-					const date = dayBase.format('YYYY-MM-DD')
-					const week = dayBase.day()
-					let bottomInfo = ''
-					if (this.showLunar) {
-						// 将日期转为农历格式
-						const lunar = Calendar.solar2lunar(
-							dayBase.year(),
-							dayBase.month() + 1,
-							dayBase.date()
-						)
-						bottomInfo = lunar.IDayCn
-					}
-					const config = {
-						day,
-						week,
-						// 小于最小允许的日期，或者大于最大的日期，则设置为disabled状态
-						disabled: date < minDateStr || date > maxDateStr,
-						// 返回一个日期对象，供外部的formatter获取当前日期的年月日等信息，进行加工处理
-						date: new Date(date),
-						bottomInfo,
-						dot: false,
-						month: monthValue
-					}
-					dateList.push(formatter(config))
-				}
-				monthsData.push({
-					date: dateList,
-					// 当前所属的月份
-					month: monthValue,
-					// 当前年份
-					year: yearValue
-				})
-			}
-			this.months = monthsData
-			this.monthsInited = true
-			if (this.monthSwitch) {
-				this.monthIndex = this.getDefaultMonthIndex()
-			}
-		},
-		getDefaultMonthIndex() {
-			let selected = dayjs().format('YYYY-MM')
-			if (this.defaultDate) {
-				if (!test.array(this.defaultDate)) {
-					selected = dayjs(this.defaultDate).format('YYYY-MM')
-				} else if (this.defaultDate.length) {
-					selected = dayjs(this.defaultDate[0]).format('YYYY-MM')
-				}
-			}
-			const index = this.months.findIndex(({ year, month }) => {
-				return `${year}-${padZero(month)}` === selected
-			})
-			return index === -1 ? 0 : index
-		},
-		prevMonth() {
-			if (!this.switchPrevDisabled) {
-				this.monthIndex -= 1
-			}
-		},
-		nextMonth() {
-			if (!this.switchNextDisabled) {
-				this.monthIndex += 1
-			}
-		},
-		prevYear() {
-			if (!this.switchPrevYearDisabled) {
-				this.monthIndex -= 12
-			}
-		},
-		nextYear() {
-			if (!this.switchNextYearDisabled) {
-				this.monthIndex += 12
-			}
-		},
-		jumpToToday() {
-			if (this.todayDisabled) {
-				return
-			}
-			const targetMonth = dayjs(this.todayDate).format('YYYY-MM')
-			const selectToday = () => {
-				if (this.mode === 'range') {
-					return
-				}
-				this.$refs.month && this.$refs.month.selectDate(this.todayDate)
-			}
-			if (this.monthSwitch) {
-				const todayMonthIndex = this.months.findIndex(({ year, month }) => {
-					return `${year}-${padZero(month)}` === targetMonth
-				})
-				if (todayMonthIndex !== -1) {
-					this.monthIndex = todayMonthIndex
-					this.$nextTick(selectToday)
-				}
-				return
-			}
-			this.scrollIntoDefaultMonth(targetMonth)
-			this.$nextTick(selectToday)
-		},
-		// 滚动到默认设置的月份
-		scrollIntoDefaultMonth(selected) {
-			// 查询默认日期在可选列表的下标
-			const _index = this.months.findIndex(({
-				  year,
-				  month
-			  }) => {
-				month = padZero(month)
-				return `${year}-${month}` === selected
-			})
-			if (_index !== -1) {
-				// #ifndef MP-WEIXIN
-				this.$nextTick(() => {
-					this.scrollIntoView = ''
-					this.scrollIntoView = `month-${_index}`
-					this.scrollIntoViewScroll = this.scrollIntoView
-				})
-				// #endif
-				// #ifdef MP-WEIXIN
-				this.scrollTop = this.months[_index].top || 0;
-				// #endif
-			}
-		},
-		// scroll-view滚动监听
-		onScroll(event) {
-			// 不允许小于0的滚动值，如果scroll-view到顶了，继续下拉，会出现负数值
-			const scrollTop = Math.max(0, event.detail.scrollTop)
-			// 将当前滚动条数值，除以滚动区域的高度，可以得出当前滚动到了哪一个月份的索引
-			for (let i = 0; i < this.months.length; i++) {
-				if (scrollTop >= (this.months[i].top || this.listHeight)) {
-					this.monthIndex = i
-					this.scrollIntoViewScroll = `month-${i}`
-				}
-			}
-		},
-		// 更新月份的top值
-		onUpdateMonthTop(topArr = []) {
-			if (this.monthSwitch) {
-				return
-			}
-			this.updateMonthTop(topArr)
-		},
-		updateMonthTop(topArr = []) {
-			// 设置对应月份的top值，用于onScroll方法更新月份
-			topArr.map((item, index) => {
-				this.months[index].top = item
-			})
+ * @example <up-calendar  :defaultDate="defaultDateMultiple" :show="show" mode="multiple" @confirm="confirm"></up-calendar>
+ */
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
+import uHeader from './header.vue'
+import uMonth from './month.vue'
+import { props as calendarProps } from './props.js'
+import dayjs from '../up-datetime-picker/dayjs.esm.min.js'
+import Calendar from '../../libs/util/calendar.js'
+import { commonProps } from '../../libs/composable/useUltraUI'
+import { addUnit, range, error, padZero } from '../../libs/function/index.js'
+import test from '../../libs/function/test.js'
+import { t } from '../../libs/i18n/index.js'
 
-			// 获取默认日期的下标
-			if (!this.defaultDate) {
-				// 如果没有设置默认日期，则将当天日期设置为默认选中的日期
-				const selected = dayjs().format("YYYY-MM")
-				this.scrollIntoDefaultMonth(selected)
+defineOptions({
+	name: 'up-calendar',
+	// #ifdef MP-WEIXIN
+	options: {
+		virtualHost: true
+	}
+	// #endif
+})
+
+const props = defineProps({
+	...commonProps,
+	...calendarProps.props
+})
+const emit = defineEmits(['confirm', 'close'])
+
+// 需要显示的月份的数组
+const months = ref([])
+// 在月份滚动区域中，当前视图中月份的index索引
+const monthIndex = ref(0)
+// 月份滚动区域的高度
+const listHeight = ref(0)
+// month组件中选择的日期数组
+const selected = ref([])
+const scrollIntoView = ref('')
+const scrollIntoViewScroll = ref('')
+const scrollTop = ref(0)
+// 月份数据是否已初始化，避免 mounted / watch 重复全量生成
+const monthsInited = ref(false)
+const timePickerShow = ref(false)
+const timePickerTarget = ref('single')
+const timePickerValue = ref([0, 0, 0])
+const hourOptions = ref([])
+const minuteOptions = ref([])
+const secondOptions = ref([])
+const singleTime = ref('00:00')
+const rangeStartTime = ref('00:00')
+const rangeEndTime = ref('00:00')
+// 过滤处理方法
+const innerFormatter = ref((value) => value)
+const monthRef = ref(null)
+let start = 0
+
+// 由于maxDate和minDate可以为字符串(2021-10-10)，或者数值(时间戳)，但是dayjs如果接受字符串形式的时间戳会有问题，这里进行处理
+const innerMaxDate = computed(() => {
+	return test.number(props.maxDate)
+		? Number(props.maxDate)
+		: props.maxDate
+})
+
+const innerMinDate = computed(() => {
+	return test.number(props.minDate)
+		? Number(props.minDate)
+		: props.minDate
+})
+
+const todayDate = computed(() => {
+	return dayjs().format('YYYY-MM-DD')
+})
+
+const todayText = computed(() => {
+	return t('up.calendar.today')
+})
+
+const todayDisabled = computed(() => {
+	const today = dayjs(todayDate.value)
+	const minDate = innerMinDate.value ? dayjs(innerMinDate.value) : null
+	const maxDate = innerMaxDate.value ? dayjs(innerMaxDate.value) : null
+	if (minDate && today.isBefore(minDate, 'day')) {
+		return true
+	}
+	if (maxDate && today.isAfter(maxDate, 'day')) {
+		return true
+	}
+	return false
+})
+
+// 多个条件的变化，会引起选中日期的变化，这里统一管理监听
+const selectedChange = computed(() => {
+	return [innerMinDate.value, innerMaxDate.value, props.defaultDate]
+})
+
+const subtitle = computed(() => {
+	// 初始化时，months为空数组，所以需要特别判断处理
+	if (months.value.length) {
+		return `${months.value[monthIndex.value].year}年${
+			months.value[monthIndex.value].month
+		}月`
+	} else {
+		return ''
+	}
+})
+
+const currentMonths = computed(() => {
+	if (props.monthSwitch && months.value.length) {
+		return [months.value[monthIndex.value]]
+	}
+	return months.value
+})
+
+const switchPrevDisabled = computed(() => {
+	return monthIndex.value <= 0
+})
+
+const switchNextDisabled = computed(() => {
+	return monthIndex.value >= months.value.length - 1
+})
+
+const switchPrevYearDisabled = computed(() => {
+	return monthIndex.value - 12 < 0
+})
+
+const switchNextYearDisabled = computed(() => {
+	return monthIndex.value + 12 > months.value.length - 1
+})
+
+const showTimePanel = computed(() => {
+	if (!props.enableTime) return false
+	if (props.mode === 'single') return true
+	if (props.mode === 'range' && props.rangeResultMode === 'boundary') {
+		return true
+	}
+	return false
+})
+
+const singleDateLabel = computed(() => {
+	return selected.value[0] || '--'
+})
+
+const rangeStartDateLabel = computed(() => {
+	return selected.value[0] || '--'
+})
+
+const rangeEndDateLabel = computed(() => {
+	if (selected.value.length >= 2) {
+		return selected.value[selected.value.length - 1]
+	}
+	return '--'
+})
+
+const buttonDisabled = computed(() => {
+	// 如果为range类型，且选择的日期个数不足1个时，让底部的按钮出于disabled状态
+	if (props.mode === 'range') {
+		if (selected.value.length <= 1) {
+			return true
+		} else {
+			return false
+		}
+	} else {
+		return false
+	}
+})
+
+const calendarCloseable = computed(() => {
+	return props.closeable === null ? !props.pageInline : props.closeable
+})
+
+watch(scrollIntoView, (n) => {
+	// console.log('scrollIntoView', n)
+}, { immediate: true })
+
+watch(selectedChange, () => {
+	// 仅在初始化后、边界/默认值变化时重建，避免 mounted 与打开弹层重复生成月份
+	if (monthsInited.value) {
+		setMonth()
+	}
+})
+
+watch(() => props.timePrecision, () => {
+	initTimeOptions()
+	initTimeValues()
+})
+
+watch(() => props.defaultTime, () => {
+	initTimeValues()
+})
+
+// 打开弹窗时，设置月份数据
+watch(() => props.show, (n) => {
+	if (n) {
+		// 已初始化过则复用月份数据，避免每次打开都全量重建
+		if (!monthsInited.value || !months.value.length) {
+			setMonth()
+		}
+	} else {
+		// 关闭时重置scrollIntoView，否则会出现二次打开日历，当前月份数据显示不正确。
+		// scrollIntoView需要有一个值变动过程，才会产生作用。
+		scrollIntoView.value = ''
+	}
+}, { immediate: true })
+
+onMounted(() => {
+	start = Date.now()
+	init()
+})
+
+function padTime(num) {
+	return String(num).padStart(2, '0')
+}
+
+function initTimeOptions() {
+	hourOptions.value = Array.from({ length: 24 }, (_, i) => padTime(i))
+	minuteOptions.value = Array.from({ length: 60 }, (_, i) => padTime(i))
+	secondOptions.value = Array.from({ length: 60 }, (_, i) => padTime(i))
+}
+
+function parseTimeValue(value = '') {
+	const raw = String(value || '').trim()
+	const parts = raw.length ? raw.split(':') : []
+	const getNumber = (index, max) => {
+		const current = Number(parts[index] || 0)
+		if (Number.isNaN(current)) return 0
+		return Math.max(0, Math.min(max, current))
+	}
+	const hour = getNumber(0, 23)
+	const minute = getNumber(1, 59)
+	const second = getNumber(2, 59)
+	return [hour, minute, second]
+}
+
+function getDefaultTimeValue() {
+	const [hour, minute, second] = parseTimeValue(props.defaultTime)
+	if (props.timePrecision === 'hour') {
+		return padTime(hour)
+	}
+	if (props.timePrecision === 'second') {
+		return `${padTime(hour)}:${padTime(minute)}:${padTime(second)}`
+	}
+	return `${padTime(hour)}:${padTime(minute)}`
+}
+
+function initTimeValues() {
+	const value = getDefaultTimeValue()
+	singleTime.value = value
+	rangeStartTime.value = value
+	rangeEndTime.value = value
+}
+
+function timeToPickerValue(value = '') {
+	const [hour, minute, second] = parseTimeValue(value)
+	return [hour, minute, second]
+}
+
+function pickerValueToTime(value = []) {
+	const hour = Number(value[0] || 0)
+	const minute = Number(value[1] || 0)
+	const second = Number(value[2] || 0)
+	if (props.timePrecision === 'hour') {
+		return padTime(hour)
+	}
+	if (props.timePrecision === 'second') {
+		return `${padTime(hour)}:${padTime(minute)}:${padTime(second)}`
+	}
+	return `${padTime(hour)}:${padTime(minute)}`
+}
+
+function openTimePicker(target) {
+	timePickerTarget.value = target
+	let currentValue = singleTime.value
+	if (target === 'start') currentValue = rangeStartTime.value
+	if (target === 'end') currentValue = rangeEndTime.value
+	timePickerValue.value = timeToPickerValue(currentValue)
+	timePickerShow.value = true
+}
+
+function onTimePickerChange(e) {
+	timePickerValue.value = e.detail.value
+}
+
+function closeTimePicker() {
+	timePickerShow.value = false
+}
+
+function confirmTimePicker() {
+	const value = pickerValueToTime(timePickerValue.value)
+	if (timePickerTarget.value === 'single') singleTime.value = value
+	if (timePickerTarget.value === 'start') rangeStartTime.value = value
+	if (timePickerTarget.value === 'end') rangeEndTime.value = value
+	timePickerShow.value = false
+}
+
+function timeToSecond(timeText = '') {
+	const [hour, minute, second] = parseTimeValue(timeText)
+	return hour * 3600 + minute * 60 + second
+}
+
+function validateSameDayRangeTime() {
+	if (!props.enableTime || props.mode !== 'range' || props.rangeResultMode !== 'boundary') {
+		return true
+	}
+	if (selected.value.length < 2) return true
+	const startDate = selected.value[0]
+	const endDate = selected.value[selected.value.length - 1]
+	if (startDate !== endDate) return true
+	const startSeconds = timeToSecond(rangeStartTime.value)
+	const endSeconds = timeToSecond(rangeEndTime.value)
+	if (endSeconds < startSeconds) {
+		uni.showToast({
+			title: '结束时间不能早于开始时间',
+			icon: 'none'
+		})
+		return false
+	}
+	return true
+}
+
+function appendTime(dateText, timeText) {
+	return `${dateText} ${timeText}`
+}
+
+function getConfirmValue(selectedArg = selected.value) {
+	let result = selectedArg
+	if (
+		props.mode === 'range' &&
+		props.rangeResultMode === 'boundary' &&
+		selectedArg.length >= 2
+	) {
+		const len = selectedArg.length - 1
+		result = [selectedArg[0], selectedArg[len]]
+	}
+	if (!showTimePanel.value || !props.enableTime) {
+		return result
+	}
+	if (props.mode === 'single' && result.length >= 1) {
+		return [appendTime(result[0], singleTime.value)]
+	}
+	if (props.mode === 'range' && props.rangeResultMode === 'boundary' && result.length >= 2) {
+		return [
+			appendTime(result[0], rangeStartTime.value),
+			appendTime(result[1], rangeEndTime.value)
+		]
+	}
+	return result
+}
+
+// 在微信小程序中，不支持将函数当做props参数，故只能通过ref形式调用
+function setFormatter(e) {
+	innerFormatter.value = e
+}
+
+// month组件内部选择日期后，通过事件通知给父组件
+function monthSelected(e, scene = 'init') {
+	selected.value = e
+	if (!props.showConfirm) {
+		// 在不需要确认按钮的情况下，如果为单选，或者范围多选且已选长度大于2，则直接进行返还
+		if (
+			props.mode === 'multiple' ||
+			props.mode === 'single' ||
+			(props.mode === 'range' && selected.value.length >= 2)
+		) {
+			if (scene === 'init') {
 				return
 			}
-			let selected = dayjs().format("YYYY-MM");
-			// 单选模式，可以是字符串或数组，Date对象等
-			if (!test.array(this.defaultDate)) {
-				selected = dayjs(this.defaultDate).format("YYYY-MM")
-			} else {
-				selected = dayjs(this.defaultDate[0]).format("YYYY-MM");
+			if (scene === 'tap') {
+				if (!validateSameDayRangeTime()) return
+				emit('confirm', getConfirmValue())
 			}
-			this.scrollIntoDefaultMonth(selected)
 		}
 	}
 }
+
+function init() {
+	// 校验maxDate，不能小于minDate。
+	if (
+		innerMaxDate.value &&
+		innerMinDate.value &&
+		new Date(innerMaxDate.value).getTime() < new Date(innerMinDate.value).getTime()
+	) {
+		return error('maxDate不能小于minDate时间')
+	}
+	// 滚动区域的高度
+	let bottomPadding = 0
+	if (!props.pageInline) {
+		bottomPadding = 30
+	}
+	listHeight.value = props.rowHeight * (props.monthSwitch ? 6 : 5) + bottomPadding
+	initTimeOptions()
+	initTimeValues()
+	setMonth()
+}
+
+function close() {
+	emit('close')
+}
+
+// 点击确定按钮
+function confirm() {
+	if (!buttonDisabled.value) {
+		if (!validateSameDayRangeTime()) return
+		emit('confirm', getConfirmValue())
+	}
+}
+
+// 获得两个日期之间的月份数
+function getMonths(minDate, maxDate) {
+	const minYear = dayjs(minDate).year()
+	const minMonth = dayjs(minDate).month() + 1
+	const maxYear = dayjs(maxDate).year()
+	const maxMonth = dayjs(maxDate).month() + 1
+	return (maxYear - minYear) * 12 + (maxMonth - minMonth) + 1
+}
+
+// 设置月份数据
+function setMonth() {
+	// 最小日期的毫秒数
+	const minDate = innerMinDate.value || dayjs().valueOf()
+	// 如果没有指定最大日期，则往后推3个月
+	const maxDate =
+		innerMaxDate.value ||
+		dayjs(minDate)
+			.add(props.monthNum - 1, 'month')
+			.valueOf()
+	// 最大最小月份之间的共有多少个月份，
+	const monthsCount = range(
+		1,
+		props.monthNum,
+		getMonths(minDate, maxDate)
+	)
+	const minDateStr = dayjs(minDate).format('YYYY-MM-DD')
+	const maxDateStr = dayjs(maxDate).format('YYYY-MM-DD')
+	const formatter = props.formatter || innerFormatter.value
+	// 先清空数组
+	const monthsData = []
+	for (let i = 0; i < monthsCount; i++) {
+		// 缓存当月 dayjs，避免每个日期重复 create/add
+		const monthBase = dayjs(minDate).add(i, 'month')
+		const daysInMonth = monthBase.daysInMonth()
+		const monthValue = monthBase.month() + 1
+		const yearValue = monthBase.year()
+		const dateList = []
+		for (let day = 1; day <= daysInMonth; day++) {
+			const dayBase = monthBase.date(day)
+			const date = dayBase.format('YYYY-MM-DD')
+			const week = dayBase.day()
+			let bottomInfo = ''
+			if (props.showLunar) {
+				// 将日期转为农历格式
+				const lunar = Calendar.solar2lunar(
+					dayBase.year(),
+					dayBase.month() + 1,
+					dayBase.date()
+				)
+				bottomInfo = lunar.IDayCn
+			}
+			const config = {
+				day,
+				week,
+				// 小于最小允许的日期，或者大于最大的日期，则设置为disabled状态
+				disabled: date < minDateStr || date > maxDateStr,
+				// 返回一个日期对象，供外部的formatter获取当前日期的年月日等信息，进行加工处理
+				date: new Date(date),
+				bottomInfo,
+				dot: false,
+				month: monthValue
+			}
+			dateList.push(formatter(config))
+		}
+		monthsData.push({
+			date: dateList,
+			// 当前所属的月份
+			month: monthValue,
+			// 当前年份
+			year: yearValue
+		})
+	}
+	months.value = monthsData
+	monthsInited.value = true
+	if (props.monthSwitch) {
+		monthIndex.value = getDefaultMonthIndex()
+	}
+}
+
+function getDefaultMonthIndex() {
+	let selectedMonth = dayjs().format('YYYY-MM')
+	if (props.defaultDate) {
+		if (!test.array(props.defaultDate)) {
+			selectedMonth = dayjs(props.defaultDate).format('YYYY-MM')
+		} else if (props.defaultDate.length) {
+			selectedMonth = dayjs(props.defaultDate[0]).format('YYYY-MM')
+		}
+	}
+	const index = months.value.findIndex(({ year, month }) => {
+		return `${year}-${padZero(month)}` === selectedMonth
+	})
+	return index === -1 ? 0 : index
+}
+
+function prevMonth() {
+	if (!switchPrevDisabled.value) {
+		monthIndex.value -= 1
+	}
+}
+
+function nextMonth() {
+	if (!switchNextDisabled.value) {
+		monthIndex.value += 1
+	}
+}
+
+function prevYear() {
+	if (!switchPrevYearDisabled.value) {
+		monthIndex.value -= 12
+	}
+}
+
+function nextYear() {
+	if (!switchNextYearDisabled.value) {
+		monthIndex.value += 12
+	}
+}
+
+function jumpToToday() {
+	if (todayDisabled.value) {
+		return
+	}
+	const targetMonth = dayjs(todayDate.value).format('YYYY-MM')
+	const selectToday = () => {
+		if (props.mode === 'range') {
+			return
+		}
+		monthRef.value && monthRef.value.selectDate(todayDate.value)
+	}
+	if (props.monthSwitch) {
+		const todayMonthIndex = months.value.findIndex(({ year, month }) => {
+			return `${year}-${padZero(month)}` === targetMonth
+		})
+		if (todayMonthIndex !== -1) {
+			monthIndex.value = todayMonthIndex
+			nextTick(selectToday)
+		}
+		return
+	}
+	scrollIntoDefaultMonth(targetMonth)
+	nextTick(selectToday)
+}
+
+// 滚动到默认设置的月份
+function scrollIntoDefaultMonth(selectedMonth) {
+	// 查询默认日期在可选列表的下标
+	const _index = months.value.findIndex(({
+		year,
+		month
+	}) => {
+		const monthStr = padZero(month)
+		return `${year}-${monthStr}` === selectedMonth
+	})
+	if (_index !== -1) {
+		// #ifndef MP-WEIXIN
+		nextTick(() => {
+			scrollIntoView.value = ''
+			scrollIntoView.value = `month-${_index}`
+			scrollIntoViewScroll.value = scrollIntoView.value
+		})
+		// #endif
+		// #ifdef MP-WEIXIN
+		scrollTop.value = months.value[_index].top || 0
+		// #endif
+	}
+}
+
+// scroll-view滚动监听
+function onScroll(event) {
+	// 不允许小于0的滚动值，如果scroll-view到顶了，继续下拉，会出现负数值
+	const nextScrollTop = Math.max(0, event.detail.scrollTop)
+	// 将当前滚动条数值，除以滚动区域的高度，可以得出当前滚动到了哪一个月份的索引
+	for (let i = 0; i < months.value.length; i++) {
+		if (nextScrollTop >= (months.value[i].top || listHeight.value)) {
+			monthIndex.value = i
+			scrollIntoViewScroll.value = `month-${i}`
+		}
+	}
+}
+
+// 更新月份的top值
+function onUpdateMonthTop(topArr = []) {
+	if (props.monthSwitch) {
+		return
+	}
+	updateMonthTop(topArr)
+}
+
+function updateMonthTop(topArr = []) {
+	// 设置对应月份的top值，用于onScroll方法更新月份
+	topArr.map((item, index) => {
+		months.value[index].top = item
+	})
+
+	// 获取默认日期的下标
+	if (!props.defaultDate) {
+		// 如果没有设置默认日期，则将当天日期设置为默认选中的日期
+		const selectedMonth = dayjs().format("YYYY-MM")
+		scrollIntoDefaultMonth(selectedMonth)
+		return
+	}
+	let selectedMonth = dayjs().format("YYYY-MM")
+	// 单选模式，可以是字符串或数组，Date对象等
+	if (!test.array(props.defaultDate)) {
+		selectedMonth = dayjs(props.defaultDate).format("YYYY-MM")
+	} else {
+		selectedMonth = dayjs(props.defaultDate[0]).format("YYYY-MM")
+	}
+	scrollIntoDefaultMonth(selectedMonth)
+}
+
+defineExpose({
+	setFormatter,
+	init,
+	confirm,
+	close
+})
 </script>
+
 
 <style lang="scss" scoped>
 @import '../../libs/css/components.scss';

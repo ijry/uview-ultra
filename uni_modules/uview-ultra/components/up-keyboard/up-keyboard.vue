@@ -67,10 +67,9 @@
 	</up-popup>
 </template>
 
-<script>
-	import { props } from './props.js';
-	import { mpMixin } from '../../libs/mixin/mpMixin.js';
-	import { mixin } from '../../libs/mixin/mixin.js';
+<script setup>
+	import { props as keyboardProps } from './props.js'
+	import { commonProps } from '../../libs/composable/useUltraUI.js'
 
 	/**
 	 * keyboard 键盘
@@ -98,37 +97,52 @@
 	 * @event {Function} backspace 键盘退格键被点击
 	 * @example <up-keyboard mode="number" v-model="show"></up-keyboard>
 	 */
-	export default {
+	defineOptions({
 		name: "up-keyboard",
-		data() {
-			return {
-
-			}
-		},
-		mixins: [mpMixin, mixin, props],
-		emits: ["change", "close", "confirm", "cancel", "backspace"],
-		methods: {
-			change(e) {
-				this.$emit('change', e);
-			},
-			// 键盘关闭
-			popupClose() {
-				this.$emit('close');
-			},
-			// 输入完成
-			onConfirm() {
-				this.$emit('confirm');
-			},
-			// 取消输入
-			onCancel() {
-				this.$emit('cancel');
-			},
-			// 退格键
-			backspace() {
-				this.$emit('backspace');
-			}
+		// #ifdef MP-WEIXIN
+		options: {
+			virtualHost: true
 		}
+		// #endif
+	})
+
+	defineProps({
+		...commonProps,
+		...keyboardProps.props
+	})
+	const emit = defineEmits(["change", "close", "confirm", "cancel", "backspace"])
+
+	function change(e) {
+		emit('change', e)
 	}
+
+	// 键盘关闭
+	function popupClose() {
+		emit('close')
+	}
+
+	// 输入完成
+	function onConfirm() {
+		emit('confirm')
+	}
+
+	// 取消输入
+	function onCancel() {
+		emit('cancel')
+	}
+
+	// 退格键
+	function backspace() {
+		emit('backspace')
+	}
+
+	defineExpose({
+		change,
+		popupClose,
+		onConfirm,
+		onCancel,
+		backspace
+	})
 </script>
 
 <style lang="scss" scoped>

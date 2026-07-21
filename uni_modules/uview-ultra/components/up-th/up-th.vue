@@ -4,11 +4,11 @@
 	</view>
 </template>
 
-<script>
-	import { props } from './props';
-	import { mpMixin } from '../../libs/mixin/mpMixin';
-	import { mixin } from '../../libs/mixin/mixin';
-	import { addUnit, $parent } from '../../libs/function/index';
+<script setup>
+	import { getCurrentInstance, onMounted, ref } from 'vue'
+	import { props as thProps } from './props'
+	import { commonProps } from '../../libs/composable/useUltraUI.js'
+	import { $parent } from '../../libs/function/index.js'
 	/** 
 	 * Td 表格中的单元格
 	 * @description 
@@ -17,39 +17,42 @@
 	 * @event {Function}
 	 * @example
 	 */
-	export default {
+	defineOptions({
 		name: 'up-th',
-		mixins: [mpMixin, mixin, props],
-		props: {
-			// 宽度，百分比或者具体带单位的值，如30%， 200rpx等，一般使用百分比
-			width: {
-				type: [String],
-				default: ''
-			}
-		},
-		data() {
-			return {
-				thStyle: {}
-			}
-		},
-		created() {
-			this.parent = false;
-		},
-		mounted() {
-			this.parent = $parent.call(this, 'up-table');
-			if (this.parent) {
-				// 将父组件的相关参数，合并到本组件
-				let style = {};
-				if (this.width) style.flex = `0 0 ${this.width}`;
-				style.textAlign = this.parent.align;
-				style.padding = this.parent.padding;
-				style.borderBottom = `solid 1px ${this.parent.borderColor}`;
-				style.borderRight = `solid 1px ${this.parent.borderColor}`;
-				Object.assign(style, this.parent.thStyle);
-				this.thStyle = style;
-			}
+		// #ifdef MP-WEIXIN
+		options: {
+			virtualHost: true
 		}
-	}
+		// #endif
+	})
+
+	const props = defineProps({
+		...commonProps,
+		...thProps.props,
+		// 宽度，百分比或者具体带单位的值，如30%， 200rpx等，一般使用百分比
+		width: {
+			type: [String],
+			default: ''
+		}
+	})
+	const instance = getCurrentInstance()
+	const thStyle = ref({})
+
+	onMounted(() => {
+		const parent = $parent.call(instance.proxy, 'up-table')
+		if (!parent) return
+		const parentProps = typeof parent.getProps === 'function' ? parent.getProps() : parent
+
+		// 将父组件的相关参数，合并到本组件
+		const style = {}
+		if (props.width) style.flex = `0 0 ${props.width}`
+		style.textAlign = parentProps.align
+		style.padding = parentProps.padding
+		style.borderBottom = `solid 1px ${parentProps.borderColor}`
+		style.borderRight = `solid 1px ${parentProps.borderColor}`
+		Object.assign(style, parentProps.thStyle)
+		thStyle.value = style
+	})
 </script>
 
 <style lang="scss" scoped>

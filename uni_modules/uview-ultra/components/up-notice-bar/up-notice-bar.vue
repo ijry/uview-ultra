@@ -38,11 +38,11 @@
 		</template>
 	</view>
 </template>
-<script>
-	import { props } from './props.js';
-	import { mpMixin } from '../../libs/mixin/mpMixin.js';
-	import { mixin } from '../../libs/mixin/mixin.js';
-	import { addStyle } from '../../libs/function/index.js';
+<script setup>
+	import { ref } from 'vue'
+	import { props as noticeBarProps } from './props.js'
+	import { commonProps, useUltraUI } from '../../libs/composable/useUltraUI.js'
+	import { addStyle } from '../../libs/function/index.js'
 	/**
 	 * noticeBar 滚动通知
 	 * @description 该组件用于滚动通告场景，有多种模式可供选择
@@ -66,32 +66,36 @@
 	 * @event {Function}			close			点击右侧关闭图标触发
 	 * @example <up-notice-bar :more-icon="true" :list="list"></up-notice-bar>
 	 */
-	export default {
-		name: "up-notice-bar",
-		mixins: [mpMixin, mixin,props],
-		data() {
-			return {
-				show: true
-			}
-		},
-		emits: ["click", "close"],
-		methods: {
-			addStyle,
-			// 点击通告栏
-			click(index) {
-				this.$emit('click', index)
-				if (this.url && this.linkType) {
-					// 此方法写在mixin中，另外跳转的url和linkType参数也在mixin的props中
-					this.openPage()
-				}
-			},
-			// 点击关闭按钮
-			close() {
-				this.show = false
-				this.$emit('close')
-			}
+	defineOptions({
+		name: 'up-notice-bar',
+		// #ifdef MP-WEIXIN
+		options: {
+			virtualHost: true
 		}
-	};
+		// #endif
+	})
+
+	const props = defineProps({
+		...commonProps,
+		...noticeBarProps.props
+	})
+	const emit = defineEmits(['click', 'close'])
+	const show = ref(true)
+	const { openPage } = useUltraUI(props)
+
+	// 点击通告栏
+	function click(index) {
+		emit('click', index)
+		if (props.url && props.linkType) {
+			openPage()
+		}
+	}
+
+	// 点击关闭按钮
+	function close() {
+		show.value = false
+		emit('close')
+	}
 </script>
 
 <style lang="scss" scoped>

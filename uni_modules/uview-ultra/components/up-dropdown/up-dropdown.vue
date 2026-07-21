@@ -33,11 +33,11 @@
 	</view>
 </template>
 
-<script>
-    import { props } from './props';
-    import { mpMixin } from '../../libs/mixin/mpMixin';
-	import { mixin } from '../../libs/mixin/mixin';
-	import { addUnit, getWindowInfo} from '../../libs/function/index';
+<script setup>
+	import { computed, onMounted, ref, toRefs } from 'vue'
+	import { props as dropdownProps } from './props'
+	import { commonProps, useUltraUI } from '../../libs/composable/useUltraUI.js'
+	import { addUnit, getWindowInfo } from '../../libs/function/index'
 	/**
 	 * dropdown 下拉菜单
 	 * @description 该组件一般用于向下展开菜单，同时可切换多个选项卡的场景
@@ -55,135 +55,173 @@
 	 * @event {Function} close 下拉菜单被关闭时触发
 	 * @example <up-dropdown></up-dropdown>
 	 */
-	export default {
+	defineOptions({
 		name: 'up-dropdown',
-        mixins: [mpMixin, mixin, props],
-		data() {
-			return {
-				showDropdown: true, // 是否打开下来菜单,
-				menuList: [], // 显示的菜单
-				active: false, // 下拉菜单的状态
-				// 当前是第几个菜单处于激活状态，小程序中此处不能写成false或者""，否则后续将current赋值为0，
-				// 无能的TX没有使用===而是使用==判断，导致程序认为前后二者没有变化，从而不会触发视图更新
-				current: 99999,
-				// 外层内容的样式，初始时处于底层，且透明
-				contentStyle: {
-					zIndex: -1,
-					opacity: 0
-				},
-				// 让某些菜单保持高亮的状态
-				highlightIndexList: [],
-				contentHeight: 0
-			}
-		},
-		computed: {
-			// 下拉出来部分的样式
-			popupStyle() {
-				let style = {};
-				// 进行Y轴位移，展开状态时，恢复原位。收齐状态时，往上位移100%，进行隐藏
-				style['transform'] = `translateY(${this.active ? 0 : '-100%'})`
-				style['transition-duration'] = this.duration / 1000 + 's';
-				style['borderRadius'] = `0 0 ${addUnit(this.borderRadius)} ${addUnit(this.borderRadius)}`;
-				return style;
-			}
-		},
-		created() {
-			// 引用所有子组件(up-dropdown-item)的this，不能在data中声明变量，否则在微信小程序会造成循环引用而报错
-			this.children = [];
-		},
-		mounted() {
-			this.getContentHeight();
-		},
-        emits: ['open', 'close'],
-		methods: {
-			addUnit,
-			init() {
-				// 当某个子组件内容变化时，触发父组件的init，父组件再让每一个子组件重新初始化一遍
-				// 以保证数据的正确性
-				this.menuList = [];
-				this.children.map(child => {
-					child.init();
-				})
-			},
-			// 点击菜单
-			menuClick(index) {
-				// 判断是否被禁用
-				if (this.menuList[index].disabled) return;
-				// 如果点击时的索引和当前激活项索引相同，意味着点击了激活项，需要收起下拉菜单
-				if (index === this.current && this.closeOnClickSelf) {
-					this.close();
-					// 等动画结束后，再移除下拉菜单中的内容，否则直接移除，也就没有下拉菜单收起的效果了
-					setTimeout(() => {
-						this.children[index].active = false;
-					}, this.duration)
-					return;
-				}
-				this.open(index);
-			},
-			// 打开下拉菜单
-			open(index) {
-				// 嵌套popup使用时可能获取不到正确的高度，重新计算
-				if (this.contentHeight < 1) this.getContentHeight()
-				// 重置高亮索引，否则会造成多个菜单同时高亮
-				// this.highlightIndex = 9999;
-				// 展开时，设置下拉内容的样式
-				this.contentStyle = {
-					zIndex: 11,
-					height: this.contentHeight + 'px'
-				}
-				// 标记展开状态以及当前展开项的索引
-				this.active = true;
-				this.current = index;
-				// 历遍所有的子元素，将索引匹配的项标记为激活状态，因为子元素是通过v-if控制切换的
-				// 之所以不是因display: none，是因为nvue没有display这个属性
-				this.children.map((val, idx) => {
-					val['active'] = index == idx ? true : false;
-				})
-				this.$emit('open', this.current);
-			},
-			// 设置下拉菜单处于收起状态
-			close() {
-				this.$emit('close', this.current);
-				// 设置为收起状态，同时current归位，设置为空字符串
-				this.active = false;
-				this.current = 99999;
-				// 下拉内容的样式进行调整，不透明度设置为0
-				this.contentStyle.zIndex = -1;
-				this.contentStyle.opacity = 0;
-				setTimeout(() => {
-					this.contentStyle.height = 0;
-				}, this.duration)
-			},
-			// 点击遮罩
-			maskClick() {
-				// 如果不允许点击遮罩，直接返回
-				if (!this.closeOnClickMask) return;
-				this.close();
-			},
-			// 外部手动设置某些菜单高亮
-			highlight(indexParams = undefined) {
-                if (Array.isArray(indexParams)) {
-                    this.highlightIndexList = [...indexParams];
-                    return;
-                }
-				this.highlightIndexList = indexParams !== undefined ? [indexParams] : [];
-			},
-			// 获取下拉菜单内容的高度
-			getContentHeight() {
-				// 这里的原理为，因为dropdown组件是相对定位的，它的下拉出来的内容，必须给定一个高度
-				// 才能让遮罩占满菜单一下，直到屏幕底部的高度
-				// getWindowInfo()为uview-plus封装的获取设备信息的方法
-				let windowHeight = getWindowInfo().windowHeight;
-				this.$uGetRect('.up-dropdown__menu').then(res => {
-					// 这里获取的是dropdown的尺寸，在H5上，uniapp获取尺寸是有bug的(以前提出修复过，后来又出现了此bug，目前hx2.8.11版本)
-					// H5端bug表现为元素尺寸的top值为导航栏底部到到元素的上边沿的距离，但是元素的bottom值确是导航栏顶部到元素底部的距离
-					// 二者是互相矛盾的，本质原因是H5端导航栏非原生，uni的开发者大意造成
-					// 这里取菜单栏的botton值合理的，不能用res.top，否则页面会造成滚动
-					this.contentHeight = windowHeight - res.bottom;
-				})
-			}
+		// #ifdef MP-WEIXIN
+		options: {
+			virtualHost: true
+		}
+		// #endif
+	})
+
+	const props = defineProps({
+		...commonProps,
+		...dropdownProps.props
+	})
+	const emit = defineEmits(['open', 'close'])
+	const { children, $uGetRect } = useUltraUI(props)
+	const {
+		activeColor,
+		inactiveColor,
+		closeOnClickMask,
+		closeOnClickSelf,
+		duration,
+		height,
+		borderBottom,
+		titleSize,
+		borderRadius,
+		menuIcon,
+		menuIconSize
+	} = toRefs(props)
+	const showDropdown = ref(true) // 是否打开下来菜单
+	const menuList = ref([]) // 显示的菜单
+	const active = ref(false) // 下拉菜单的状态
+	// 当前是第几个菜单处于激活状态，小程序中此处不能写成false或者""，否则后续将current赋值为0
+	const current = ref(99999)
+	// 外层内容的样式，初始时处于底层，且透明
+	const contentStyle = ref({
+		zIndex: -1,
+		opacity: 0
+	})
+	// 让某些菜单保持高亮的状态
+	const highlightIndexList = ref([])
+	const contentHeight = ref(0)
+
+	// 下拉出来部分的样式
+	const popupStyle = computed(() => {
+		const style = {}
+		// 进行Y轴位移，展开状态时，恢复原位。收齐状态时，往上位移100%，进行隐藏
+		style.transform = `translateY(${active.value ? 0 : '-100%'})`
+		style['transition-duration'] = props.duration / 1000 + 's'
+		style.borderRadius = `0 0 ${addUnit(props.borderRadius)} ${addUnit(props.borderRadius)}`
+		return style
+	})
+
+	function getProps() {
+		return {
+			activeColor: props.activeColor,
+			inactiveColor: props.inactiveColor
 		}
 	}
+
+	function init() {
+		// 当某个子组件内容变化时，触发父组件的init，父组件再让每一个子组件重新初始化一遍
+		// 以保证数据的正确性
+		menuList.value = []
+		children.value.map(child => {
+			child.init()
+		})
+	}
+
+	// 点击菜单
+	function menuClick(index) {
+		// 判断是否被禁用
+		if (menuList.value[index].disabled) return
+		// 如果点击时的索引和当前激活项索引相同，意味着点击了激活项，需要收起下拉菜单
+		if (index === current.value && props.closeOnClickSelf) {
+			close()
+			// 等动画结束后，再移除下拉菜单中的内容，否则直接移除，也就没有下拉菜单收起的效果了
+			setTimeout(() => {
+				children.value[index].active = false
+			}, props.duration)
+			return
+		}
+		open(index)
+	}
+
+	// 打开下拉菜单
+	function open(index) {
+		// 嵌套popup使用时可能获取不到正确的高度，重新计算
+		if (contentHeight.value < 1) getContentHeight()
+		// 展开时，设置下拉内容的样式
+		contentStyle.value = {
+			zIndex: 11,
+			height: contentHeight.value + 'px'
+		}
+		// 标记展开状态以及当前展开项的索引
+		active.value = true
+		current.value = index
+		// 历遍所有的子元素，将索引匹配的项标记为激活状态，因为子元素是通过v-if控制切换的
+		children.value.map((val, idx) => {
+			val.active = index == idx ? true : false
+		})
+		emit('open', current.value)
+	}
+
+	// 设置下拉菜单处于收起状态
+	function close() {
+		emit('close', current.value)
+		// 设置为收起状态，同时current归位，设置为空字符串
+		active.value = false
+		current.value = 99999
+		// 下拉内容的样式进行调整，不透明度设置为0
+		contentStyle.value.zIndex = -1
+		contentStyle.value.opacity = 0
+		setTimeout(() => {
+			contentStyle.value.height = 0
+		}, props.duration)
+	}
+
+	// 点击遮罩
+	function maskClick() {
+		// 如果不允许点击遮罩，直接返回
+		if (!props.closeOnClickMask) return
+		close()
+	}
+
+	// 外部手动设置某些菜单高亮
+	function highlight(indexParams = undefined) {
+		if (Array.isArray(indexParams)) {
+			highlightIndexList.value = [...indexParams]
+			return
+		}
+		highlightIndexList.value = indexParams !== undefined ? [indexParams] : []
+	}
+
+	// 获取下拉菜单内容的高度
+	function getContentHeight() {
+		// 这里的原理为，因为dropdown组件是相对定位的，它的下拉出来的内容，必须给定一个高度
+		// 才能让遮罩占满菜单一下，直到屏幕底部的高度
+		const windowHeight = getWindowInfo().windowHeight
+		$uGetRect('.up-dropdown__menu').then(res => {
+			// 这里取菜单栏的botton值合理的，不能用res.top，否则页面会造成滚动
+			contentHeight.value = windowHeight - res.bottom
+		})
+	}
+
+	onMounted(() => {
+		getContentHeight()
+	})
+
+	defineExpose({
+		children,
+		activeColor,
+		inactiveColor,
+		menuList,
+		active,
+		current,
+		contentStyle,
+		highlightIndexList,
+		contentHeight,
+		init,
+		menuClick,
+		open,
+		close,
+		maskClick,
+		highlight,
+		getContentHeight,
+		getProps
+	})
 </script>
 
 <style scoped lang="scss">

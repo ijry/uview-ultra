@@ -26,89 +26,75 @@
 	</view>
 </template>
 
-<script>
-	import { props } from './props.js';
-	import { mpMixin } from '../../libs/mixin/mpMixin.js';
-	import { mixin } from '../../libs/mixin/mixin.js';
-	import {sleep } from '../../libs/function/index.js';
+<script setup>
+	import { computed, getCurrentInstance, onMounted, ref } from 'vue'
+	import { props as circleProgressProps } from './props.js'
+	import { commonProps } from '../../libs/composable/useUltraUI.js'
+	import { sleep } from '../../libs/function/index.js'
 	// #ifdef APP-NVUE
 	const animation = uni.requireNativePlugin('animation')
 	// #endif
 	/**
-	 * CircleProgress 圆形进度条 TODO: 待完善 
+	 * CircleProgress 圆形进度条 TODO: 待完善
 	 * @description 展示操作或任务的当前进度，比如上传文件，是一个圆形的进度环。
 	 * @tutorial https://ijry.github.io/uview-plus/components/circleProgress.html
 	 * @property {String | Number}	percentage	圆环进度百分比值，为数值类型，0-100 (默认 30 )
 	 * @example
 	 */
-	export default {
+	defineOptions({
 		name: 'up-circle-progress',
-		mixins: [mpMixin, mixin, props],
-		data() {
-			return {
-				leftBorderColor: 'rgb(200, 200, 200)',
-				rightBorderColor: 'rgb(200, 200, 200)',
-			}
-		},
-		computed: {
-			leftSyle() {
-				const style = {}
-				style.borderTopColor = this.leftBorderColor
-				style.borderRightColor = this.leftBorderColor
-				return style
+		// #ifdef MP-WEIXIN
+		options: {
+			virtualHost: true
+		}
+		// #endif
+	})
+
+	defineProps({
+		...commonProps,
+		...circleProgressProps.props
+	})
+	const instance = getCurrentInstance()
+	const leftBorderColor = ref('rgb(200, 200, 200)')
+	const rightBorderColor = ref('rgb(200, 200, 200)')
+
+	const leftSyle = computed(() => {
+		const style = {}
+		style.borderTopColor = leftBorderColor.value
+		style.borderRightColor = leftBorderColor.value
+		return style
+	})
+
+	const rightSyle = computed(() => {
+		const style = {}
+		style.borderLeftColor = rightBorderColor.value
+		style.borderBottomColor = rightBorderColor.value
+		return style
+	})
+
+	function init() {
+		// #ifdef APP-NVUE
+		animation.transition(instance.proxy.$refs['right-circle'].ref, {
+			styles: {
+				transform: 'rotate(45deg)',
+				transformOrigin: 'center center'
 			},
-			rightSyle() {
-				const style = {}
-				style.borderLeftColor = this.rightBorderColor
-				style.borderBottomColor = this.rightBorderColor
-				return style
-			}
-		},
-		mounted() {
-			sleep().then(() => {
-				this.rightBorderColor = 'rgb(66, 185, 131)'
-				// this.init()
-			})
-		},
-		methods: {
-			init() {
-				animation.transition(this.$refs['right-circle'].ref, {
-					styles: {
-						transform: 'rotate(45deg)',
-						transformOrigin: 'center center'
-					},
-				}, () => {
-					this.rightBorderColor = 'rgb(66, 185, 131)'
-					// animation.transition(this.$refs['right-circle'].ref, {
-					// 	styles: {
-					// 		transform: 'rotate(225deg)',
-					// 		transformOrigin: 'center center'
-					// 	},
-					// 	duration: 3000,
-					// }, () => {
-					// 	animation.transition(this.$refs['left-circle'].ref, {
-					// 		styles: {
-					// 			transform: 'rotate(45deg)',
-					// 			transformOrigin: 'center center'
-					// 		},
-					// 	}, () => {
-					// 		this.leftBorderColor = 'rgb(66, 185, 131)'
-					// 		animation.transition(this.$refs['left-circle'].ref, {
-					// 			styles: {
-					// 				transform: 'rotate(225deg)',
-					// 				transformOrigin: 'center center'
-					// 			},
-					// 			duration: 1500,
-					// 		}, () => {
-
-					// 		})
-					// 	})
-					// })
-				})
-
-			}
-		},
+		}, () => {
+			rightBorderColor.value = 'rgb(66, 185, 131)'
+		})
+		// #endif
 	}
+
+	onMounted(() => {
+		sleep().then(() => {
+			rightBorderColor.value = 'rgb(66, 185, 131)'
+			// init()
+		})
+	})
+
+	defineExpose({
+		init
+	})
 </script>
 
 <style lang="scss" scoped>

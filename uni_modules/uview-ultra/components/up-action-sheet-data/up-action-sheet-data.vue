@@ -23,74 +23,76 @@
 	</view>
 </template>
 
-<script>
-export default {
+<script setup>
+import { ref, watch } from 'vue'
+import { commonProps } from '../../libs/composable/useUltraUI.js'
+
+defineOptions({
 	name: 'up-action-sheet-data',
-	props: {
-		modelValue: {
-			type: [String, Number],
-			default: ''
-		},
-		title: {
-			type: String,
-			default: ''
-		},
-		description: {
-			type: String,
-			default: ''
-		},
-		options: {
-			type: Array,
-			default: () => []
-		},
-		valueKey: {
-			type: String,
-			default: 'value'
-		},
-		labelKey: {
-			type: String,
-			default: 'name'
-		}
-	},
-	emits: ['update:modelValue'],
-	data() {
-		return {
-			show: false,
-			current: ''
-		}
-	},
-	watch: {
-		modelValue: {
-			handler() {
-				this.syncCurrent()
-			},
-			immediate: true
-		},
-		options: {
-			handler() {
-				this.syncCurrent()
-			},
-			immediate: true
-		}
-	},
-	methods: {
-		syncCurrent() {
-			const model = this.modelValue == null ? '' : this.modelValue.toString()
-			this.current = ''
-			this.options.forEach((item) => {
-				if ((item[this.valueKey] == null ? '' : item[this.valueKey].toString()) == model) {
-					this.current = item[this.labelKey] == null ? '' : item[this.labelKey].toString()
-				}
-			})
-		},
-		select(item) {
-			this.show = false
-			this.$emit('update:modelValue', item[this.valueKey])
-			this.current = item[this.labelKey] == null ? '' : item[this.labelKey].toString()
-		}
+	// #ifdef MP-WEIXIN
+	options: {
+		virtualHost: true
 	}
+	// #endif
+})
+
+const props = defineProps({
+	...commonProps,
+	modelValue: {
+		type: [String, Number],
+		default: ''
+	},
+	title: {
+		type: String,
+		default: ''
+	},
+	description: {
+		type: String,
+		default: ''
+	},
+	options: {
+		type: Array,
+		default: () => []
+	},
+	valueKey: {
+		type: String,
+		default: 'value'
+	},
+	labelKey: {
+		type: String,
+		default: 'name'
+	}
+})
+const emit = defineEmits(['update:modelValue'])
+
+const show = ref(false)
+const current = ref('')
+
+function syncCurrent() {
+	const model = props.modelValue == null ? '' : props.modelValue.toString()
+	current.value = ''
+	props.options.forEach((item) => {
+		if ((item[props.valueKey] == null ? '' : item[props.valueKey].toString()) == model) {
+			current.value = item[props.labelKey] == null ? '' : item[props.labelKey].toString()
+		}
+	})
+}
+
+watch(() => props.modelValue, () => {
+	syncCurrent()
+}, { immediate: true })
+
+watch(() => props.options, () => {
+	syncCurrent()
+}, { immediate: true })
+
+function select(item) {
+	show.value = false
+	emit('update:modelValue', item[props.valueKey])
+	current.value = item[props.labelKey] == null ? '' : item[props.labelKey].toString()
 }
 </script>
+
 
 <style lang="scss" scoped>
 .up-action-sheet-data__trigger {

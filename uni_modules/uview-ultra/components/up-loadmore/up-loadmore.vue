@@ -51,74 +51,51 @@
 	</view>
 </template>
 
-<script>
-	import { props } from './props.js';
-	import { mpMixin } from '../../libs/mixin/mpMixin.js';
-	import { mixin } from '../../libs/mixin/mixin.js';
-	import { addUnit, addStyle } from '../../libs/function/index.js';
-	/**
-	 * loadmore 加载更多
-	 * @description 此组件一般用于标识页面底部加载数据时的状态。
-	 * @tutorial https://ijry.github.io/uview-plus/components/loadMore.html
-	 * @property {String}			status			组件状态（默认 'loadmore' ）
-	 * @property {String}			bgColor			组件背景颜色，在页面是非白色时会用到（默认 'transparent' ）
-	 * @property {Boolean}			icon			加载中时是否显示图标（默认 true ）
-	 * @property {String | Number}	fontSize		字体大小（默认 14 ）
-	 * @property {String | Number}	iconSize		图标大小（默认 17 ）
-	 * @property {String}			color			字体颜色（默认 '#606266' ）
-	 * @property {String}			loadingIcon		加载图标（默认 'circle' ）
-	 * @property {String}			loadmoreText	加载前的提示语（默认 '加载更多' ）
-	 * @property {String}			loadingText		加载中提示语（默认 '正在加载...' ）
-	 * @property {String}			nomoreText		没有更多的提示语（默认 '没有更多了' ）
-	 * @property {Boolean}			isDot			到上一个相邻元素的距离 （默认 false ）
-	 * @property {String}			iconColor		加载中图标的颜色 （默认 '#b7b7b7' ）
-	 * @property {String}			lineColor		线条颜色（默认 #E6E8EB ）
-	 * @property {String | Number}	marginTop		上边距 （默认 10 ）
-	 * @property {String | Number}	marginBottom	下边距 （默认 10 ）
-	 * @property {String | Number}	height			高度，单位px （默认 'auto' ）
-	 * @property {Boolean}			line			是否显示左边分割线  （默认 false ）
-	 * @property {Boolean}			dashed		// 是否虚线，true-虚线，false-实线  （默认 false ）
-	 * @event {Function} loadmore status为loadmore时，点击组件会发出此事件
-	 * @example <up-loadmore :status="status" icon-type="iconType" load-text="loadText" />
-	 */
-	export default {
-		name: "up-loadmore",
-		mixins: [mpMixin, mixin, props],
-		data() {
-			return {
-				// 粗点
-				dotText: "●"
-			}
-		},
-		computed: {
-			// 加载的文字显示的样式
-			loadTextStyle() {
-				return {
-					color: this.color,
-					fontSize: addUnit(this.fontSize),
-					lineHeight: addUnit(this.fontSize),
-					backgroundColor: this.bgColor,
-				}
-			},
-			// 显示的提示文字
-			showText() {
-				let text = '';
-				if (this.status == 'loadmore') text = this.loadmoreText
-				else if (this.status == 'loading') text = this.loadingText
-				else if (this.status == 'nomore' && this.isDot) text = this.dotText;
-				else text = this.nomoreText;
-				return text;
-			}
-		},
-		emits: ["loadmore"],
-		methods: {
-			addStyle,
-			addUnit,
-			loadMore() {
-				// 只有在“加载更多”的状态下才发送点击事件，内容不满一屏时无法触发底部上拉事件，所以需要点击来触发
-				if (this.status == 'loadmore') this.$emit('loadmore');
-			}
+<script setup>
+	import { computed } from 'vue'
+	import { props as loadmoreProps } from './props.js'
+	import { commonProps } from '../../libs/composable/useUltraUI.js'
+	import { addUnit, addStyle } from '../../libs/function/index.js'
+
+	defineOptions({
+		name: 'up-loadmore',
+		// #ifdef MP-WEIXIN
+		options: {
+			virtualHost: true
 		}
+		// #endif
+	})
+
+	const props = defineProps({
+		...commonProps,
+		...loadmoreProps.props
+	})
+	const emit = defineEmits(['loadmore'])
+	const dotText = '●'
+
+	// 加载的文字显示的样式
+	const loadTextStyle = computed(() => {
+		return {
+			color: props.color,
+			fontSize: addUnit(props.fontSize),
+			lineHeight: addUnit(props.fontSize),
+			backgroundColor: props.bgColor,
+		}
+	})
+
+	// 显示的提示文字
+	const showText = computed(() => {
+		let text = ''
+		if (props.status == 'loadmore') text = props.loadmoreText
+		else if (props.status == 'loading') text = props.loadingText
+		else if (props.status == 'nomore' && props.isDot) text = dotText
+		else text = props.nomoreText
+		return text
+	})
+
+	function loadMore() {
+		// 只有在“加载更多”的状态下才发送点击事件，内容不满一屏时无法触发底部上拉事件，所以需要点击来触发
+		if (props.status == 'loadmore') emit('loadmore')
 	}
 </script>
 

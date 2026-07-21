@@ -59,11 +59,11 @@
 	</up-transition>
 </template>
 
-<script>
-	import { props } from './props.js';
-	import { mpMixin } from '../../libs/mixin/mpMixin.js';
-	import { mixin } from '../../libs/mixin/mixin.js';
-	import test from '../../libs/function/test.js';
+<script setup>
+	import { computed } from 'vue'
+	import { props as tagProps } from './props.js'
+	import { commonProps } from '../../libs/composable/useUltraUI.js'
+	import test from '../../libs/function/test.js'
 	/**
 	 * Tag 标签
 	 * @description tag组件一般用于标记和选择，我们提供了更加丰富的表现形式，能够较全面的涵盖您的使用场景
@@ -87,70 +87,78 @@
 	 * @event {Function(index)} close closable为true时，点击标签关闭按钮触发 index: 传递的index参数值	
 	 * @example <up-tag text="标签" type="error" plain plainFill></up-tag>
 	 */
-	export default {
+	defineOptions({
 		name: 'up-tag',
-		mixins: [mpMixin, mixin, props],
-		data() {
-			return {
-
-			}
-		},
-		computed: {
-			style() {
-				const style = {}
-				if (this.bgColor) {
-					style.backgroundColor = this.bgColor
-				}
-				if (this.color) {
-					style.color = this.color
-				}
-				if(this.borderColor) {
-					style.borderColor = this.borderColor
-				}
-				return style
-			},
-			// nvue下，文本颜色无法继承父元素
-			textColor() {
-				const style = {}
-				if (this.color) {
-					style.color = this.color
-				}
-				return style
-			},
-			imgStyle() {
-				const width = this.size === 'large' ? '17px' : this.size === 'medium' ? '15px' : '13px'
-				return {
-					width,
-					height: width
-				}
-			},
-			// 文本的样式
-			closeSize() {
-				const size = this.size === 'large' ? 15 : this.size === 'medium' ? 13 : 12
-				return size
-			},
-			// 图标大小
-			iconSize() {
-				const size = this.size === 'large' ? 21 : this.size === 'medium' ? 19 : 16
-				return size
-			},
-			// 图标颜色
-			elIconColor() {
-				return this.iconColor ? this.iconColor : this.plain ? this.type : '#ffffff'
-			}
-		},
-		emits: ["click", "close"],
-		methods: {
-			testImage: test.image,
-			// 点击关闭按钮
-			closeHandler() {
-				this.$emit('close', this.name)
-			},
-			// 点击标签
-			clickHandler() {
-				this.$emit('click', this.name)
-			}
+		// #ifdef MP-WEIXIN
+		options: {
+			virtualHost: true
 		}
+		// #endif
+	})
+
+	const props = defineProps({
+		...commonProps,
+		...tagProps.props
+	})
+	const emit = defineEmits(['click', 'close'])
+	const testImage = test.image
+
+	const style = computed(() => {
+		const style = {}
+		if (props.bgColor) {
+			style.backgroundColor = props.bgColor
+		}
+		if (props.color) {
+			style.color = props.color
+		}
+		if (props.borderColor) {
+			style.borderColor = props.borderColor
+		}
+		return style
+	})
+
+	// nvue下，文本颜色无法继承父元素
+	const textColor = computed(() => {
+		const style = {}
+		if (props.color) {
+			style.color = props.color
+		}
+		return style
+	})
+
+	const imgStyle = computed(() => {
+		const width = props.size === 'large' ? '17px' : props.size === 'medium' ? '15px' : '13px'
+		return {
+			width,
+			height: width
+		}
+	})
+
+	// 文本的样式
+	const closeSize = computed(() => {
+		const size = props.size === 'large' ? 15 : props.size === 'medium' ? 13 : 12
+		return size
+	})
+
+	// 图标大小
+	const iconSize = computed(() => {
+		const size = props.size === 'large' ? 21 : props.size === 'medium' ? 19 : 16
+		return size
+	})
+
+	// 图标颜色
+	const elIconColor = computed(() => {
+		return props.iconColor ? props.iconColor : props.plain ? props.type : '#ffffff'
+	})
+
+	// 点击关闭按钮
+	function closeHandler() {
+		emit('close', props.name)
+	}
+
+	// 点击标签
+	function clickHandler() {
+		emit('click', props.name)
 	}
 </script>
 

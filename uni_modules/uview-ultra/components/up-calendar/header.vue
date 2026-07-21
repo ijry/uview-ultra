@@ -52,105 +52,113 @@
 	</view>
 </template>
 
-<script>
-	import { mpMixin } from '../../libs/mixin/mpMixin.js';
-	import { mixin } from '../../libs/mixin/mixin.js';
-	export default {
-		name: 'up-calendar-header',
-		mixins: [mpMixin, mixin],
-		props: {
-			// 标题
-			title: {
-				type: String,
-				default: ''
-			},
-			// 副标题
-			subtitle: {
-				type: String,
-				default: ''
-			},
-			// 是否显示标题
-			showTitle: {
-				type: Boolean,
-				default: true
-			},
-			// 是否显示副标题
-			showSubtitle: {
-				type: Boolean,
-				default: true
-			},
-			// 星期文本
-			weekText: {
-				type: Array,
-				default: () => ['一', '二', '三', '四', '五', '六', '日']
-			},
-			showSwitch: {
-				type: Boolean,
-				default: false
-			},
-			prevDisabled: {
-				type: Boolean,
-				default: false
-			},
-			nextDisabled: {
-				type: Boolean,
-				default: false
-			},
-			prevYearDisabled: {
-				type: Boolean,
-				default: false
-			},
-			nextYearDisabled: {
-				type: Boolean,
-				default: false
-			},
-			showToday: {
-				type: Boolean,
-				default: true
-			},
-			todayText: {
-				type: String,
-				default: '今天'
-			},
-			todayDisabled: {
-				type: Boolean,
-				default: false
-			},
-		},
-		data() {
-			return {
-
-			}
-		},
-		methods: {
-			prev() {
-				if (!this.prevDisabled) {
-					this.$emit('prev')
-				}
-			},
-			next() {
-				if (!this.nextDisabled) {
-					this.$emit('next')
-				}
-			},
-			prevYear() {
-				if (!this.prevYearDisabled) {
-					this.$emit('prevYear')
-				}
-			},
-			nextYear() {
-				if (!this.nextYearDisabled) {
-					this.$emit('nextYear')
-				}
-			},
-			today() {
-				if (!this.todayDisabled) {
-					this.$emit('today')
-				}
-			}
-		},
+<script setup>
+import { commonProps } from '../../libs/composable/useUltraUI'
+/**
+ * up-calendar-header
+ */
+defineOptions({
+	name: 'up-calendar-header',
+	// #ifdef MP-WEIXIN
+	options: {
+		virtualHost: true
 	}
+	// #endif
+})
+
+const props = defineProps({
+	...commonProps,
+	// 标题
+	title: {
+		type: String,
+		default: ''
+	},
+	// 副标题
+	subtitle: {
+		type: String,
+		default: ''
+	},
+	// 是否显示标题
+	showTitle: {
+		type: Boolean,
+		default: true
+	},
+	// 是否显示副标题
+	showSubtitle: {
+		type: Boolean,
+		default: true
+	},
+	// 星期文本
+	weekText: {
+		type: Array,
+		default: () => ['一', '二', '三', '四', '五', '六', '日']
+	},
+	showSwitch: {
+		type: Boolean,
+		default: false
+	},
+	prevDisabled: {
+		type: Boolean,
+		default: false
+	},
+	nextDisabled: {
+		type: Boolean,
+		default: false
+	},
+	prevYearDisabled: {
+		type: Boolean,
+		default: false
+	},
+	nextYearDisabled: {
+		type: Boolean,
+		default: false
+	},
+	showToday: {
+		type: Boolean,
+		default: true
+	},
+	todayText: {
+		type: String,
+		default: '今天'
+	},
+	todayDisabled: {
+		type: Boolean,
+		default: false
+	}
+})
+const emit = defineEmits(['prev', 'next', 'prevYear', 'nextYear', 'today'])
+
+function prev() {
+	if (!props.prevDisabled) {
+		emit('prev')
+	}
+}
+
+function next() {
+	if (!props.nextDisabled) {
+		emit('next')
+	}
+}
+
+function prevYear() {
+	if (!props.prevYearDisabled) {
+		emit('prevYear')
+	}
+}
+
+function nextYear() {
+	if (!props.nextYearDisabled) {
+		emit('nextYear')
+	}
+}
+
+function today() {
+	if (!props.todayDisabled) {
+		emit('today')
+	}
+}
 </script>
+
 
 <style lang="scss" scoped>
 	@import "../../libs/css/components.scss";

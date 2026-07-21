@@ -8,8 +8,9 @@
 	</view>
 </template>
 
-<script>
-	import props from './props.js';
+<script setup>
+	import { onMounted, ref, watch } from 'vue'
+	import pdfReaderProps from './props.js'
 
 	/**
 	 * pdfReader PDF阅读器
@@ -20,30 +21,35 @@
 	 * @property {String}			pdfjsDomain		pdfjs资源域名，默认为'https://uview-plus.jiangruyi.com/h5'
 	 * @example <up-pdf-reader src="https://example.com/file.pdf"></up-pdf-reader>
 	 */
-	export default {
-		name: 'up-pdf-reader',
-		mixins: [props],
-        data() {
-            return {
-                baseUrlInner: 'https://uview-plus.jiangruyi.com/h5',
-                viewerUrl: ''
-            }
-        },
-        watch: {
-            baseUrl: function (val) {
-                this.baseUrl = val;
-            },
-            src: function (val) {
-                this.viewerUrl = `${this.baseUrlInner}/static/pdfjs/web/viewer.html?file=` + encodeURIComponent(val);
-            }
-        },
-        mounted() {
-            if (this.baseUrl) {
-                this.baseUrlInner = this.baseUrl;
-            }
-            this.viewerUrl = `${this.baseUrlInner}/static/pdfjs/web/viewer.html?file=` + encodeURIComponent(this.src);
-		}
+	defineOptions({
+		name: 'up-pdf-reader'
+	})
+
+	const props = defineProps({
+		...pdfReaderProps.props
+	})
+	const baseUrlInner = ref('https://uview-plus.jiangruyi.com/h5')
+	const viewerUrl = ref('')
+
+	function setViewerUrl(src) {
+		viewerUrl.value = `${baseUrlInner.value}/static/pdfjs/web/viewer.html?file=` + encodeURIComponent(src)
 	}
+
+	watch(() => props.baseUrl, (value) => {
+		if (value) baseUrlInner.value = value
+		setViewerUrl(props.src)
+	})
+
+	watch(() => props.src, (value) => {
+		setViewerUrl(value)
+	})
+
+	onMounted(() => {
+		if (props.baseUrl) {
+			baseUrlInner.value = props.baseUrl
+		}
+		setViewerUrl(props.src)
+	})
 </script>
 
 <style lang="scss" scoped>	

@@ -4,10 +4,9 @@
 	</view>
 </template>
 
-<script>
-	import { props } from './props';
-	import { mpMixin } from '../../libs/mixin/mpMixin';
-	import { mixin } from '../../libs/mixin/mixin';
+<script setup>
+	import { props as trProps } from './props'
+	import { commonProps } from '../../libs/composable/useUltraUI.js'
 	/**
 	 * Tr  
 	 * @description 
@@ -16,15 +15,19 @@
 	 * @event {Function}
 	 * @example
 	 */
-	export default {
+	defineOptions({
 		name: 'up-tr',
-		mixins: [mpMixin, mixin, props],
-		data() {
-			return {
-				
-			}
+		// #ifdef MP-WEIXIN
+		options: {
+			virtualHost: true
 		}
-	}
+		// #endif
+	})
+
+	defineProps({
+		...commonProps,
+		...trProps.props
+	})
 </script>
 
 <style lang="scss" scoped>

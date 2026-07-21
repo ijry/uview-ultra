@@ -2,7 +2,7 @@
     <view
         class="up-rate"
         :id="elId"
-        ref="up-rate"
+        ref="rateRef"
         :style="[addStyle(customStyle)]"
     >
         <view
@@ -18,7 +18,7 @@
             >
                 <view
                     class="up-rate__content__item__icon-wrap"
-                    ref="up-rate__content__item__icon-wrap"
+                    ref="rateIconWrapRefs"
                     @tap.stop="clickHandler($event, index + 1)"
                 >
                     <up-icon
@@ -47,7 +47,7 @@
                     :style="[{
                         width: addUnit(rateWidth / 2),
                     }]"
-                    ref="up-rate__content__item__icon-wrap"
+                    ref="rateIconWrapRefs"
                 >
                     <up-icon
                         :name="
@@ -73,284 +73,258 @@
     </view>
 </template>
 
-<script>
-	import { props } from './props';
-	import { mpMixin } from '../../libs/mixin/mpMixin';
-	import { mixin } from '../../libs/mixin/mixin';
-	import { addUnit, addStyle, guid, sleep, range, os } from '../../libs/function/index';
-	// #ifdef APP-NVUE
-	const dom = weex.requireModule("dom");
+<script setup>
+import { onMounted, ref, watch } from 'vue'
+import { props as rateProps } from './props'
+import { commonProps, useUltraUI } from '../../libs/composable/useUltraUI'
+import { addUnit, addStyle, guid, sleep, range, os } from '../../libs/function/index'
+// #ifdef APP-NVUE
+const dom = weex.requireModule('dom')
+// #endif
+/**
+ * rate 评分
+ * @description 该组件一般用于满意度调查，星型评分的场景
+ * @tutorial https://uview-plus.jiangruyi.com/components/rate.html
+ * @property {String | Number}	value			用于v-model双向绑定选中的星星数量 (默认 1 )
+ * @property {String | Number}	count			最多可选的星星数量 （默认 5 ）
+ * @property {Boolean}			disabled		是否禁止用户操作 （默认 false ）
+ * @property {Boolean}			readonly		是否只读 （默认 false ）
+ * @property {String | Number}	size			星星的大小，单位px （默认 18 ）
+ * @property {String}			inactiveColor	未选中星星的颜色 （默认 '#b2b2b2' ）
+ * @property {String}			activeColor		选中的星星颜色 （默认 '#FA3534' ）
+ * @property {String | Number}	gutter			星星之间的距离 （默认 4 ）
+ * @property {String | Number}	minCount		最少选中星星的个数 （默认 1 ）
+ * @property {Boolean}			allowHalf		是否允许半星选择 （默认 false ）
+ * @property {String}			activeIcon		选中时的图标名，只能为uView的内置图标 （默认 'star-fill' ）
+ * @property {String}			inactiveIcon	未选中时的图标名，只能为uView的内置图标 （默认 'star' ）
+ * @property {Boolean}			touchable		是否可以通过滑动手势选择评分 （默认 'true' ）
+ * @property {Object}			customStyle		组件的样式，对象形式
+ * @event {Function} change 选中的星星发生变化时触发
+ * @example <up-rate :count="count" :value="2"></up-rate>
+ */
+defineOptions({
+	name: 'up-rate',
+	// #ifdef MP-WEIXIN
+	options: {
+		virtualHost: true
+	}
 	// #endif
-	/**
-	 * rate 评分
-	 * @description 该组件一般用于满意度调查，星型评分的场景
-	 * @tutorial https://uview-plus.jiangruyi.com/components/rate.html
-	 * @property {String | Number}	value			用于v-model双向绑定选中的星星数量 (默认 1 )
-	 * @property {String | Number}	count			最多可选的星星数量 （默认 5 ）
-	 * @property {Boolean}			disabled		是否禁止用户操作 （默认 false ）
-	 * @property {Boolean}			readonly		是否只读 （默认 false ）
-	 * @property {String | Number}	size			星星的大小，单位px （默认 18 ）
-	 * @property {String}			inactiveColor	未选中星星的颜色 （默认 '#b2b2b2' ）
-	 * @property {String}			activeColor		选中的星星颜色 （默认 '#FA3534' ）
-	 * @property {String | Number}	gutter			星星之间的距离 （默认 4 ）
-	 * @property {String | Number}	minCount		最少选中星星的个数 （默认 1 ）
-	 * @property {Boolean}			allowHalf		是否允许半星选择 （默认 false ）
-	 * @property {String}			activeIcon		选中时的图标名，只能为uView的内置图标 （默认 'star-fill' ）
-	 * @property {String}			inactiveIcon	未选中时的图标名，只能为uView的内置图标 （默认 'star' ）
-	 * @property {Boolean}			touchable		是否可以通过滑动手势选择评分 （默认 'true' ）
-	 * @property {Object}			customStyle		组件的样式，对象形式
-	 * @event {Function} change 选中的星星发生变化时触发
-	 * @example <up-rate :count="count" :value="2"></up-rate>
-	 */
-	export default {
-		name: "up-rate",
-		mixins: [mpMixin, mixin, props],
-		data() {
-			const modelVal = Number(this.modelValue)
-			const valueVal = Number(this.value)
-			const minCount = Number(this.minCount)
-			const defaultActive = Number.isFinite(minCount) ? minCount : 0
-			return {
-				// 生成一个唯一id，否则一个页面多个评分组件，会造成冲突
-				elId: guid(),
-				elClass: guid(),
-				rateBoxLeft: 0, // 评分盒子左边到屏幕左边的距离，用于滑动选择时计算距离
-				// #ifdef VUE3
-				activeIndex: Number.isFinite(modelVal) ? modelVal : defaultActive,
-				// #endif
-				// #ifdef VUE2
-				activeIndex: Number.isFinite(valueVal) ? valueVal : defaultActive,
-				// #endif
-				rateWidth: 0, // 每个星星的宽度
-				// 标识是否正在滑动，由于iOS事件上touch比click先触发，导致快速滑动结束后，接着触发click，导致事件混乱而出错
-				moving: false,
-			};
-		},
-		watch: {
-			// #ifdef VUE3
-			modelValue(val) {
-				this.activeIndex = this.normalizeActiveIndex(val);
-			},
-			// #endif
-        	// #ifdef VUE2
-			value(val) {
-				this.activeIndex = this.normalizeActiveIndex(val);
-			},
-			// #endif
-			activeIndex: 'emitEvent'
-		},
-		// #ifdef VUE3
-		emits: ['update:modelValue', 'change'],
-    	// #endif
-		methods: {
-			addStyle,
-			addUnit,
-			toNumber(value, fallback = 0) {
-				const num = Number(value)
-				return Number.isFinite(num) ? num : fallback
-			},
-			getMinCountValue() {
-				return this.toNumber(this.minCount, 0)
-			},
-			getCountValue() {
-				return this.toNumber(this.count, 0)
-			},
-			normalizeActiveIndex(value) {
-				let normalized = this.toNumber(value, this.getMinCountValue())
-				const minCount = this.getMinCountValue()
-				const count = this.getCountValue()
-				if (normalized < minCount) normalized = minCount
-				if (count > 0 && normalized > count) normalized = count
-				return normalized
-			},
-			getFallbackRateWidth() {
-				const size = parseFloat(this.size) || 18
-				const gutter = parseFloat(this.gutter) || 0
-				const width = size + gutter
-				return width > 0 ? width : 18
-			},
-			ensureRateMetrics() {
-				if (!Number.isFinite(this.rateBoxLeft)) {
-					this.rateBoxLeft = 0
-				}
-				if (!Number.isFinite(this.rateWidth) || this.rateWidth <= 0) {
-					this.rateWidth = this.getFallbackRateWidth()
-					this.getRateIconWrapRect()
-				}
-				return Number.isFinite(this.rateWidth) && this.rateWidth > 0
-			},
-			init() {
-				sleep().then(() => {
-					this.getRateItemRect();
-					this.getRateIconWrapRect();
-				})
-			},
-			// 获取评分组件盒子的布局信息
-			async getRateItemRect() {
-				await sleep();
-				// uView封装的获取节点的方法，详见文档
-				// #ifndef APP-NVUE
-				this.$uGetRect("#" + this.elId).then((res) => {
-					if (res && Number.isFinite(res.left)) {
-						this.rateBoxLeft = res.left;
-					}
-				});
-				// #endif
-				// #ifdef APP-NVUE
-				dom.getComponentRect(this.$refs["up-rate"], (res) => {
-					const left = res && res.size ? res.size.left : NaN
-					if (Number.isFinite(left)) {
-						this.rateBoxLeft = left;
-					}
-				});
-				// #endif
-			},
-			// 获取单个星星的尺寸
-			getRateIconWrapRect() {
-				// uView封装的获取节点的方法，详见文档
-				// #ifndef APP-NVUE
-				this.$uGetRect("." + this.elClass).then((res) => {
-					if (res && Number.isFinite(res.width) && res.width > 0) {
-						this.rateWidth = res.width;
-					}
-				});
-				// #endif
-				// #ifdef APP-NVUE
-				dom.getComponentRect(
-					this.$refs["up-rate__content__item__icon-wrap"][0],
-					(res) => {
-						const width = res && res.size ? res.size.width : NaN
-						if (Number.isFinite(width) && width > 0) {
-							this.rateWidth = width;
-						}
-					}
-				);
-				// #endif
-			},
-			// 手指滑动
-			touchMove(e) {
-				// 如果禁止通过手动滑动选择，返回
-				if (!this.touchable) {
-					return;
-				}
-				this.preventEvent(e);
-				this.ensureRateMetrics();
-				const x = e.changedTouches[0].pageX;
-				this.getActiveIndex(x);
-			},
-			// 停止滑动
-			touchEnd(e) {
-				// 如果禁止通过手动滑动选择，返回
-				if (!this.touchable) {
-					return;
-				}
-				this.preventEvent(e);
-				this.ensureRateMetrics();
-				const x = e.changedTouches[0].pageX;
-				this.getActiveIndex(x);
-			},
-			// 通过点击，直接选中
-			clickHandler(e, index) {
-				// ios上，moving状态取消事件触发
-				if (os() === "ios" && this.moving) {
-					return;
-				}
-				this.preventEvent(e);
-				this.ensureRateMetrics();
-				let x = 0;
-				// 点击时，在nvue上，无法获得点击的坐标，所以无法实现点击半星选择
-				// #ifndef APP-NVUE
-				x = e.changedTouches[0].pageX;
-				// #endif
-				// #ifdef APP-NVUE
-				// nvue下，无法通过点击获得坐标信息，这里通过元素的位置尺寸值模拟坐标
-				x = index * this.rateWidth + this.rateBoxLeft;
-				// #endif
-				this.getActiveIndex(x,true);
-			},
-			// 发出事件
-			emitEvent() {
-				const normalizedValue = this.normalizeActiveIndex(this.activeIndex)
-				if (!Number.isFinite(this.activeIndex) || normalizedValue !== this.activeIndex) {
-					this.activeIndex = normalizedValue
-					return
-				}
-				// 发出change事件
-				this.$emit("change", normalizedValue);
-				// 同时修改双向绑定的值
-				// #ifdef VUE3
-                this.$emit("update:modelValue", normalizedValue);
-                // #endif
-                // #ifdef VUE2
-				this.$emit("input", normalizedValue);
-				// #endif
-			},
-			// 获取当前激活的评分图标
-			getActiveIndex(x,isClick = false) {
-				if (this.disabled || this.readonly) {
-					return;
-				}
-				if (!this.ensureRateMetrics()) {
-					return;
-				}
-				const count = this.getCountValue()
-				if (count <= 0) {
-					return;
-				}
-				if (!Number.isFinite(x)) {
-					return;
-				}
-				// 判断当前操作的点的x坐标值，是否在允许的边界范围内
-				const allRateWidth = this.rateWidth * count + this.rateBoxLeft;
-				// 如果小于第一个图标的左边界，设置为最小值，如果大于所有图标的宽度，则设置为最大值
-				x = range(this.rateBoxLeft, allRateWidth, x) - this.rateBoxLeft
-				// 滑动点相对于评分盒子左边的距离
-				const distance = x;
-				// 滑动的距离，相当于多少颗星星
-				let index;
-				// 判断是否允许半星
-				if (this.allowHalf) {
-					index = Math.floor(distance / this.rateWidth);
-					// 取余，判断小数的区间范围
-					const decimal = distance % this.rateWidth;
-					if (decimal <= this.rateWidth / 2 && decimal > 0) {
-						index += 0.5;
-					} else if (decimal > this.rateWidth / 2) {
-						index++;
-					}
-				} else {
-					index = Math.floor(distance / this.rateWidth);
-					// 取余，判断小数的区间范围
-					const decimal = distance % this.rateWidth;
-					// 非半星时，只有超过了图标的一半距离，才认为是选择了这颗星
-					if (isClick){
-						if (decimal > 0) index++;
-					} else {
-						if (decimal > this.rateWidth / 2) index++;
-					}
+})
 
-				}
-				this.activeIndex = this.normalizeActiveIndex(Math.min(index, count));
-				// 对最少颗星星的限制
-				if (this.activeIndex < this.getMinCountValue()) {
-					this.activeIndex = this.getMinCountValue();
-				}
+const props = defineProps({
+	...commonProps,
+	...rateProps.props
+})
+const emit = defineEmits([
+	// #ifdef VUE3
+	'update:modelValue',
+	// #endif
+	'change'
+])
+const { $uGetRect, preventEvent } = useUltraUI(props)
 
-				// 设置延时为了让click事件在touchmove之前触发
-				setTimeout(() => {
-					this.moving = true;
-				}, 10);
-				// 一定时间后，取消标识为移动中状态，是为了让click事件无效
-				setTimeout(() => {
-					this.moving = false;
-				}, 10);
-			},
-		},
-		mounted() {
-			this.init();
-		},
-	};
+function toNumber(value, fallback = 0) {
+	const num = Number(value)
+	return Number.isFinite(num) ? num : fallback
+}
+function getMinCountValue() {
+	return toNumber(props.minCount, 0)
+}
+function getCountValue() {
+	return toNumber(props.count, 0)
+}
+function normalizeActiveIndex(value) {
+	let normalized = toNumber(value, getMinCountValue())
+	const minCount = getMinCountValue()
+	const count = getCountValue()
+	if (normalized < minCount) normalized = minCount
+	if (count > 0 && normalized > count) normalized = count
+	return normalized
+}
+
+// #ifdef VUE3
+const initialActive = Number.isFinite(Number(props.modelValue)) ? Number(props.modelValue) : getMinCountValue()
+// #endif
+// #ifdef VUE2
+const initialActive = Number.isFinite(Number(props.value)) ? Number(props.value) : getMinCountValue()
+// #endif
+
+const elId = ref(guid())
+const elClass = ref(guid())
+const rateBoxLeft = ref(0)
+const activeIndex = ref(initialActive)
+const rateWidth = ref(0)
+const moving = ref(false)
+const rateRef = ref(null)
+const rateIconWrapRefs = ref([])
+
+// #ifdef VUE3
+watch(() => props.modelValue, (val) => {
+	activeIndex.value = normalizeActiveIndex(val)
+})
+// #endif
+// #ifdef VUE2
+watch(() => props.value, (val) => {
+	activeIndex.value = normalizeActiveIndex(val)
+})
+// #endif
+
+watch(activeIndex, () => {
+	emitEvent()
+})
+
+onMounted(() => {
+	init()
+})
+
+function getFallbackRateWidth() {
+	const size = parseFloat(props.size) || 18
+	const gutter = parseFloat(props.gutter) || 0
+	const width = size + gutter
+	return width > 0 ? width : 18
+}
+
+function ensureRateMetrics() {
+	if (!Number.isFinite(rateBoxLeft.value)) {
+		rateBoxLeft.value = 0
+	}
+	if (!Number.isFinite(rateWidth.value) || rateWidth.value <= 0) {
+		rateWidth.value = getFallbackRateWidth()
+		getRateIconWrapRect()
+	}
+	return Number.isFinite(rateWidth.value) && rateWidth.value > 0
+}
+
+function init() {
+	sleep().then(() => {
+		getRateItemRect()
+		getRateIconWrapRect()
+	})
+}
+
+async function getRateItemRect() {
+	await sleep()
+	// #ifndef APP-NVUE
+	$uGetRect('#' + elId.value).then((res) => {
+		if (res && Number.isFinite(res.left)) {
+			rateBoxLeft.value = res.left
+		}
+	})
+	// #endif
+	// #ifdef APP-NVUE
+	dom.getComponentRect(rateRef.value, (res) => {
+		const left = res && res.size ? res.size.left : NaN
+		if (Number.isFinite(left)) {
+			rateBoxLeft.value = left
+		}
+	})
+	// #endif
+}
+
+function getRateIconWrapRect() {
+	// #ifndef APP-NVUE
+	$uGetRect('.' + elClass.value).then((res) => {
+		if (res && Number.isFinite(res.width) && res.width > 0) {
+			rateWidth.value = res.width
+		}
+	})
+	// #endif
+	// #ifdef APP-NVUE
+	const wrap = Array.isArray(rateIconWrapRefs.value) ? rateIconWrapRefs.value[0] : rateIconWrapRefs.value
+	dom.getComponentRect(wrap, (res) => {
+		const width = res && res.size ? res.size.width : NaN
+		if (Number.isFinite(width) && width > 0) {
+			rateWidth.value = width
+		}
+	})
+	// #endif
+}
+
+function touchMove(e) {
+	if (!props.touchable) return
+	preventEvent(e)
+	ensureRateMetrics()
+	const x = e.changedTouches[0].pageX
+	getActiveIndex(x)
+}
+
+function touchEnd(e) {
+	if (!props.touchable) return
+	preventEvent(e)
+	ensureRateMetrics()
+	const x = e.changedTouches[0].pageX
+	getActiveIndex(x)
+}
+
+function clickHandler(e, index) {
+	if (os() === 'ios' && moving.value) return
+	preventEvent(e)
+	ensureRateMetrics()
+	let x = 0
+	// #ifndef APP-NVUE
+	x = e.changedTouches[0].pageX
+	// #endif
+	// #ifdef APP-NVUE
+	x = index * rateWidth.value + rateBoxLeft.value
+	// #endif
+	getActiveIndex(x, true)
+}
+
+function emitEvent() {
+	const normalizedValue = normalizeActiveIndex(activeIndex.value)
+	if (!Number.isFinite(activeIndex.value) || normalizedValue !== activeIndex.value) {
+		activeIndex.value = normalizedValue
+		return
+	}
+	emit('change', normalizedValue)
+	// #ifdef VUE3
+	emit('update:modelValue', normalizedValue)
+	// #endif
+	// #ifdef VUE2
+	emit('input', normalizedValue)
+	// #endif
+}
+
+function getActiveIndex(x, isClick = false) {
+	if (props.disabled || props.readonly) return
+	if (!ensureRateMetrics()) return
+	const count = getCountValue()
+	if (count <= 0) return
+	if (!Number.isFinite(x)) return
+	const allRateWidth = rateWidth.value * count + rateBoxLeft.value
+	x = range(rateBoxLeft.value, allRateWidth, x) - rateBoxLeft.value
+	const distance = x
+	let index
+	if (props.allowHalf) {
+		index = Math.floor(distance / rateWidth.value)
+		const decimal = distance % rateWidth.value
+		if (decimal <= rateWidth.value / 2 && decimal > 0) {
+			index += 0.5
+		} else if (decimal > rateWidth.value / 2) {
+			index++
+		}
+	} else {
+		index = Math.floor(distance / rateWidth.value)
+		const decimal = distance % rateWidth.value
+		if (isClick) {
+			if (decimal > 0) index++
+		} else {
+			if (decimal > rateWidth.value / 2) index++
+		}
+	}
+	activeIndex.value = normalizeActiveIndex(Math.min(index, count))
+	if (activeIndex.value < getMinCountValue()) {
+		activeIndex.value = getMinCountValue()
+	}
+	setTimeout(() => {
+		moving.value = true
+	}, 10)
+	setTimeout(() => {
+		moving.value = false
+	}, 10)
+}
 </script>
+
 
 <style lang="scss" scoped>
 $up-rate-margin: 0 !default;

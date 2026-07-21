@@ -1,13 +1,13 @@
 <template>
     <view
         class="up-subsection"
-        ref="up-subsection"
+        ref="subsectionRootRef"
         :class="[`up-subsection--${mode}`]"
         :style="[addStyle(customStyle), wrapperStyle]"
     >
         <view
             class="up-subsection__bar cursor-pointer"
-            ref="up-subsection__bar"
+            ref="subsectionBarRef"
             :style="[barStyle]"
             :class="[
                 mode === 'button' && 'up-subsection--button__bar',
@@ -33,7 +33,7 @@
                 index === list.length - 1 && 'up-subsection__item--last',
                 disabled && 'up-subsection__item--disabled',
             ]"
-            :ref="`up-subsection__item--${index}`"
+            :ref="index === 0 ? 'firstItemRef' : undefined"
             :style="[itemStyle(index)]"
             @tap="clickHandler(index)"
             v-for="(item, index) in list"
@@ -49,15 +49,15 @@
     </view>
 </template>
 
-<script>
+<script setup>
 // #ifdef APP-NVUE
-const dom = uni.requireNativePlugin("dom");
-const animation = uni.requireNativePlugin("animation");
+const dom = uni.requireNativePlugin('dom')
+const animation = uni.requireNativePlugin('animation')
 // #endif
-import { props } from "./props.js";
-import { mpMixin } from '../../libs/mixin/mpMixin.js';
-import { mixin } from '../../libs/mixin/mixin.js';
-import { addStyle, addUnit, sleep } from '../../libs/function/index.js';
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { props as subsectionProps } from './props.js'
+import { commonProps, useUltraUI } from '../../libs/composable/useUltraUI.js'
+import { addStyle, addUnit, sleep } from '../../libs/function/index.js'
 /**
  * Subsection 分段器
  * @description 该分段器一般用于用户从几个选项中选择某一个的场景
@@ -76,173 +76,153 @@ import { addStyle, addUnit, sleep } from '../../libs/function/index.js';
  * @event {Function} change		分段器选项发生改变时触发  回调 index：选项的index索引值，从0开始
  * @example <up-subsection :list="list" :current="curNow" @change="sectionChange"></up-subsection>
  */
-export default {
-    name: "up-subsection",
-    mixins: [mpMixin, mixin, props],
-    data() {
-        return {
-            // 组件尺寸
-            itemRect: {
-                width: 0,
-                height: 0,
-            },
-            innerCurrent: '',
-            windowResizeCallback: {}
-        };
-    },
-    watch: {
-        list(newValue, oldValue) {
-            this.init();
-        },
-        current: {
-            immediate: true,
-            handler(n) {
-                if (n !== this.innerCurrent) {
-                    this.innerCurrent = n
-                }
-                // #ifdef APP-NVUE
-                // 在安卓nvue上，如果通过translateX进行位移，到最后一个时，会导致右侧无法绘制圆角
-                // 故用animation模块进行位移
-                const ref = this.$refs?.["up-subsection__bar"]?.ref;
-                // 不存在ref的时候(理解为第一次初始化时，需要渲染dom，进行一定延时再获取ref)，这里的100ms是经过测试得出的结果(某些安卓需要延时久一点)，勿随意修改
-                sleep(ref ? 0 : 100).then(() => {
-                    animation.transition(this.$refs["up-subsection__bar"].ref, {
-                        styles: {
-                            transform: `translateX(${
-                                n * this.itemRect.width
-                            }px)`,
-                            transformOrigin: "center center",
-                        },
-                        duration: 300,
-                    });
-                });
-                // #endif
-            },
-        },
-    },
-    computed: {
-        wrapperStyle() {
-            const style = {};
-            // button模式时，设置背景色
-            if (this.mode === "button") {
-                style.backgroundColor = this.bgColor;
-            }
-            return style;
-        },
-        // 滑块的样式
-        barStyle() {
-            const style = {};
-            style.width = `${this.itemRect.width}px`;
-            style.height = `${this.itemRect.height}px`;
-            // 通过translateX移动滑块，其移动的距离为索引*item的宽度
-            // #ifndef APP-NVUE
-            style.transform = `translateX(${
-                this.innerCurrent * this.itemRect.width
-            }px)`;
-            // #endif
-            if (this.mode === "subsection") {
-                // 在subsection模式下，需要动态设置滑块的圆角，因为移动滑块使用的是translateX，无法通过父元素设置overflow: hidden隐藏滑块的直角
-                style.backgroundColor = this.activeColor;
-            }
-            return style;
-        },
-        // 分段器item的样式
-        itemStyle(index) {
-            return (index) => {
-                const style = {};
-                if (this.mode === "subsection") {
-                    // 设置border的样式
-                    style.borderColor = this.activeColor;
-                    style.borderWidth = "1px";
-                    style.borderStyle = "solid";
-                }
-                return style;
-            };
-        },
-        // 分段器文字颜色
-        textStyle(index) {
-            return (index) => {
-                const style = {};
-                if (this.disabled) {
-                    style.fontWeight = "normal";
-                    style.fontSize = addUnit(this.fontSize);
-                    style.color = "var(--up-disabled-color, #c8c9cc)";
-                    return style;
-                }
-                style.fontWeight =
-                    this.bold && this.innerCurrent === index ? "bold" : "normal";
-                style.fontSize = addUnit(this.fontSize);
-                const item = this.list[index];
-                const activeColorTemp =
-                    typeof item === "object" && item
-                        ? item[this.activeColorKeyName]
-                        : null;
-                const inactiveColorTemp =
-                    typeof item === "object" && item
-                        ? item[this.inactiveColorKeyName]
-                        : null;
-                // subsection模式下，激活时默认为白色的文字
-                if (this.mode === "subsection") {
-                    style.color =
-                        this.innerCurrent === index
-                            ? activeColorTemp || "#fff"
-                            : inactiveColorTemp || this.inactiveColor;
-                } else {
-                    // button模式下，激活时文字颜色默认为activeColor
-                    style.color =
-                        this.innerCurrent === index
-                            ? activeColorTemp || this.activeColor
-                            : inactiveColorTemp || this.inactiveColor;
-                }
-                return style;
-            };
-        },
-    },
-    mounted() {
-        this.init();
-        this.windowResizeCallback = (res) => {
-            this.init();
-        }
-        uni.onWindowResize(this.windowResizeCallback)
-    },
-    beforeUnmount() {
-        uni.offWindowResize(this.windowResizeCallback)
-    },
-	emits: ["change"],
-    methods: {
-        addStyle,
-        init() {
-            this.innerCurrent = this.current
-            sleep().then(() => this.getRect());
-        },
-		// 判断展示文本
-		getText(item) {
-			return typeof item === 'object' ? item[this.keyName] : item
-		},
-        // 获取组件的尺寸
-        getRect() {
-            // #ifndef APP-NVUE
-            this.$uGetRect(".up-subsection__item--0").then((size) => {
-                this.itemRect = size;
-            });
-            // #endif
+defineOptions({
+	name: 'up-subsection',
+	// #ifdef MP-WEIXIN
+	options: {
+		virtualHost: true
+	}
+	// #endif
+})
 
-            // #ifdef APP-NVUE
-            const ref = this.$refs["up-subsection__item--0"][0];
-            ref &&
-                dom.getComponentRect(ref, (res) => {
-                    this.itemRect = res.size;
-                });
-            // #endif
-        },
-        clickHandler(index) {
-            if (this.disabled) return;
-            this.innerCurrent = index
-            this.$emit("change", index);
-        },
-    },
-};
+const props = defineProps({
+	...commonProps,
+	...subsectionProps.props
+})
+const emit = defineEmits(['change'])
+const { $uGetRect } = useUltraUI(props)
+
+const itemRect = ref({
+	width: 0,
+	height: 0,
+})
+const innerCurrent = ref('')
+const windowResizeCallback = ref(null)
+const subsectionBarRef = ref(null)
+const firstItemRef = ref(null)
+
+watch(() => props.list, () => {
+	init()
+})
+
+watch(() => props.current, (n) => {
+	if (n !== innerCurrent.value) {
+		innerCurrent.value = n
+	}
+	// #ifdef APP-NVUE
+	const bar = subsectionBarRef.value
+	const refNode = bar?.ref
+	sleep(refNode ? 0 : 100).then(() => {
+		animation.transition(subsectionBarRef.value.ref, {
+			styles: {
+				transform: `translateX(${n * itemRect.value.width}px)`,
+				transformOrigin: 'center center',
+			},
+			duration: 300,
+		})
+	})
+	// #endif
+}, { immediate: true })
+
+const wrapperStyle = computed(() => {
+	const style = {}
+	if (props.mode === 'button') {
+		style.backgroundColor = props.bgColor
+	}
+	return style
+})
+
+const barStyle = computed(() => {
+	const style = {}
+	style.width = `${itemRect.value.width}px`
+	style.height = `${itemRect.value.height}px`
+	// #ifndef APP-NVUE
+	style.transform = `translateX(${innerCurrent.value * itemRect.value.width}px)`
+	// #endif
+	if (props.mode === 'subsection') {
+		style.backgroundColor = props.activeColor
+	}
+	return style
+})
+
+function itemStyle() {
+	const style = {}
+	if (props.mode === 'subsection') {
+		style.borderColor = props.activeColor
+		style.borderWidth = '1px'
+		style.borderStyle = 'solid'
+	}
+	return style
+}
+
+function textStyle(index) {
+	const style = {}
+	if (props.disabled) {
+		style.fontWeight = 'normal'
+		style.fontSize = addUnit(props.fontSize)
+		style.color = 'var(--up-disabled-color, #c8c9cc)'
+		return style
+	}
+	style.fontWeight = props.bold && innerCurrent.value === index ? 'bold' : 'normal'
+	style.fontSize = addUnit(props.fontSize)
+	const item = props.list[index]
+	const activeColorTemp = typeof item === 'object' && item ? item[props.activeColorKeyName] : null
+	const inactiveColorTemp = typeof item === 'object' && item ? item[props.inactiveColorKeyName] : null
+	if (props.mode === 'subsection') {
+		style.color = innerCurrent.value === index
+			? activeColorTemp || '#fff'
+			: inactiveColorTemp || props.inactiveColor
+	} else {
+		style.color = innerCurrent.value === index
+			? activeColorTemp || props.activeColor
+			: inactiveColorTemp || props.inactiveColor
+	}
+	return style
+}
+
+onMounted(() => {
+	init()
+	windowResizeCallback.value = () => {
+		init()
+	}
+	uni.onWindowResize(windowResizeCallback.value)
+})
+
+onBeforeUnmount(() => {
+	uni.offWindowResize(windowResizeCallback.value)
+})
+
+function init() {
+	innerCurrent.value = props.current
+	sleep().then(() => getRect())
+}
+
+function getText(item) {
+	return typeof item === 'object' ? item[props.keyName] : item
+}
+
+function getRect() {
+	// #ifndef APP-NVUE
+	$uGetRect('.up-subsection__item--0').then((size) => {
+		itemRect.value = size
+	})
+	// #endif
+
+	// #ifdef APP-NVUE
+	const refNode = Array.isArray(firstItemRef.value) ? firstItemRef.value[0] : firstItemRef.value
+	refNode && dom.getComponentRect(refNode, (res) => {
+		itemRect.value = res.size
+	})
+	// #endif
+}
+
+function clickHandler(index) {
+	if (props.disabled) return
+	innerCurrent.value = index
+	emit('change', index)
+}
 </script>
+
 
 <style lang="scss" scoped>
 @import "../../libs/css/components.scss";

@@ -184,523 +184,514 @@
 	</view>
 </template>
 
-<script>
-	import {
-		chooseFile
-	} from './utils';
-	import { mixinUpload } from './mixin';
-	import { props } from './props';
-	import { mpMixin } from '../../libs/mixin/mpMixin';
-	import { mixin } from '../../libs/mixin/mixin';
-	import { addStyle, addUnit, toast } from '../../libs/function/index';
-	import test from '../../libs/function/test';
-	import { t } from '../../libs/i18n'
-	/**
-	 * upload 上传
-	 * @description 该组件用于上传图片场景
-	 * @tutorial https://uview-plus.jiangruyi.com/components/upload.html
-	 * @property {String}			accept				接受的文件类型, 可选值为all media image file video （默认 'image' ）
-	 * @property {String | Array}	capture				图片或视频拾取模式，当accept为image类型时设置capture可选额外camera可以直接调起摄像头（默认 ['album', 'camera'] ）
-	 * @property {Array}			extension			选择文件的后缀名，暂只支持.zip、.png等，不支持application/msword等值
-	 * @property {Boolean}			compressed			当accept为video时生效，是否压缩视频，默认为true（默认 true ）
-	 * @property {String}			camera				当accept为video时生效，可选值为back或front（默认 'back' ）
-	 * @property {Number}			maxDuration			当accept为video时生效，拍摄视频最长拍摄时间，单位秒（默认 60 ）
-	 * @property {String}			uploadIcon			上传区域的图标，只能内置图标（默认 'camera-fill' ）
-	 * @property {String}			uploadIconColor		上传区域的图标的字体颜色，只能内置图标（默认 #D3D4D6 ）
-	 * @property {Boolean}			useBeforeRead		是否开启文件读取前事件（默认 false ）
-	 * @property {Boolean}			previewFullImage	是否显示组件自带的图片预览功能（默认 true ）
-	 * @property {String | Number}	maxCount			最大上传数量（默认 52 ）
-	 * @property {Boolean}			disabled			是否启用（默认 false ）
-	 * @property {String}			imageMode			预览上传的图片时的裁剪模式，和image组件mode属性一致（默认 'aspectFill' ）
-	 * @property {String}			name				标识符，可以在回调函数的第二项参数中获取
-	 * @property {Array}			sizeType			所选的图片的尺寸, 可选值为original compressed（默认 ['original', 'compressed'] ）
-	 * @property {Boolean}			multiple			是否开启图片多选，部分安卓机型不支持 （默认 false ）
-	 * @property {Boolean}			deletable			是否展示删除按钮（默认 true ）
-	 * @property {String | Number}	maxSize				文件大小限制，单位为byte （默认 Number.MAX_VALUE ）
-	 * @property {Array}			fileList			显示已上传的文件列表
-	 * @property {String}			uploadText			上传区域的提示文字
-	 * @property {String | Number}	width				内部预览图片区域和选择图片按钮的区域宽度（默认 80 ）
-	 * @property {String | Number}	height				内部预览图片区域和选择图片按钮的区域高度（默认 80 ）
-	 * @property {Object}			customStyle			组件的样式，对象形式
-	 * @event {Function} afterRead		读取后的处理函数
-	 * @event {Function} beforeRead		读取前的处理函数
-	 * @event {Function} oversize		文件超出大小限制
-	 * @event {Function} clickPreview	点击预览图片
-	 * @event {Function} delete 		删除图片
-	 * @example <up-upload :action="action" :fileList="fileList" ></up-upload>
-	 */
-	export default {
-		name: "up-upload",
-		mixins: [mpMixin, mixin, mixinUpload, props],
-		data() {
-			return {
-				// #ifdef APP-NVUE
-				successIcon: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACgAAAAoCAYAAACM/rhtAAAAAXNSR0IArs4c6QAAAERlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAA6ABAAMAAAABAAEAAKACAAQAAAABAAAAKKADAAQAAAABAAAAKAAAAAB65masAAACP0lEQVRYCc3YXygsURwH8K/dpcWyG3LF5u/6/+dKVylSypuUl6uUPMifKMWL8oKEB1EUT1KeUPdR3uTNUsSLxb2udG/cbvInNuvf2rVnazZ/ZndmZ87snjM1Z+Z3zpzfp9+Z5mEAhlvjRtZgCKs+gnPAOcAkkMOR4jEHfItjDvgRxxSQD8cM0BuOCaAvXNCBQrigAsXgggYUiwsK0B9cwIH+4gIKlIILGFAqLiBAOTjFgXJxigJp4BQD0sIpAqSJow6kjSNAFTnRaHJwLenD6Mud52VQAcrBfTd2oyq+HtGaGGWAcnAVcXWoM3bCZrdi+ncPfaAcXE5UKVpdW/vitGPqqAtn98d0gXJwX7Qp6MmegUYVhvmTIezdmHlxJCjpHRTCFerLkRRu4k0aqdajN3sWOo0BK//msHa+xDuPC/oNFMKRhTtM4xjIX0SCNpXL4+7VIaHuyiWEp2L7ahWLf8fejfPdqPmC3mJicORZUp1CQzm+GiphvljGk+PBvWRbxii+xVTj5M6CiZ/tsDufvaXyxEUDxeLIyvu3m0iOyEFWVAkydcVYdyFrE9tQk9iMq6f/GNlvwt3LjQfh60LUrw9/cFyyMJUW/XkLSNMV4Mi6C5ML+ui4x5ClAX9sB9w0wV6wglJwJCv5fOxcr6EstgbGiEw4XcfUry4cWrcEUW8n+ARKxXEJHhw2WG43UKSvwI/TSZgvl7kh0b3XLZaLEy0QmMgLZAVH7J+ALOE+AVnDvQOyiPMAWcW5gSzjCPAV+78S5WE0GrQAAAAASUVORK5CYII=',
-				// #endif
-				lists: [],
-				isInCount: true,
-				popupShow: false,
-				currentItemIndex: -1
-			}
-		},
-		watch: {
-			// 监听文件列表的变化，重新整理内部数据
-			fileList: {
-				handler() {
-					this.formatFileList()
-				},
-				immediate: true,
-				deep: true,
-			},
-			deletable(newVal) {
-				this.formatFileList()
-			},
-			maxCount(newVal) {
-				this.formatFileList()
-			},
-			accept(newVal) {
-				this.formatFileList()
-			},
-			popupShow(newVal) {
-				if (!newVal) {
-					this.currentItemIndex = -1;
-				}
-			}
-		},
-		// #ifdef VUE3
-		emits: ['error', 'beforeRead', 'oversize', 'afterRead', 'delete', 'clickPreview', 'update:fileList', 'afterAutoUpload'],
-		// #endif
-		methods: {
-			t,
-			addUnit,
-			addStyle,
-			videoErrorCallback() {},
-			loadedVideoMetadata(e) {
-				if (this.currentItemIndex < 0) {
-					return;
-				}
-				if (this.autoUploadDriver != 'local') {
-					return;
-				}
-				if (!this.getVideoThumb) {
-					return;
-				}
-				// 截取第一帧作为封面，oss等云存储场景直接使用拼接参数。
-				let w = this.lists[this.currentItemIndex].width;
-				let h = this.lists[this.currentItemIndex].height;
-				const dpr = uni.getSystemInfoSync().pixelRatio;
-				uni.createSelectorQuery().select('#myVideo').context(res => {
-					console.log('select video', res)
-					const myVideo = res.context
-					uni.createSelectorQuery()
-					  .select('#myCanvas')
-					  .fields({ node: true, size: true })
-					  .exec(([res]) => {
-						console.log('select canvas', res)
-						const ctx1 = res[0].node.getContext('2d')
-						res[0].node.width = w * dpr
-						res[0].node.height = h * dpr
-						// Draw the first frame and export it as an image
-						// myVideo.onPlay(() => {
-							setTimeout(() => {
-								captureFirstFrame()
-							}, 500)
-						// })
-						const captureFirstFrame = () => {
-							ctx1.drawImage(myVideo, 0, 0, w * dpr, h * dpr)
-							wx.canvasToTempFilePath({
-								canvas: res[0].node,
-								success: (result) => {
-									console.log('First frame image path:', result
-										.tempFilePath)
-									// Now you can use the image path (result.tempFilePath)
-									this.fileList['currentItemIndex'].thumb = result.tempFilePath
-								},
-								fail: (err) => {
-									console.error('Failed to export image:', err)
-								}
-							})
-						}
+<script setup>
+/**
+ * upload 上传
+ * @description 该组件用于上传图片场景
+ * @tutorial https://uview-plus.jiangruyi.com/components/upload.html
+ * @example <up-upload :action="action" :fileList="fileList" ></up-upload>
+ */
+import { ref, watch } from 'vue'
+import { chooseFile as chooseFileUtil } from './utils'
+import { props as uploadProps } from './props'
+import { commonProps } from '../../libs/composable/useUltraUI'
+import { addStyle, addUnit, toast, error } from '../../libs/function/index'
+import test from '../../libs/function/test'
+import { t } from '../../libs/i18n'
 
-						// Capture the first frame
-						setInterval(() => {
-							ctx1.drawImage(myVideo, 0, 0, w * dpr, h * dpr);
-						}, 1000 / 24)
-					}).exec()
-				}).exec()
-			},
-			formatFileList() {
-				const {
-					fileList = [], maxCount
-				} = this;
-				const lists = fileList.map((item) => {
-					const name = item.name || item.url || item.thumb
-					return Object.assign(Object.assign({}, item), {
-						// 如果item.url为本地选择的blob文件的话，无法判断其为video还是image，此处优先通过accept做判断处理
-						isImage: item.name ? test.image(item.name) : (this.accept === 'image' || test.image(name)),
-						isVideo: item.name ? test.video(item.name) : (this.accept === 'video' || test.video(name)),
-						deletable: typeof item.deletable === 'boolean' ? item.deletable : this.deletable,
-					})
-				});
-				this.lists = lists
-				this.isInCount = lists.length < maxCount
-			},
-			chooseFile(params) {
-				const {
-					maxCount,
-					multiple,
-					lists,
-					disabled
-				} = this;
-				if (disabled) return Promise.reject();
-				const chooseParams = Object.assign({
-					accept: this.accept,
-					extension: this.extension,
-					multiple: this.multiple,
-					capture: this.capture,
-					compressed: this.compressed,
-					maxDuration: this.maxDuration,
-					sizeType: this.sizeType,
-					camera: this.camera,
-				}, {
-					maxCount: maxCount - lists.length,
-					...params
-				})
-				return chooseFile(chooseParams)
-					.then((res) => {
-						const result = chooseParams.multiple ? res : res[0]
-						this.onBeforeRead(result);
-						return result
-					})
-					.catch((error) => {
-						this.$emit('error', error);
-					});
-			},
-			// 文件读取之前
-			onBeforeRead(file) {
-				const {
-					beforeRead,
-					useBeforeRead,
-				} = this;
-				let res = file
-				// beforeRead是否为一个方法
-				if (test.func(beforeRead)) {
-					// 如果用户定义了此方法，则去执行此方法，并传入读取的文件回调
-					res = beforeRead(file, this.getDetail());
-				}
-				if (useBeforeRead) {
-					res = new Promise((resolve, reject) => {
-						this.$emit(
-							'beforeRead',
-							Object.assign(Object.assign({
-								file
-							}, this.getDetail()), {
-								callback: (ok) => {
-									ok ? resolve() : reject();
-								},
-							})
-						);
-					});
-				}
-				if (test.promise(res)) {
-					res.then((data) => this.onAfterRead(data || file));
-				} else {
-					this.onAfterRead(res || file);
-				}
-			},
-			getDetail(index) {
-				return {
-					name: this.name,
-					index: index == null ? this.fileList.length : index,
-				};
-			},
-			async onAfterRead(file) {
-				const {
-					maxSize,
-					afterRead
-				} = this;
-				const oversize = Array.isArray(file) ?
-					file.some((item) => item.size > maxSize) :
-					file.size > maxSize;
-				if (oversize) {
-					uni.showToast({
-						title: t("up.upload.sizeExceed")
-					})
-					this.$emit('oversize', Object.assign({
-						file
-					}, this.getDetail()));
-					return;
-				}
-				let len = this.fileList.length;
-				if (this.autoUpload) {
-					// 当设置 mutiple 为 true 时, file 为数组格式，否则为对象格式
-					let lists = [].concat(file);
-					let fileListLen = this.fileList.length;
-					lists.map((item) => {
-						this.fileList.push({
-							...item,
-							status: 'uploading',
-							message: t("up.upload.uploading"),
-							progress: 0
-						});
-					});
-					let that = this;
-					this.$emit('update:fileList', this.fileList);
-					for (let i = 0; i < lists.length; i++) {
-						let j = i;
-						let result = '';
-						switch(this.autoUploadDriver) {
-							case 'cos': // 腾讯云
-								break;
-							case 'kodo': // 七牛云
-								break;
-							case 'oss':
-							case 'upload_oss':
-								// 阿里云前端直传
-								// 获取签名
-								console.log()
-								let formData = {};
-								let ret = await uni.request({
-									url: this.autoUploadAuthUrl,
-									method: 'get',
-									header: this.autoUploadHeader,
-									data: {
-										filename: lists[j].name
-									}
-								});
-								// console.log(ret);
-								let res0 = ret.data;
-								if (res0.code == 200) {
-									// 路径 + 文件名 + 扩展名
-									// 不传递filename就要拼接key
-									// res0.data.params.key = res0.data.params.dir + res0.data.params.uniqidName + fileExt;
-									formData = res0.data.params;
-								} else {
-									uni.showToast({
-										title: res0.msg,
-										duration: 1500
-									});
-									return;
-								}
-								var uploadTask = uni.uploadFile({
-									url: res0.data.params.host,
-									filePath: lists[j].url,
-									name: 'file',
-									// fileType: 'video', // 仅支付宝小程序，且必填。
-									// header: header,
-									formData: formData,
-									success: (uploadFileRes) => {
-										let thumb = '';
-										let afterPromise = '';
-										if (that.customAfterAutoUpload) {
-											afterPromise = new Promise((resolve, reject) => {
-												that.$emit(
-													'afterAutoUpload',
-													Object.assign(res0, {
-														callback: (r) => {
-															r.url ? resolve(r) : reject();
-														},
-													})
-												);
-											});
-										}
-										if (test.promise(afterPromise)) {
-											afterPromise.then((data) => that.succcessUpload(len + j, data.url, data.thumb));
-										} else {
-											result = res0.data.params.host + '/' + res0.data.params.key;
-											if (that.accept === 'video' || test.video(result)) {
-												thumb = result + '?x-oss-process=video/snapshot,t_10000,m_fast';
-											}
-											that.succcessUpload(len + j, result, thumb);
-										}
-									}
-								});
-								uploadTask.onProgressUpdate((res) => {
-									that.updateUpload(len + j, {
-										progress: res.progress
-									});
-									// console.log('上传进度' + res.progress);
-									// console.log('已经上传的数据长度' + res.totalBytesSent);
-									// console.log('预期需要上传的数据总长度' + res.totalBytesExpectedToSend);
-								});
-								break;
-							case 'local':
-							default:
-								// 服务器本机上传
-								var uploadTask = uni.uploadFile({
-									url: this.autoUploadApi,
-									filePath: lists[j].url,
-									name: 'file',
-									// fileType: 'video', // 仅支付宝小程序，且必填。
-									header: this.autoUploadHeader,
-									success: (uploadFileRes) => {
-										let res0 = uploadFileRes.data;
-										let afterPromise = '';
-										if (that.customAfterAutoUpload) {
-											afterPromise = new Promise((resolve, reject) => {
-												that.$emit(
-													'afterAutoUpload',
-													Object.assign(res0, {
-														callback: (r) => {
-															r.url ? resolve(r) : reject();
-														}
-													})
-												);
-											});
-										}
-										if (test.promise(afterPromise)) {
-											afterPromise.then((data) => that.succcessUpload(len + j, data.url));
-										} else {
-											if (res0.code != 200) {
-												uni.showToast({
-													title: res0.msg
-												});
-											} else {
-												result = res0.data.url;
-												that.succcessUpload(len + j, result);
-											}
-										}
-									}
-								});
-								uploadTask.onProgressUpdate((res) => {
-									that.updateUpload(len + j, {
-										progress: res.progress
-									});
-									// console.log('上传进度' + res.progress);
-									// console.log('已经上传的数据长度' + res.totalBytesSent);
-									// console.log('预期需要上传的数据总长度' + res.totalBytesExpectedToSend);
-								});
-								break;
+defineOptions({
+	name: 'up-upload',
+	// #ifdef MP-WEIXIN
+	options: {
+		virtualHost: true
+	}
+	// #endif
+})
+
+const props = defineProps({
+	...commonProps,
+	...uploadProps.props
+})
+const emit = defineEmits([
+	'error',
+	'beforeRead',
+	'oversize',
+	'afterRead',
+	'delete',
+	'clickPreview',
+	'update:fileList',
+	'afterAutoUpload'
+])
+
+// #ifdef APP-NVUE
+const successIcon = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACgAAAAoCAYAAACM/rhtAAAAAXNSR0IArs4c6QAAAERlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAA6ABAAMAAAABAAEAAKACAAQAAAABAAAAKKADAAQAAAABAAAAKAAAAAB65masAAACP0lEQVRYCc3YXygsURwH8K/dpcWyG3LF5u/6/+dKVylSypuUl6uUPMifKMWL8oKEB1EUT1KeUPdR3uTNUsSLxb2udG/cbvInNuvf2rVnazZ/ZndmZ87snjM1Z+Z3zpzfp9+Z5mEAhlvjRtZgCKs+gnPAOcAkkMOR4jEHfItjDvgRxxSQD8cM0BuOCaAvXNCBQrigAsXgggYUiwsK0B9cwIH+4gIKlIILGFAqLiBAOTjFgXJxigJp4BQD0sIpAqSJow6kjSNAFTnRaHJwLenD6Mud52VQAcrBfTd2oyq+HtGaGGWAcnAVcXWoM3bCZrdi+ncPfaAcXE5UKVpdW/vitGPqqAtn98d0gXJwX7Qp6MmegUYVhvmTIezdmHlxJCjpHRTCFerLkRRu4k0aqdajN3sWOo0BK//msHa+xDuPC/oNFMKRhTtM4xjIX0SCNpXL4+7VIaHuyiWEp2L7ahWLf8fejfPdqPmC3mJicORZUp1CQzm+GiphvljGk+PBvWRbxii+xVTj5M6CiZ/tsDufvaXyxEUDxeLIyvu3m0iOyEFWVAkydcVYdyFrE9tQk9iMq6f/GNlvwt3LjQfh60LUrw9/cFyyMJUW/XkLSNMV4Mi6C5ML+ui4x5ClAX9sB9w0wV6wglJwJCv5fOxcr6EstgbGiEw4XcfUry4cWrcEUW8n+ARKxXEJHhw2WG43UKSvwI/TSZgvl7kh0b3XLZaLEy0QmMgLZAVH7J+ALOE+AVnDvQOyiPMAWcW5gSzjCPAV+78S5WE0GrQAAAAASUVORK5CYII='
+// #endif
+const lists = ref([])
+const isInCount = ref(true)
+const popupShow = ref(false)
+const currentItemIndex = ref(-1)
+
+// 监听accept的变化，判断是否符合各平台要求
+watch(() => props.accept, (val) => {
+	// #ifndef MP-WEIXIN
+	if (val === 'all' || val === 'media') {
+		error('只有微信小程序才支持把accept配置为all、media之一')
+	}
+	// #endif
+	// #ifndef H5 || MP-WEIXIN
+	if (val === 'file') {
+		error('只有微信小程序和H5(HX2.9.9)才支持把accept配置为file')
+	}
+	// #endif
+}, { immediate: true })
+
+// 监听文件列表的变化，重新整理内部数据
+watch(() => props.fileList, () => {
+	formatFileList()
+}, { immediate: true, deep: true })
+
+watch(() => props.deletable, () => {
+	formatFileList()
+})
+
+watch(() => props.maxCount, () => {
+	formatFileList()
+})
+
+watch(() => props.accept, () => {
+	formatFileList()
+})
+
+watch(popupShow, (newVal) => {
+	if (!newVal) {
+		currentItemIndex.value = -1
+	}
+})
+
+function videoErrorCallback() {}
+
+function loadedVideoMetadata(e) {
+	if (currentItemIndex.value < 0) {
+		return
+	}
+	if (props.autoUploadDriver != 'local') {
+		return
+	}
+	if (!props.getVideoThumb) {
+		return
+	}
+	// 截取第一帧作为封面，oss等云存储场景直接使用拼接参数。
+	let w = lists.value[currentItemIndex.value].width
+	let h = lists.value[currentItemIndex.value].height
+	const dpr = uni.getSystemInfoSync().pixelRatio
+	uni.createSelectorQuery().select('#myVideo').context(res => {
+		console.log('select video', res)
+		const myVideo = res.context
+		uni.createSelectorQuery()
+			.select('#myCanvas')
+			.fields({ node: true, size: true })
+			.exec(([res2]) => {
+				console.log('select canvas', res2)
+				const ctx1 = res2[0].node.getContext('2d')
+				res2[0].node.width = w * dpr
+				res2[0].node.height = h * dpr
+				// Draw the first frame and export it as an image
+				setTimeout(() => {
+					captureFirstFrame()
+				}, 500)
+				const captureFirstFrame = () => {
+					ctx1.drawImage(myVideo, 0, 0, w * dpr, h * dpr)
+					wx.canvasToTempFilePath({
+						canvas: res2[0].node,
+						success: (result) => {
+							console.log('First frame image path:', result.tempFilePath)
+							// Now you can use the image path (result.tempFilePath)
+							props.fileList['currentItemIndex'].thumb = result.tempFilePath
+						},
+						fail: (err) => {
+							console.error('Failed to export image:', err)
 						}
-					}
-				} else {
-					if (typeof afterRead === 'function') {
-						afterRead(file, this.getDetail());
-					}
-					this.$emit('afterRead', Object.assign({
-						file
-					}, this.getDetail()));
+					})
 				}
-			},
-			updateUpload(index, param) {
-				let item = this.fileList[index];
-				this.fileList.splice(index, 1, {
-					...item,
-					// 注意这里不判断会出现succcessUpload先执行又被覆盖的问题
-					status: param.progress == 100 ? 'success' : 'uploading',
-					message: '',
-					progress: param.progress
-				});
-				this.$emit('update:fileList', this.fileList);
-			},
-			succcessUpload(index, url, thumb = '') {
-				let item = this.fileList[index];
-				this.fileList.splice(index, 1, {
-					...item,
-					status: 'success',
-					message: '',
-					url: url,
-					progress: 100,
-					thumb: thumb
-				});
-				this.$emit('update:fileList', this.fileList);
-			},
-			deleteItem(index) {
-				if (this.autoDelete) {
-					this.fileList.splice(index, 1);
-					this.$emit('update:fileList', this.fileList);
-				} else {
-					this.$emit(
-						'delete',
-						Object.assign(Object.assign({}, this.getDetail(index)), {
-							file: this.fileList[index],
+
+				// Capture the first frame
+				setInterval(() => {
+					ctx1.drawImage(myVideo, 0, 0, w * dpr, h * dpr)
+				}, 1000 / 24)
+			})
+	}).exec()
+}
+
+function formatFileList() {
+	const fileList = props.fileList || []
+	const maxCount = props.maxCount
+	const nextLists = fileList.map((item) => {
+		const name = item.name || item.url || item.thumb
+		return Object.assign(Object.assign({}, item), {
+			// 如果item.url为本地选择的blob文件的话，无法判断其为video还是image，此处优先通过accept做判断处理
+			isImage: item.name ? test.image(item.name) : (props.accept === 'image' || test.image(name)),
+			isVideo: item.name ? test.video(item.name) : (props.accept === 'video' || test.video(name)),
+			deletable: typeof item.deletable === 'boolean' ? item.deletable : props.deletable,
+		})
+	})
+	lists.value = nextLists
+	isInCount.value = nextLists.length < maxCount
+}
+
+function chooseFileHandler(params) {
+	const maxCount = props.maxCount
+	const disabled = props.disabled
+	const currentLists = lists.value
+	if (disabled) return Promise.reject()
+	const chooseParams = Object.assign({
+		accept: props.accept,
+		extension: props.extension,
+		multiple: props.multiple,
+		capture: props.capture,
+		compressed: props.compressed,
+		maxDuration: props.maxDuration,
+		sizeType: props.sizeType,
+		camera: props.camera,
+	}, {
+		maxCount: maxCount - currentLists.length,
+		...params
+	})
+	return chooseFileUtil(chooseParams)
+		.then((res) => {
+			const result = chooseParams.multiple ? res : res[0]
+			onBeforeRead(result)
+			return result
+		})
+		.catch((error) => {
+			emit('error', error)
+		})
+}
+
+// 文件读取之前
+function onBeforeRead(file) {
+	const beforeRead = props.beforeRead
+	const useBeforeRead = props.useBeforeRead
+	let res = file
+	// beforeRead是否为一个方法
+	if (test.func(beforeRead)) {
+		// 如果用户定义了此方法，则去执行此方法，并传入读取的文件回调
+		res = beforeRead(file, getDetail())
+	}
+	if (useBeforeRead) {
+		res = new Promise((resolve, reject) => {
+			emit(
+				'beforeRead',
+				Object.assign(Object.assign({
+					file
+				}, getDetail()), {
+					callback: (ok) => {
+						ok ? resolve() : reject()
+					},
+				})
+			)
+		})
+	}
+	if (test.promise(res)) {
+		res.then((data) => onAfterRead(data || file))
+	} else {
+		onAfterRead(res || file)
+	}
+}
+
+function getDetail(index) {
+	return {
+		name: props.name,
+		index: index == null ? props.fileList.length : index,
+	}
+}
+
+async function onAfterRead(file) {
+	const maxSize = props.maxSize
+	const afterRead = props.afterRead
+	const oversize = Array.isArray(file) ?
+		file.some((item) => item.size > maxSize) :
+		file.size > maxSize
+	if (oversize) {
+		uni.showToast({
+			title: t("up.upload.sizeExceed")
+		})
+		emit('oversize', Object.assign({
+			file
+		}, getDetail()))
+		return
+	}
+	let len = props.fileList.length
+	if (props.autoUpload) {
+		// 当设置 mutiple 为 true 时, file 为数组格式，否则为对象格式
+		let uploadLists = [].concat(file)
+		uploadLists.map((item) => {
+			props.fileList.push({
+				...item,
+				status: 'uploading',
+				message: t("up.upload.uploading"),
+				progress: 0
+			})
+		})
+		emit('update:fileList', props.fileList)
+		for (let i = 0; i < uploadLists.length; i++) {
+			let j = i
+			let result = ''
+			switch (props.autoUploadDriver) {
+				case 'cos': // 腾讯云
+					break
+				case 'kodo': // 七牛云
+					break
+				case 'oss':
+				case 'upload_oss':
+					// 阿里云前端直传
+					// 获取签名
+					console.log()
+					let formData = {}
+					let ret = await uni.request({
+						url: props.autoUploadAuthUrl,
+						method: 'get',
+						header: props.autoUploadHeader,
+						data: {
+							filename: uploadLists[j].name
+						}
+					})
+					// console.log(ret);
+					let res0 = ret.data
+					if (res0.code == 200) {
+						// 路径 + 文件名 + 扩展名
+						// 不传递filename就要拼接key
+						// res0.data.params.key = res0.data.params.dir + res0.data.params.uniqidName + fileExt;
+						formData = res0.data.params
+					} else {
+						uni.showToast({
+							title: res0.msg,
+							duration: 1500
 						})
-					);
-				}
-			},
-			// 预览图片
-			onPreviewImage(previewItem, index) {
-				if (!previewItem.isImage || !this.previewFullImage) return
-                let current = 0;
-                const urls = [];
-                let imageIndex = 0;
-                for (var i = 0; i < this.lists.length; i++) {
-                    const item = this.lists[i];
-                    if (item.isImage || (item.type && item.type === 'image')) {
-                        urls.push(item.url || item.thumb);
-                        if (i === index) {
-                            current = imageIndex;
-                        }
-                        imageIndex += 1;
-                    }
-                }
-                if (urls.length < 1) {
-                    return;
-                }
-				uni.previewImage({
-                    urls: urls,
-                    current: current,
-					fail() {
-						toast(t("up.upload.previewImageFail"))
-					},
-				});
-			},
-			onPreviewVideo(previewItem, index) {
-				if (!this.previewFullImage) return;
-                let current = 0;
-                const sources = [];
-                let videoIndex = 0;
-                for (var i = 0; i < this.lists.length; i++) {
-                    const item = this.lists[i];
-                    if (item.isVideo || (item.type && item.type === 'video')) {
-                        sources.push(Object.assign(Object.assign({}, item), {
-                            type: 'video'
-                        }));
-                        if (i === index) {
-                            current = videoIndex;
-                        }
-                        videoIndex += 1;
-                    }
-                }
-                if (sources.length < 1) {
-                    return;
-                }
-				// #ifndef MP-WEIXIN
-				this.popupShow = true;
-				this.currentItemIndex = index;
-				console.log(this.lists[this.currentItemIndex])
-				// #endif
-				// #ifdef MP-WEIXIN
-				wx.previewMedia({
-					sources: sources,
-					current: current,
-					fail() {
-						toast(t("up.upload.previewVideoFail"))
-					},
-				});
-				// #endif
-			},
-			onClickPreview(item, index) {
-				if (this.previewFullImage) {
-					switch (item.type) {
-						case 'image':
-							this.onPreviewImage(item, index);
-							break;
-						case 'video':
-							this.onPreviewVideo(item, index);
-							break;
-						default:
-							break;
+						return
 					}
-				}
-				this.$emit(
-					'clickPreview',
-					Object.assign(Object.assign({}, item), this.getDetail(index))
-				);
+					var uploadTask = uni.uploadFile({
+						url: res0.data.params.host,
+						filePath: uploadLists[j].url,
+						name: 'file',
+						// fileType: 'video', // 仅支付宝小程序，且必填。
+						// header: header,
+						formData: formData,
+						success: (uploadFileRes) => {
+							let thumb = ''
+							let afterPromise = ''
+							if (props.customAfterAutoUpload) {
+								afterPromise = new Promise((resolve, reject) => {
+									emit(
+										'afterAutoUpload',
+										Object.assign(res0, {
+											callback: (r) => {
+												r.url ? resolve(r) : reject()
+											},
+										})
+									)
+								})
+							}
+							if (test.promise(afterPromise)) {
+								afterPromise.then((data) => succcessUpload(len + j, data.url, data.thumb))
+							} else {
+								result = res0.data.params.host + '/' + res0.data.params.key
+								if (props.accept === 'video' || test.video(result)) {
+									thumb = result + '?x-oss-process=video/snapshot,t_10000,m_fast'
+								}
+								succcessUpload(len + j, result, thumb)
+							}
+						}
+					})
+					uploadTask.onProgressUpdate((res) => {
+						updateUpload(len + j, {
+							progress: res.progress
+						})
+					})
+					break
+				case 'local':
+				default:
+					// 服务器本机上传
+					var uploadTaskLocal = uni.uploadFile({
+						url: props.autoUploadApi,
+						filePath: uploadLists[j].url,
+						name: 'file',
+						// fileType: 'video', // 仅支付宝小程序，且必填。
+						header: props.autoUploadHeader,
+						success: (uploadFileRes) => {
+							let resLocal = uploadFileRes.data
+							let afterPromise = ''
+							if (props.customAfterAutoUpload) {
+								afterPromise = new Promise((resolve, reject) => {
+									emit(
+										'afterAutoUpload',
+										Object.assign(resLocal, {
+											callback: (r) => {
+												r.url ? resolve(r) : reject()
+											}
+										})
+									)
+								})
+							}
+							if (test.promise(afterPromise)) {
+								afterPromise.then((data) => succcessUpload(len + j, data.url))
+							} else {
+								if (resLocal.code != 200) {
+									uni.showToast({
+										title: resLocal.msg
+									})
+								} else {
+									result = resLocal.data.url
+									succcessUpload(len + j, result)
+								}
+							}
+						}
+					})
+					uploadTaskLocal.onProgressUpdate((res) => {
+						updateUpload(len + j, {
+							progress: res.progress
+						})
+					})
+					break
 			}
 		}
+	} else {
+		if (typeof afterRead === 'function') {
+			afterRead(file, getDetail())
+		}
+		emit('afterRead', Object.assign({
+			file
+		}, getDetail()))
 	}
+}
+
+function updateUpload(index, param) {
+	let item = props.fileList[index]
+	props.fileList.splice(index, 1, {
+		...item,
+		// 注意这里不判断会出现succcessUpload先执行又被覆盖的问题
+		status: param.progress == 100 ? 'success' : 'uploading',
+		message: '',
+		progress: param.progress
+	})
+	emit('update:fileList', props.fileList)
+}
+
+function succcessUpload(index, url, thumb = '') {
+	let item = props.fileList[index]
+	props.fileList.splice(index, 1, {
+		...item,
+		status: 'success',
+		message: '',
+		url: url,
+		progress: 100,
+		thumb: thumb
+	})
+	emit('update:fileList', props.fileList)
+}
+
+function deleteItem(index) {
+	if (props.autoDelete) {
+		props.fileList.splice(index, 1)
+		emit('update:fileList', props.fileList)
+	} else {
+		emit(
+			'delete',
+			Object.assign(Object.assign({}, getDetail(index)), {
+				file: props.fileList[index],
+			})
+		)
+	}
+}
+
+// 预览图片
+function onPreviewImage(previewItem, index) {
+	if (!previewItem.isImage || !props.previewFullImage) return
+	let current = 0
+	const urls = []
+	let imageIndex = 0
+	for (var i = 0; i < lists.value.length; i++) {
+		const item = lists.value[i]
+		if (item.isImage || (item.type && item.type === 'image')) {
+			urls.push(item.url || item.thumb)
+			if (i === index) {
+				current = imageIndex
+			}
+			imageIndex += 1
+		}
+	}
+	if (urls.length < 1) {
+		return
+	}
+	uni.previewImage({
+		urls: urls,
+		current: current,
+		fail() {
+			toast(t("up.upload.previewImageFail"))
+		},
+	})
+}
+
+function onPreviewVideo(previewItem, index) {
+	if (!props.previewFullImage) return
+	let current = 0
+	const sources = []
+	let videoIndex = 0
+	for (var i = 0; i < lists.value.length; i++) {
+		const item = lists.value[i]
+		if (item.isVideo || (item.type && item.type === 'video')) {
+			sources.push(Object.assign(Object.assign({}, item), {
+				type: 'video'
+			}))
+			if (i === index) {
+				current = videoIndex
+			}
+			videoIndex += 1
+		}
+	}
+	if (sources.length < 1) {
+		return
+	}
+	// #ifndef MP-WEIXIN
+	popupShow.value = true
+	currentItemIndex.value = index
+	console.log(lists.value[currentItemIndex.value])
+	// #endif
+	// #ifdef MP-WEIXIN
+	wx.previewMedia({
+		sources: sources,
+		current: current,
+		fail() {
+			toast(t("up.upload.previewVideoFail"))
+		},
+	})
+	// #endif
+}
+
+function onClickPreview(item, index) {
+	if (props.previewFullImage) {
+		switch (item.type) {
+			case 'image':
+				onPreviewImage(item, index)
+				break
+			case 'video':
+				onPreviewVideo(item, index)
+				break
+			default:
+				break
+		}
+	}
+	emit(
+		'clickPreview',
+		Object.assign(Object.assign({}, item), getDetail(index))
+	)
+}
+
+// expose method name used by template
+function chooseFile(params) {
+	return chooseFileHandler(params)
+}
 </script>
+
 
 <style lang="scss" scoped>
 	$up-upload-preview-border-radius: 2px !default;

@@ -50,174 +50,143 @@
 	</view>
 </template>
 
-<script>
-	import { props } from './props.js';
-	import { mpMixin } from '../../libs/mixin/mpMixin.js';
-	import { mixin } from '../../libs/mixin/mixin.js';
-	import { addUnit, getPx } from '../../libs/function/index.js';
-	/**
-	 * CodeInput 验证码输入
-	 * @description 该组件一般用于验证用户短信验证码的场景，也可以结合uview-plus的键盘组件使用
-	 * @tutorial https://ijry.github.io/uview-plus/components/codeInput.html
-	 * @property {String | Number}	maxlength			最大输入长度 （默认 6 ）
-	 * @property {Boolean}			dot					是否用圆点填充 （默认 false ）
-	 * @property {String}			mode				显示模式，box-盒子模式，line-底部横线模式 （默认 'box' ）
-	 * @property {Boolean}			hairline			是否细边框 （默认 false ）
-	 * @property {String | Number}	space				字符间的距离 （默认 10 ）
-	 * @property {String | Number}	value				预置值
-	 * @property {Boolean}			focus				是否自动获取焦点 （默认 false ）
-	 * @property {Boolean}			bold				字体和输入横线是否加粗 （默认 false ）
-	 * @property {String}			color				字体颜色 （默认 '#606266' ）
-	 * @property {String | Number}	fontSize			字体大小，单位px （默认 18 ）
-	 * @property {String | Number}	size				输入框的大小，宽等于高 （默认 35 ）
-	 * @property {Boolean}			disabledKeyboard	是否隐藏原生键盘，如果想用自定义键盘的话，需设置此参数为true （默认 false ）
-	 * @property {String}			borderColor			边框和线条颜色 （默认 '#c9cacc' ）
-	 * @property {Boolean}			disabledDot			是否禁止输入"."符号 （默认 true ）
-	 * 
-	 * @event {Function}	change	输入内容发生改变时触发，具体见上方说明			value：当前输入的值
-	 * @event {Function}	finish	输入字符个数达maxlength值时触发，见上方说明	value：当前输入的值
-	 * @example	<up-code-input v-model="value4" :focus="true"></up-code-input>
-	 */
-	export default {
-		name: 'up-code-input',
-		mixins: [mpMixin, mixin, props],
-		data() {
-			return {
-				inputValue: '',
-				isFocus: this.focus,
-				timer: null,
-				opacity: 1
-			}
-		},
-		watch: {
-			// #ifdef VUE2
-			value: {
-				immediate: true,
-				handler(val) {
-					// 转为字符串，超出部分截掉
-					this.inputValue = String(val).substring(0, this.maxlength)
-				}
-			},
-			// #endif
-			// #ifdef VUE3
-			modelValue: {
-				immediate: true,
-				handler(val) {
-					// 转为字符串，超出部分截掉
-					this.inputValue = String(val).substring(0, this.maxlength)
-				}
-			},
-			// #endif
-			isFocus: {
-				handler(val) {
-					// #ifdef APP-NVUE
-					if (val) {
-						this.timer = setInterval(() => {
-							this.opacity = Math.abs(this.opacity - 1)
-						}, 600)
-					} else {
-						clearInterval(this.timer)
-					}
-					// #endif
-				}
-			}
-		},
-		created() {
-			
-		},
-		beforeUnmount() {
-			// #ifdef APP-NVUE
-			clearInterval(this.timer)
-			// #endif
-		},
-		computed: {
-			// 根据长度，循环输入框的个数，因为头条小程序数值不能用于v-for
-			codeLength() {
-				return new Array(Number(this.maxlength))
-			},
-			// 循环item的样式
-			itemStyle() {
-				return index => {
-					const style = {
-						width: addUnit(this.size),
-						height: addUnit(this.size)
-					}
-					// 盒子模式下，需要额外进行处理
-					if (this.mode === 'box') {
-						// 设置盒子的边框，如果是细边框，则设置为0.5px宽度
-						style.border = `${this.hairline ? 0.5 : 1}px solid ${this.borderColor}`
-						// 如果盒子间距为0的话
-						if (getPx(this.space) === 0) {
-							// 给第一和最后一个盒子设置圆角
-							if (index === 0) {
-								style.borderTopLeftRadius = '3px'
-								style.borderBottomLeftRadius = '3px'
-							}
-							if (index === this.codeLength.length - 1) {
-								style.borderTopRightRadius = '3px'
-								style.borderBottomRightRadius = '3px'
-							}
-							// 最后一个盒子的右边框需要保留
-							if (index !== this.codeLength.length - 1) {
-								style.borderRight = 'none'
-							}
-						}
-					}
-					if (index !== this.codeLength.length - 1) {
-						// 设置验证码字符之间的距离，通过margin-right设置，最后一个字符，无需右边框
-						style.marginRight = addUnit(this.space)
-					} else {
-						// 最后一个盒子的有边框需要保留
-						style.marginRight = 0
-					}
+<script setup>
+import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
+import { props as codeInputProps } from './props.js'
+import { commonProps } from '../../libs/composable/useUltraUI.js'
+import { addUnit, getPx } from '../../libs/function/index.js'
+/**
+ * CodeInput 验证码输入
+ * @description 该组件一般用于验证用户短信验证码的场景，也可以结合uview-plus的键盘组件使用
+ * @tutorial https://ijry.github.io/uview-plus/components/codeInput.html
+ * @property {String | Number}	maxlength			最大输入长度 （默认 6 ）
+ * @property {Boolean}			dot					是否用圆点填充 （默认 false ）
+ * @property {String}			mode				显示模式，box-盒子模式，line-底部横线模式 （默认 'box' ）
+ * @property {Boolean}			hairline			是否细边框 （默认 false ）
+ * @property {String | Number}	space				字符间的距离 （默认 10 ）
+ * @property {String | Number}	value				预置值
+ * @property {Boolean}			focus				是否自动获取焦点 （默认 false ）
+ * @property {Boolean}			bold				字体和输入横线是否加粗 （默认 false ）
+ * @property {String}			color				字体颜色 （默认 '#606266' ）
+ * @property {String | Number}	fontSize			字体大小，单位px （默认 18 ）
+ * @property {String | Number}	size				输入框的大小，宽等于高 （默认 35 ）
+ * @property {Boolean}			disabledKeyboard	是否隐藏原生键盘，如果想用自定义键盘的话，需设置此参数为true （默认 false ）
+ * @property {String}			borderColor			边框和线条颜色 （默认 '#c9cacc' ）
+ * @property {Boolean}			disabledDot			是否禁止输入"."符号 （默认 true ）
+ *
+ * @event {Function}	change	输入内容发生改变时触发，具体见上方说明			value：当前输入的值
+ * @event {Function}	finish	输入字符个数达maxlength值时触发，见上方说明	value：当前输入的值
+ * @example	<up-code-input v-model="value4" :focus="true"></up-code-input>
+ */
+defineOptions({
+	name: 'up-code-input',
+	// #ifdef MP-WEIXIN
+	options: {
+		virtualHost: true
+	}
+	// #endif
+})
 
-					return style
-				}
-			},
-			// 将输入的值，转为数组，给item历遍时，根据当前的索引显示数组的元素
-			codeArray() {
-				return String(this.inputValue).split('')
-			},
-			// 下划线模式下，横线的样式
-			lineStyle() {
-				const style = {}
-				style.height = this.hairline ? '2px' : '4px'
-				style.width = addUnit(this.size)
-				// 线条模式下，背景色即为边框颜色
-				style.backgroundColor = this.borderColor
-				return style
+const props = defineProps({
+	...commonProps,
+	...codeInputProps.props
+})
+const emit = defineEmits(['change', 'finish', 'update:modelValue'])
+
+const inputValue = ref('')
+const isFocus = ref(props.focus)
+const timer = ref(null)
+const opacity = ref(1)
+
+// #ifdef VUE2
+watch(() => props.value, (val) => {
+	inputValue.value = String(val).substring(0, props.maxlength)
+}, { immediate: true })
+// #endif
+// #ifdef VUE3
+watch(() => props.modelValue, (val) => {
+	inputValue.value = String(val).substring(0, props.maxlength)
+}, { immediate: true })
+// #endif
+
+watch(isFocus, (val) => {
+	// #ifdef APP-NVUE
+	if (val) {
+		timer.value = setInterval(() => {
+			opacity.value = Math.abs(opacity.value - 1)
+		}, 600)
+	} else {
+		clearInterval(timer.value)
+	}
+	// #endif
+})
+
+onBeforeUnmount(() => {
+	// #ifdef APP-NVUE
+	clearInterval(timer.value)
+	// #endif
+})
+
+const codeLength = computed(() => new Array(Number(props.maxlength)))
+const codeArray = computed(() => String(inputValue.value).split(''))
+const lineStyle = computed(() => {
+	const style = {}
+	style.height = props.hairline ? '2px' : '4px'
+	style.width = addUnit(props.size)
+	style.backgroundColor = props.borderColor
+	return style
+})
+
+function itemStyle(index) {
+	const style = {
+		width: addUnit(props.size),
+		height: addUnit(props.size)
+	}
+	if (props.mode === 'box') {
+		style.border = `${props.hairline ? 0.5 : 1}px solid ${props.borderColor}`
+		if (getPx(props.space) === 0) {
+			if (index === 0) {
+				style.borderTopLeftRadius = '3px'
+				style.borderBottomLeftRadius = '3px'
 			}
-		},
-		emits: ["change", 'finish', "update:modelValue"],
-		methods: {
-			addUnit,
-			// 监听输入框的值发生变化
-			inputHandler(e) {
-				const value = e.detail.value
-				this.inputValue = value
-				// 是否允许输入“.”符号
-				if(this.disabledDot) {
-					this.$nextTick(() => {
-						this.inputValue = value.replace('.', '')
-					})
-				}
-				// 未达到maxlength之前，发送change事件，达到后发送finish事件
-				this.$emit('change', value)
-				// 修改通过v-model双向绑定的值
-				// #ifdef VUE3
-                this.$emit("update:modelValue", value);
-                // #endif
-                // #ifdef VUE2
-                this.$emit("input", value);
-                // #endif
-				// 达到用户指定输入长度时，发出完成事件
-				if (String(value).length >= Number(this.maxlength)) {
-					this.$emit('finish', value)
-				}
+			if (index === codeLength.value.length - 1) {
+				style.borderTopRightRadius = '3px'
+				style.borderBottomRightRadius = '3px'
+			}
+			if (index !== codeLength.value.length - 1) {
+				style.borderRight = 'none'
 			}
 		}
 	}
+	if (index !== codeLength.value.length - 1) {
+		style.marginRight = addUnit(props.space)
+	} else {
+		style.marginRight = 0
+	}
+	return style
+}
+
+function inputHandler(e) {
+	const value = e.detail.value
+	inputValue.value = value
+	if (props.disabledDot) {
+		nextTick(() => {
+			inputValue.value = value.replace('.', '')
+		})
+	}
+	emit('change', value)
+	// #ifdef VUE3
+	emit('update:modelValue', value)
+	// #endif
+	// #ifdef VUE2
+	emit('input', value)
+	// #endif
+	if (String(value).length >= Number(props.maxlength)) {
+		emit('finish', value)
+	}
+}
 </script>
+
 
 <style lang="scss" scoped>
 	@import "../../libs/css/components.scss";
@@ -282,7 +251,7 @@
 			text-align: left;
 		}
 	}
-	
+
 	/* #ifndef APP-NVUE */
 	@keyframes up-cursor-flicker {
 		0% {

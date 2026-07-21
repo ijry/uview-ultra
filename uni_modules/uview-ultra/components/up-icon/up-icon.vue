@@ -34,7 +34,8 @@
 	</view>
 </template>
 
-<script>
+<script setup>
+	import { computed } from 'vue'
 	// #ifdef APP-NVUE
 	// nvue通过weex的dom模块引入字体，相关文档地址如下：
 	// https://weex.apache.org/zh/docs/modules/dom.html#addrule
@@ -48,12 +49,11 @@
 
 	// 引入图标名称，已经对应的unicode
 	import icons from './icons.js'
-	import fontUtil from './util.js';
-	import { propsIcon } from './props.js';
-	import { mpMixin } from '../../libs/mixin/mpMixin.js';
-	import { mixin } from '../../libs/mixin/mixin.js';
-	import { addUnit, addStyle } from '../../libs/function/index.js';
-	import config from '../../libs/config/config.js';
+	import fontUtil from './util.js'
+	import { propsIcon } from './props.js'
+	import { commonProps, useUltraUI } from '../../libs/composable/useUltraUI.js'
+	import { addUnit, addStyle } from '../../libs/function/index.js'
+	import config from '../../libs/config/config.js'
 	/**
 	 * icon 图标
 	 * @description 基于字体的图标集，包含了大多数常见场景的图标。
@@ -80,87 +80,90 @@
 	 * @event {Function} touchstart 事件触摸时触发
 	 * @example <up-icon name="photo" color="#2979ff" size="28"></up-icon>
 	 */
-	export default {
+	defineOptions({
 		name: 'up-icon',
-		beforeCreate() {
-			if (!fontUtil.params.loaded) {
-				fontUtil.loadFont();
-			}
-		},
-		data() {
-			return {
-
-			}
-		},
-		emits: ['click'],
-		mixins: [mpMixin, mixin, propsIcon],
-		computed: {
-			uClasses() {
-				let classes = []
-				classes.push(this.customPrefix + '-' + this.name)
-				// uview-plus的自定义图标类名为up-iconfont
-				if (this.customPrefix == 'upicon') {
-					classes.push('up-iconfont')
-				} else {
-					// 不能缺少这一步，否则自定义图标会无效
-					classes.push(this.customPrefix)
-				}
-				// 主题色，通过类配置
-				if (this.color && config.type.includes(this.color)) classes.push('up-icon__icon--' + this.color)
-				// 阿里，头条，百度小程序通过数组绑定类名时，无法直接使用[a, b, c]的形式，否则无法识别
-				// 故需将其拆成一个字符串的形式，通过空格隔开各个类名
-				//#ifdef MP-ALIPAY || MP-TOUTIAO || MP-BAIDU
-				classes = classes.join(' ')
-				//#endif
-				return classes
-			},
-			iconStyle() {
-				let style = {}
-				style = {
-					fontSize: addUnit(this.size),
-					lineHeight: addUnit(this.size),
-					fontWeight: this.bold ? 'bold' : 'normal',
-					// 某些特殊情况需要设置一个到顶部的距离，才能更好的垂直居中
-					top: addUnit(this.top)
-				}
-				if (this.customPrefix !== 'upicon') {
-					style.fontFamily = this.customPrefix
-				}
-				// 非主题色值时，才当作颜色值
-				if (this.color && !config.type.includes(this.color)) style.color = this.color
-
-				return style
-			},
-			// 判断传入的name属性，是否图片路径，只要带有"/"均认为是图片形式
-			isImg() {
-				return this.name.indexOf('/') !== -1
-			},
-			imgStyle() {
-				let style = {}
-				// 如果设置width和height属性，则优先使用，否则使用size属性
-				style.width = this.width ? addUnit(this.width) : addUnit(this.size)
-				style.height = this.height ? addUnit(this.height) : addUnit(this.size)
-				return style
-			},
-			// 通过图标名，查找对应的图标
-			icon() {
-				// 使用自定义图标的时候页面上会把name属性也展示出来，所以在这里处理一下
-				if (this.customPrefix !== 'upicon') {
-					return config.customIcons[this.name] || this.name;
-				}
-				// 如果内置的图标中找不到对应的图标，就直接返回name值，因为用户可能传入的是unicode代码
-				return icons['upicon-' + this.name] || this.name
-			}
-		},
-		methods: {
-			addStyle,
-			addUnit,
-			clickHandler(e) {
-				this.$emit('click', this.index)
-				// 是否阻止事件冒泡
-				this.stop && this.preventEvent(e)
-			}
+		// #ifdef MP-WEIXIN
+		options: {
+			virtualHost: true
 		}
+		// #endif
+	})
+
+	const props = defineProps({
+		...commonProps,
+		...propsIcon.props
+	})
+	const emit = defineEmits(['click'])
+	const { preventEvent } = useUltraUI(props)
+
+	if (!fontUtil.params.loaded) {
+		fontUtil.loadFont()
+	}
+
+	const uClasses = computed(() => {
+		let classes = []
+		classes.push(props.customPrefix + '-' + props.name)
+		// uview-plus的自定义图标类名为up-iconfont
+		if (props.customPrefix == 'upicon') {
+			classes.push('up-iconfont')
+		} else {
+			// 不能缺少这一步，否则自定义图标会无效
+			classes.push(props.customPrefix)
+		}
+		// 主题色，通过类配置
+		if (props.color && config.type.includes(props.color)) classes.push('up-icon__icon--' + props.color)
+		// 阿里，头条，百度小程序通过数组绑定类名时，无法直接使用[a, b, c]的形式，否则无法识别
+		// 故需将其拆成一个字符串的形式，通过空格隔开各个类名
+		//#ifdef MP-ALIPAY || MP-TOUTIAO || MP-BAIDU
+		classes = classes.join(' ')
+		//#endif
+		return classes
+	})
+
+	const iconStyle = computed(() => {
+		const style = {
+			fontSize: addUnit(props.size),
+			lineHeight: addUnit(props.size),
+			fontWeight: props.bold ? 'bold' : 'normal',
+			// 某些特殊情况需要设置一个到顶部的距离，才能更好的垂直居中
+			top: addUnit(props.top)
+		}
+		if (props.customPrefix !== 'upicon') {
+			style.fontFamily = props.customPrefix
+		}
+		// 非主题色值时，才当作颜色值
+		if (props.color && !config.type.includes(props.color)) style.color = props.color
+
+		return style
+	})
+
+	// 判断传入的name属性，是否图片路径，只要带有"/"均认为是图片形式
+	const isImg = computed(() => {
+		return props.name.indexOf('/') !== -1
+	})
+
+	const imgStyle = computed(() => {
+		const style = {}
+		// 如果设置width和height属性，则优先使用，否则使用size属性
+		style.width = props.width ? addUnit(props.width) : addUnit(props.size)
+		style.height = props.height ? addUnit(props.height) : addUnit(props.size)
+		return style
+	})
+
+	// 通过图标名，查找对应的图标
+	const icon = computed(() => {
+		// 使用自定义图标的时候页面上会把name属性也展示出来，所以在这里处理一下
+		if (props.customPrefix !== 'upicon') {
+			return config.customIcons[props.name] || props.name
+		}
+		// 如果内置的图标中找不到对应的图标，就直接返回name值，因为用户可能传入的是unicode代码
+		return icons['upicon-' + props.name] || props.name
+	})
+
+	function clickHandler(e) {
+		emit('click', props.index)
+		// 是否阻止事件冒泡
+		props.stop && preventEvent(e)
 	}
 </script>
 

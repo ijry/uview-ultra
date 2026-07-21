@@ -45,11 +45,11 @@
 	</view>
 </template>
 
-<script>
-	import { props } from './props.js';
-	import { mpMixin } from '../../libs/mixin/mpMixin.js';
-	import { mixin } from '../../libs/mixin/mixin.js';
-	import { addUnit, addStyle, deepMerge, sleep, sys } from '../../libs/function/index.js';
+<script setup>
+	import { computed, getCurrentInstance, ref, watch } from 'vue'
+	import { props as popupProps } from './props.js'
+	import { commonProps, useUltraUI } from '../../libs/composable/useUltraUI.js'
+	import { addUnit, addStyle, deepMerge, sleep, sys } from '../../libs/function/index.js'
 	/**
 	 * popup 弹窗
 	 * @description 弹出层容器，用于展示弹窗、信息提示等内容，支持上、下、左、右和中部弹出。组件只提供容器，内部内容由用户自定义
@@ -74,163 +74,187 @@
 	 * @event {Function} close 弹出层收起
 	 * @example <up-popup v-model="show"><text>出淤泥而不染，濯清涟而不妖</text></up-popup>
 	 */
-	export default {
+	defineOptions({
 		name: 'up-popup',
-		mixins: [mpMixin, mixin, props],
-		data() {
-			return {
-				overlayDuration: this.duration + 50
-			}
-		},
-		watch: {
-			show(newValue, oldValue) {
-				if (newValue === true) {
-					// #ifdef MP-WEIXIN
-					const children = this.$children
-					this.retryComputedComponentRect(children)
-					// #endif
-				}
-			}
-		},
-		computed: {
-			transitionStyle() {
-				const style = {
-					display: 'flex',
-				}
-				if (!this.pageInline) {
-					style.zIndex = this.zIndex
-					style.position = 'fixed'
-				}
-				style[this.mode] = 0
-				if (this.mode === 'left') {
-					return deepMerge(style, {
-						bottom: 0,
-						top: 0,
-					})
-				} else if (this.mode === 'right') {
-					return deepMerge(style, {
-						bottom: 0,
-						top: 0,
-					})
-				} else if (this.mode === 'top') {
-					return deepMerge(style, {
-						left: 0,
-						right: 0
-					})
-				} else if (this.mode === 'bottom') {
-					return deepMerge(style, {
-						left: 0,
-						right: 0,
-					})
-				} else if (this.mode === 'center') {
-					return deepMerge(style, {
-						alignItems: 'center',
-						'justify-content': 'center',
-						top: 0,
-						left: 0,
-						right: 0,
-						bottom: 0
-					})
-				}
-			},
-			contentStyle() {
-				const style = {}
-				// 通过设备信息的safeAreaInsets值来判断是否需要预留顶部状态栏和底部安全局的位置
-				// 不使用css方案，是因为nvue不支持css的iPhoneX安全区查询属性
-				const {
-					safeAreaInsets
-				} = sys()
-				if (this.mode !== 'center') {
-					style.flex = 1
-				}
-				// 背景色，一般用于设置为transparent，去除默认的白色背景
-				if (this.bgColor) {
-					style.backgroundColor = this.bgColor
-				}
-				if(this.round) {
-					const value = addUnit(this.round)
-					if(this.mode === 'top') {
-						style.borderBottomLeftRadius = value
-						style.borderBottomRightRadius = value
-					} else if(this.mode === 'bottom') {
-						style.borderTopLeftRadius = value
-						style.borderTopRightRadius = value
-					} else if(this.mode === 'center') {
-						style.borderRadius = value
-					} 
-				}
-				return deepMerge(style, addStyle(this.customStyle))
-			},
-			position() {
-				if (this.mode === 'center') {
-					return this.zoom ? 'fade-zoom' : 'fade'
-				}
-				if (this.mode === 'left') {
-					return 'slide-left'
-				}
-				if (this.mode === 'right') {
-					return 'slide-right'
-				}
-				if (this.mode === 'bottom') {
-					return 'slide-up'
-				}
-				if (this.mode === 'top') {
-					return 'slide-down'
-				}
-			},
-		},
-		emits: ["open", "close", "click", "update:show"],
-		methods: {
-			// 点击遮罩
-			overlayClick() {
-				if (this.closeOnClickOverlay) {
-					this.$emit('update:show', false)
-					this.$emit('close')
-				}
-			},
-			close(e) {
-				this.$emit('update:show', false)
-				this.$emit('close')
-			},
-			afterEnter() {
-				this.$emit('open')
-			},
-			clickHandler() {
-				// 由于中部弹出时，其up-transition占据了整个页面相当于遮罩，此时需要发出遮罩点击事件，是否无法通过点击遮罩关闭弹窗
-				if(this.mode === 'center') {
-					this.overlayClick()
-				}
-				this.$emit('click')
-			},
+		// #ifdef MP-WEIXIN
+		options: {
+			virtualHost: true
+		}
+		// #endif
+	})
+
+	const props = defineProps({
+		...commonProps,
+		...popupProps.props
+	})
+	const emit = defineEmits(['open', 'close', 'click', 'update:show'])
+	const instance = getCurrentInstance()
+	const { noop } = useUltraUI(props)
+	const overlayDuration = ref(props.duration + 50)
+
+	watch(() => props.show, (newValue) => {
+		if (newValue === true) {
 			// #ifdef MP-WEIXIN
-			retryComputedComponentRect(children) {
-				// 组件内部需要计算节点的组件
-				const names = ['up-calendar-month', 'up-album', 'up-collapse-item', 'up-dropdown', 'up-index-item', 'up-index-list',
-					'up-line-progress', 'up-list-item', 'up-rate', 'up-read-more', 'up-row', 'up-row-notice', 'up-scroll-list',
-					'up-skeleton', 'up-slider', 'up-steps-item', 'up-sticky', 'up-subsection', 'up-swipe-action-item', 'up-tabbar',
-					'up-tabs', 'up-tooltip'
-				]
-				// 历遍所有的子组件节点
-				for (let i = 0; i < children.length; i++) {
-					const child = children[i]
-					// 拿到子组件的子组件
-					const grandChild = child.$children
-					// 判断如果在需要重新初始化的组件数组中名中，并且存在init方法的话，则执行
-					if (names.includes(child.$options.name) && typeof child?.init === 'function') {
-						// 需要进行一定的延时，因为初始化页面需要时间
-						sleep(50).then(() => {
-							child.init()
-						})
-					}
-					// 如果子组件还有孙组件，进行递归历遍
-					if (grandChild.length) {
-						this.retryComputedComponentRect(grandChild)
-					}
-				}
-			}
+			const children = instance?.proxy?.$children || []
+			retryComputedComponentRect(children)
 			// #endif
 		}
+	})
+
+	const transitionStyle = computed(() => {
+		const style = {
+			display: 'flex',
+		}
+		if (!props.pageInline) {
+			style.zIndex = props.zIndex
+			style.position = 'fixed'
+		}
+		style[props.mode] = 0
+		if (props.mode === 'left') {
+			return deepMerge(style, {
+				bottom: 0,
+				top: 0,
+			})
+		} else if (props.mode === 'right') {
+			return deepMerge(style, {
+				bottom: 0,
+				top: 0,
+			})
+		} else if (props.mode === 'top') {
+			return deepMerge(style, {
+				left: 0,
+				right: 0
+			})
+		} else if (props.mode === 'bottom') {
+			return deepMerge(style, {
+				left: 0,
+				right: 0,
+			})
+		} else if (props.mode === 'center') {
+			return deepMerge(style, {
+				alignItems: 'center',
+				'justify-content': 'center',
+				top: 0,
+				left: 0,
+				right: 0,
+				bottom: 0
+			})
+		}
+	})
+
+	const contentStyle = computed(() => {
+		const style = {}
+		// 通过设备信息的safeAreaInsets值来判断是否需要预留顶部状态栏和底部安全局的位置
+		// 不使用css方案，是因为nvue不支持css的iPhoneX安全区查询属性
+		const {
+			safeAreaInsets
+		} = sys()
+		if (props.mode !== 'center') {
+			style.flex = 1
+		}
+		// 背景色，一般用于设置为transparent，去除默认的白色背景
+		if (props.bgColor) {
+			style.backgroundColor = props.bgColor
+		}
+		if(props.round) {
+			const value = addUnit(props.round)
+			if(props.mode === 'top') {
+				style.borderBottomLeftRadius = value
+				style.borderBottomRightRadius = value
+			} else if(props.mode === 'bottom') {
+				style.borderTopLeftRadius = value
+				style.borderTopRightRadius = value
+			} else if(props.mode === 'center') {
+				style.borderRadius = value
+			}
+		}
+		return deepMerge(style, addStyle(props.customStyle))
+	})
+
+	const position = computed(() => {
+		if (props.mode === 'center') {
+			return props.zoom ? 'fade-zoom' : 'fade'
+		}
+		if (props.mode === 'left') {
+			return 'slide-left'
+		}
+		if (props.mode === 'right') {
+			return 'slide-right'
+		}
+		if (props.mode === 'bottom') {
+			return 'slide-up'
+		}
+		if (props.mode === 'top') {
+			return 'slide-down'
+		}
+	})
+
+	// 点击遮罩
+	function overlayClick() {
+		if (props.closeOnClickOverlay) {
+			emit('update:show', false)
+			emit('close')
+		}
 	}
+
+	function close(e) {
+		emit('update:show', false)
+		emit('close')
+	}
+
+	function afterEnter() {
+		emit('open')
+	}
+
+	function clickHandler() {
+		// 由于中部弹出时，其up-transition占据了整个页面相当于遮罩，此时需要发出遮罩点击事件，是否无法通过点击遮罩关闭弹窗
+		if(props.mode === 'center') {
+			overlayClick()
+		}
+		emit('click')
+	}
+
+	// #ifdef MP-WEIXIN
+	function retryComputedComponentRect(children = []) {
+		// 组件内部需要计算节点的组件
+		const names = ['up-calendar-month', 'up-album', 'up-collapse-item', 'up-dropdown', 'up-index-item', 'up-index-list',
+			'up-line-progress', 'up-list-item', 'up-rate', 'up-read-more', 'up-row', 'up-row-notice', 'up-scroll-list',
+			'up-skeleton', 'up-slider', 'up-steps-item', 'up-sticky', 'up-subsection', 'up-swipe-action-item', 'up-tabbar',
+			'up-tabs', 'up-tooltip'
+		]
+		// 历遍所有的子组件节点
+		for (let i = 0; i < children.length; i++) {
+			const child = children[i]
+			// 拿到子组件的子组件
+			const grandChild = child?.$children || []
+			// 判断如果在需要重新初始化的组件数组中名中，并且存在init方法的话，则执行
+			if (names.includes(child?.$options?.name) && typeof child?.init === 'function') {
+				// 需要进行一定的延时，因为初始化页面需要时间
+				sleep(50).then(() => {
+					child.init()
+				})
+			}
+			// 如果子组件还有孙组件，进行递归历遍
+			if (grandChild.length) {
+				retryComputedComponentRect(grandChild)
+			}
+		}
+	}
+	// #endif
+
+	defineExpose({
+		overlayDuration,
+		transitionStyle,
+		contentStyle,
+		position,
+		overlayClick,
+		close,
+		afterEnter,
+		clickHandler,
+		// #ifdef MP-WEIXIN
+		retryComputedComponentRect
+		// #endif
+	})
 </script>
 
 <style lang="scss" scoped>

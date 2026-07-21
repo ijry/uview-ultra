@@ -30,11 +30,11 @@
 	</view>
 </template>
 
-<script>
-	import { props } from './props';
-	import { mpMixin } from '../../libs/mixin/mpMixin';
-	import { mixin } from '../../libs/mixin/mixin';
-	import { addUnit } from '../../libs/function/index';
+<script setup>
+	import { computed } from 'vue'
+	import { props as swiperIndicatorProps } from './props'
+	import { commonProps } from '../../libs/composable/useUltraUI.js'
+	import { addUnit } from '../../libs/function/index.js'
 	/**
 	 * SwiperIndicator 轮播图指示器
 	 * @description 该组件一般用于导航轮播，广告展示等场景,可开箱即用，
@@ -46,35 +46,35 @@
 	 * @property {String}			indicatorMode			指示器模式（默认 'line' ）
 	 * @example	<up-swiper :list="list4" indicator keyName="url" :autoplay="false"></up-swiper>
 	 */
-	export default {
+	defineOptions({
 		name: 'up-swiper-indicator',
-		mixins: [mpMixin, mixin, props],
-		data() {
-			return {
-				lineWidth: 22
-			}
-		},
-		computed: {
-			// 指示器为线型的样式
-			lineStyle() {
-				let style = {}
-				style.width = addUnit(this.lineWidth)
-				style.transform = `translateX(${ addUnit(this.current * this.lineWidth) })`
-				style.backgroundColor = this.indicatorActiveColor
-				return style
-			},
-			// 指示器为点型的样式
-			dotStyle() {
-				return index => {
-					let style = {}
-					style.backgroundColor = index === this.current ? this.indicatorActiveColor : this.indicatorInactiveColor
-					return style
-				}
-			}
-		},
-		methods: {
-			addUnit
+		// #ifdef MP-WEIXIN
+		options: {
+			virtualHost: true
 		}
+		// #endif
+	})
+
+	const props = defineProps({
+		...commonProps,
+		...swiperIndicatorProps.props
+	})
+	const lineWidth = 22
+
+	// 指示器为线型的样式
+	const lineStyle = computed(() => {
+		const style = {}
+		style.width = addUnit(lineWidth)
+		style.transform = `translateX(${addUnit(props.current * lineWidth)})`
+		style.backgroundColor = props.indicatorActiveColor
+		return style
+	})
+
+	// 指示器为点型的样式
+	function dotStyle(index) {
+		const style = {}
+		style.backgroundColor = index === props.current ? props.indicatorActiveColor : props.indicatorInactiveColor
+		return style
 	}
 </script>
 

@@ -1,7 +1,7 @@
 <template>
-	<view class="up-calendar-month-wrapper" ref="up-calendar-month-wrapper">
+	<view class="up-calendar-month-wrapper" ref="monthWrapperRef">
 		<view v-for="(item, index) in months" :key="index" :class="[`up-calendar-month-${index}`]"
-			:ref="`up-calendar-month-${index}`" :id="`month-${index}`">
+			:ref="(el) => setMonthItemRef(el, index)" :id="`month-${index}`">
 			<text v-if="index !== 0" class="up-calendar-month__title">{{ getMonthTitle(item) }}</text>
 			<view class="up-calendar-month__days">
 				<view v-if="showMark" class="up-calendar-month__days__month-mark-wrapper">
@@ -26,527 +26,559 @@
 	</view>
 </template>
 
-<script>
-	// #ifdef APP-NVUE
-	// 由于nvue不支持百分比单位，需要查询宽度来计算每个日期的宽度
-	const dom = uni.requireNativePlugin('dom')
-	// #endif
-	import { mpMixin } from '../../libs/mixin/mpMixin.js';
-	import { mixin } from '../../libs/mixin/mixin.js';
-	import { addUnit, deepClone, toast, sleep, getWindowInfo } from '../../libs/function/index.js';
-	import { colorGradient } from '../../libs/function/colorGradient.js';
-	import test from '../../libs/function/test.js';
-	import defProps from '../../libs/config/props.js';
-	import dayjs from '../up-datetime-picker/dayjs.esm.min.js';
-	export default {
-		name: 'up-calendar-month',
-		mixins: [mpMixin, mixin],
-		props: {
-			// 是否显示月份背景色
-			showMark: {
-				type: Boolean,
-				default: true
-			},
-			// 主题色，对底部按钮和选中日期有效
-			color: {
-				type: String,
-				default: '#3c9cff'
-			},
-			// 月份数据
-			months: {
-				type: Array,
-				default: () => []
-			},
-			// 日期选择类型
-			mode: {
-				type: String,
-				default: 'single'
-			},
-			// 日期行高
-			rowHeight: {
-				type: [String, Number],
-				default: 58
-			},
-			// mode=multiple时，最多可选多少个日期
-			maxCount: {
-				type: [String, Number],
-				default: Infinity
-			},
-			// mode=range时，第一个日期底部的提示文字
-			startText: {
-				type: String,
-				default: '开始'
-			},
-			// mode=range时，最后一个日期底部的提示文字
-			endText: {
-				type: String,
-				default: '结束'
-			},
-			// 默认选中的日期，mode为multiple或range是必须为数组格式
-			defaultDate: {
-				type: [Array, String, Date],
-				default: null
-			},
-			// 最小的可选日期
-			minDate: {
-				type: [String, Number],
-				default: 0
-			},
-			// 最大可选日期
-			maxDate: {
-				type: [String, Number],
-				default: 0
-			},
-			// 如果没有设置maxDate，则往后推多少个月
-			maxMonth: {
-				type: [String, Number],
-				default: 2
-			},
-			// 是否为只读状态，只读状态下禁止选择日期
-			readonly: {
-				type: Boolean,
-				default: () => defProps.calendar.readonly
-			},
-			// 日期区间最多可选天数，默认无限制，mode = range时有效
-			maxRange: {
-				type: [Number, String],
-				default: Infinity
-			},
-			// 范围选择超过最多可选天数时的提示文案，mode = range时有效
-			rangePrompt: {
-				type: String,
-				default: ''
-			},
-			// 范围选择超过最多可选天数时，是否展示提示文案，mode = range时有效
-			showRangePrompt: {
-				type: Boolean,
-				default: true
-			},
-			// 是否允许日期范围的起止时间为同一天，mode = range时有效
-			allowSameDay: {
-				type: Boolean,
-				default: false
-			},
-			// 禁用日期，格式为 YYYY-MM-DD；range 模式不启用该限制
-			forbidDays: {
-				type: Array,
-				default: () => []
-			},
-			// 点击禁用日期时的提示
-			forbidDaysToast: {
-				type: String,
-				default: ''
-			},
-			// 月份标题格式，遵循 dayjs format
-			monthFormat: {
-				type: String,
-				default: ''
-			},
-			// 今天日期，用于独立高亮
-			todayDate: {
-				type: String,
-				default: ''
-			},
-			// 今天日期的独立高亮颜色
-			todayColor: {
-				type: String,
-				default: ''
-			}
-		},
-		data() {
-			return {
-				// 每个日期的宽度
-				width: 0,
-				// 当前选中的日期item
-				item: {},
-				selected: []
-			}
-		},
-		watch: {
-			selectedChange: {
-				immediate: true,
-				handler(n) {
-					this.setDefaultDate()
-				}
-			}
-		},
-		computed: {
-			// 多个条件的变化，会引起选中日期的变化，这里统一管理监听
-			selectedChange() {
-				return [this.minDate, this.maxDate, this.defaultDate]
-			},
-			dayStyle(index1, index2, item) {
-				return (index1, index2, item) => {
-					const style = {}
-					let week = item.week
-					// 隐藏挂载时节点宽度可能为0，兜底使用窗口宽度避免首日偏移归零
-					const wrapperWidth = this.width > 0 ? this.width : (getWindowInfo().windowWidth || 0)
-					// 不进行四舍五入的形式保留2位小数
-					const dayWidth = Number(parseFloat(wrapperWidth / 7).toFixed(3).slice(0, -1))
-					// 得出每个日期的宽度
-					// #ifdef APP-NVUE
-					style.width = addUnit(dayWidth, 'px')
-					// #endif
-					style.height = addUnit(this.rowHeight)
-					if (index2 === 0) {
-						// 获取当前为星期几，如果为0，则为星期天，减一为每月第一天时，需要向左偏移的item个数
-						week = (week === 0 ? 7 : week) - 1
-						// #ifdef APP-NVUE
-						style.marginLeft = addUnit(week * dayWidth, 'px')
-						// #endif
-						// #ifndef APP-NVUE
-						style.marginLeft = `${(week / 7) * 100}%`
-						// #endif
-					}
-					if (this.mode === 'range') {
-						// 之所以需要这么写，是因为DCloud公司的iOS客户端的开发者能力有限导致的bug
-						style.paddingLeft = 0
-						style.paddingRight = 0
-						style.paddingBottom = 0
-						style.paddingTop = 0
-					}
-					return style
-				}
-			},
-			daySelectStyle() {
-				return (index1, index2, item) => {
-					let date = dayjs(item.date).format("YYYY-MM-DD"),
-						style = {}
-					// 判断date是否在selected数组中，因为月份可能会需要补0，所以使用dateSame判断，而不用数组的includes判断
-					if (this.selected.some(item => this.dateSame(item, date))) {
-						style.backgroundColor = this.color
-					}
-					if (this.todayDate && this.dateSame(date, this.todayDate)) {
-						style.border = `1px solid ${this.resolvedTodayColor}`
-						style.boxSizing = 'border-box'
-					}
-					if (this.mode === 'single') {
-						if (date === this.selected[0]) {
-							// 因为需要对nvue的兼容，只能这么写，无法缩写，也无法通过类名控制等等
-							style.borderTopLeftRadius = '3px'
-							style.borderBottomLeftRadius = '3px'
-							style.borderTopRightRadius = '3px'
-							style.borderBottomRightRadius = '3px'
-						}
-					} else if (this.mode === 'range') {
-						if (this.selected.length >= 2) {
-							const startDate = this.rangeStartDate
-							const endDate = this.rangeEndDate
-							// 第一个日期设置左上角和左下角的圆角
-							if (this.dateSame(date, startDate)) {
-								style.borderTopLeftRadius = '3px'
-								style.borderBottomLeftRadius = '3px'
-							}
-							// 最后一个日期设置右上角和右下角的圆角
-							if (this.dateSame(date, endDate)) {
-								style.borderTopRightRadius = '3px'
-								style.borderBottomRightRadius = '3px'
-							}
-							// 处于第一和最后一个之间的日期，背景色设置为浅色
-							if (date > startDate && date < endDate) {
-								style.backgroundColor = this.rangeMiddleColor
-								// 增加一个透明度，让范围区间的背景色也能看到底部的mark水印字符
-								style.opacity = 0.7
-							}
-						} else if (this.selected.length === 1) {
-							// 之所以需要这么写，是因为DCloud公司的iOS客户端的开发者能力有限导致的bug
-							// 进行还原操作，否则在nvue的iOS，uni-app有bug，会导致诡异的表现
-							style.borderTopLeftRadius = '3px'
-							style.borderBottomLeftRadius = '3px'
-						}
-					} else {
-						if (this.selected.some(item => this.dateSame(item, date))) {
-							style.borderTopLeftRadius = '3px'
-							style.borderBottomLeftRadius = '3px'
-							style.borderTopRightRadius = '3px'
-							style.borderBottomRightRadius = '3px'
-						}
-					}
-					return style
-				}
-			},
-			resolvedTodayColor() {
-				return this.todayColor || this.color
-			},
-			// 区间中间态背景色只计算一次，避免每个日期都跑 colorGradient(100)
-			rangeMiddleColor() {
-				return colorGradient(this.color, '#ffffff', 100)[90]
-			},
-			rangeStartDate() {
-				return this.selected.length ? this.selected[0] : ''
-			},
-			rangeEndDate() {
-				return this.selected.length >= 2 ? this.selected[this.selected.length - 1] : ''
-			},
-			// 某个日期是否被选中
-			textStyle() {
-				return (item) => {
-					const date = dayjs(item.date).format("YYYY-MM-DD"),
-						style = {}
-					// 选中的日期，提示文字设置白色
-					if (this.selected.some(item => this.dateSame(item, date))) {
-						style.color = '#ffffff'
-					}
-					if (this.mode === 'range' && this.selected.length >= 2) {
-						// 如果是范围选择模式，第一个和最后一个之间的日期，文字颜色设置为高亮的主题色
-						if (date > this.rangeStartDate && date < this.rangeEndDate) {
-							style.color = this.color
-						}
-					}
-					if (this.todayDate && this.dateSame(date, this.todayDate) && !this.isSelectedDate(date)) {
-						style.color = this.resolvedTodayColor
-					}
-					return style
-				}
-			},
-			// 获取底部的提示文字
-			getBottomInfo() {
-				return (index1, index2, item) => {
-					const date = dayjs(item.date).format("YYYY-MM-DD")
-					const bottomInfo = item.bottomInfo
-					// 当为日期范围模式时，且选择的日期个数大于0时
-					if (this.mode === 'range' && this.selected.length > 0) {
-						if (this.selected.length === 1) {
-							// 选择了一个日期时，如果当前日期为数组中的第一个日期，则显示底部文字为“开始”
-							if (this.dateSame(date, this.selected[0])) return this.startText
-							else return bottomInfo
-						} else {
-							const len = this.selected.length - 1
-							// 如果数组中的日期大于2个时，第一个和最后一个显示为开始和结束日期
-							if (this.dateSame(date, this.selected[0]) && this.dateSame(date, this.selected[1]) &&
-								len === 1) {
-								// 如果长度为2，且第一个等于第二个日期，则提示语放在同一个item中
-								return `${this.startText}/${this.endText}`
-							} else if (this.dateSame(date, this.selected[0])) {
-								return this.startText
-							} else if (this.dateSame(date, this.selected[len])) {
-								return this.endText
-							} else {
-								return bottomInfo
-							}
-						}
-					} else {
-						return bottomInfo
-					}
-				}
-			}
-		},
-		mounted() {
-			this.init()
-		},
-		methods: {
-			init() {
-				// 初始化默认选中
-				this.$emit('monthSelected', this.selected)
-				this.$nextTick(() => {
-					// 这里需要另一个延时，因为获取宽度后，会进行月份数据渲染，只有渲染完成之后，才有真正的高度
-					// 因为nvue下，$nextTick并不是100%可靠的
-					sleep(10).then(() => {
-						this.getWrapperWidth()
-						this.getMonthRect()
-					})
-				})
-			},
-			getMonthTitle(item) {
-				if (!item) return ''
-				const month = String(item.month).padStart(2, '0')
-				const monthDate = dayjs(`${item.year}-${month}-01`)
-				if (this.monthFormat && monthDate.isValid()) {
-					return monthDate.format(this.monthFormat)
-				}
-				return `${item.year}年${item.month}月`
-			},
-			// 判断两个日期是否相等
-			dateSame(date1, date2) {
-				return dayjs(date1).isSame(dayjs(date2))
-			},
-			isForbid(item) {
-				const date = dayjs(item.date).format('YYYY-MM-DD')
-				if (this.mode !== 'range' && this.forbidDays.includes(date)) {
-					return true
-				}
-				return false
-			},
-			isSelectedDate(date) {
-				return this.selected.some(item => this.dateSame(item, date))
-			},
-			// 获取月份数据区域的宽度，因为nvue不支持百分比，所以无法通过css设置每个日期item的宽度
-			getWrapperWidth() {
-				// #ifdef APP-NVUE
-				dom.getComponentRect(this.$refs['up-calendar-month-wrapper'], res => {
-					const width = res && res.size ? Number(res.size.width) : 0
-					this.width = width > 0 ? width : (getWindowInfo().windowWidth || 0)
-				})
-				// #endif
-				// #ifndef APP-NVUE
-				this.$uGetRect('.up-calendar-month-wrapper').then(size => {
-					const width = size ? Number(size.width) : 0
-					this.width = width > 0 ? width : (getWindowInfo().windowWidth || 0)
-				})
-				// #endif
-			},
-			getMonthRect() {
-				// 获取每个月份数据的尺寸，用于父组件在scroll-view滚动事件中，监听当前滚动到了第几个月份
-				const promiseAllArr = this.months.map((item, index) => this.getMonthRectByPromise(
-					`up-calendar-month-${index}`))
-				// 一次性返回
-				Promise.all(promiseAllArr).then(
-					sizes => {
-						let height = 1
-						const topArr = []
-						for (let i = 0; i < this.months.length; i++) {
-							// 添加到months数组中，供scroll-view滚动事件中，判断当前滚动到哪个月份
-							topArr[i] = height
-							height += sizes[i].height
-						}
-						// 由于微信下，无法通过this.months[i].top的形式(引用类型)去修改父组件的month的top值，所以使用事件形式对外发出
-						this.$emit('updateMonthTop', topArr)
-					})
-			},
-			// 获取每个月份区域的尺寸
-			getMonthRectByPromise(el) {
-				// #ifndef APP-NVUE
-				// $uGetRect为uView自带的节点查询简化方法，详见文档介绍：https://ijry.github.io/uview-plus/js/getRect.html
-				// 组件内部一般用this.$uGetRect，对外的为uni.$u.getRect，二者功能一致，名称不同
-				return new Promise(resolve => {
-					this.$uGetRect(`.${el}`).then(size => {
-						resolve(size)
-					})
-				})
-				// #endif
+<script setup>
+/**
+ * up-calendar-month
+ */
+// #ifdef APP-NVUE
+// 由于nvue不支持百分比单位，需要查询宽度来计算每个日期的宽度
+const dom = uni.requireNativePlugin('dom')
+// #endif
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
+import { commonProps, useUltraUI } from '../../libs/composable/useUltraUI'
+import { addUnit, deepClone, toast, sleep, getWindowInfo } from '../../libs/function/index.js'
+import { colorGradient } from '../../libs/function/colorGradient.js'
+import test from '../../libs/function/test.js'
+import defProps from '../../libs/config/props.js'
+import dayjs from '../up-datetime-picker/dayjs.esm.min.js'
 
-				// #ifdef APP-NVUE
-				// nvue下，使用dom模块查询元素高度
-				// 返回一个promise，让调用此方法的主体能使用then回调
-				return new Promise(resolve => {
-					dom.getComponentRect(this.$refs[el][0], res => {
-						resolve(res.size)
-					})
-				})
-				// #endif
-			},
-			// 点击某一个日期
-			clickHandler(index1, index2, item) {
-				if (this.readonly) {
-					return;
-				}
-				this.item = item
-				const date = dayjs(item.date).format("YYYY-MM-DD")
-				if (item.disabled) return
-				if (this.isForbid(item)) {
-					uni.showToast({
-						title: this.forbidDaysToast,
-						icon: 'none'
-					})
+defineOptions({
+	name: 'up-calendar-month',
+	// #ifdef MP-WEIXIN
+	options: {
+		virtualHost: true
+	}
+	// #endif
+})
+
+const props = defineProps({
+	...commonProps,
+	// 是否显示月份背景色
+	showMark: {
+		type: Boolean,
+		default: true
+	},
+	// 主题色，对底部按钮和选中日期有效
+	color: {
+		type: String,
+		default: '#3c9cff'
+	},
+	// 月份数据
+	months: {
+		type: Array,
+		default: () => []
+	},
+	// 日期选择类型
+	mode: {
+		type: String,
+		default: 'single'
+	},
+	// 日期行高
+	rowHeight: {
+		type: [String, Number],
+		default: 58
+	},
+	// mode=multiple时，最多可选多少个日期
+	maxCount: {
+		type: [String, Number],
+		default: Infinity
+	},
+	// mode=range时，第一个日期底部的提示文字
+	startText: {
+		type: String,
+		default: '开始'
+	},
+	// mode=range时，最后一个日期底部的提示文字
+	endText: {
+		type: String,
+		default: '结束'
+	},
+	// 默认选中的日期，mode为multiple或range是必须为数组格式
+	defaultDate: {
+		type: [Array, String, Date],
+		default: null
+	},
+	// 最小的可选日期
+	minDate: {
+		type: [String, Number],
+		default: 0
+	},
+	// 最大可选日期
+	maxDate: {
+		type: [String, Number],
+		default: 0
+	},
+	// 如果没有设置maxDate，则往后推多少个月
+	maxMonth: {
+		type: [String, Number],
+		default: 2
+	},
+	// 是否为只读状态，只读状态下禁止选择日期
+	readonly: {
+		type: Boolean,
+		default: () => defProps.calendar.readonly
+	},
+	// 日期区间最多可选天数，默认无限制，mode = range时有效
+	maxRange: {
+		type: [Number, String],
+		default: Infinity
+	},
+	// 范围选择超过最多可选天数时的提示文案，mode = range时有效
+	rangePrompt: {
+		type: String,
+		default: ''
+	},
+	// 范围选择超过最多可选天数时，是否展示提示文案，mode = range时有效
+	showRangePrompt: {
+		type: Boolean,
+		default: true
+	},
+	// 是否允许日期范围的起止时间为同一天，mode = range时有效
+	allowSameDay: {
+		type: Boolean,
+		default: false
+	},
+	// 禁用日期，格式为 YYYY-MM-DD；range 模式不启用该限制
+	forbidDays: {
+		type: Array,
+		default: () => []
+	},
+	// 点击禁用日期时的提示
+	forbidDaysToast: {
+		type: String,
+		default: ''
+	},
+	// 月份标题格式，遵循 dayjs format
+	monthFormat: {
+		type: String,
+		default: ''
+	},
+	// 今天日期，用于独立高亮
+	todayDate: {
+		type: String,
+		default: ''
+	},
+	// 今天日期的独立高亮颜色
+	todayColor: {
+		type: String,
+		default: ''
+	}
+})
+const emit = defineEmits(['monthSelected', 'updateMonthTop'])
+const { $uGetRect } = useUltraUI(props)
+
+// 每个日期的宽度
+const width = ref(0)
+// 当前选中的日期item
+const item = ref({})
+const selected = ref([])
+const monthWrapperRef = ref(null)
+const monthItemRefs = {}
+
+function setMonthItemRef(el, index) {
+	if (el) {
+		monthItemRefs[index] = el
+	} else {
+		delete monthItemRefs[index]
+	}
+}
+
+// 多个条件的变化，会引起选中日期的变化，这里统一管理监听
+const selectedChange = computed(() => {
+	return [props.minDate, props.maxDate, props.defaultDate]
+})
+
+const dayStyle = (index1, index2, itemArg) => {
+	const style = {}
+	let week = itemArg.week
+	// 隐藏挂载时节点宽度可能为0，兜底使用窗口宽度避免首日偏移归零
+	const wrapperWidth = width.value > 0 ? width.value : (getWindowInfo().windowWidth || 0)
+	// 不进行四舍五入的形式保留2位小数
+	const dayWidth = Number(parseFloat(wrapperWidth / 7).toFixed(3).slice(0, -1))
+	// 得出每个日期的宽度
+	// #ifdef APP-NVUE
+	style.width = addUnit(dayWidth, 'px')
+	// #endif
+	style.height = addUnit(props.rowHeight)
+	if (index2 === 0) {
+		// 获取当前为星期几，如果为0，则为星期天，减一为每月第一天时，需要向左偏移的item个数
+		week = (week === 0 ? 7 : week) - 1
+		// #ifdef APP-NVUE
+		style.marginLeft = addUnit(week * dayWidth, 'px')
+		// #endif
+		// #ifndef APP-NVUE
+		style.marginLeft = `${(week / 7) * 100}%`
+		// #endif
+	}
+	if (props.mode === 'range') {
+		// 之所以需要这么写，是因为DCloud公司的iOS客户端的开发者能力有限导致的bug
+		style.paddingLeft = 0
+		style.paddingRight = 0
+		style.paddingBottom = 0
+		style.paddingTop = 0
+	}
+	return style
+}
+
+const daySelectStyle = (index1, index2, itemArg) => {
+	let date = dayjs(itemArg.date).format("YYYY-MM-DD")
+	let style = {}
+	// 判断date是否在selected数组中，因为月份可能会需要补0，所以使用dateSame判断，而不用数组的includes判断
+	if (selected.value.some(sel => dateSame(sel, date))) {
+		style.backgroundColor = props.color
+	}
+	if (props.todayDate && dateSame(date, props.todayDate)) {
+		style.border = `1px solid ${resolvedTodayColor.value}`
+		style.boxSizing = 'border-box'
+	}
+	if (props.mode === 'single') {
+		if (date === selected.value[0]) {
+			// 因为需要对nvue的兼容，只能这么写，无法缩写，也无法通过类名控制等等
+			style.borderTopLeftRadius = '3px'
+			style.borderBottomLeftRadius = '3px'
+			style.borderTopRightRadius = '3px'
+			style.borderBottomRightRadius = '3px'
+		}
+	} else if (props.mode === 'range') {
+		if (selected.value.length >= 2) {
+			const startDate = rangeStartDate.value
+			const endDate = rangeEndDate.value
+			// 第一个日期设置左上角和左下角的圆角
+			if (dateSame(date, startDate)) {
+				style.borderTopLeftRadius = '3px'
+				style.borderBottomLeftRadius = '3px'
+			}
+			// 最后一个日期设置右上角和右下角的圆角
+			if (dateSame(date, endDate)) {
+				style.borderTopRightRadius = '3px'
+				style.borderBottomRightRadius = '3px'
+			}
+			// 处于第一和最后一个之间的日期，背景色设置为浅色
+			if (date > startDate && date < endDate) {
+				style.backgroundColor = rangeMiddleColor.value
+				// 增加一个透明度，让范围区间的背景色也能看到底部的mark水印字符
+				style.opacity = 0.7
+			}
+		} else if (selected.value.length === 1) {
+			// 之所以需要这么写，是因为DCloud公司的iOS客户端的开发者能力有限导致的bug
+			// 进行还原操作，否则在nvue的iOS，uni-app有bug，会导致诡异的表现
+			style.borderTopLeftRadius = '3px'
+			style.borderBottomLeftRadius = '3px'
+		}
+	} else {
+		if (selected.value.some(sel => dateSame(sel, date))) {
+			style.borderTopLeftRadius = '3px'
+			style.borderBottomLeftRadius = '3px'
+			style.borderTopRightRadius = '3px'
+			style.borderBottomRightRadius = '3px'
+		}
+	}
+	return style
+}
+
+const resolvedTodayColor = computed(() => {
+	return props.todayColor || props.color
+})
+
+// 区间中间态背景色只计算一次，避免每个日期都跑 colorGradient(100)
+const rangeMiddleColor = computed(() => {
+	return colorGradient(props.color, '#ffffff', 100)[90]
+})
+
+const rangeStartDate = computed(() => {
+	return selected.value.length ? selected.value[0] : ''
+})
+
+const rangeEndDate = computed(() => {
+	return selected.value.length >= 2 ? selected.value[selected.value.length - 1] : ''
+})
+
+// 某个日期是否被选中
+const textStyle = (itemArg) => {
+	const date = dayjs(itemArg.date).format("YYYY-MM-DD")
+	const style = {}
+	// 选中的日期，提示文字设置白色
+	if (selected.value.some(sel => dateSame(sel, date))) {
+		style.color = '#ffffff'
+	}
+	if (props.mode === 'range' && selected.value.length >= 2) {
+		// 如果是范围选择模式，第一个和最后一个之间的日期，文字颜色设置为高亮的主题色
+		if (date > rangeStartDate.value && date < rangeEndDate.value) {
+			style.color = props.color
+		}
+	}
+	if (props.todayDate && dateSame(date, props.todayDate) && !isSelectedDate(date)) {
+		style.color = resolvedTodayColor.value
+	}
+	return style
+}
+
+// 获取底部的提示文字
+const getBottomInfo = (index1, index2, itemArg) => {
+	const date = dayjs(itemArg.date).format("YYYY-MM-DD")
+	const bottomInfo = itemArg.bottomInfo
+	// 当为日期范围模式时，且选择的日期个数大于0时
+	if (props.mode === 'range' && selected.value.length > 0) {
+		if (selected.value.length === 1) {
+			// 选择了一个日期时，如果当前日期为数组中的第一个日期，则显示底部文字为“开始”
+			if (dateSame(date, selected.value[0])) return props.startText
+			else return bottomInfo
+		} else {
+			const len = selected.value.length - 1
+			// 如果数组中的日期大于2个时，第一个和最后一个显示为开始和结束日期
+			if (dateSame(date, selected.value[0]) && dateSame(date, selected.value[1]) &&
+				len === 1) {
+				// 如果长度为2，且第一个等于第二个日期，则提示语放在同一个item中
+				return `${props.startText}/${props.endText}`
+			} else if (dateSame(date, selected.value[0])) {
+				return props.startText
+			} else if (dateSame(date, selected.value[len])) {
+				return props.endText
+			} else {
+				return bottomInfo
+			}
+		}
+	} else {
+		return bottomInfo
+	}
+}
+
+watch(selectedChange, () => {
+	setDefaultDate()
+}, { immediate: true })
+
+onMounted(() => {
+	init()
+})
+
+function init() {
+	// 初始化默认选中
+	emit('monthSelected', selected.value)
+	nextTick(() => {
+		// 这里需要另一个延时，因为获取宽度后，会进行月份数据渲染，只有渲染完成之后，才有真正的高度
+		// 因为nvue下，$nextTick并不是100%可靠的
+		sleep(10).then(() => {
+			getWrapperWidth()
+			getMonthRect()
+		})
+	})
+}
+
+function getMonthTitle(itemArg) {
+	if (!itemArg) return ''
+	const month = String(itemArg.month).padStart(2, '0')
+	const monthDate = dayjs(`${itemArg.year}-${month}-01`)
+	if (props.monthFormat && monthDate.isValid()) {
+		return monthDate.format(props.monthFormat)
+	}
+	return `${itemArg.year}年${itemArg.month}月`
+}
+
+// 判断两个日期是否相等
+function dateSame(date1, date2) {
+	return dayjs(date1).isSame(dayjs(date2))
+}
+
+function isForbid(itemArg) {
+	const date = dayjs(itemArg.date).format('YYYY-MM-DD')
+	if (props.mode !== 'range' && props.forbidDays.includes(date)) {
+		return true
+	}
+	return false
+}
+
+function isSelectedDate(date) {
+	return selected.value.some(sel => dateSame(sel, date))
+}
+
+// 获取月份数据区域的宽度，因为nvue不支持百分比，所以无法通过css设置每个日期item的宽度
+function getWrapperWidth() {
+	// #ifdef APP-NVUE
+	dom.getComponentRect(monthWrapperRef.value, res => {
+		const w = res && res.size ? Number(res.size.width) : 0
+		width.value = w > 0 ? w : (getWindowInfo().windowWidth || 0)
+	})
+	// #endif
+	// #ifndef APP-NVUE
+	$uGetRect('.up-calendar-month-wrapper').then(size => {
+		const w = size ? Number(size.width) : 0
+		width.value = w > 0 ? w : (getWindowInfo().windowWidth || 0)
+	})
+	// #endif
+}
+
+function getMonthRect() {
+	// 获取每个月份数据的尺寸，用于父组件在scroll-view滚动事件中，监听当前滚动到了第几个月份
+	const promiseAllArr = props.months.map((itemArg, index) => getMonthRectByPromise(
+		`up-calendar-month-${index}`, index))
+	// 一次性返回
+	Promise.all(promiseAllArr).then(
+		sizes => {
+			let height = 1
+			const topArr = []
+			for (let i = 0; i < props.months.length; i++) {
+				// 添加到months数组中，供scroll-view滚动事件中，判断当前滚动到哪个月份
+				topArr[i] = height
+				height += sizes[i].height
+			}
+			// 由于微信下，无法通过this.months[i].top的形式(引用类型)去修改父组件的month的top值，所以使用事件形式对外发出
+			emit('updateMonthTop', topArr)
+		})
+}
+
+// 获取每个月份区域的尺寸
+function getMonthRectByPromise(el, index) {
+	// #ifndef APP-NVUE
+	// $uGetRect为uView自带的节点查询简化方法
+	return new Promise(resolve => {
+		$uGetRect(`.${el}`).then(size => {
+			resolve(size)
+		})
+	})
+	// #endif
+
+	// #ifdef APP-NVUE
+	// nvue下，使用dom模块查询元素高度
+	// 返回一个promise，让调用此方法的主体能使用then回调
+	return new Promise(resolve => {
+		const refNode = monthItemRefs[index]
+		dom.getComponentRect(refNode, res => {
+			resolve(res.size)
+		})
+	})
+	// #endif
+}
+
+// 点击某一个日期
+function clickHandler(index1, index2, itemArg) {
+	if (props.readonly) {
+		return
+	}
+	item.value = itemArg
+	const date = dayjs(itemArg.date).format("YYYY-MM-DD")
+	if (itemArg.disabled) return
+	if (isForbid(itemArg)) {
+		uni.showToast({
+			title: props.forbidDaysToast,
+			icon: 'none'
+		})
+		return
+	}
+	// 对上一次选择的日期数组进行深度克隆
+	let nextSelected = deepClone(selected.value)
+	if (props.mode === 'single') {
+		// 单选情况下，让数组中的元素为当前点击的日期
+		nextSelected = [date]
+	} else if (props.mode === 'multiple') {
+		if (nextSelected.some(sel => dateSame(sel, date))) {
+			// 如果点击的日期已在数组中，则进行移除操作，也就是达到反选的效果
+			const itemIndex = nextSelected.findIndex(sel => sel === date)
+			nextSelected.splice(itemIndex, 1)
+		} else {
+			// 如果点击的日期不在数组中，且已有的长度小于总可选长度时，则添加到数组中去
+			if (nextSelected.length < props.maxCount) nextSelected.push(date)
+		}
+	} else {
+		// 选择区间形式
+		if (nextSelected.length === 0 || nextSelected.length >= 2) {
+			// 如果原来就为0或者大于2的长度，则当前点击的日期，就是开始日期
+			nextSelected = [date]
+		} else if (nextSelected.length === 1) {
+			// 如果已经选择了开始日期
+			const existsDate = nextSelected[0]
+			// 如果当前选择的日期小于上一次选择的日期，则当前的日期定为开始日期
+			if (dayjs(date).isBefore(existsDate)) {
+				nextSelected = [date]
+			} else if (dayjs(date).isAfter(existsDate)) {
+				// 当前日期减去最大可选的日期天数，如果大于起始时间，则进行提示
+				if (dayjs(dayjs(date).subtract(props.maxRange, 'day')).isAfter(dayjs(nextSelected[0])) && props.showRangePrompt) {
+					if (props.rangePrompt) {
+						toast(props.rangePrompt)
+					} else {
+						toast(`选择天数不能超过 ${props.maxRange} 天`)
+					}
 					return
 				}
-				// 对上一次选择的日期数组进行深度克隆
-				let selected = deepClone(this.selected)
-				if (this.mode === 'single') {
-					// 单选情况下，让数组中的元素为当前点击的日期
-					selected = [date]
-				} else if (this.mode === 'multiple') {
-					if (selected.some(item => this.dateSame(item, date))) {
-						// 如果点击的日期已在数组中，则进行移除操作，也就是达到反选的效果
-						const itemIndex = selected.findIndex(item => item === date)
-						selected.splice(itemIndex, 1)
-					} else {
-						// 如果点击的日期不在数组中，且已有的长度小于总可选长度时，则添加到数组中去
-						if (selected.length < this.maxCount) selected.push(date)
-					}
-				} else {
-					// 选择区间形式
-					if (selected.length === 0 || selected.length >= 2) {
-						// 如果原来就为0或者大于2的长度，则当前点击的日期，就是开始日期
-						selected = [date]
-					} else if (selected.length === 1) {
-						// 如果已经选择了开始日期
-						const existsDate = selected[0]
-						// 如果当前选择的日期小于上一次选择的日期，则当前的日期定为开始日期
-						if (dayjs(date).isBefore(existsDate)) {
-							selected = [date]
-						} else if (dayjs(date).isAfter(existsDate)) {
-							// 当前日期减去最大可选的日期天数，如果大于起始时间，则进行提示
-							if(dayjs(dayjs(date).subtract(this.maxRange, 'day')).isAfter(dayjs(selected[0])) && this.showRangePrompt) {
-								if(this.rangePrompt) {
-									toast(this.rangePrompt)
-								} else {
-									toast(`选择天数不能超过 ${this.maxRange} 天`)
-								}
-								return
-							}
-							// 如果当前日期大于已有日期，将当前的添加到数组尾部
-							selected.push(date)
-							const startDate = selected[0]
-							const endDate = selected[1]
-							const arr = []
-							let i = 0
-							do {
-								// 将开始和结束日期之间的日期添加到数组中
-								arr.push(dayjs(startDate).add(i, 'day').format("YYYY-MM-DD"))
-								i++
-								// 累加的日期小于结束日期时，继续下一次的循环
-							} while (dayjs(startDate).add(i, 'day').isBefore(dayjs(endDate)))
-							// 为了一次性修改数组，避免computed中多次触发，这里才用arr变量一次性赋值的方式，同时将最后一个日期添加近来
-							arr.push(endDate)
-							selected = arr
-						} else {
-							// 选择区间时，只有一个日期的情况下，且不允许选择起止为同一天的话，不允许选择自己
-							if (selected[0] === date && !this.allowSameDay) return
-							selected.push(date)
-						}
-					}
-				}
-				this.setSelected(selected)
-			},
-			// 设置默认日期
-			setDefaultDate() {
-				if (!this.defaultDate) {
-					// 如果没有设置默认日期，则将当天日期设置为默认选中的日期
-					const selected = [dayjs().format("YYYY-MM-DD")]
-					return this.setSelected(selected, false)
-				}
-				let defaultDate = []
-				const minDate = this.minDate || dayjs().format("YYYY-MM-DD")
-				const maxDate = this.maxDate || dayjs(minDate).add(this.maxMonth - 1, 'month').format("YYYY-MM-DD")
-				if (this.mode === 'single') {
-					// 单选模式，可以是字符串或数组，Date对象等
-					if (!test.array(this.defaultDate)) {
-						defaultDate = [dayjs(this.defaultDate).format("YYYY-MM-DD")]
-					} else {
-						defaultDate = [this.defaultDate[0]]
-					}
-				} else {
-					// 如果为非数组，则不执行
-					if (!test.array(this.defaultDate)) return
-					defaultDate = this.defaultDate
-				}
-				// 过滤用户传递的默认数组，取出只在可允许最大值与最小值之间的元素
-				defaultDate = defaultDate.filter(item => {
-					return dayjs(item).isAfter(dayjs(minDate).subtract(1, 'day')) && dayjs(item).isBefore(dayjs(
-						maxDate).add(1, 'day'))
-				})
-				this.setSelected(defaultDate, false)
-			},
-			setSelected(selected, event = true) {
-				this.selected = selected
-				event && this.$emit('monthSelected', this.selected,'tap')
-			},
-			selectDate(date) {
-				const targetDate = dayjs(date).format("YYYY-MM-DD")
-				for (let monthIndex = 0; monthIndex < this.months.length; monthIndex++) {
-					const dayIndex = this.months[monthIndex].date.findIndex(item => {
-						return this.dateSame(item.date, targetDate)
-					})
-					if (dayIndex !== -1) {
-						this.clickHandler(monthIndex, dayIndex, this.months[monthIndex].date[dayIndex])
-						return
-					}
-				}
+				// 如果当前日期大于已有日期，将当前的添加到数组尾部
+				nextSelected.push(date)
+				const startDate = nextSelected[0]
+				const endDate = nextSelected[1]
+				const arr = []
+				let i = 0
+				do {
+					// 将开始和结束日期之间的日期添加到数组中
+					arr.push(dayjs(startDate).add(i, 'day').format("YYYY-MM-DD"))
+					i++
+					// 累加的日期小于结束日期时，继续下一次的循环
+				} while (dayjs(startDate).add(i, 'day').isBefore(dayjs(endDate)))
+				// 为了一次性修改数组，避免computed中多次触发，这里才用arr变量一次性赋值的方式，同时将最后一个日期添加近来
+				arr.push(endDate)
+				nextSelected = arr
+			} else {
+				// 选择区间时，只有一个日期的情况下，且不允许选择起止为同一天的话，不允许选择自己
+				if (nextSelected[0] === date && !props.allowSameDay) return
+				nextSelected.push(date)
 			}
 		}
 	}
+	setSelected(nextSelected)
+}
+
+// 设置默认日期
+function setDefaultDate() {
+	if (!props.defaultDate) {
+		// 如果没有设置默认日期，则将当天日期设置为默认选中的日期
+		const nextSelected = [dayjs().format("YYYY-MM-DD")]
+		return setSelected(nextSelected, false)
+	}
+	let defaultDate = []
+	const minDate = props.minDate || dayjs().format("YYYY-MM-DD")
+	const maxDate = props.maxDate || dayjs(minDate).add(props.maxMonth - 1, 'month').format("YYYY-MM-DD")
+	if (props.mode === 'single') {
+		// 单选模式，可以是字符串或数组，Date对象等
+		if (!test.array(props.defaultDate)) {
+			defaultDate = [dayjs(props.defaultDate).format("YYYY-MM-DD")]
+		} else {
+			defaultDate = [props.defaultDate[0]]
+		}
+	} else {
+		// 如果为非数组，则不执行
+		if (!test.array(props.defaultDate)) return
+		defaultDate = props.defaultDate
+	}
+	// 过滤用户传递的默认数组，取出只在可允许最大值与最小值之间的元素
+	defaultDate = defaultDate.filter(sel => {
+		return dayjs(sel).isAfter(dayjs(minDate).subtract(1, 'day')) && dayjs(sel).isBefore(dayjs(
+			maxDate).add(1, 'day'))
+	})
+	setSelected(defaultDate, false)
+}
+
+function setSelected(nextSelected, event = true) {
+	selected.value = nextSelected
+	event && emit('monthSelected', selected.value, 'tap')
+}
+
+function selectDate(date) {
+	const targetDate = dayjs(date).format("YYYY-MM-DD")
+	for (let monthIndex = 0; monthIndex < props.months.length; monthIndex++) {
+		const dayIndex = props.months[monthIndex].date.findIndex(dayItem => {
+			return dateSame(dayItem.date, targetDate)
+		})
+		if (dayIndex !== -1) {
+			clickHandler(monthIndex, dayIndex, props.months[monthIndex].date[dayIndex])
+			return
+		}
+	}
+}
+
+defineExpose({
+	selectDate,
+	selected,
+	setSelected
+})
 </script>
+
 
 <style lang="scss" scoped>
 	@import "../../libs/css/components.scss";

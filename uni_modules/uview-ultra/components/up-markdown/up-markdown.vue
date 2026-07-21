@@ -4,99 +4,88 @@
   </view>
 </template>
 
-<script>
-import { marked } from './marked.esm.js';
+<script setup>
+import { ref, watch } from 'vue'
+import { commonProps } from '../../libs/composable/useUltraUI.js'
+import { marked } from './marked.esm.js'
 
-export default {
-  name: 'up-markdown',
-  props: {
-    // markdown内容
-    content: {
-      type: String,
-      default: ''
-    },
-    // 是否启用图片预览
-    previewImg: {
-      type: Boolean,
-      default: true
-    },
-    // 是否显示代码块行号
-    showLineNumber: {
-      type: Boolean,
-      default: false
-    },
-    // 主题样式 'light' | 'dark'
-    theme: {
-      type: String,
-      default: 'light'
-    }
-  },
-  data() {
-    return {
-      parsedContent: ''
-    };
-  },
-  watch: {
-    content: {
-      handler(newVal) {
-        this.parseMarkdown(newVal);
-      },
-      immediate: true
-    }
-  },
-  methods: {
-    // 解析markdown内容
-    parseMarkdown(content) {
-      if (!content) {
-        this.parsedContent = '';
-        return;
-      }
+defineOptions({
+	name: 'up-markdown',
+	// #ifdef MP-WEIXIN
+	options: {
+		virtualHost: true
+	}
+	// #endif
+})
 
-      // 使用marked解析markdown
-      let parsed = marked(content);
-      
-      // 处理代码块
-      parsed = this.handleCodeBlock(parsed);
-      
-      // 应用主题样式
-      parsed = this.applyTheme(parsed);
-      
-      this.parsedContent = parsed;
-    },
-    
-    // 处理代码块
-    handleCodeBlock(html) {
-      // 添加代码块样式和行号
-      return html.replace(/<pre><code([^>]*)>([^<]+)<\/code><\/pre>/g, (match, lang, code) => {
-        const language = lang.match(/class="language-([^"]+)"/);
-        const langClass = language ? `language-${language[1]}` : '';
-        
-        let result = `<pre class="up-markdown-code ${langClass}">`;
-        
-        if (this.showLineNumber) {
-          // 添加行号
-          const lines = code.split('\n').filter(line => line.trim() !== '');
-          result += '<span class="up-markdown-line-numbers">';
-          lines.push('');
-          lines.forEach((_, index) => {
-            result += `<span class="up-markdown-line-number">${index + 1}</span>`;
-          });
-          result += '</span>';
-        }
-        
-        result += `<code class='code-lang ${langClass}'>${code}</code></pre>`;
-        return result;
-      });
-    },
-    
-    // 应用主题样式
-    applyTheme(html) {
-      // 可以根据theme属性添加不同的样式类
-      return html;
-    }
-  }
-};
+const props = defineProps({
+	...commonProps,
+	// markdown内容
+	content: {
+		type: String,
+		default: ''
+	},
+	// 是否启用图片预览
+	previewImg: {
+		type: Boolean,
+		default: true
+	},
+	// 是否显示代码块行号
+	showLineNumber: {
+		type: Boolean,
+		default: false
+	},
+	// 主题样式 'light' | 'dark'
+	theme: {
+		type: String,
+		default: 'light'
+	}
+})
+
+const parsedContent = ref('')
+
+function handleCodeBlock(html) {
+	return html.replace(/<pre><code([^>]*)>([^<]+)<\/code><\/pre>/g, (match, lang, code) => {
+		const language = lang.match(/class="language-([^"]+)"/)
+		const langClass = language ? `language-${language[1]}` : ''
+
+		let result = `<pre class="up-markdown-code ${langClass}">`
+
+		if (props.showLineNumber) {
+			const lines = code.split('\n').filter(line => line.trim() !== '')
+			result += '<span class="up-markdown-line-numbers">'
+			lines.push('')
+			lines.forEach((_, index) => {
+				result += `<span class="up-markdown-line-number">${index + 1}</span>`
+			})
+			result += '</span>'
+		}
+
+		result += `<code class='code-lang ${langClass}'>${code}</code></pre>`
+		return result
+	})
+}
+
+function applyTheme(html) {
+	return html
+}
+
+function parseMarkdown(content) {
+	if (!content) {
+		parsedContent.value = ''
+		return
+	}
+	let parsed = marked(content)
+	parsed = handleCodeBlock(parsed)
+	parsed = applyTheme(parsed)
+	parsedContent.value = parsed
+}
+
+watch(() => props.content, (newVal) => {
+	parseMarkdown(newVal)
+}, { immediate: true })
 </script>
+
 
 <style lang="scss" scoped>
 .up-markdown {
@@ -106,78 +95,78 @@ export default {
   color: #333;
   padding: 16px;
   word-wrap: break-word;
-  
+
   /* 标题样式 */
   ::v-deep h1 {
     font-size: 32px;
     margin: 8px 0;
     font-weight: bold;
   }
-  
+
   ::v-deep h2 {
     font-size: 24px;
     margin: 8px 0;
     font-weight: bold;
   }
-  
+
   ::v-deep h3 {
     font-size: 18px;
     margin: 7px 0;
     font-weight: bold;
   }
-  
+
   ::v-deep h4 {
     font-size: 16px;
     margin: 7px 0;
     font-weight: bold;
   }
-  
+
   ::v-deep h5 {
     font-size: 13px;
     margin: 6px 0;
     font-weight: bold;
   }
-  
+
   ::v-deep h6 {
     font-size: 10px;
     margin: 5px 0;
     font-weight: bold;
   }
-  
+
   /* 段落样式 */
   ::v-deep p {
     margin: 16px 0;
   }
-  
+
   /* 链接样式 */
   ::v-deep a {
     color: #007AFF;
     text-decoration: none;
-    
+
     &:hover {
       text-decoration: underline;
     }
   }
-  
+
   /* 列表样式 */
   ::v-deep ul,
   ::v-deep ol {
     margin: 16px 0;
     padding-left: 32px;
-    
+
     li {
       margin: 8px 0;
     }
   }
-  
+
   ::v-deep ul li {
     list-style-type: disc;
   }
-  
+
   ::v-deep ol li {
     list-style-type: decimal;
   }
-  
+
   /* 引用样式 */
   ::v-deep blockquote {
     margin: 8px 0;
@@ -185,7 +174,7 @@ export default {
     border-left: 4px solid #ccc;
     color: #666;
   }
-  
+
   /* 代码样式 */
   ::v-deep &-code {
     font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace;
@@ -199,7 +188,7 @@ export default {
     width: 100%;
     overflow-x: auto;
   }
-  
+
   ::v-deep pre {
     font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace;
     font-size: 14px;
@@ -208,34 +197,34 @@ export default {
     overflow: auto;
     border-radius: 6px;
     margin: 16px 0;
-    
+
     ::v-deep code {
       background: none;
       padding: 0;
     }
   }
-  
+
   /* 表格样式 */
   ::v-deep table {
     border-collapse: collapse;
     margin: 16px 0;
     width: 100%;
-    
+
     th,
     td {
       padding: 6px 13px;
       border: 1px solid #dfe2e5;
     }
-    
+
     th {
       font-weight: 600;
     }
-    
+
     tr:nth-child(2n) {
       background-color: #f6f8fa;
     }
   }
-  
+
   /* 图片样式 */
   ::v-deep img {
     max-width: 100%;
@@ -243,7 +232,7 @@ export default {
     background-color: #fff;
     margin: 16px 0;
   }
-  
+
   /* 分割线样式 */
   ::v-deep hr {
     height: 1px;
@@ -252,17 +241,17 @@ export default {
     background-color: #e1e4e8;
     border: 0;
   }
-  
+
   /* 深色主题 */
   &.dark {
     color: #ccc;
     background-color: #1e1e1e;
-    
+
     ::v-deep &-code {
       background-color: #2d2d2d;
       color: #dcdcdc;
     }
-    
+
     ::v-deep pre {
       background-color: #2d2d2d;
       color: #dcdcdc;
@@ -274,7 +263,7 @@ export default {
         border-left: 4px solid #ccc;
         color: #bbb;
     }
-    
+
     ::v-deep a {
       color: #4da6ff;
     }
@@ -290,7 +279,7 @@ export default {
   margin-right: 10px;
   border-right: 1px solid #ddd;
   user-select: none;
-  
+
   .up-markdown-line-number {
     color: #999;
     font-size: 14px;

@@ -38,11 +38,11 @@
 	</view>
 </template>
 
-<script>
-	import { props } from './props.js';
-	import { mpMixin } from '../../libs/mixin/mpMixin.js';
-	import { mixin } from '../../libs/mixin/mixin.js';
-	import { randomArray } from '../../libs/function/index.js';
+<script setup>
+	import { computed, onBeforeUnmount, ref } from 'vue'
+	import { props as numberKeyboardProps } from './props.js'
+	import { commonProps, useUltraUI } from '../../libs/composable/useUltraUI.js'
+	import { randomArray } from '../../libs/function/index.js'
 	/**
 	 * keyboard 键盘组件
 	 * @description
@@ -54,83 +54,102 @@
 	 * @event {Function} backspace	点击退格键触发
 	 * @example
 	 */
-	export default {
+	defineOptions({
 		name: 'up-number-keyboard',
-		mixins: [mpMixin, mixin, props],
-		data() {
-			return {
-				backspace: 'backspace', // 退格键内容
-				dot: '.', // 点
-				timer: null, // 长按多次删除的事件监听
-				cardX: 'X' // 身份证的X符号
-			};
-		},
-		computed: {
-			// 键盘需要显示的内容
-			numList() {
-				let tmp = [];
-				if (this.dotDisabled && this.mode == 'number') {
-					if (!this.random) {
-						return [1, 2, 3, 4, 5, 6, 7, 8, 9, 0];
-					} else {
-						return randomArray([1, 2, 3, 4, 5, 6, 7, 8, 9, 0]);
-					}
-				} else if (!this.dotDisabled && this.mode == 'number') {
-					if (!this.random) {
-						return [1, 2, 3, 4, 5, 6, 7, 8, 9, this.dot, 0];
-					} else {
-						return randomArray([1, 2, 3, 4, 5, 6, 7, 8, 9, this.dot, 0]);
-					}
-				} else if (this.mode == 'card') {
-					if (!this.random) {
-						return [1, 2, 3, 4, 5, 6, 7, 8, 9, this.cardX, 0];
-					} else {
-						return randomArray([1, 2, 3, 4, 5, 6, 7, 8, 9, this.cardX, 0]);
-					}
-				}
-			},
-			// 按键的样式，在非乱序&&数字键盘&&不显示点按钮时，index为9时，按键占位两个空间
-			itemStyle() {
-				return index => {
-					let style = {};
-					if (this.mode == 'number' && this.dotDisabled && index == 9) style.width = '464rpx';
-					return style;
-				};
-			},
-			// 是否让按键显示灰色，只在非乱序&&数字键盘&&且允许点按键的时候
-			btnBgGray() {
-				return index => {
-					if (!this.random && index == 9 && (this.mode != 'number' || (this.mode == 'number' && !this
-							.dotDisabled))) return true;
-					else return false;
-				};
-			},
-		},
-		created() {
-		},
-		emits: ["backspace", "change"],
-		methods: {
-			// 点击退格键
-			backspaceClick() {
-				this.$emit('backspace');
-				clearInterval(this.timer); //再次清空定时器，防止重复注册定时器
-				this.timer = null;
-				this.timer = setInterval(() => {
-					this.$emit('backspace');
-				}, 250);
-			},
-			clearTimer() {
-				clearInterval(this.timer);
-				this.timer = null;
-			},
-			// 获取键盘显示的内容
-			keyboardClick(val) {
-				// 允许键盘显示点模式和触发非点按键时，将内容转为数字类型
-				if (!this.dotDisabled && val != this.dot && val != this.cardX) val = Number(val);
-				this.$emit('change', val);
+		// #ifdef MP-WEIXIN
+		options: {
+			virtualHost: true
+		}
+		// #endif
+	})
+
+	const props = defineProps({
+		...commonProps,
+		...numberKeyboardProps.props
+	})
+	const emit = defineEmits(["backspace", "change"])
+	const { noop } = useUltraUI(props)
+	const backspace = 'backspace' // 退格键内容
+	const dot = '.' // 点
+	const timer = ref(null) // 长按多次删除的事件监听
+	const cardX = 'X' // 身份证的X符号
+
+	// 键盘需要显示的内容
+	const numList = computed(() => {
+		if (props.dotDisabled && props.mode == 'number') {
+			if (!props.random) {
+				return [1, 2, 3, 4, 5, 6, 7, 8, 9, 0]
+			} else {
+				return randomArray([1, 2, 3, 4, 5, 6, 7, 8, 9, 0])
+			}
+		} else if (!props.dotDisabled && props.mode == 'number') {
+			if (!props.random) {
+				return [1, 2, 3, 4, 5, 6, 7, 8, 9, dot, 0]
+			} else {
+				return randomArray([1, 2, 3, 4, 5, 6, 7, 8, 9, dot, 0])
+			}
+		} else if (props.mode == 'card') {
+			if (!props.random) {
+				return [1, 2, 3, 4, 5, 6, 7, 8, 9, cardX, 0]
+			} else {
+				return randomArray([1, 2, 3, 4, 5, 6, 7, 8, 9, cardX, 0])
 			}
 		}
-	};
+		return []
+	})
+
+	// 按键的样式，在非乱序&&数字键盘&&不显示点按钮时，index为9时，按键占位两个空间
+	function itemStyle(index) {
+		const style = {}
+		if (props.mode == 'number' && props.dotDisabled && index == 9) style.width = '464rpx'
+		return style
+	}
+
+	// 是否让按键显示灰色，只在非乱序&&数字键盘&&且允许点按键的时候
+	function btnBgGray(index) {
+		if (!props.random && index == 9 && (props.mode != 'number' || (props.mode == 'number' && !props.dotDisabled))) return true
+		else return false
+	}
+
+	// 点击退格键
+	function backspaceClick() {
+		emit('backspace')
+		clearInterval(timer.value) //再次清空定时器，防止重复注册定时器
+		timer.value = null
+		timer.value = setInterval(() => {
+			emit('backspace')
+		}, 250)
+	}
+
+	function clearTimer() {
+		clearInterval(timer.value)
+		timer.value = null
+	}
+
+	// 获取键盘显示的内容
+	function keyboardClick(val) {
+		// 允许键盘显示点模式和触发非点按键时，将内容转为数字类型
+		if (!props.dotDisabled && val != dot && val != cardX) val = Number(val)
+		emit('change', val)
+	}
+
+	onBeforeUnmount(() => {
+		clearTimer()
+	})
+
+	defineExpose({
+		backspace,
+		dot,
+		timer,
+		cardX,
+		noop,
+		numList,
+		itemStyle,
+		btnBgGray,
+		backspaceClick,
+		clearTimer,
+		keyboardClick
+	})
 </script>
 
 <style lang="scss" scoped>

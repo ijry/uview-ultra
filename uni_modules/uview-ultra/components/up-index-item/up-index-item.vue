@@ -14,11 +14,11 @@
 	<!-- #endif -->
 </template>
 
-<script>
-	import { props } from './props';
-	import { mpMixin } from '../../libs/mixin/mpMixin';
-	import { mixin } from '../../libs/mixin/mixin';
-	import { sleep, error } from '../../libs/function/index';
+<script setup>
+	import { getCurrentInstance, onMounted, ref } from 'vue'
+	import { props as itemProps } from './props'
+	import { commonProps, useUltraUI } from '../../libs/composable/useUltraUI.js'
+	import { sleep, error } from '../../libs/function/index'
 	// #ifdef APP-NVUE
 	// 由于weex为阿里的KPI业绩考核的产物，所以不支持百分比单位，这里需要通过dom查询组件的宽度
 	const dom = uni.requireNativePlugin('dom')
@@ -31,57 +31,73 @@
 	 * @event {Function}
 	 * @example
 	 */
-	export default {
+	defineOptions({
 		name: 'up-index-item',
-		mixins: [mpMixin, mixin, props],
-		data() {
-			return {
-				// 本组件到滚动条顶部的距离
-				top: 0,
-				height: 0,
-				id: ''
-			}
-		},
-		created() {
-			// 子组件u-index-anchor的实例
-			this.anchor = {}
-		},
-		mounted() {
-			this.init()
-		},
-		methods: {
-			init() {
-				// 此处会活动父组件实例，并赋值给实例的parent属性
-				this.getParentData('up-index-list')
-				if (!this.parent) {
-					return error('up-index-item必须要搭配up-index-list组件使用')
-				}
-				sleep().then(() =>{
-					this.getIndexItemRect().then(size => {
-						// 由于对象的引用特性，此处会同时生效到父组件的children数组的本实例的top属性中，供父组件判断读取
-						this.top = Math.ceil(size.top)
-						this.height = Math.ceil(size.height)
-					})
-				})
-			},
-			getIndexItemRect() {
-				return new Promise(resolve => {
-					// #ifndef APP-NVUE
-					this.$uGetRect('.up-index-item').then(size => {
-						resolve(size)
-					})
-					// #endif
+		// #ifdef MP-WEIXIN
+		options: {
+			virtualHost: true
+		}
+		// #endif
+	})
 
-					// #ifdef APP-NVUE
-					const ref = this.$refs['up-index-item']
-					dom.getComponentRect(ref, res => {
-						resolve(res.size)
-					})
-					// #endif
-				}) 
-			}
-		},
+	const props = defineProps({
+		...commonProps,
+		...itemProps.props
+	})
+	const instance = getCurrentInstance()
+	const proxy = instance?.proxy
+	const { parent, getParentData, $uGetRect } = useUltraUI(props)
+	// 本组件到滚动条顶部的距离
+	const top = ref(0)
+	const height = ref(0)
+	const id = ref('')
+	// 子组件u-index-anchor的实例
+	const anchor = ref({})
+
+	function init() {
+		// 此处会活动父组件实例，并赋值给实例的parent属性
+		getParentData('up-index-list')
+		if (!parent.value) {
+			return error('up-index-item必须要搭配up-index-list组件使用')
+		}
+		sleep().then(() =>{
+			getIndexItemRect().then(size => {
+				// 由于对象的引用特性，此处会同时生效到父组件的children数组的本实例的top属性中，供父组件判断读取
+				top.value = Math.ceil(size.top)
+				height.value = Math.ceil(size.height)
+			})
+		})
 	}
+
+	function getIndexItemRect() {
+		return new Promise(resolve => {
+			// #ifndef APP-NVUE
+			$uGetRect('.up-index-item').then(size => {
+				resolve(size)
+			})
+			// #endif
+
+			// #ifdef APP-NVUE
+			const ref = proxy.$refs['up-index-item']
+			dom.getComponentRect(ref, res => {
+				resolve(res.size)
+			})
+			// #endif
+		})
+	}
+
+	onMounted(() => {
+		init()
+	})
+
+	defineExpose({
+		top,
+		height,
+		id,
+		anchor,
+		init,
+		getIndexItemRect
+	})
 </script>
 
 <style lang="scss" scoped>

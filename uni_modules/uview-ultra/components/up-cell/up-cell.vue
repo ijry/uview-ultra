@@ -46,12 +46,12 @@
 	</view>
 </template>
 
-<script>
-	import { propsCell } from './props.js';
-	import { mpMixin } from '../../libs/mixin/mpMixin.js';
-	import { mixin } from '../../libs/mixin/mixin.js';
-	import { addStyle } from '../../libs/function/index.js';
-	import test from '../../libs/function/test.js';
+<script setup>
+	import { computed } from 'vue'
+	import { propsCell } from './props.js'
+	import { commonProps, useUltraUI } from '../../libs/composable/useUltraUI.js'
+	import { addStyle } from '../../libs/function/index.js'
+	import test from '../../libs/function/test.js'
 	/**
 	 * cell  单元格
 	 * @description cell单元格一般用于一组列表的情况，比如个人中心页，设置页等。
@@ -80,35 +80,37 @@
 	 * @event {Function}			click			点击cell列表时触发
 	 * @example 该组件需要搭配cell-group组件使用，见官方文档示例
 	 */
-	export default {
+	defineOptions({
 		name: 'up-cell',
-		data() {
-			return {
-
-			}
-		},
-		mixins: [mpMixin, mixin, propsCell],
-		computed: {
-			titleTextStyle() {
-				return addStyle(this.titleStyle)
-			}
-		},
-		emits: ['click'],
-		methods: {
-			addStyle,
-			testEmpty: test.empty,
-			// 点击cell
-			clickHandler(e) {
-				if (this.disabled) return
-				this.$emit('click', {
-					name: this.name
-				})
-				// 如果配置了url(此props参数通过mixin引入)参数，跳转页面
-				this.openPage()
-				// 是否阻止事件传播
-				this.stop && this.preventEvent(e)
-			},
+		// #ifdef MP-WEIXIN
+		options: {
+			virtualHost: true
 		}
+		// #endif
+	})
+
+	const props = defineProps({
+		...commonProps,
+		...propsCell.props
+	})
+	const emit = defineEmits(['click'])
+	const { openPage, preventEvent } = useUltraUI(props)
+	const testEmpty = test.empty
+
+	const titleTextStyle = computed(() => {
+		return addStyle(props.titleStyle)
+	})
+
+	// 点击cell
+	function clickHandler(e) {
+		if (props.disabled) return
+		emit('click', {
+			name: props.name
+		})
+		// 如果配置了url参数，跳转页面
+		openPage()
+		// 是否阻止事件传播
+		props.stop && preventEvent(e)
 	}
 </script>
 

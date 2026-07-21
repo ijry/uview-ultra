@@ -47,10 +47,9 @@
     </view>
 </template>
 
-<script>
-import { mpMixin } from '../../libs/mixin/mpMixin';
-import { mixin } from '../../libs/mixin/mixin';
-import { addStyle, addUnit, deepMerge } from '../../libs/function/index';
+<script setup>
+import { ref } from 'vue'
+import { commonProps } from '../../libs/composable/useUltraUI.js'
 /**
  * FloatButton 悬浮按钮
  * @description 悬浮按钮常用于屏幕右下角点击展开的操作菜单
@@ -59,92 +58,86 @@ import { addStyle, addUnit, deepMerge } from '../../libs/function/index';
  * @event {Function} click  点击触发事件
  * @example <up-float-button></up-float-button>
  */
-export default {
+defineOptions({
     name: 'up-float-button',
-    // #ifdef MP
-    mixins: [mpMixin, mixin],
+    // #ifdef MP-WEIXIN
+    options: {
+        virtualHost: true
+    }
     // #endif
-    // #ifndef MP
-    mixins: [mpMixin, mixin],
-    // #endif
-   emits: ['click', 'item-click'],
-    computed: {
+})
+
+const props = defineProps({
+    ...commonProps,
+    // 背景颜色
+    backgroundColor: {
+        type: String,
+        default: '#2979ff'
     },
-    props: {
-        // 背景颜色
-        backgroundColor: {
-            type: String,
-            default: '#2979ff'
-        },
-        // 文字颜色
-        color: {
-            type: String,
-            default: '#fff'
-        },
-        // 宽度
-        width: {
-            type: String,
-            default: '50px'
-        },
-        // 高度
-        height: {
-            type: String,
-            default: '50px'
-        },
-        // 边框颜色，默认为空字符串表示无边框
-        borderColor: {
-            type: String,
-            default: ''
-        },
-        // 右侧偏移量
-        right: {
-            type: [String, Number],
-            default: '30px'
-        },
-        // 顶部偏移量，未提供默认值，可能需要根据具体情况设置
-        top: {
-            type: [String, Number],
-            default: '',
-        },
-        // 底部偏移量
-        bottom: {
-            type: String,
-            default: ''
-        },
-        // 是否为菜单项
-        isMenu: {
-            type: Boolean,
-            default: false
-        },
-        list: {
-            type: Array,
-            default: () => {
-                return []
-            }
-        }
+    // 文字颜色
+    color: {
+        type: String,
+        default: '#fff'
     },
-    data() {
-        return {
-            showList: false
-        }
+    // 宽度
+    width: {
+        type: String,
+        default: '50px'
     },
-    methods: {
-        addStyle,
-        clickHandler(e) {
-            if (this.isMenu) {
-                this.showList = !this.showList
-                this.$emit('click', e)
-            } else {
-                this.$emit('click', e)
-            }
-        },
-        itemClick(item, index) {
-            this.$emit('item-click', {
-                ...item,
-                index
-            })
+    // 高度
+    height: {
+        type: String,
+        default: '50px'
+    },
+    // 边框颜色，默认为空字符串表示无边框
+    borderColor: {
+        type: String,
+        default: ''
+    },
+    // 右侧偏移量
+    right: {
+        type: [String, Number],
+        default: '30px'
+    },
+    // 顶部偏移量，未提供默认值，可能需要根据具体情况设置
+    top: {
+        type: [String, Number],
+        default: '',
+    },
+    // 底部偏移量
+    bottom: {
+        type: String,
+        default: ''
+    },
+    // 是否为菜单项
+    isMenu: {
+        type: Boolean,
+        default: false
+    },
+    list: {
+        type: Array,
+        default: () => {
+            return []
         }
     }
+})
+const emit = defineEmits(['click', 'item-click'])
+const showList = ref(false)
+
+function clickHandler(e) {
+    if (props.isMenu) {
+        showList.value = !showList.value
+        emit('click', e)
+    } else {
+        emit('click', e)
+    }
+}
+
+function itemClick(item, index) {
+    emit('item-click', {
+        ...item,
+        index
+    })
 }
 </script>
 

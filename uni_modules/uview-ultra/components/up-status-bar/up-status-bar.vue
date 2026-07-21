@@ -7,36 +7,33 @@
 	</view>
 </template>
 
-<script>
-	import { props } from './props.js';
-	import { mpMixin } from '../../libs/mixin/mpMixin.js';
-	import { mixin } from '../../libs/mixin/mixin.js';
-	import { addUnit, addStyle, deepMerge, sys } from '../../libs/function/index.js';
-	/**
-	 * StatbusBar 状态栏占位
-	 * @description 本组件主要用于状态填充，比如在自定导航栏的时候，它会自动适配一个恰当的状态栏高度。
-	 * @tutorial https://uview-plus.jiangruyi.com/components/statusBar.html
-	 * @property {String}			bgColor			背景色 (默认 'transparent' )
-	 * @property {String | Object}	customStyle		自定义样式 
-	 * @example <up-status-bar></up-status-bar>
-	 */
-	export default {
+<script setup>
+	import { computed } from 'vue'
+	import { props as statusBarProps } from './props.js'
+	import { commonProps } from '../../libs/composable/useUltraUI.js'
+	import { addUnit, addStyle, deepMerge, sys } from '../../libs/function/index.js'
+
+	defineOptions({
 		name: 'up-status-bar',
-		mixins: [mpMixin, mixin, props],
-		data() {
-			return {
-			}
-		},
-		computed: {
-			style() {
-				const style = {}
-				// 状态栏高度，由于某些安卓和微信开发工具无法识别css的顶部状态栏变量，所以使用js获取的方式
-				style.height = addUnit(sys().statusBarHeight, 'px')
-				style.backgroundColor = this.bgColor
-				return deepMerge(style, addStyle(this.customStyle))
-			}
-		},
-	}
+		// #ifdef MP-WEIXIN
+		options: {
+			virtualHost: true
+		}
+		// #endif
+	})
+
+	const props = defineProps({
+		...commonProps,
+		...statusBarProps.props
+	})
+
+	const style = computed(() => {
+		const style = {}
+		// 状态栏高度，由于某些安卓和微信开发工具无法识别css的顶部状态栏变量，所以使用js获取的方式
+		style.height = addUnit(sys().statusBarHeight, 'px')
+		style.backgroundColor = props.bgColor
+		return deepMerge(style, addStyle(props.customStyle))
+	})
 </script>
 
 <style lang="scss" scoped>

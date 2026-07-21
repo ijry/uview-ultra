@@ -27,323 +27,306 @@
     </view>
 </template>
 
-<script>
-import { mpMixin } from '../../libs/mixin/mpMixin';
-import { mixin } from '../../libs/mixin/mixin';
-import { sleep } from '../../libs/function/index';
-export default {
-    name: 'up-dragsort',
-    // #ifdef MP
-    mixins: [mpMixin, mixin,],
-    // #endif
-    // #ifndef MP
-    mixins: [mixin],
-    // #endif
-    props: {
-        initialList: {
-            type: Array,
-            required: true,
-            default: () => []
-        },
-        draggable: {
-            type: Boolean,
-            default: true
-        },
-        vibrate: {
-            type: Boolean,
-            default: true
-        },
-        direction: {
-            type: String,
-            default: 'vertical',
-            validator: value => ['vertical', 'horizontal', 'all'].includes(value)
-        },
-        // 新增列数属性，用于all模式
-        columns: {
-            type: Number,
-            default: 3
-        }
-    },
-    data() {
-        return {
-            list: [],
-            dragIndex: -1,
-            sortChanged: false,
-            itemHeight: 0,
-            itemWidth: 0,
-            areaWidth: 0, // 可拖动区域宽度
-            areaHeight: 0, // 可拖动区域高度
-            currentPosition: {
-                x: 0,
-                y: 0
-            }
-        };
-    },
-    computed: {
-        movableAreaStyle() {
-            if (this.direction === 'vertical') {
-                return {
-                    height: this.itemHeight ? `${this.list.length * this.itemHeight}px` : 'auto',
-                    width: '100%'
-                }
-            } else if (this.direction === 'horizontal') {
-                return {
-                    height: this.itemHeight ? `${this.itemHeight}px` : 'auto',
-                    width: this.itemWidth ? `${this.list.length * this.itemWidth}px` : 'auto'
-                }
-            } else {
-                // all模式，计算网格布局所需的高度
-                const rows = Math.ceil(this.list.length / this.columns)
-                return {
-                    height: this.itemHeight ? `${rows * this.itemHeight}px` : 'auto',
-                    width: '100%'
-                }
-            }
-        }
-    },
-    emits: ['drag-end'],
-    async mounted() {
-        await this.$nextTick();
-        this.initList();
-        this.calculateItemSize();
-        this.calculateAreaSize();
-    },
-    methods: {
-        initList() {
-            // 初始化列表项的位置
-            this.list = this.initialList.map((item, index) => {
-                let x
-                let y
+<script setup>
+import { computed, getCurrentInstance, nextTick, onMounted, ref, useSlots, watch } from 'vue'
+import { commonProps } from '../../libs/composable/useUltraUI'
+import { sleep } from '../../libs/function/index'
 
-                if (this.direction === 'horizontal' && this.itemWidth) {
-                    x = index * this.itemWidth
-                    y = 0
-                } else if (this.direction === 'vertical' && this.itemHeight) {
-                    x = 0
-                    y = index * this.itemHeight
-                } else if (this.itemWidth && this.itemHeight) {
-                    // all模式，网格布局
-                    const col = index % this.columns
-                    const row = Math.floor(index / this.columns)
-                    x = col * this.itemWidth
-                    y = row * this.itemHeight
-                }
+defineOptions({
+	name: 'up-dragsort',
+	// #ifdef MP-WEIXIN
+	options: {
+		virtualHost: true
+	}
+	// #endif
+})
 
-                return {
-                    ...item,
-                    x,
-                    y
-                }
-            })
-        },
-        async calculateItemSize() {
-            // 计算项目尺寸
-            await sleep(30);
-            return new Promise((resolve) => {
-                uni.createSelectorQuery()
-                    .in(this)
-                    .select('.up-dragsort-item-content')
-                    .boundingClientRect(res => {
-                        if (res) {
-                            this.itemHeight = res.height || 40;
-                            this.itemWidth = res.width || 80;
+const props = defineProps({
+	...commonProps,
+	initialList: {
+		type: Array,
+		required: true,
+		default: () => []
+	},
+	draggable: {
+		type: Boolean,
+		default: true
+	},
+	vibrate: {
+		type: Boolean,
+		default: true
+	},
+	direction: {
+		type: String,
+		default: 'vertical',
+		validator: (value) => ['vertical', 'horizontal', 'all'].includes(value)
+	},
+	// 列数配置属性，用于all模式
+	columns: {
+		type: Number,
+		default: 3
+	}
+})
+const emit = defineEmits(['drag-end'])
+const instance = getCurrentInstance()
+const proxy = instance?.proxy || null
+const slots = useSlots()
 
-                            // 更新所有项目的位置
-                            this.updatePositions();
-                        }
-                        resolve(res);
-                    })
-                    .exec();
-            });
-        },
-        async calculateAreaSize() {
-            // 计算可拖动区域尺寸
-            await sleep(30);
-            return new Promise((resolve) => {
-                uni.createSelectorQuery()
-                    .in(this)
-                    .select('.up-dragsort-area')
-                    .boundingClientRect(res => {
-                        if (res) {
-                            this.areaWidth = res.width || 300;
-                            this.areaHeight = res.height || 300;
-                        }
-                        resolve(res);
-                    })
-                    .exec();
-            });
-        },
-        updatePositions(isDragging) {
-            // 更新所有项目的位置
-            this.list = this.list.map((item, index) => {
-                // 当前正在拖动的项目保持拖动位置不动，避免抖动
-                if (isDragging && this.dragIndex === index) {
-                    return item
-                }
+const list = ref([])
+const dragIndex = ref(-1)
+const sortChanged = ref(false)
+const itemHeight = ref(0)
+const itemWidth = ref(0)
+const areaWidth = ref(0)
+const areaHeight = ref(0)
+const currentPosition = ref({
+	x: 0,
+	y: 0
+})
+let timer = null
 
-                if (this.direction === 'vertical') {
-                    return {
-                        ...item,
-                        x: 0,
-                        y: index * this.itemHeight
-                    }
-                }
+const movableAreaStyle = computed(() => {
+	if (props.direction === 'vertical') {
+		return {
+			height: itemHeight.value ? `${list.value.length * itemHeight.value}px` : 'auto',
+			width: '100%'
+		}
+	} else if (props.direction === 'horizontal') {
+		return {
+			height: itemHeight.value ? `${itemHeight.value}px` : 'auto',
+			width: itemWidth.value ? `${list.value.length * itemWidth.value}px` : 'auto'
+		}
+	} else {
+		const rows = Math.ceil(list.value.length / props.columns)
+		return {
+			height: itemHeight.value ? `${rows * itemHeight.value}px` : 'auto',
+			width: '100%'
+		}
+	}
+})
 
-                if (this.direction === 'horizontal') {
-                    return {
-                        ...item,
-                        x: index * this.itemWidth,
-                        y: 0
-                    }
-                }
+onMounted(async () => {
+	await nextTick()
+	initList()
+	calculateItemSize()
+	calculateAreaSize()
+})
 
-                // all模式，网格布局
-                const col = index % this.columns
-                const row = Math.floor(index / this.columns)
+watch(() => props.initialList, () => {
+	nextTick(() => {
+		initList()
+	})
+})
 
-                return {
-                    ...item,
-                    x: col * this.itemWidth,
-                    y: row * this.itemHeight
-                }
-            })
-        },
-        onTouchStart(index, e) {
-            if (this.$slots.handler && e.currentTarget.dataset.action !== 'handler') {
-                return
-            }
-            if (this.list[index]?.draggable === false) return;
-            if (this.timer) clearTimeout(this.timer);
-            this.sortChanged = false;
-            this.dragIndex = index;
-        },
-        onTouchMove(e) {
-            if (this.dragIndex !== -1) {
-                // 目前只对H5生效, 如果该组件放置在开启了下拉刷新的scroll-view中, 向下拖动item还是会触发下拉刷新
-                e.stopPropagation()
-                e.preventDefault()
-            }
-        },
-        onChange(index, event) {
-            if (!event.detail.source || event.detail.source !== 'touch') return;
+watch(() => props.direction, () => {
+	nextTick(() => {
+		initList()
+		calculateItemSize()
+		calculateAreaSize()
+	})
+})
 
-            this.currentPosition.x = event.detail.x;
-            this.currentPosition.y = event.detail.y;
+watch(() => props.columns, () => {
+	if (props.direction === 'all') {
+		nextTick(() => {
+			initList()
+			updatePositions()
+		})
+	}
+})
 
-            // all模式下使用更智能的位置计算
-            if (this.direction === 'all') {
-                this.handleAllModeChange(index);
-            } else {
-                // 原有的垂直和水平模式逻辑
-                let itemSize = 0;
-                let targetIndex = -1;
+function initList() {
+	list.value = props.initialList.map((item, index) => {
+		let x
+		let y
 
-                if (this.direction === 'vertical') {
-                    itemSize = this.itemHeight;
-                    targetIndex = Math.max(0, Math.min(
-                        Math.round(this.currentPosition.y / itemSize),
-                        this.list.length - 1
-                    ));
-                } else if (this.direction === 'horizontal') {
-                    itemSize = this.itemWidth;
-                    targetIndex = Math.max(0, Math.min(
-                        Math.round(this.currentPosition.x / itemSize),
-                        this.list.length - 1
-                    ));
-                }
+		if (props.direction === 'horizontal' && itemWidth.value) {
+			x = index * itemWidth.value
+			y = 0
+		} else if (props.direction === 'vertical' && itemHeight.value) {
+			x = 0
+			y = index * itemHeight.value
+		} else if (itemWidth.value && itemHeight.value) {
+			const col = index % props.columns
+			const row = Math.floor(index / props.columns)
+			x = col * itemWidth.value
+			y = row * itemHeight.value
+		}
 
-                // 如果位置发生变化，则重新排序
-                if (targetIndex !== index) {
-                    this.reorderItems(index, targetIndex);
-                }
-            }
-        },
-        handleAllModeChange(index) {
-            // 在all模式下，根据当前位置计算最近的网格位置
-            const col = Math.max(0, Math.min(Math.round(this.currentPosition.x / this.itemWidth), this.columns - 1));
-            const row = Math.max(0, Math.round(this.currentPosition.y / this.itemHeight));
+		return {
+			...item,
+			x,
+			y
+		}
+	})
+}
 
-            // 计算目标索引
-            let targetIndex = row * this.columns + col;
-            targetIndex = Math.max(0, Math.min(targetIndex, this.list.length - 1));
+async function calculateItemSize() {
+	await sleep(30)
+	return new Promise((resolve) => {
+		uni.createSelectorQuery()
+			.in(proxy)
+			.select('.up-dragsort-item-content')
+			.boundingClientRect((res) => {
+				if (res) {
+					itemHeight.value = res.height || 40
+					itemWidth.value = res.width || 80
+					updatePositions()
+				}
+				resolve(res)
+			})
+			.exec()
+	})
+}
 
-            // 如果位置发生变化，则重新排序
-            if (targetIndex !== index) {
-                this.reorderItems(index, targetIndex);
-            }
-        },
-        reorderItems(fromIndex, toIndex) {
-            const movedItem = this.list.splice(fromIndex, 1)[0];
-            this.list.splice(toIndex, 0, movedItem);
+async function calculateAreaSize() {
+	await sleep(30)
+	return new Promise((resolve) => {
+		uni.createSelectorQuery()
+			.in(proxy)
+			.select('.up-dragsort-area')
+			.boundingClientRect((res) => {
+				if (res) {
+					areaWidth.value = res.width || 300
+					areaHeight.value = res.height || 300
+				}
+				resolve(res)
+			})
+			.exec()
+	})
+}
 
-            // 更新当前拖拽项目的新索引
-            this.dragIndex = toIndex;
-            this.sortChanged = true;
+function updatePositions(isDragging) {
+	list.value = list.value.map((item, index) => {
+		if (isDragging && dragIndex.value === index) {
+			return item
+		}
 
-            // 更新所有项目的位置
-            this.updatePositions(true);
+		if (props.direction === 'vertical') {
+			return {
+				...item,
+				x: 0,
+				y: index * itemHeight.value
+			}
+		}
 
-            // 震动反馈
-            if (this.vibrate && uni.vibrateShort) {
-                uni.vibrateShort({ type: 'light' });
-            }
-        },
-        onTouchEnd() {
-            // 未发生位移
-            if (this.dragIndex === -1) return
+		if (props.direction === 'horizontal') {
+			return {
+				...item,
+				x: index * itemWidth.value,
+				y: 0
+			}
+		}
 
-            // 0.001是为了解决拖动过快等某些极限场景下位置还原不生效问题
-            if (this.direction === 'horizontal') {
-                this.list[this.dragIndex].x = this.currentPosition.x + 0.001;
-            } else if (this.direction === 'vertical' || this.direction === 'all') {
-                this.list[this.dragIndex].y = this.currentPosition.y + 0.001;
-                this.list[this.dragIndex].x = this.currentPosition.x + 0.001;
-            }
+		const col = index % props.columns
+		const row = Math.floor(index / props.columns)
 
-            // 重置到位置，需要延迟触发动，否则无效。
-            sleep(50).then(() => {
-                this.updatePositions();
-                if (this.sortChanged) {
-                    this.$emit('drag-end', [...this.list]);
-                    this.sortChanged = false;
-                }
-                this.timer = setTimeout(() => {
-                    this.dragIndex = -1
-                }, 600)
-            });
-        }
-    },
-    watch: {
-        initialList: {
-            handler() {
-                this.$nextTick(() => {
-                    this.initList();
-                });
-            },
-            // deep: true
-        },
-        direction: {
-            handler() {
-                this.$nextTick(() => {
-                    this.initList();
-                    this.calculateItemSize();
-                    this.calculateAreaSize();
-                });
-            }
-        },
-        columns: {
-            handler() {
-                if (this.direction === 'all') {
-                    this.$nextTick(() => {
-                        this.initList();
-                        this.updatePositions();
-                    });
-                }
-            }
-        }
-    }
-};
+		return {
+			...item,
+			x: col * itemWidth.value,
+			y: row * itemHeight.value
+		}
+	})
+}
+
+function onTouchStart(index, e) {
+	if (slots.handler && e.currentTarget.dataset.action !== 'handler') {
+		return
+	}
+	if (list.value[index]?.draggable === false) return
+	if (timer) clearTimeout(timer)
+	sortChanged.value = false
+	dragIndex.value = index
+}
+
+function onTouchMove(e) {
+	if (dragIndex.value !== -1) {
+		e.stopPropagation()
+		e.preventDefault()
+	}
+}
+
+function onChange(index, event) {
+	if (!event.detail.source || event.detail.source !== 'touch') return
+
+	currentPosition.value.x = event.detail.x
+	currentPosition.value.y = event.detail.y
+
+	if (props.direction === 'all') {
+		handleAllModeChange(index)
+	} else {
+		let itemSize = 0
+		let targetIndex = -1
+
+		if (props.direction === 'vertical') {
+			itemSize = itemHeight.value
+			targetIndex = Math.max(0, Math.min(
+				Math.round(currentPosition.value.y / itemSize),
+				list.value.length - 1
+			))
+		} else if (props.direction === 'horizontal') {
+			itemSize = itemWidth.value
+			targetIndex = Math.max(0, Math.min(
+				Math.round(currentPosition.value.x / itemSize),
+				list.value.length - 1
+			))
+		}
+
+		if (targetIndex !== index) {
+			reorderItems(index, targetIndex)
+		}
+	}
+}
+
+function handleAllModeChange(index) {
+	const col = Math.max(0, Math.min(Math.round(currentPosition.value.x / itemWidth.value), props.columns - 1))
+	const row = Math.max(0, Math.round(currentPosition.value.y / itemHeight.value))
+
+	let targetIndex = row * props.columns + col
+	targetIndex = Math.max(0, Math.min(targetIndex, list.value.length - 1))
+
+	if (targetIndex !== index) {
+		reorderItems(index, targetIndex)
+	}
+}
+
+function reorderItems(fromIndex, toIndex) {
+	const movedItem = list.value.splice(fromIndex, 1)[0]
+	list.value.splice(toIndex, 0, movedItem)
+
+	dragIndex.value = toIndex
+	sortChanged.value = true
+
+	updatePositions(true)
+
+	if (props.vibrate && uni.vibrateShort) {
+		uni.vibrateShort({ type: 'light' })
+	}
+}
+
+function onTouchEnd() {
+	if (dragIndex.value === -1) return
+
+	if (props.direction === 'horizontal') {
+		list.value[dragIndex.value].x = currentPosition.value.x + 0.001
+	} else if (props.direction === 'vertical' || props.direction === 'all') {
+		list.value[dragIndex.value].y = currentPosition.value.y + 0.001
+		list.value[dragIndex.value].x = currentPosition.value.x + 0.001
+	}
+
+	sleep(50).then(() => {
+		updatePositions()
+		if (sortChanged.value) {
+			emit('drag-end', [...list.value])
+			sortChanged.value = false
+		}
+		timer = setTimeout(() => {
+			dragIndex.value = -1
+		}, 600)
+	})
+}
 </script>
+
 
 <style scoped lang="scss">
 .up-dragsort {

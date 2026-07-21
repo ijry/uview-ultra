@@ -7,47 +7,42 @@
 	</view>
 </template>
 
-<script>
-	import { props } from "./props.js";
-	import { mpMixin } from '../../libs/mixin/mpMixin.js';
-	import { mixin } from '../../libs/mixin/mixin.js';
-	import { addStyle, deepMerge, addUnit, sys } from '../../libs/function/index.js';
-	/**
-	 * SafeBottom 底部安全区
-	 * @description 这个适配，主要是针对IPhone X等一些底部带指示条的机型，指示条的操作区域与页面底部存在重合，容易导致用户误操作，因此我们需要针对这些机型进行底部安全区适配。
-	 * @tutorial https://ijry.github.io/uview-plus/components/safeAreaInset.html
-	 * @property {type}		prop_name
-	 * @property {Object}	customStyle	定义需要用到的外部样式
-	 *
-	 * @event {Function()}
-	 * @example <up-safe-bottom></up-safe-bottom>
-	 */
-	export default {
-		name: "up-safe-bottom",
-		mixins: [mpMixin, mixin, props],
-		data() {
-			return {
-				safeAreaBottomHeight: 0,
-				isNvue: false,
-			};
-		},
-		computed: {
-			style() {
-				const style = {};
-				// #ifdef APP-NVUE || MP-TOUTIAO
-				// nvue下，高度使用js计算填充
-				style.height = addUnit(sys().safeAreaInsets.bottom, 'px');
-				// #endif
-				return deepMerge(style, addStyle(this.customStyle));
-			},
-		},
-		mounted() {
-			// #ifdef APP-NVUE
-			// 标识为是否nvue
-			this.isNvue = true;
-			// #endif
-		},
-	};
+<script setup>
+	import { computed, onMounted, ref } from 'vue'
+	import { props as safeBottomProps } from './props.js'
+	import { commonProps } from '../../libs/composable/useUltraUI.js'
+	import { addStyle, deepMerge, addUnit, sys } from '../../libs/function/index.js'
+
+	defineOptions({
+		name: 'up-safe-bottom',
+		// #ifdef MP-WEIXIN
+		options: {
+			virtualHost: true
+		}
+		// #endif
+	})
+
+	const props = defineProps({
+		...commonProps,
+		...safeBottomProps.props
+	})
+	const isNvue = ref(false)
+
+	const style = computed(() => {
+		const style = {}
+		// #ifdef APP-NVUE || MP-TOUTIAO
+		// nvue下，高度使用js计算填充
+		style.height = addUnit(sys().safeAreaInsets.bottom, 'px')
+		// #endif
+		return deepMerge(style, addStyle(props.customStyle))
+	})
+
+	onMounted(() => {
+		// #ifdef APP-NVUE
+		// 标识为是否nvue
+		isNvue.value = true
+		// #endif
+	})
 </script>
 
 <style lang="scss" scoped>

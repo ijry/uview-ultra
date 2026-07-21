@@ -22,11 +22,11 @@
 	</view>
 </template>
 
-<script>
-	import { props } from './props';
-	import { mpMixin } from '../../libs/mixin/mpMixin';
-	import { mixin } from '../../libs/mixin/mixin';
-	import { addStyle, deepMerge, sleep } from '../../libs/function/index';
+<script setup>
+	import { computed, getCurrentInstance, onMounted, ref, toRefs, watch } from 'vue'
+	import { props as tabbarProps } from './props'
+	import { commonProps, useUltraUI } from '../../libs/composable/useUltraUI.js'
+	import { addStyle, deepMerge, sleep } from '../../libs/function/index'
 	// #ifdef APP-NVUE
 	const dom = uni.requireNativePlugin('dom')
 	// #endif
@@ -47,80 +47,111 @@
 	 * 
 	 * @example <up-tabbar :value="value2" :placeholder="false" @change="name => value2 = name" :fixed="false" :safeAreaInsetBottom="false"><up-tabbar-item text="首页" icon="home" dot ></up-tabbar-item></up-tabbar>
 	 */
-	export default {
+	defineOptions({
 		name: 'up-tabbar',
-		mixins: [mpMixin, mixin, props],
-		data() {
-			return {
-				placeholderHeight: 0
-			}
-		},
-		computed: {
-			tabbarStyle() {
-				const style = {
-					zIndex: this.zIndex
-				}
-				if (this.borderColor) {
-					style.borderColor = this.borderColor + ' !important'
-				}
-				if (this.backgroundColor) {
-					style.backgroundColor = this.backgroundColor
-				}
-				// 合并来自父组件的customStyle样式
-				return deepMerge(style, addStyle(this.customStyle))
-			},
-			// 监听多个参数的变化，通过在computed执行对应的操作
-			updateChild() {
-				return [this.value, this.activeColor, this.inactiveColor]
-			},
-			updatePlaceholder() {
-				return [this.fixed, this.placeholder]
-			}
-		},
-		watch: {
-			updateChild() {
-				// 如果updateChildren中的元素发生了变化，则执行子元素初始化操作
-				this.updateChildren()
-			},
-			updatePlaceholder() {
-				// 如果fixed，placeholder等参数发生变化，重新计算占位元素的高度
-				this.setPlaceholderHeight()
-			}
-		},
-		created() {
-			this.children = []
-		},
-		mounted() {
-			this.setPlaceholderHeight()
-		},
-		methods: {
-			updateChildren() {
-				// 如果存在子元素，则执行子元素的updateFromParent进行更新数据
-				this.children.length && this.children.map(child => child.updateFromParent())
-			},
-			// 设置用于防止塌陷元素的高度
-			async setPlaceholderHeight() {
-				if (!this.fixed || !this.placeholder) return
-				// 延时一定时间
-				await sleep(20)
-				// #ifndef APP-NVUE
-				this.$uGetRect('.up-tabbar__content').then(({height = 50}) => {
-					// 修复IOS safearea bottom 未填充高度
-					this.placeholderHeight = height
-				})
-				// #endif
+		// #ifdef MP-WEIXIN
+		options: {
+			virtualHost: true
+		}
+		// #endif
+	})
 
-				// #ifdef APP-NVUE
-				dom.getComponentRect(this.$refs['up-tabbar__content'], (res) => {
-					const {
-						size
-					} = res
-					this.placeholderHeight = size.height
-				})
-				// #endif
-			}
+	const props = defineProps({
+		...commonProps,
+		...tabbarProps.props
+	})
+	const emit = defineEmits(['change'])
+	const instance = getCurrentInstance()
+	const { children, noop, $uGetRect } = useUltraUI(props)
+	const {
+		value,
+		safeAreaInsetBottom,
+		border,
+		activeColor,
+		inactiveColor,
+		fixed,
+		placeholder
+	} = toRefs(props)
+	const placeholderHeight = ref(0)
+
+	const tabbarStyle = computed(() => {
+		const style = {
+			zIndex: props.zIndex
+		}
+		if (props.borderColor) {
+			style.borderColor = props.borderColor + ' !important'
+		}
+		if (props.backgroundColor) {
+			style.backgroundColor = props.backgroundColor
+		}
+		// 合并来自父组件的customStyle样式
+		return deepMerge(style, addStyle(props.customStyle))
+	})
+
+	function updateChildren() {
+		// 如果存在子元素，则执行子元素的updateFromParent进行更新数据
+		children.value.length && children.value.map(child => child.updateFromParent())
+	}
+
+	// 设置用于防止塌陷元素的高度
+	async function setPlaceholderHeight() {
+		if (!props.fixed || !props.placeholder) return
+		// 延时一定时间
+		await sleep(20)
+		// #ifndef APP-NVUE
+		$uGetRect('.up-tabbar__content').then(({ height = 50 }) => {
+			// 修复IOS safearea bottom 未填充高度
+			placeholderHeight.value = height
+		})
+		// #endif
+
+		// #ifdef APP-NVUE
+		dom.getComponentRect(instance.proxy.$refs['up-tabbar__content'], (res) => {
+			const {
+				size
+			} = res
+			placeholderHeight.value = size.height
+		})
+		// #endif
+	}
+
+	function emitChange(name) {
+		emit('change', name)
+	}
+
+	function getProps() {
+		return {
+			value: props.value,
+			activeColor: props.activeColor,
+			inactiveColor: props.inactiveColor
 		}
 	}
+
+	watch(() => [props.value, props.activeColor, props.inactiveColor], () => {
+		// 如果updateChildren中的元素发生了变化，则执行子元素初始化操作
+		updateChildren()
+	})
+
+	watch(() => [props.fixed, props.placeholder], () => {
+		// 如果fixed，placeholder等参数发生变化，重新计算占位元素的高度
+		setPlaceholderHeight()
+	})
+
+	onMounted(() => {
+		setPlaceholderHeight()
+	})
+
+	defineExpose({
+		children,
+		value,
+		activeColor,
+		inactiveColor,
+		placeholderHeight,
+		updateChildren,
+		setPlaceholderHeight,
+		emitChange,
+		getProps
+	})
 </script>
 
 <style lang="scss" scoped>

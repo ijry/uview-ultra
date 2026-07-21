@@ -12,7 +12,7 @@
 			<text
 				class="up-tooltip__wrapper__text"
 				:id="textId"
-				:ref="textId"
+				ref="textRef"
 				:userSelect="false"
 				:selectable="false"
 				@longpress.stop="longpressHandler"
@@ -26,7 +26,7 @@
 				:show="showTooltip"
 				duration="300"
 				:customStyle="{
-					position: 'absolute', 
+					position: 'absolute',
 					top: addUnit(tooltipTop),
 					zIndex: zIndex,
 					...tooltipStyle
@@ -35,7 +35,7 @@
 				<view
 					class="up-tooltip__wrapper__popup"
 					:id="tooltipId"
-					:ref="tooltipId"
+					ref="tooltipRef"
 				>
 					<view
 						class="up-tooltip__wrapper__popup__indicator"
@@ -89,191 +89,174 @@
 	</view>
 </template>
 
-<script>
-	import { props } from './props.js';
-	import { mpMixin } from '../../libs/mixin/mpMixin.js';
-	import { mixin } from '../../libs/mixin/mixin.js';
-	import { addStyle, addUnit, getPx, guid, toast, sleep, sys } from '../../libs/function/index.js';
-	// #ifdef APP-NVUE 
-	const dom = uni.requireNativePlugin('dom')
-	// #endif
-	/**
-	 * Tooltip 
-	 * @description 
-	 * @tutorial https://ijry.github.io/uview-plus/components/tooltip.html
-	 * @property {String | Number}	text		需要显示的提示文字
-	 * @property {String | Number}	copyText	点击复制按钮时，复制的文本，为空则使用text值
-	 * @property {String | Number}	size		文本大小（默认 14 ）
-	 * @property {String}			color		字体颜色（默认 '#606266' ）
-	 * @property {String}			bgColor		弹出提示框时，文本的背景色（默认 'transparent' ）
-	 * @property {String}			direction	弹出提示的方向，top-上方，bottom-下方（默认 'top' ）
-	 * @property {String | Number}	zIndex		弹出提示的z-index，nvue无效（默认 10071 ）
-	 * @property {Boolean}			showCopy	是否显示复制按钮（默认 true ）
-	 * @property {Array}			buttons		扩展的按钮组
-	 * @property {Boolean}			overlay		是否显示透明遮罩以防止触摸穿透（默认 true ）
-	 * @property {Object}			customStyle	定义需要用到的外部样式
-	 * 
-	 * @event {Function} 
-	 * @example 
-	 */
-	export default {
-		name: 'up-tooltip',
-		mixins: [mpMixin, mixin, props],
-		data() {
-			return {
-				// 是否展示气泡
-				showTooltip: true,
-				// 生成唯一id，防止一个页面多个组件，造成干扰
-				textId: guid(),
-				tooltipId: guid(),
-				// 初始时甚至为很大的值，让其移到屏幕外面，为了计算元素的尺寸
-				tooltipTop: -10000,
-				// 气泡的位置信息
-				tooltipInfo: {
-					width: 0,
-					left: 0
-				},
-				// 文本的位置信息
-				textInfo: {
-					width: 0,
-					left: 0
-				},
-				// 三角形指示器的样式
-				indicatorStyle: {},
-				// 气泡在可能超出屏幕边沿范围时，重新定位后，距离屏幕边沿的距离
-				screenGap: 12,
-				// 三角形指示器的宽高，由于对元素进行了角度旋转，精确计算指示器位置时，需要用到其尺寸信息
-				indicatorWidth: 14,
-			}
-		},
-		watch: {
-			propsChange() {
-				this.getElRect()
-			}
-		},
-		computed: {
-			// 特别处理H5的复制，因为H5浏览器是自带系统复制功能的，在H5环境
-			// 当一些依赖参数变化时，需要重新计算气泡和指示器的位置信息
-			propsChange() {
-				return [this.text, this.buttons]
-			},
-			// 计算气泡和指示器的位置信息
-			tooltipStyle() {
-				const style = {
-						transform: `translateY(${this.direction === 'top' ? '-100%' : '100%'})`,
-					},
-					sysInfo = sys()
-				if (this.tooltipInfo.width / 2 > this.textInfo.left + this.textInfo.width / 2 - this.screenGap) {
-					this.indicatorStyle = {}
-					style.left = `-${addUnit(this.textInfo.left - this.screenGap)}`
-					this.indicatorStyle.left = addUnit(this.textInfo.width / 2 - getPx(style.left) - this.indicatorWidth /
-						2)
-				} else if (this.tooltipInfo.width / 2 > sysInfo.windowWidth - this.textInfo.right + this.textInfo.width / 2 -
-					this.screenGap) {
-					this.indicatorStyle = {}
-					style.right = `-${addUnit(sysInfo.windowWidth - this.textInfo.right - this.screenGap)}`
-					this.indicatorStyle.right = addUnit(this.textInfo.width / 2 - getPx(style.right) - this
-						.indicatorWidth / 2)
-				} else {
-					const left = Math.abs(this.textInfo.width / 2 - this.tooltipInfo.width / 2)
-					style.left = this.textInfo.width > this.tooltipInfo.width ? addUnit(left) : -addUnit(left)
-					this.indicatorStyle = {}
-				}
-				if (this.direction === 'top') {
-					style.marginTop = '-10px'
-					this.indicatorStyle.bottom = '-4px'
-				} else {
-					style.marginBottom = '-10px'
-					this.indicatorStyle.top = '-4px'
-				}
-				return style
-			}
-		},
-		mounted() {
-			this.init()
-		},
-		emits: ["click"],
-		methods: {
-			addStyle,
-			addUnit,
-			init() {
-				this.getElRect()
-			},
-			// 长按触发事件
-			async longpressHandler() {
-				this.tooltipTop = 0
-				this.showTooltip = true
-			},
-			// 点击透明遮罩
-			overlayClickHandler() {
-				this.showTooltip = false
-			},
-			// 点击弹出按钮
-			btnClickHandler(index) {
-				this.showTooltip = false
-				// 如果需要展示复制按钮，此处index需要加1，因为复制按钮在第一个位置
-				this.$emit('click', this.showCopy ? index + 1 : index)
-			},
-			// 查询内容高度
-			queryRect(ref) {
-				// #ifndef APP-NVUE
-				// $uGetRect为uView自带的节点查询简化方法，详见文档介绍：https://ijry.github.io/uview-plus/js/getRect.html
-				// 组件内部一般用this.$uGetRect，对外的为uni.$u.getRect，二者功能一致，名称不同
-				return new Promise(resolve => {
-					this.$uGetRect(`#${ref}`).then(size => {
-						resolve(size)
-					})
-				})
-				// #endif
-
-				// #ifdef APP-NVUE
-				// nvue下，使用dom模块查询元素高度
-				// 返回一个promise，让调用此方法的主体能使用then回调
-				return new Promise(resolve => {
-					dom.getComponentRect(this.$refs[ref], res => {
-						resolve(res.size)
-					})
-				})
-				// #endif
-			},
-			// 元素尺寸
-			getElRect() {
-				// 调用之前，先将指示器调整到屏幕外，方便获取尺寸
-				this.showTooltip = true
-				this.tooltipTop = -10000
-				sleep(500).then(() => {
-					this.queryRect(this.tooltipId).then(size => {
-						this.tooltipInfo = size
-						// 获取气泡尺寸之后，将其隐藏，为了让下次切换气泡显示与隐藏时，有淡入淡出的效果
-						this.showTooltip = false
-					})
-					this.queryRect(this.textId).then(size => {
-						this.textInfo = size
-					})
-				})
-			},
-			// 复制文本到粘贴板
-			setClipboardData() {
-				// 关闭组件
-				this.showTooltip = false
-				this.$emit('click', 0)
-				uni.setClipboardData({
-					// 优先使用copyText字段，如果没有，则默认使用text字段当做复制的内容
-					data: this.copyText || this.text,
-					success: () => {
-						this.showToast && toast('复制成功')
-					},
-					fail: () => {
-						this.showToast && toast('复制失败')
-					},
-					complete: () => {
-						this.showTooltip = false
-					}
-				})
-			}
-		}
+<script setup>
+import { computed, onMounted, ref, watch } from 'vue'
+import { props as tooltipProps } from './props.js'
+import { commonProps, useUltraUI } from '../../libs/composable/useUltraUI.js'
+import { addStyle, addUnit, getPx, guid, toast, sleep, sys } from '../../libs/function/index.js'
+// #ifdef APP-NVUE
+const dom = uni.requireNativePlugin('dom')
+// #endif
+/**
+ * Tooltip
+ * @description
+ * @tutorial https://ijry.github.io/uview-plus/components/tooltip.html
+ * @property {String | Number}	text		需要显示的提示文字
+ * @property {String | Number}	copyText	点击复制按钮时，复制的文本，为空则使用text值
+ * @property {String | Number}	size		文本大小（默认 14 ）
+ * @property {String}			color		字体颜色（默认 '#606266' ）
+ * @property {String}			bgColor		弹出提示框时，文本的背景色（默认 'transparent' ）
+ * @property {String}			direction	弹出提示的方向，top-上方，bottom-下方（默认 'top' ）
+ * @property {String | Number}	zIndex		弹出提示的z-index，nvue无效（默认 10071 ）
+ * @property {Boolean}			showCopy	是否显示复制按钮（默认 true ）
+ * @property {Array}			buttons		扩展的按钮组
+ * @property {Boolean}			overlay		是否显示透明遮罩以防止触摸穿透（默认 true ）
+ * @property {Object}			customStyle	定义需要用到的外部样式
+ *
+ * @event {Function}
+ * @example
+ */
+defineOptions({
+	name: 'up-tooltip',
+	// #ifdef MP-WEIXIN
+	options: {
+		virtualHost: true
 	}
+	// #endif
+})
+
+const props = defineProps({
+	...commonProps,
+	...tooltipProps.props
+})
+const emit = defineEmits(['click'])
+const { $uGetRect } = useUltraUI(props)
+
+const showTooltip = ref(true)
+const textId = ref(guid())
+const tooltipId = ref(guid())
+const tooltipTop = ref(-10000)
+const tooltipInfo = ref({
+	width: 0,
+	left: 0
+})
+const textInfo = ref({
+	width: 0,
+	left: 0
+})
+const indicatorStyle = ref({})
+const screenGap = 12
+const indicatorWidth = 14
+const textRef = ref(null)
+const tooltipRef = ref(null)
+
+const propsChange = computed(() => [props.text, props.buttons])
+
+watch(propsChange, () => {
+	getElRect()
+})
+
+const tooltipStyle = computed(() => {
+	const style = {
+		transform: `translateY(${props.direction === 'top' ? '-100%' : '100%'})`,
+	}
+	const sysInfo = sys()
+	if (tooltipInfo.value.width / 2 > textInfo.value.left + textInfo.value.width / 2 - screenGap) {
+		indicatorStyle.value = {}
+		style.left = `-${addUnit(textInfo.value.left - screenGap)}`
+		indicatorStyle.value.left = addUnit(textInfo.value.width / 2 - getPx(style.left) - indicatorWidth / 2)
+	} else if (tooltipInfo.value.width / 2 > sysInfo.windowWidth - textInfo.value.right + textInfo.value.width / 2 - screenGap) {
+		indicatorStyle.value = {}
+		style.right = `-${addUnit(sysInfo.windowWidth - textInfo.value.right - screenGap)}`
+		indicatorStyle.value.right = addUnit(textInfo.value.width / 2 - getPx(style.right) - indicatorWidth / 2)
+	} else {
+		const left = Math.abs(textInfo.value.width / 2 - tooltipInfo.value.width / 2)
+		style.left = textInfo.value.width > tooltipInfo.value.width ? addUnit(left) : -addUnit(left)
+		indicatorStyle.value = {}
+	}
+	if (props.direction === 'top') {
+		style.marginTop = '-10px'
+		indicatorStyle.value.bottom = '-4px'
+	} else {
+		style.marginBottom = '-10px'
+		indicatorStyle.value.top = '-4px'
+	}
+	return style
+})
+
+onMounted(() => {
+	init()
+})
+
+function init() {
+	getElRect()
+}
+
+async function longpressHandler() {
+	tooltipTop.value = 0
+	showTooltip.value = true
+}
+
+function overlayClickHandler() {
+	showTooltip.value = false
+}
+
+function btnClickHandler(index) {
+	showTooltip.value = false
+	emit('click', props.showCopy ? index + 1 : index)
+}
+
+function queryRect(refName) {
+	// #ifndef APP-NVUE
+	return new Promise((resolve) => {
+		$uGetRect(`#${refName}`).then((size) => {
+			resolve(size)
+		})
+	})
+	// #endif
+
+	// #ifdef APP-NVUE
+	return new Promise((resolve) => {
+		const node = refName === textId.value ? textRef.value : tooltipRef.value
+		dom.getComponentRect(node, (res) => {
+			resolve(res.size)
+		})
+	})
+	// #endif
+}
+
+function getElRect() {
+	showTooltip.value = true
+	tooltipTop.value = -10000
+	sleep(500).then(() => {
+		queryRect(tooltipId.value).then((size) => {
+			tooltipInfo.value = size
+			showTooltip.value = false
+		})
+		queryRect(textId.value).then((size) => {
+			textInfo.value = size
+		})
+	})
+}
+
+function setClipboardData() {
+	showTooltip.value = false
+	emit('click', 0)
+	uni.setClipboardData({
+		data: props.copyText || props.text,
+		success: () => {
+			props.showToast && toast('复制成功')
+		},
+		fail: () => {
+			props.showToast && toast('复制失败')
+		},
+		complete: () => {
+			showTooltip.value = false
+		}
+	})
+}
 </script>
+
 
 <style lang="scss" scoped>
 	@import "../../libs/css/components.scss";

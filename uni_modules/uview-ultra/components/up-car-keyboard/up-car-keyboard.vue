@@ -67,11 +67,11 @@
 	</view>
 </template>
 
-<script>
-	import { props } from './props.js';
-	import { mpMixin } from '../../libs/mixin/mpMixin.js';
-	import { mixin } from '../../libs/mixin/mixin.js';
-	import { randomArray, sleep } from '../../libs/function/index.js';
+<script setup>
+	import { computed, onBeforeUnmount, ref } from 'vue'
+	import { props as carKeyboardProps } from './props.js'
+	import { commonProps, useUltraUI } from '../../libs/composable/useUltraUI.js'
+	import { randomArray, sleep } from '../../libs/function/index.js'
 	/**
 	 * keyboard 键盘组件
 	 * @description 此为uView自定义的键盘面板，内含了数字键盘，车牌号键，身份证号键盘3种模式，都有可以打乱按键顺序的选项。
@@ -81,144 +81,169 @@
 	 * @event {Function} backspace 点击退格键触发
 	 * @example <up-keyboard ref="uKeyboard" mode="car" v-model="show"></up-keyboard>
 	 */
-	export default {
+	defineOptions({
 		name: "up-car-keyboard",
-		mixins: [mpMixin, mixin, props],
-		data() {
-			return {
-				// 车牌输入时，abc=true为输入车牌号码，bac=false为输入省份中文简称
-				abc: false
-			};
-		},
-		computed: {
-			areaList() {
-				let data = [
-					'京',
-					'沪',
-					'粤',
-					'津',
-					'冀',
-					'豫',
-					'云',
-					'辽',
-					'黑',
-					'湘',
-					'皖',
-					'鲁',
-					'苏',
-					'浙',
-					'赣',
-					'鄂',
-					'桂',
-					'甘',
-					'晋',
-					'陕',
-					'蒙',
-					'吉',
-					'闽',
-					'贵',
-					'渝',
-					'川',
-					'青',
-					'琼',
-					'宁',
-					'挂',
-					'藏',
-					'港',
-					'澳',
-					'新',
-					'使',
-					'学'
-				];
-				let tmp = [];
-				// 打乱顺序
-				if (this.random) data = randomArray(data);
-				// 切割成二维数组
-				tmp[0] = data.slice(0, 10);
-				tmp[1] = data.slice(10, 20);
-				tmp[2] = data.slice(20, 30);
-				tmp[3] = data.slice(30, 36);
-				return tmp;
-			},
-			engKeyBoardList() {
-				let data = [
-					1,
-					2,
-					3,
-					4,
-					5,
-					6,
-					7,
-					8,
-					9,
-					0,
-					'Q',
-					'W',
-					'E',
-					'R',
-					'T',
-					'Y',
-					'U',
-					'I',
-					'O',
-					'P',
-					'A',
-					'S',
-					'D',
-					'F',
-					'G',
-					'H',
-					'J',
-					'K',
-					'L',
-					'Z',
-					'X',
-					'C',
-					'V',
-					'B',
-					'N',
-					'M'
-				];
-				let tmp = [];
-				if (this.random) data = randomArray(data);
-				tmp[0] = data.slice(0, 10);
-				tmp[1] = data.slice(10, 20);
-				tmp[2] = data.slice(20, 30);
-				tmp[3] = data.slice(30, 36);
-				return tmp;
-			}
-		},
-		emits: ["change", "backspace"],
-		methods: {
-			// 点击键盘按钮
-			carInputClick(i, j) {
-				let value = '';
-				// 不同模式，获取不同数组的值
-				if (this.abc) value = this.engKeyBoardList[i][j];
-				else value = this.areaList[i][j];
-				// 如果允许自动切换，则将中文状态切换为英文
-				if (!this.abc && this.autoChange) sleep(200).then(() => this.abc = true)
-				this.$emit('change', value);
-			},
-			// 修改汽车牌键盘的输入模式，中文|英文
-			changeCarInputMode() {
-				this.abc = !this.abc;
-			},
-			// 点击退格键
-			backspaceClick() {
-				this.$emit('backspace');
-				clearInterval(this.timer); //再次清空定时器，防止重复注册定时器
-				this.timer = null;
-				this.timer = setInterval(() => {
-					this.$emit('backspace');
-				}, 250);
-			},
-			clearTimer() {
-				clearInterval(this.timer);
-				this.timer = null;
-			},
+		// #ifdef MP-WEIXIN
+		options: {
+			virtualHost: true
 		}
-	};
+		// #endif
+	})
+
+	const props = defineProps({
+		...commonProps,
+		...carKeyboardProps.props
+	})
+	const emit = defineEmits(["change", "backspace"])
+	const { noop } = useUltraUI(props)
+	// 车牌输入时，abc=true为输入车牌号码，bac=false为输入省份中文简称
+	const abc = ref(false)
+	const timer = ref(null)
+
+	const areaList = computed(() => {
+		let data = [
+			'京',
+			'沪',
+			'粤',
+			'津',
+			'冀',
+			'豫',
+			'云',
+			'辽',
+			'黑',
+			'湘',
+			'皖',
+			'鲁',
+			'苏',
+			'浙',
+			'赣',
+			'鄂',
+			'桂',
+			'甘',
+			'晋',
+			'陕',
+			'蒙',
+			'吉',
+			'闽',
+			'贵',
+			'渝',
+			'川',
+			'青',
+			'琼',
+			'宁',
+			'挂',
+			'藏',
+			'港',
+			'澳',
+			'新',
+			'使',
+			'学'
+		]
+		const tmp = []
+		// 打乱顺序
+		if (props.random) data = randomArray(data)
+		// 切割成二维数组
+		tmp[0] = data.slice(0, 10)
+		tmp[1] = data.slice(10, 20)
+		tmp[2] = data.slice(20, 30)
+		tmp[3] = data.slice(30, 36)
+		return tmp
+	})
+
+	const engKeyBoardList = computed(() => {
+		let data = [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			0,
+			'Q',
+			'W',
+			'E',
+			'R',
+			'T',
+			'Y',
+			'U',
+			'I',
+			'O',
+			'P',
+			'A',
+			'S',
+			'D',
+			'F',
+			'G',
+			'H',
+			'J',
+			'K',
+			'L',
+			'Z',
+			'X',
+			'C',
+			'V',
+			'B',
+			'N',
+			'M'
+		]
+		const tmp = []
+		if (props.random) data = randomArray(data)
+		tmp[0] = data.slice(0, 10)
+		tmp[1] = data.slice(10, 20)
+		tmp[2] = data.slice(20, 30)
+		tmp[3] = data.slice(30, 36)
+		return tmp
+	})
+
+	// 点击键盘按钮
+	function carInputClick(i, j) {
+		let value = ''
+		// 不同模式，获取不同数组的值
+		if (abc.value) value = engKeyBoardList.value[i][j]
+		else value = areaList.value[i][j]
+		// 如果允许自动切换，则将中文状态切换为英文
+		if (!abc.value && props.autoChange) sleep(200).then(() => abc.value = true)
+		emit('change', value)
+	}
+
+	// 修改汽车牌键盘的输入模式，中文|英文
+	function changeCarInputMode() {
+		abc.value = !abc.value
+	}
+
+	// 点击退格键
+	function backspaceClick() {
+		emit('backspace')
+		clearInterval(timer.value) //再次清空定时器，防止重复注册定时器
+		timer.value = null
+		timer.value = setInterval(() => {
+			emit('backspace')
+		}, 250)
+	}
+
+	function clearTimer() {
+		clearInterval(timer.value)
+		timer.value = null
+	}
+
+	onBeforeUnmount(() => {
+		clearTimer()
+	})
+
+	defineExpose({
+		noop,
+		abc,
+		timer,
+		areaList,
+		engKeyBoardList,
+		carInputClick,
+		changeCarInputMode,
+		backspaceClick,
+		clearTimer
+	})
 </script>
 
 <style lang="scss" scoped>

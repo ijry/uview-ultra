@@ -4,11 +4,11 @@
 	</view>
 </template>
 
-<script>
-	import { props } from './props';
-	import { mpMixin } from '../../libs/mixin/mpMixin';
-	import { mixin } from '../../libs/mixin/mixin';
-	import { addUnit, $parent } from '../../libs/function/index';
+<script setup>
+	import { getCurrentInstance, onMounted, ref } from 'vue'
+	import { props as tdProps } from './props'
+	import { commonProps } from '../../libs/composable/useUltraUI.js'
+	import { addUnit, $parent } from '../../libs/function/index.js'
 	/** 
 	 * Td 表格中的单元格
 	 * @description 
@@ -17,70 +17,71 @@
 	 * @event {Function}
 	 * @example
 	 */
-	export default {
+	defineOptions({
 		name: 'up-td',
-		mixins: [mpMixin, mixin, props],
-		props: {
-			// 宽度，百分比或者具体带单位的值，如30%， 200rpx等，一般使用百分比
-			width: {
-				type: [String],
-				default: 'auto'
-			},
-			textAlign: {
-				type: String,
-				default: ''
-			},
-			fontSize: {
-				type: String,
-				default: ''
-			},
-			borderColor: {
-				type: String,
-				default: ''
-			},
-			color: {
-				type: String,
-				default: ''
-			}
-		},
-		data() {
-			return {
-				tdStyle: {
-					
-				}
-			}
-		},
-		created() {
-			this.parent = false;
-		},
-		mounted() {
-			this.parent = $parent.call(this, 'up-table');
-			if (this.parent) {
-				// 将父组件的相关参数，合并到本组件
-				let style = {};
-				if (this.width != "auto") style.flex = `0 0 ${this.width}`;
-				style.textAlign = this.parent.align;
-				style.fontSize = addUnit(this.parent.fontSize);
-				style.padding = this.parent.padding;
-				style.borderBottom = `solid 1px ${this.parent.borderColor}`;
-				style.borderRight = `solid 1px ${this.parent.borderColor}`;
-				style.color = this.parent.color;
-				if (this.textAlign != '') {
-					style.textAlign = this.textAlign;
-				}
-				if (this.fontSize != '') {
-					style.fontSize = this.fontSize;
-				}
-				if (this.borderColor != '') {
-					style.borderColor = this.borderColor;
-				}
-				if (this.color != '') {
-					style.color = this.color;
-				}
-				this.tdStyle = style;
-			}
+		// #ifdef MP-WEIXIN
+		options: {
+			virtualHost: true
 		}
-	}
+		// #endif
+	})
+
+	const props = defineProps({
+		...commonProps,
+		...tdProps.props,
+		// 宽度，百分比或者具体带单位的值，如30%， 200rpx等，一般使用百分比
+		width: {
+			type: [String],
+			default: 'auto'
+		},
+		textAlign: {
+			type: String,
+			default: ''
+		},
+		fontSize: {
+			type: String,
+			default: ''
+		},
+		borderColor: {
+			type: String,
+			default: ''
+		},
+		color: {
+			type: String,
+			default: ''
+		}
+	})
+	const instance = getCurrentInstance()
+	const tdStyle = ref({})
+
+	onMounted(() => {
+		const parent = $parent.call(instance.proxy, 'up-table')
+		if (!parent) return
+		const parentProps = typeof parent.getProps === 'function' ? parent.getProps() : parent
+
+		// 将父组件的相关参数，合并到本组件
+		const style = {}
+		if (props.width != 'auto') style.flex = `0 0 ${props.width}`
+		style.textAlign = parentProps.align
+		style.fontSize = addUnit(parentProps.fontSize)
+		style.padding = parentProps.padding
+		style.borderBottom = `solid 1px ${parentProps.borderColor}`
+		style.borderRight = `solid 1px ${parentProps.borderColor}`
+		style.color = parentProps.color
+		if (props.textAlign != '') {
+			style.textAlign = props.textAlign
+		}
+		if (props.fontSize != '') {
+			style.fontSize = props.fontSize
+		}
+		if (props.borderColor != '') {
+			style.borderColor = props.borderColor
+		}
+		if (props.color != '') {
+			style.color = props.color
+		}
+		tdStyle.value = style
+	})
 </script>
 
 <style lang="scss" scoped>
