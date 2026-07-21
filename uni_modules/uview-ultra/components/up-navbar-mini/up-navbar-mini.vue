@@ -39,11 +39,10 @@
 	</view>
 </template>
 
-<script>
-	import { props } from './props';
-	import { mpMixin } from '../../libs/mixin/mpMixin';
-	import { mixin } from '../../libs/mixin/mixin';
-	import { addUnit, addStyle, getPx, sys } from '../../libs/function/index';
+<script setup>
+	import { props as navbarMiniProps } from './props'
+	import { commonProps } from '../../libs/composable/useUltraUI.js'
+	import { addUnit } from '../../libs/function/index.js'
 	/**
 	 * NavbarMini 迷你导航栏
 	 * @description 此组件一般用于在全屏页面中，典型的如微信小程序左上角。
@@ -63,34 +62,33 @@
 	 * @event {Function} rightClick		点击右侧区域
 	 * @example <up-navbar-mini @click-left="onClickBack"></up-navbar-mini>
 	 */
-	export default {
+	defineOptions({
 		name: 'up-navbar-mini',
-		mixins: [mpMixin, mixin, props],
-		data() {
-			return {
-			}
-		},
-		emits: ["leftClick", "homeClick"],
-        created() {
-        },
-		methods: {
-			addStyle,
-			addUnit,
-			sys,
-			getPx,
-			// 点击左侧区域
-			leftClick() {
-				// 如果配置了autoBack，自动返回上一页
-				this.$emit('leftClick')
-				if(this.autoBack) {
-					uni.navigateBack()
-				}
-			},
-			homeClick() {
-				if (this.homeUrl) {
-					uni.reLaunch({ url: this.homeUrl })
-				}
-			}
+		// #ifdef MP-WEIXIN
+		options: {
+			virtualHost: true
+		}
+		// #endif
+	})
+
+	const props = defineProps({
+		...commonProps,
+		...navbarMiniProps.props
+	})
+	const emit = defineEmits(['leftClick', 'homeClick'])
+
+	// 点击左侧区域
+	function leftClick() {
+		// 如果配置了autoBack，自动返回上一页
+		emit('leftClick')
+		if (props.autoBack) {
+			uni.navigateBack()
+		}
+	}
+
+	function homeClick() {
+		if (props.homeUrl) {
+			uni.reLaunch({ url: props.homeUrl })
 		}
 	}
 </script>

@@ -46,11 +46,11 @@
 	<!-- #endif -->
 </template>
 
-<script>
-	import { props } from './props';
-	import { mpMixin } from '../../libs/mixin/mpMixin';
-	import { mixin } from '../../libs/mixin/mixin';
-	import { addUnit, addStyle, deepMerge, sleep, getWindowInfo } from '../../libs/function/index';
+<script setup>
+	import { computed, provide, ref, toRefs, watch } from 'vue'
+	import { props as listProps } from './props'
+	import { commonProps, useUltraUI } from '../../libs/composable/useUltraUI.js'
+	import { addUnit, addStyle, deepMerge, sleep, getWindowInfo } from '../../libs/function/index'
 	// #ifdef APP-NVUE
 	const dom = uni.requireNativePlugin('dom')
 	// #endif
@@ -76,104 +76,149 @@
 	 *
 	 * @example <up-list @scrolltolower="scrolltolower"></up-list>
 	 */
-	export default {
+	defineOptions({
 		name: 'up-list',
-		mixins: [mpMixin, mixin, props],
-		watch: {
-			scrollIntoView(n) {
-				this.scrollIntoViewById(n)
-			}
-		},
-		data() {
-			return {
-				// 记录内部滚动的距离
-				innerScrollTop: 0,
-				// vue下，scroll-view在上拉加载时的偏移值
-				offset: 0,
-				sys: getWindowInfo()
-			}
-		},
-		computed: {
-			listStyle() {
-				const style = {};
-				if (this.width != 0) style.width = addUnit(this.width)
-				if (this.height != 0) style.height = addUnit(this.height)
-				// 如果没有定义列表高度，则默认使用屏幕高度
-				if (!style.height) style.height = addUnit(this.sys.windowHeight, 'px')
-				return deepMerge(style, addStyle(this.customStyle))
-			}
-		},
-		provide() {
-			return {
-				uList: this
-			}
-		},
-		created() {
-			this.refs = []
-			this.children = []
-			this.anchors = []
-		},
-		mounted() {},
-		emits: ["scroll", "scrolltolower", "scroll-to-lower", "scrolltoupper", "scroll-to-upper",
-			"refresherpulling", "refresherrefresh", "refresherrestore", "refresherabort"],
-		methods: {
-			updateOffsetFromChild(top) {
-				this.offset = top
-			},
-			onScroll(e) {
-				let scrollTop = 0
-				// #ifdef APP-NVUE
-				scrollTop = e.contentOffset.y
-				// #endif
-				// #ifndef APP-NVUE
-				scrollTop = e.detail.scrollTop
-				// #endif
-				this.innerScrollTop = scrollTop
-				this.$emit('scroll', scrollTop)
-			},
-			scrollIntoViewById(id) {
-				// #ifdef APP-NVUE
-				// 根据id参数，找到所有up-list-item中匹配的节点，再通过dom模块滚动到对应的位置
-				const item = this.refs.find(item => item.$refs[id] ? true : false)
-				dom.scrollToElement(item.$refs[id], {
-					// 是否需要滚动动画
-					animated: this.scrollWithAnimation
-				})
-				// #endif
-			},
-			// 滚动到底部触发事件
-			scrolltolower(e) {
-				sleep(30).then(() => {
-					this.$emit('scrolltolower')
-					// 支付宝小程序奇怪无法触发scrolltolowerhttps://github.com/ijry/uview-plus/issues/422
-					this.$emit('scroll-to-lower')
-				})
-			},
-			// #ifndef APP-NVUE
-			// 滚动到底部时触发，非nvue有效
-			scrolltoupper(e) {
-				sleep(30).then(() => {
-					this.$emit('scrolltoupper')
-					this.$emit('scroll-to-upper')
-					// 这一句很重要，能绝对保证在性功能障碍的webview，滚动条到顶时，取消偏移值，让页面置顶
-					this.offset = 0
-				})
-			},
-			refresherpulling(e) {
-				this.$emit('refresherpulling', e)
-			},
-			refresherrefresh(e) {
-				this.$emit('refresherrefresh', e)
-			},
-			refresherrestore(e) {
-				this.$emit('refresherrestore', e)
-			},
-			refresherabort(e) {
-				this.$emit('refresherabort', e)
-			}
-			// #endif
-		},
+		// #ifdef MP-WEIXIN
+		options: {
+			virtualHost: true
+		}
+		// #endif
+	})
+
+	const props = defineProps({
+		...commonProps,
+		...listProps.props
+	})
+	const emit = defineEmits(['scroll', 'scrolltolower', 'scroll-to-lower', 'scrolltoupper', 'scroll-to-upper',
+		'refresherpulling', 'refresherrefresh', 'refresherrestore', 'refresherabort'])
+	const { children } = useUltraUI(props)
+	const {
+		showScrollbar,
+		lowerThreshold,
+		upperThreshold,
+		scrollTop,
+		offsetAccuracy,
+		scrollable,
+		scrollIntoView,
+		scrollWithAnimation,
+		enableBackToTop,
+		refresherEnabled,
+		refresherThreshold,
+		refresherDefaultStyle,
+		refresherBackground,
+		refresherTriggered,
+		preLoadScreen
+	} = toRefs(props)
+	const refs = ref([])
+	const anchors = ref([])
+	// 记录内部滚动的距离
+	const innerScrollTop = ref(0)
+	// vue下，scroll-view在上拉加载时的偏移值
+	const offset = ref(0)
+	const sys = getWindowInfo()
+
+	const listStyle = computed(() => {
+		const style = {}
+		if (props.width != 0) style.width = addUnit(props.width)
+		if (props.height != 0) style.height = addUnit(props.height)
+		// 如果没有定义列表高度，则默认使用屏幕高度
+		if (!style.height) style.height = addUnit(sys.windowHeight, 'px')
+		return deepMerge(style, addStyle(props.customStyle))
+	})
+
+	function updateOffsetFromChild(top) {
+		offset.value = top
 	}
+
+	function onScroll(e) {
+		let currentScrollTop = 0
+		// #ifdef APP-NVUE
+		currentScrollTop = e.contentOffset.y
+		// #endif
+		// #ifndef APP-NVUE
+		currentScrollTop = e.detail.scrollTop
+		// #endif
+		innerScrollTop.value = currentScrollTop
+		emit('scroll', currentScrollTop)
+	}
+
+	function scrollIntoViewById(id) {
+		// #ifdef APP-NVUE
+		// 根据id参数，找到所有up-list-item中匹配的节点，再通过dom模块滚动到对应的位置
+		const item = refs.value.find(item => item.$refs[id] ? true : false)
+		dom.scrollToElement(item.$refs[id], {
+			// 是否需要滚动动画
+			animated: props.scrollWithAnimation
+		})
+		// #endif
+	}
+
+	// 滚动到底部触发事件
+	function scrolltolower(e) {
+		sleep(30).then(() => {
+			emit('scrolltolower')
+			// 支付宝小程序奇怪无法触发scrolltolowerhttps://github.com/ijry/uview-plus/issues/422
+			emit('scroll-to-lower')
+		})
+	}
+
+	// #ifndef APP-NVUE
+	// 滚动到底部时触发，非nvue有效
+	function scrolltoupper(e) {
+		sleep(30).then(() => {
+			emit('scrolltoupper')
+			emit('scroll-to-upper')
+			// 这一句很重要，能绝对保证在性功能障碍的webview，滚动条到顶时，取消偏移值，让页面置顶
+			offset.value = 0
+		})
+	}
+
+	function refresherpulling(e) {
+		emit('refresherpulling', e)
+	}
+
+	function refresherrefresh(e) {
+		emit('refresherrefresh', e)
+	}
+
+	function refresherrestore(e) {
+		emit('refresherrestore', e)
+	}
+
+	function refresherabort(e) {
+		emit('refresherabort', e)
+	}
+	// #endif
+
+	function getProps() {
+		return {
+			preLoadScreen: props.preLoadScreen,
+			scrollWithAnimation: props.scrollWithAnimation
+		}
+	}
+
+	provide('uList', {
+		innerScrollTop,
+		preLoadScreen,
+		updateOffsetFromChild
+	})
+
+	watch(() => props.scrollIntoView, (n) => {
+		scrollIntoViewById(n)
+	})
+
+	defineExpose({
+		children,
+		refs,
+		anchors,
+		innerScrollTop,
+		offset,
+		preLoadScreen,
+		scrollWithAnimation,
+		updateOffsetFromChild,
+		scrollIntoViewById,
+		getProps
+	})
 </script>
 
 <style lang="scss" scoped>

@@ -42,10 +42,10 @@
     </view>
 </template>
 
-<script>
-import { props } from "./props.js";
-import { mpMixin } from '../../libs/mixin/mpMixin.js';
-import { mixin } from '../../libs/mixin/mixin.js';
+<script setup>
+import { computed, getCurrentInstance, nextTick, ref, watch } from 'vue'
+import { props as textareaProps } from "./props.js";
+import { commonProps } from '../../libs/composable/useUltraUI.js'
 import { addStyle, addUnit, deepMerge, formValidate, os } from '../../libs/function/index.js';
 /**
  * Textarea 文本域
@@ -84,164 +84,169 @@ import { addStyle, addUnit, deepMerge, formValidate, os } from '../../libs/funct
  * @event {Function(e)} keyboardheightchange	键盘高度发生变化的时候触发此事件
  * @example <up-textarea v-model="value1" placeholder="请输入内容" ></up-textarea>
  */
-export default {
+defineOptions({
     name: "up-textarea",
-    mixins: [mpMixin, mixin, props],
-	data() {
-		return {
-			// 输入框的值
-			innerValue: "",
-			// 是否处于获得焦点状态
-			focused: false,
-			// value是否第一次变化，在watch中，由于加入immediate属性，会在第一次触发，此时不应该认为value发生了变化
-			firstChange: true,
-			// value绑定值的变化是由内部还是外部引起的
-			changeFromInner: false,
-			// 过滤处理方法
-			innerFormatter: value => value
-		}
-	},
-	created() {
-	},
-	watch: {
-        // #ifdef VUE2
-	    value: {
-	        immediate: true,
-	        handler(newVal, oldVal) {
-	            this.innerValue = this.normalizeValue(newVal);
-	            /* #ifdef H5 */
-	            // 在H5中，外部value变化后，修改input中的值，不会触发@input事件，此时手动调用值变化方法
-	            if (
-	                this.firstChange === false &&
-	                this.changeFromInner === false
-	            ) {
-	                this.valueChange();
-	            }
-	            /* #endif */
-	            this.firstChange = false;
-	            // 重置changeFromInner的值为false，标识下一次引起默认为外部引起的
-	            this.changeFromInner = false;
-	        },
-	    },
-        // #endif
-        // #ifdef VUE3
-        modelValue: {
-	        immediate: true,
-	        handler(newVal, oldVal) {
-	            this.innerValue = this.normalizeValue(newVal);
-	            /* #ifdef H5 */
-	            // 在H5中，外部value变化后，修改input中的值，不会触发@input事件，此时手动调用值变化方法
-	            if (
-	                this.firstChange === false &&
-	                this.changeFromInner === false
-	            ) {
-	                this.valueChange();
-	            }
-	            /* #endif */
-	            this.firstChange = false;
-	            // 重置changeFromInner的值为false，标识下一次引起默认为外部引起的
-	            this.changeFromInner = false;
-	        },
-	    }
-        // #endif
-	},
-    computed: {
-        // 字数统计安全取值，避免 v-model 为 null/undefined/number 时访问 length 报错
-        valueLength() {
-            return String(this.innerValue ?? '').length
-        },
-        // 组件的类名
-        textareaClass() {
-            let classes = [],
-                { border, disabled } = this;
-            border === "surround" &&
-                (classes = classes.concat(["up-border", "up-textarea--radius"]));
-            border === "bottom" &&
-                (classes = classes.concat([
-                    "up-border-bottom",
-                    "up-textarea--no-radius",
-                ]));
-            disabled && classes.push("up-textarea--disabled");
-            return classes.join(" ");
-        },
-        // 组件的样式
-        textareaStyle() {
-            const style = {};
-            // #ifdef APP-NVUE
-            // 由于textarea在安卓nvue上的差异性，需要额外再调整其内边距
-            if (os() === "android") {
-                style.paddingTop = "6px";
-                style.paddingLeft = "9px";
-                style.paddingBottom = "3px";
-                style.paddingRight = "6px";
-            }
-            // #endif
-            return deepMerge(style, addStyle(this.customStyle));
-        },
-    },
-    // #ifdef VUE3
-    emits: ['update:modelValue', 'linechange', 'focus', 'blur', 'change', 'confirm', 'keyboardheightchange'],
+    // #ifdef MP-WEIXIN
+    options: {
+        virtualHost: true
+    }
     // #endif
-    methods: {
-        addStyle,
-        addUnit,
-		normalizeValue(value) {
-			if (value === null || value === undefined) return ''
-			return typeof value === 'number' ? String(value) : value
-		},
-		// 在微信小程序中，不支持将函数当做props参数，故只能通过ref形式调用
-		setFormatter(e) {
-			this.innerFormatter = e
-		},
-        onFocus(e) {
-            this.$emit("focus", e);
-        },
-        onBlur(e) {
-            this.$emit("blur", e);
-            // 尝试调用up-form的验证方法
-            formValidate(this, "blur");
-        },
-        onLinechange(e) {
-            this.$emit("linechange", e);
-        },
-        onInput(e) {
-			let { value } = e.detail || {};
-			value = this.normalizeValue(value)
-			// 格式化过滤方法
-			const formatter = this.formatter || this.innerFormatter
-			const formatValue = this.normalizeValue(formatter(value))
-			// 为了避免props的单向数据流特性，需要先将innerValue值设置为当前值，再在$nextTick中重新赋予设置后的值才有效
-			this.innerValue = value
-			this.$nextTick(() => {
-				this.innerValue = formatValue;
-				this.valueChange();
-			})
-        },
-		// 内容发生变化，进行处理
-		valueChange() {
-		    const value = this.innerValue;
-		    this.$nextTick(() => {
-                // #ifdef VUE3
-                this.$emit("update:modelValue", value);
-                // #endif
-                // #ifdef VUE2
-                this.$emit("input", value);
-                // #endif
-		        // 标识value值的变化是由内部引起的
-		        this.changeFromInner = true;
-		        this.$emit("change", value);
-		        // 尝试调用up-form的验证方法
-		        formValidate(this, "change");
-		    });
-		},
-        onConfirm(e) {
-            this.$emit("confirm", e);
-        },
-        onKeyboardheightchange(e) {
-            this.$emit("keyboardheightchange", e);
-        },
-    },
-};
+})
+
+const props = defineProps({
+    ...commonProps,
+    ...textareaProps.props
+})
+const emit = defineEmits(['update:modelValue', 'input', 'linechange', 'focus', 'blur', 'change', 'confirm', 'keyboardheightchange'])
+const instance = getCurrentInstance()
+const proxy = instance?.proxy
+// 输入框的值
+const innerValue = ref("")
+// 是否处于获得焦点状态
+const focused = ref(false)
+// value是否第一次变化，在watch中，由于加入immediate属性，会在第一次触发，此时不应该认为value发生了变化
+const firstChange = ref(true)
+// value绑定值的变化是由内部还是外部引起的
+const changeFromInner = ref(false)
+// 过滤处理方法
+const innerFormatter = ref(value => value)
+
+watch(() => props.modelValue, (newVal) => {
+    innerValue.value = normalizeValue(newVal)
+    /* #ifdef H5 */
+    // 在H5中，外部value变化后，修改input中的值，不会触发@input事件，此时手动调用值变化方法
+    if (
+        firstChange.value === false &&
+        changeFromInner.value === false
+    ) {
+        valueChange()
+    }
+    /* #endif */
+    firstChange.value = false
+    // 重置changeFromInner的值为false，标识下一次引起默认为外部引起的
+    changeFromInner.value = false
+}, {
+    immediate: true
+})
+
+// 字数统计安全取值，避免 v-model 为 null/undefined/number 时访问 length 报错
+const valueLength = computed(() => {
+    return String(innerValue.value ?? '').length
+})
+
+// 组件的类名
+const textareaClass = computed(() => {
+    let classes = []
+    const { border, disabled } = props
+    border === "surround" &&
+        (classes = classes.concat(["up-border", "up-textarea--radius"]))
+    border === "bottom" &&
+        (classes = classes.concat([
+            "up-border-bottom",
+            "up-textarea--no-radius",
+        ]))
+    disabled && classes.push("up-textarea--disabled")
+    return classes.join(" ")
+})
+
+// 组件的样式
+const textareaStyle = computed(() => {
+    const style = {}
+    // #ifdef APP-NVUE
+    // 由于textarea在安卓nvue上的差异性，需要额外再调整其内边距
+    if (os() === "android") {
+        style.paddingTop = "6px"
+        style.paddingLeft = "9px"
+        style.paddingBottom = "3px"
+        style.paddingRight = "6px"
+    }
+    // #endif
+    return deepMerge(style, addStyle(props.customStyle))
+})
+
+function normalizeValue(value) {
+    if (value === null || value === undefined) return ''
+    return typeof value === 'number' ? String(value) : value
+}
+
+// 在微信小程序中，不支持将函数当做props参数，故只能通过ref形式调用
+function setFormatter(e) {
+    innerFormatter.value = e
+}
+
+function onFocus(e) {
+    emit("focus", e)
+}
+
+function onBlur(e) {
+    emit("blur", e)
+    // 尝试调用up-form的验证方法
+    formValidate(proxy, "blur")
+}
+
+function onLinechange(e) {
+    emit("linechange", e)
+}
+
+function onInput(e) {
+    let { value } = e.detail || {}
+    value = normalizeValue(value)
+    // 格式化过滤方法
+    const formatter = props.formatter || innerFormatter.value
+    const formatValue = normalizeValue(formatter(value))
+    // 为了避免props的单向数据流特性，需要先将innerValue值设置为当前值，再在$nextTick中重新赋予设置后的值才有效
+    innerValue.value = value
+    nextTick(() => {
+        innerValue.value = formatValue
+        valueChange()
+    })
+}
+
+// 内容发生变化，进行处理
+function valueChange() {
+    const value = innerValue.value
+    nextTick(() => {
+        // #ifdef VUE3
+        emit("update:modelValue", value)
+        // #endif
+        // #ifdef VUE2
+        emit("input", value)
+        // #endif
+        // 标识value值的变化是由内部引起的
+        changeFromInner.value = true
+        emit("change", value)
+        // 尝试调用up-form的验证方法
+        formValidate(proxy, "change")
+    })
+}
+
+function onConfirm(e) {
+    emit("confirm", e)
+}
+
+function onKeyboardheightchange(e) {
+    emit("keyboardheightchange", e)
+}
+
+defineExpose({
+    innerValue,
+    focused,
+    firstChange,
+    changeFromInner,
+    innerFormatter,
+    valueLength,
+    textareaClass,
+    textareaStyle,
+    normalizeValue,
+    setFormatter,
+    onFocus,
+    onBlur,
+    onLinechange,
+    onInput,
+    valueChange,
+    onConfirm,
+    onKeyboardheightchange
+})
 </script>
 
 <style lang="scss" scoped>

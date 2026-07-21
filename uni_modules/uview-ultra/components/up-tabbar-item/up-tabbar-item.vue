@@ -48,11 +48,11 @@
 	</view>
 </template>
 
-<script>
-	import { props } from './props';
-	import { mpMixin } from '../../libs/mixin/mpMixin';
-	import { mixin } from '../../libs/mixin/mixin';
-	import { addStyle, error } from '../../libs/function/index';
+<script setup>
+	import { computed, getCurrentInstance, nextTick, onBeforeUnmount, onMounted, reactive, ref, toRef } from 'vue'
+	import { props as tabbarItemProps } from './props'
+	import { commonProps, useUltraUI } from '../../libs/composable/useUltraUI.js'
+	import { addStyle, error } from '../../libs/function/index'
 	/**
 	 * TabbarItem 底部导航栏子组件
 	 * @description 此组件提供了自定义tabbar的能力。
@@ -67,120 +67,134 @@
 	 * 
 	 * @example <up-tabbar :value="value2" :placeholder="false" @change="name => value2 = name" :fixed="false" :safeAreaInsetBottom="false"><up-tabbar-item text="首页" icon="home" dot ></up-tabbar-item></up-tabbar>
 	 */
-	export default {
+	defineOptions({
 		name: 'up-tabbar-item',
-		mixins: [mpMixin, mixin, props],
-		data() {
-			return {
-				isActive: false, // 是否处于激活状态
-				routeSyncTimer: null,
-				routeSyncLast: '',
-				parentData: {
-					value: null,
-					activeColor: '',
-					inactiveColor: ''
-				}
-			}
-		},
-		//  微信小程序中 options 选项
+		// 微信小程序中 options 选项
 		options: {
-		    virtualHost: true //将自定义节点设置成虚拟的，更加接近Vue组件的表现。我们不希望自定义组件的这个节点本身可以设置样式、响应 flex 布局等
+			virtualHost: true //将自定义节点设置成虚拟的，更加接近Vue组件的表现。我们不希望自定义组件的这个节点本身可以设置样式、响应 flex 布局等
 		},
-		computed: {
-			// 计算是否为中间按钮
-			isMidButton() {
-				return this.mode === 'midButton';
-			}
-		},
-		created() {
-			this.init()
-		},
-		mounted() {
-			this.startRouteSync()
-		},
-		beforeUnmount() {
-			this.clearRouteSync()
-		},
-		beforeDestroy() {
-			this.clearRouteSync()
-		},
-		emits: ["click", "change"],
-		methods: {
-			addStyle,
-			clearRouteSync() {
-				if (this.routeSyncTimer) {
-					clearInterval(this.routeSyncTimer)
-					this.routeSyncTimer = null
-				}
-			},
-			getCurrentRoutePath() {
-				const pages = typeof getCurrentPages === 'function' ? getCurrentPages() : []
-				if (!pages || !pages.length) return ''
-				const currentPage = pages[pages.length - 1] || {}
-				const route = currentPage.route || currentPage.$page?.fullPath || ''
-				return route ? (route.startsWith('/') ? route : `/${route}`) : ''
-			},
-			normalizeRoutePath(path) {
-				if (typeof path !== 'string') return ''
-				return path.replace(/^[#\\/]+/, '')
-			},
-			syncActiveByRouteOrValue() {
-				// 支付宝小程序不支持provide/inject，所以使用这个方法获取整个父组件，在created定义，避免循环引用
-				this.updateParentData()
-				// 本子组件在up-tabbar的children数组中的索引
-				const index = this.parent.children.indexOf(this)
-				const name = this.name || index
-				const routePath = this.getCurrentRoutePath()
-				if (typeof name === 'string' && routePath) {
-					const isRouteMatch =
-						this.normalizeRoutePath(name) === this.normalizeRoutePath(routePath)
-					if (isRouteMatch) {
-						this.isActive = true
-						return
-					}
-				}
-				this.isActive = name === this.parentData.value
-			},
-			startRouteSync() {
-				this.clearRouteSync()
-				if (typeof this.name !== 'string' || this.name.indexOf('/') === -1) return
-				this.routeSyncLast = this.getCurrentRoutePath()
-				this.routeSyncTimer = setInterval(() => {
-					const current = this.getCurrentRoutePath()
-					if (current !== this.routeSyncLast) {
-						this.routeSyncLast = current
-						this.syncActiveByRouteOrValue()
-					}
-				}, 200)
-			},
-			init() {
-				if (!this.parent) {
-					error('up-tabbar-item必须搭配up-tabbar组件使用')
-				}
-				this.syncActiveByRouteOrValue()
-			},
-			updateParentData() {
-				// 此方法在mixin中
-				this.getParentData('up-tabbar')
-			},
-			// 此方法将会被父组件up-tabbar调用
-			updateFromParent() {
-				// 重新初始化
-				this.init()
-			},
-			clickHandler() {
-				this.$nextTick(() => {
-					const index = this.parent.children.indexOf(this)
-					const name = this.name || index
-					// 点击的item为非激活的item才发出change事件
-					if (name !== this.parent.value) {
-						this.parent.$emit('change', name)
-					}
-					this.$emit('click', name)
-				})
-			}
-		},
+	})
+
+	const props = defineProps({
+		...commonProps,
+		...tabbarItemProps.props
+	})
+	const emit = defineEmits(['click', 'change'])
+	const instance = getCurrentInstance()
+	const parentData = reactive({
+		value: null,
+		activeColor: '',
+		inactiveColor: ''
+	})
+	const { parent, getParentData } = useUltraUI(props, parentData)
+	const name = toRef(props, 'name')
+	const isActive = ref(false) // 是否处于激活状态
+	const routeSyncTimer = ref(null)
+	const routeSyncLast = ref('')
+
+	// 计算是否为中间按钮
+	const isMidButton = computed(() => {
+		return props.mode === 'midButton'
+	})
+
+	function clearRouteSync() {
+		if (routeSyncTimer.value) {
+			clearInterval(routeSyncTimer.value)
+			routeSyncTimer.value = null
+		}
 	}
+
+	function getCurrentRoutePath() {
+		const pages = typeof getCurrentPages === 'function' ? getCurrentPages() : []
+		if (!pages || !pages.length) return ''
+		const currentPage = pages[pages.length - 1] || {}
+		const route = currentPage.route || currentPage.$page?.fullPath || ''
+		return route ? (route.startsWith('/') ? route : `/${route}`) : ''
+	}
+
+	function normalizeRoutePath(path) {
+		if (typeof path !== 'string') return ''
+		return path.replace(/^[#\\/]+/, '')
+	}
+
+	function syncActiveByRouteOrValue() {
+		// 支付宝小程序不支持provide/inject，所以使用这个方法获取整个父组件
+		updateParentData()
+		if (!parent.value) {
+			error('up-tabbar-item必须搭配up-tabbar组件使用')
+			return
+		}
+		// 本子组件在up-tabbar的children数组中的索引
+		const index = parent.value.children.indexOf(instance.proxy)
+		const itemName = props.name || index
+		const routePath = getCurrentRoutePath()
+		if (typeof itemName === 'string' && routePath) {
+			const isRouteMatch =
+				normalizeRoutePath(itemName) === normalizeRoutePath(routePath)
+			if (isRouteMatch) {
+				isActive.value = true
+				return
+			}
+		}
+		isActive.value = itemName === parentData.value
+	}
+
+	function startRouteSync() {
+		clearRouteSync()
+		if (typeof props.name !== 'string' || props.name.indexOf('/') === -1) return
+		routeSyncLast.value = getCurrentRoutePath()
+		routeSyncTimer.value = setInterval(() => {
+			const current = getCurrentRoutePath()
+			if (current !== routeSyncLast.value) {
+				routeSyncLast.value = current
+				syncActiveByRouteOrValue()
+			}
+		}, 200)
+	}
+
+	function init() {
+		syncActiveByRouteOrValue()
+	}
+
+	function updateParentData() {
+		getParentData('up-tabbar')
+	}
+
+	// 此方法将会被父组件up-tabbar调用
+	function updateFromParent() {
+		// 重新初始化
+		init()
+	}
+
+	function clickHandler() {
+		nextTick(() => {
+			const index = parent.value?.children?.indexOf(instance.proxy) ?? 0
+			const itemName = props.name || index
+			// 点击的item为非激活的item才发出change事件
+			if (itemName !== parentData.value) {
+				parent.value?.emitChange?.(itemName)
+			}
+			emit('click', itemName)
+		})
+	}
+
+	onMounted(() => {
+		init()
+		startRouteSync()
+	})
+
+	onBeforeUnmount(() => {
+		clearRouteSync()
+	})
+
+	defineExpose({
+		name,
+		isActive,
+		init,
+		updateParentData,
+		updateFromParent,
+		clearRouteSync
+	})
 </script>
 
 <style lang="scss" scoped>

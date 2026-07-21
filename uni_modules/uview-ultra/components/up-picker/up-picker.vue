@@ -72,244 +72,213 @@
     </view>
 </template>
 
-<script>
+<script setup>
 /**
  * up-picker
  * @description 选择器
- * @property {Boolean}			show				是否显示picker弹窗（默认 false ）
- * @property {Boolean}			showToolbar			是否显示顶部的操作栏（默认 true ）
- * @property {String}			title				顶部标题
- * @property {Array}			columns				对象数组，设置每一列的数据
- * @property {Boolean}			loading				是否显示加载中状态（默认 false ）
- * @property {String | Number}	itemHeight			各列中，单个选项的高度（默认 44 ）
- * @property {String}			cancelText			取消按钮的文字（默认 '取消' ）
- * @property {String}			confirmText			确认按钮的文字（默认 '确定' ）
- * @property {String}			cancelColor			取消按钮的颜色（默认 '#909193' ）
- * @property {String}			confirmColor		确认按钮的颜色（默认 '#3c9cff' ）
- * @property {String | Number}	visibleItemCount	每列中可见选项的数量（默认 5 ）
- * @property {String}			keyName				选项对象中，需要展示的属性键名（默认 'text' ）
- * @property {Boolean}			closeOnClickOverlay	是否允许点击遮罩关闭选择器（默认 false ）
- * @property {Array}			defaultIndex		各列的默认索引
- * @property {Boolean}			immediateChange		是否在手指松开时立即触发change事件（默认 true ）
- * @event {Function} close		关闭选择器时触发
- * @event {Function} cancel		点击取消按钮触发
- * @event {Function} change		当选择值变化时触发
- * @event {Function} confirm	点击确定按钮，返回当前选择的值
  */
-import { props } from './props.js';
-import { mpMixin } from '../../libs/mixin/mpMixin.js';
-import { mixin } from '../../libs/mixin/mixin.js';
-import { addUnit, deepClone, sleep } from '../../libs/function/index.js';
-import test from '../../libs/function/test.js';
-export default {
+import { computed, nextTick, ref, watch } from 'vue'
+import { props as pickerProps } from './props.js'
+import { commonProps } from '../../libs/composable/useUltraUI'
+import { addUnit, deepClone, sleep } from '../../libs/function/index.js'
+import test from '../../libs/function/test.js'
+
+defineOptions({
 	name: 'up-picker',
-	mixins: [mpMixin, mixin, props],
-	data() {
-		return {
-			// 上一次选择的列索引
-			lastIndex: [],
-			// 索引值 ，对应picker-view的value
-			innerIndex: [],
-			// 各列的值
-			innerColumns: [],
-			// 上一次的变化列索引
-			columnIndex: 0,
-            showByClickInput: false,
-		}
-	},
-	watch: {
-		// 监听默认索引的变化，重新设置对应的值
-		defaultIndex: {
-			immediate: true,
-			deep:true,
-			handler(n) {
-				this.setIndexs(n, true)
-			}
-		},
-		// 监听columns参数的变化
-		columns: {
-			immediate: true,
-			deep:true,
-			handler(n) {
-				this.setColumns(n)
-			}
-		},
-	},
-	emits: ['close', 'cancel', 'confirm', 'change', 'update:modelValue'],
-    computed: {
-        inputLabel() {
-            let items = this.innerColumns.map((item, index) => item[this.innerIndex[index]])
-            let res = []
-            items.forEach(element => {
-                res.push(element[this.keyName])
-            });
-            return res
-        },
-        inputValue() {
-            let items = this.innerColumns.map((item, index) => item[this.innerIndex[index]])
-            let res = []
-            items.forEach(element => {
-                res.push(element['id'])
-            });
-            return res
-        }
-    },
-	methods: {
-		addUnit,
-		testArray: test.array,
-		// 获取item需要显示的文字，判别为对象还是文本
-		getItemText(item) {
-			if (test.object(item)) {
-				return item[this.keyName]
-			} else {
-				return item
-			}
-		},
-		// 关闭选择器
-		closeHandler() {
-			if (this.closeOnClickOverlay) {
-                if (this.hasInput) {
-                    this.showByClickInput = false
-                }
-				this.$emit('close')
-			}
-		},
-		// 点击工具栏的取消按钮
-		cancel() {
-            if (this.hasInput) {
-                this.showByClickInput = false
-            }
-			this.$emit('cancel')
-		},
-		// 点击工具栏的确定按钮
-		confirm() {
-            this.$emit('update:modelValue', this.inputValue)
-            if (this.hasInput) {
-                this.showByClickInput = false
-            }
-			this.$emit('confirm', {
-				indexs: this.innerIndex,
-				value: this.innerColumns.map((item, index) => item[this.innerIndex[index]]),
-				values: this.innerColumns
-			})
-		},
-		// 选择器某一列的数据发生变化时触发
-		changeHandler(e) {
-			const {
-				value
-			} = e.detail
-			let index = 0,
-				columnIndex = 0
-			// 通过对比前后两次的列索引，得出当前变化的是哪一列
-			for (let i = 0; i < value.length; i++) {
-				let item = value[i]
-				if (item !== (this.lastIndex[i] || 0)) { // 把undefined转为合法假值0
-					// 设置columnIndex为当前变化列的索引
-					columnIndex = i
-					// index则为变化列中的变化项的索引
-					index = item
-					break // 终止循环，即使少一次循环，也是性能的提升
-				}
-			}
-			this.columnIndex = columnIndex
-			const values = this.innerColumns
-			// 将当前的各项变化索引，设置为"上一次"的索引变化值
-			this.setLastIndex(value)
-			this.setIndexs(value)
+	// #ifdef MP-WEIXIN
+	options: {
+		virtualHost: true
+	}
+	// #endif
+})
 
-            this.$emit('update:modelValue', this.inputValue)
+const props = defineProps({
+	...commonProps,
+	...pickerProps.props
+})
+const emit = defineEmits(['close', 'cancel', 'confirm', 'change', 'update:modelValue'])
 
-			this.$emit('change', {
-				// #ifndef MP-WEIXIN || MP-LARK
-				// 微信小程序不能传递this，会因为循环引用而报错
-				// picker: this,
-				// #endif
-				value: this.innerColumns.map((item, index) => item[value[index]]),
-				index,
-				indexs: value,
-				// values为当前变化列的数组内容
-				values,
-				columnIndex
-			})
-		},
-		// 设置index索引，此方法可被外部调用设置
-		setIndexs(index, setLastIndex) {
-			this.innerIndex = deepClone(index)
-			if (setLastIndex) {
-				this.setLastIndex(index)
-			}
-		},
-		// 记录上一次的各列索引位置
-		setLastIndex(index) {
-			// 当能进入此方法，意味着当前设置的各列默认索引，即为“上一次”的选中值，需要记录，是因为changeHandler中
-			// 需要拿前后的变化值进行对比，得出当前发生改变的是哪一列
-			this.lastIndex = deepClone(index)
-		},
-		// 设置对应列选项的所有值
-		setColumnValues(columnIndex, values) {
-			// 替换innerColumns数组中columnIndex索引的值为values，使用的是数组的splice方法
-			this.innerColumns.splice(columnIndex, 1, values)
-            // 替换完成之后将修改列之后的已选值置空
-			this.setLastIndex(this.innerIndex.slice(0, columnIndex))
-			// 拷贝一份原有的innerIndex做临时变量，将大于当前变化列的所有的列的默认索引设置为0
-			let tmpIndex = deepClone(this.innerIndex)
-			for (let i = 0; i < this.innerColumns.length; i++) {
-				if (i > this.columnIndex) {
-					tmpIndex[i] = 0
-				}
-			}
-			// 一次性赋值，不能单个修改，否则无效
-			this.setIndexs(tmpIndex)
-		},
-		// 获取对应列的所有选项
-		getColumnValues(columnIndex) {
-			// 进行同步阻塞，因为外部得到change事件之后，可能需要执行setColumnValues更新列的值
-			// 索引如果在外部change的回调中调用getColumnValues的话，可能无法得到变更后的列值，这里进行一定延时，保证值的准确性
-			(async () => {
-				await sleep()
-			})()
-			return this.innerColumns[columnIndex]
-		},
-		// 设置整体各列的columns的值
-		setColumns(columns) {
-			// console.log(columns)
-			const prevColumns = this.innerColumns
-			this.innerColumns = deepClone(columns)
-			// 如果在设置各列数据时，没有被设置默认的各列索引defaultIndex，那么用0去填充它，数组长度为列的数量
-			if (this.innerIndex.length === 0) {
-				this.innerIndex = new Array(columns.length).fill(0)
-			} else {
-				// 修复异步columns加载时defaultIndex位置不更新的问题 (issue #841)
-				// 当某列从空数组变为有数据时，picker-view不会因为:value未变化而重新滚动到指定位置
-				// 需要通过先清空再赋值的方式强制触发picker-view的滚动更新
-				const hasColumnsChangedFromEmpty = columns.some(
-					(col, i) => col && col.length > 0 && (!prevColumns[i] || prevColumns[i].length === 0)
-				)
-				if (hasColumnsChangedFromEmpty) {
-					const targetIndex = deepClone(this.innerIndex)
-					this.innerIndex = []
-					this.$nextTick(() => {
-						this.innerIndex = targetIndex
-					})
-				}
-			}
-		},
-		// 获取各列选中值对应的索引
-		getIndexs() {
-			return this.innerIndex
-		},
-		// 获取各列选中的值
-		getValues() {
-			// 进行同步阻塞，因为外部得到change事件之后，可能需要执行setColumnValues更新列的值
-			// 索引如果在外部change的回调中调用getValues的话，可能无法得到变更后的列值，这里进行一定延时，保证值的准确性
-			(async () => {
-				await sleep()
-			})()
-			return this.innerColumns.map((item, index) => item[this.innerIndex[index]])
+const lastIndex = ref([])
+const innerIndex = ref([])
+const innerColumns = ref([])
+const columnIndex = ref(0)
+const showByClickInput = ref(false)
+
+const testArray = test.array
+
+const inputLabel = computed(() => {
+	const items = innerColumns.value.map((item, index) => item[innerIndex.value[index]])
+	const res = []
+	items.forEach((element) => {
+		if (element && typeof element === 'object') {
+			res.push(element[props.keyName])
+		} else {
+			res.push(element)
 		}
-	},
+	})
+	return res
+})
+
+const inputValue = computed(() => {
+	const items = innerColumns.value.map((item, index) => item[innerIndex.value[index]])
+	const res = []
+	items.forEach((element) => {
+		if (element && typeof element === 'object') {
+			res.push(element['id'])
+		} else {
+			res.push(element)
+		}
+	})
+	return res
+})
+
+watch(() => props.defaultIndex, (n) => {
+	setIndexs(n, true)
+}, { immediate: true, deep: true })
+
+watch(() => props.columns, (n) => {
+	setColumns(n)
+}, { immediate: true, deep: true })
+
+function getItemText(item) {
+	if (test.object(item)) {
+		return item[props.keyName]
+	}
+	return item
 }
+
+function closeHandler() {
+	if (props.closeOnClickOverlay) {
+		if (props.hasInput) {
+			showByClickInput.value = false
+		}
+		emit('close')
+	}
+}
+
+function cancel() {
+	if (props.hasInput) {
+		showByClickInput.value = false
+	}
+	emit('cancel')
+}
+
+function confirm() {
+	emit('update:modelValue', inputValue.value)
+	if (props.hasInput) {
+		showByClickInput.value = false
+	}
+	emit('confirm', {
+		indexs: innerIndex.value,
+		value: innerColumns.value.map((item, index) => item[innerIndex.value[index]]),
+		values: innerColumns.value
+	})
+}
+
+function changeHandler(e) {
+	const {
+		value
+	} = e.detail
+	let index = 0
+	let nextColumnIndex = 0
+	for (let i = 0; i < value.length; i++) {
+		const item = value[i]
+		if (item !== (lastIndex.value[i] || 0)) {
+			nextColumnIndex = i
+			index = item
+			break
+		}
+	}
+	columnIndex.value = nextColumnIndex
+	const values = innerColumns.value
+	setLastIndex(value)
+	setIndexs(value)
+
+	emit('update:modelValue', inputValue.value)
+
+	emit('change', {
+		// #ifndef MP-WEIXIN || MP-LARK
+		// picker: this,
+		// #endif
+		value: innerColumns.value.map((item, idx) => item[value[idx]]),
+		index,
+		indexs: value,
+		values,
+		columnIndex: nextColumnIndex
+	})
+}
+
+function setIndexs(index, setLast = false) {
+	innerIndex.value = deepClone(index)
+	if (setLast) {
+		setLastIndex(index)
+	}
+}
+
+function setLastIndex(index) {
+	lastIndex.value = deepClone(index)
+}
+
+function setColumnValues(colIndex, values) {
+	innerColumns.value.splice(colIndex, 1, values)
+	setLastIndex(innerIndex.value.slice(0, colIndex))
+	const tmpIndex = deepClone(innerIndex.value)
+	for (let i = 0; i < innerColumns.value.length; i++) {
+		if (i > columnIndex.value) {
+			tmpIndex[i] = 0
+		}
+	}
+	setIndexs(tmpIndex)
+}
+
+function getColumnValues(colIndex) {
+	;(async () => {
+		await sleep()
+	})()
+	return innerColumns.value[colIndex]
+}
+
+function setColumns(columns) {
+	const prevColumns = innerColumns.value
+	innerColumns.value = deepClone(columns)
+	if (innerIndex.value.length === 0) {
+		innerIndex.value = new Array(columns.length).fill(0)
+	} else {
+		const hasColumnsChangedFromEmpty = columns.some(
+			(col, i) => col && col.length > 0 && (!prevColumns[i] || prevColumns[i].length === 0)
+		)
+		if (hasColumnsChangedFromEmpty) {
+			const targetIndex = deepClone(innerIndex.value)
+			innerIndex.value = []
+			nextTick(() => {
+				innerIndex.value = targetIndex
+			})
+		}
+	}
+}
+
+function getIndexs() {
+	return innerIndex.value
+}
+
+function getValues() {
+	;(async () => {
+		await sleep()
+	})()
+	return innerColumns.value.map((item, index) => item[innerIndex.value[index]])
+}
+
+defineExpose({
+	setIndexs,
+	setColumnValues,
+	getColumnValues,
+	setColumns,
+	getIndexs,
+	getValues,
+	showByClickInput
+})
 </script>
+
 
 <style lang="scss" scoped>
 	@import "../../libs/css/components.scss";

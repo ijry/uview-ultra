@@ -48,10 +48,9 @@
 	</view>
 </template>
 
-<script>
-	import { props } from './props.js';
-	import { mpMixin } from '../../libs/mixin/mpMixin.js';
-	import { mixin } from '../../libs/mixin/mixin.js';
+<script setup>
+	import { props as toolbarProps } from './props.js'
+	import { commonProps, useUltraUI } from '../../libs/composable/useUltraUI.js'
 	/**
 	 * Toolbar 工具条
 	 * @description 
@@ -65,23 +64,30 @@
 	 * @event {Function} 
 	 * @example 
 	 */
-	export default {
+	defineOptions({
 		name: 'up-toolbar',
-		mixins: [mpMixin, mixin, props],
-		emits: ["confirm", "cancel"],
-		created() {
-			// console.log(this.$slots)
-		},
-		methods: {
-			// 点击取消按钮
-			cancel() {
-				this.$emit('cancel')
-			},
-			// 点击确定按钮
-			confirm() {
-				this.$emit('confirm')
-			}
-		},
+		// #ifdef MP-WEIXIN
+		options: {
+			virtualHost: true
+		}
+		// #endif
+	})
+
+	const props = defineProps({
+		...commonProps,
+		...toolbarProps.props
+	})
+	const emit = defineEmits(['confirm', 'cancel'])
+	const { noop } = useUltraUI(props)
+
+	// 点击取消按钮
+	function cancel() {
+		emit('cancel')
+	}
+
+	// 点击确定按钮
+	function confirm() {
+		emit('confirm')
 	}
 </script>
 

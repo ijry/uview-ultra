@@ -72,68 +72,66 @@
 	</view>
 </template>
 
-<script>
-	import { props } from './props.js';
-	import { mpMixin } from '../../libs/mixin/mpMixin.js';
-	import { mixin } from '../../libs/mixin/mixin.js';
-	import config from '../../libs/config/config.js';
-	import { addUnit, addStyle, getPx, sys } from '../../libs/function/index.js';
-	/**
-	 * Navbar 自定义导航栏
-	 * @description 此组件一般用于在特殊情况下，需要自定义导航栏的时候用到，一般建议使用uni-app带的导航栏。
-	 * @tutorial https://ijry.github.io/uview-plus/components/navbar.html
-	 * @property {Boolean}			safeAreaInsetTop	是否开启顶部安全区适配  （默认 true ）
-	 * @property {Boolean}			placeholder			固定在顶部时，是否生成一个等高元素，以防止塌陷 （默认 false ）
-	 * @property {Boolean}			fixed				导航栏是否固定在顶部 （默认 false ）
-	 * @property {Boolean}			border				导航栏底部是否显示下边框 （默认 false ）
-	 * @property {String}			leftIcon			左边返回图标的名称，只能为uView自带的图标 （默认 'arrow-left' ）
-	 * @property {String}			leftText			左边的提示文字
-	 * @property {String}			rightText			右边的提示文字
-	 * @property {String}			rightIcon			右边返回图标的名称，只能为uView自带的图标
-	 * @property {String}			title				导航栏标题，如设置为空字符，将会隐藏标题占位区域
-	 * @property {String}			bgColor				导航栏背景设置 （默认 '#ffffff' ）
-	 * @property {String | Number}	titleWidth			导航栏标题的最大宽度，内容超出会以省略号隐藏 （默认 '400rpx' ）
-	 * @property {String | Number}	height				导航栏高度(不包括状态栏高度在内，内部自动加上)（默认 '44px' ）
-	 * @property {String | Number}	leftIconSize		左侧返回图标的大小（默认 20px ）
-	 * @property {String | Number}	leftIconColor		左侧返回图标的颜色（默认 #303133 ）
-	 * @property {Boolean}	        autoBack			点击左侧区域(返回图标)，是否自动返回上一页（默认 false ）
-	 * @property {Object | String}	titleStyle			标题的样式，对象或字符串
-	 * @event {Function} leftClick		点击左侧区域
-	 * @event {Function} rightClick		点击右侧区域
-	 * @example <up-navbar title="剑未配妥，出门已是江湖" left-text="返回" right-text="帮助" @click-left="onClickBack" @click-right="onClickRight"></up-navbar>
-	 */
-	export default {
-		name: 'up-navbar',
-		mixins: [mpMixin, mixin, props],
-		data() {
-			return {
-			}
-		},
-		emits: ["leftClick", "rightClick"],
-		methods: {
-			addStyle,
-			addUnit,
-			sys,
-			getPx,
-			// 点击左侧区域
-			leftClick() {
-				// 如果配置了autoBack，自动返回上一页
-				this.$emit('leftClick')
-				if (config.interceptor.navbarLeftClick != null) {
-					config.interceptor.navbarLeftClick.call(this, this)
-				} else {
-					if(this.autoBack) {
-						uni.navigateBack()
-					}
-				}
-			},
-			// 点击右侧区域
-			rightClick() {
-				this.$emit('rightClick')
-			},
-		}
+<script setup>
+import { props as navbarProps } from './props.js'
+import { commonProps } from '../../libs/composable/useUltraUI.js'
+import config from '../../libs/config/config.js'
+import { addUnit, addStyle, getPx, sys } from '../../libs/function/index.js'
+import { getCurrentInstance } from 'vue'
+/**
+ * Navbar 自定义导航栏
+ * @description 此组件一般用于在特殊情况下，需要自定义导航栏的时候用到，一般建议使用uni-app带的导航栏。
+ * @tutorial https://ijry.github.io/uview-plus/components/navbar.html
+ * @property {Boolean}			safeAreaInsetTop	是否开启顶部安全区适配  （默认 true ）
+ * @property {Boolean}			placeholder			固定在顶部时，是否生成一个等高元素，以防止塌陷 （默认 false ）
+ * @property {Boolean}			fixed				导航栏是否固定在顶部 （默认 false ）
+ * @property {Boolean}			border				导航栏底部是否显示下边框 （默认 false ）
+ * @property {String}			leftIcon			左边返回图标的名称，只能为uView自带的图标 （默认 'arrow-left' ）
+ * @property {String}			leftText			左边的提示文字
+ * @property {String}			rightText			右边的提示文字
+ * @property {String}			rightIcon			右边返回图标的名称，只能为uView自带的图标
+ * @property {String}			title				导航栏标题，如设置为空字符，将会隐藏标题占位区域
+ * @property {String}			bgColor				导航栏背景设置 （默认 '#ffffff' ）
+ * @property {String | Number}	titleWidth			导航栏标题的最大宽度，内容超出会以省略号隐藏 （默认 '400rpx' ）
+ * @property {String | Number}	height				导航栏高度(不包括状态栏高度在内，内部自动加上)（默认 '44px' ）
+ * @property {String | Number}	leftIconSize		左侧返回图标的大小（默认 20px ）
+ * @property {String | Number}	leftIconColor		左侧返回图标的颜色（默认 #303133 ）
+ * @property {Boolean}	        autoBack			点击左侧区域(返回图标)，是否自动返回上一页（默认 false ）
+ * @property {Object | String}	titleStyle			标题的样式，对象或字符串
+ * @event {Function} leftClick		点击左侧区域
+ * @event {Function} rightClick		点击右侧区域
+ * @example <up-navbar title="剑未配妥，出门已是江湖" left-text="返回" right-text="帮助" @click-left="onClickBack" @click-right="onClickRight"></up-navbar>
+ */
+defineOptions({
+	name: 'up-navbar',
+	// #ifdef MP-WEIXIN
+	options: {
+		virtualHost: true
 	}
+	// #endif
+})
+
+const props = defineProps({
+	...commonProps,
+	...navbarProps.props
+})
+const emit = defineEmits(['leftClick', 'rightClick'])
+
+function leftClick() {
+	emit('leftClick')
+	if (config.interceptor.navbarLeftClick != null) {
+		const proxy = getCurrentInstance()?.proxy
+		config.interceptor.navbarLeftClick.call(proxy, proxy)
+	} else if (props.autoBack) {
+		uni.navigateBack()
+	}
+}
+
+function rightClick() {
+	emit('rightClick')
+}
 </script>
+
 
 <style lang="scss" scoped>
 	@import "../../libs/css/components.scss";
@@ -169,7 +167,7 @@
 
 			&__left {
 				left: 0;
-				
+
 				&--hover {
 					opacity: 0.7;
 				}

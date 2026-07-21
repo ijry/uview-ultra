@@ -74,13 +74,13 @@
 	</view>
 </template>
 
-<script>
-	import { props } from './props';
-	import { mpMixin } from '../../libs/mixin/mpMixin';
-	import { mixin } from '../../libs/mixin/mixin';
+<script setup>
+	import { computed, onMounted, reactive, ref, toRef, watch } from 'vue'
+	import { props as formItemProps } from './props'
+	import { commonProps, useUltraUI } from '../../libs/composable/useUltraUI.js'
 	import defProps from '../../libs/config/props.js'
-	import color from '../../libs/config/color';
-	import { addStyle, addUnit, getProperty, setProperty, error } from '../../libs/function/index';
+	import color from '../../libs/config/color'
+	import { addStyle, addUnit, getProperty, setProperty, error } from '../../libs/function/index'
 	/**
 	 * Form 表单
 	 * @description 此组件一般用于表单场景，可以配置Input输入框，Select弹出框，进行表单验证等。
@@ -97,91 +97,106 @@
 	 *
 	 * @example <up-form-item label="姓名" prop="userInfo.name" borderBottom ref="item1"></up-form-item>
 	 */
-	export default {
+	defineOptions({
 		name: 'up-form-item',
-		mixins: [mpMixin, mixin, props],
-		data() {
-			return {
-				// 错误提示语
-				message: '',
-				parentData: {
-					// 提示文本的位置
-					labelPosition: 'left',
-					// 提示文本对齐方式
-					labelAlign: 'left',
-					// 提示文本的样式
-					labelStyle: {},
-					// 提示文本的宽度
-					labelWidth: 45,
-					// 错误提示方式
-					errorType: 'message'
-				},
-				color: color,
-				itemRules: []
-			}
-		},
-		// 组件创建完成时，将当前实例保存到u-form中
-		computed: {
-			propsLine() {
-				return defProps.line
-			}
-		},
-		mounted() {
-			this.init()
-		},
-		emits: ["click"],
-		watch: {
-			// 监听规则的变化
-			rules: {
-				immediate: true,
-				handler(n) {
-					this.setRules(n);
-				},
-			},
-		},
-		methods: {
-			addStyle,
-			addUnit,
-			init() {
-				// 父组件的实例
-				this.updateParentData()
-				if (!this.parent) {
-					error('up-form-item需要结合up-form组件使用')
-				}
-			},
-			// 手动设置校验的规则，如果规则中有函数的话，微信小程序中会过滤掉，所以只能手动调用设置规则
-			setRules(rules) {
-				// 判断是否有规则
-				if (rules.length === 0) {
-					this.itemRules = [];
-					return
-				};
-				this.itemRules = rules;
-			},
-			// 获取父组件的参数
-			updateParentData() {
-				// 此方法写在mixin中
-				this.getParentData('up-form');
-			},
-			// 移除up-form-item的校验结果
-			clearValidate() {
-				this.message = null
-			},
-			// 清空当前的组件的校验结果，并重置为初始值
-			resetField() {
-				// 找到原始值
-				const value = getProperty(this.parent.$data['originalModel'], this.prop)
-				// 将up-form的model的prop属性链还原原始值
-				setProperty(this.parent.$props['model'], this.prop, value)
-				// 移除校验结果
-				this.message = null
-			},
-			// 点击组件
-			clickHandler() {
-				this.$emit('click')
-			}
-		},
+		// #ifdef MP-WEIXIN
+		options: {
+			virtualHost: true
+		}
+		// #endif
+	})
+
+	const props = defineProps({
+		...commonProps,
+		...formItemProps.props
+	})
+	const emit = defineEmits(['click'])
+	const parentData = reactive({
+		// 提示文本的位置
+		labelPosition: 'left',
+		// 提示文本对齐方式
+		labelAlign: 'left',
+		// 提示文本的样式
+		labelStyle: {},
+		// 提示文本的宽度
+		labelWidth: 45,
+		// 错误提示方式
+		errorType: 'message'
+	})
+	const { parent, getParentData } = useUltraUI(props, parentData)
+	// 错误提示语
+	const message = ref('')
+	const itemRules = ref([])
+	const prop = toRef(props, 'prop')
+
+	// 组件创建完成时，将当前实例保存到up-form中
+	const propsLine = computed(() => {
+		return defProps.line
+	})
+
+	function init() {
+		// 父组件的实例
+		updateParentData()
+		if (!parent.value) {
+			error('up-form-item需要结合up-form组件使用')
+		}
 	}
+
+	// 手动设置校验的规则，如果规则中有函数的话，微信小程序中会过滤掉，所以只能手动调用设置规则
+	function setRules(rules) {
+		// 判断是否有规则
+		if (rules.length === 0) {
+			itemRules.value = []
+			return
+		}
+		itemRules.value = rules
+	}
+
+	// 获取父组件的参数
+	function updateParentData() {
+		getParentData('up-form')
+	}
+
+	// 移除up-form-item的校验结果
+	function clearValidate() {
+		message.value = null
+	}
+
+	// 清空当前的组件的校验结果，并重置为初始值
+	function resetField() {
+		// 找到原始值
+		const value = getProperty(parent.value?.originalModel, props.prop)
+		// 将up-form的model的prop属性链还原原始值
+		setProperty(parent.value?.model, props.prop, value)
+		// 移除校验结果
+		message.value = null
+	}
+
+	// 点击组件
+	function clickHandler() {
+		emit('click')
+	}
+
+	// 监听规则的变化
+	watch(() => props.rules, (n) => {
+		setRules(n)
+	}, { immediate: true })
+
+	onMounted(() => {
+		init()
+	})
+
+	defineExpose({
+		prop,
+		message,
+		itemRules,
+		init,
+		setRules,
+		updateParentData,
+		clearValidate,
+		resetField,
+		clickHandler
+	})
 </script>
 
 <style lang="scss" scoped>

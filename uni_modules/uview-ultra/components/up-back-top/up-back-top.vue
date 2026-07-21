@@ -23,11 +23,11 @@
 	</up-transition>
 </template>
 
-<script>
-	import { props } from './props.js';
-	import { mpMixin } from '../../libs/mixin/mpMixin.js';
-	import { mixin } from '../../libs/mixin/mixin.js';
-	import { addUnit, addStyle, getPx, deepMerge, error } from '../../libs/function/index.js';
+<script setup>
+	import { computed, getCurrentInstance } from 'vue'
+	import { props as backTopProps } from './props.js'
+	import { commonProps } from '../../libs/composable/useUltraUI.js'
+	import { addUnit, addStyle, getPx, deepMerge, error } from '../../libs/function/index.js'
 	// #ifdef APP-NVUE
 	const dom = weex.requireModule('dom')
 	// #endif
@@ -50,63 +50,71 @@
 	 * 
 	 * @example <up-back-top :scrollTop="scrollTop"></up-back-top>
 	 */
-	export default {
+	defineOptions({
 		name: 'up-back-top',
-		mixins: [mpMixin, mixin, props],
-		computed: {
-			backTopStyle() {
-				// 动画组件样式
-				const style = {
-					bottom: addUnit(this.bottom),
-					right: addUnit(this.right),
-					width: '40px',
-					height: '40px',
-					position: 'fixed',
-					zIndex: 10,
-				}
-				return style
-			},
-			show() {
-				return getPx(this.scrollTop) > getPx(this.top)
-			},
-			contentStyle() {
-				const style = {}
-				let radius = 0
-				// 是否圆形
-				if(this.mode === 'circle') {
-					radius = '100px'
-				} else {
-					radius = '4px'
-				}
-				// 为了兼容安卓nvue，只能这么分开写
-				style.borderRadius = radius
-				style.borderTopRightRadius = radius
-				style.borderBottomLeftRadius = radius
-				style.borderBottomRightRadius = radius
-				return deepMerge(style, addStyle(this.customStyle))
-			}
-		},
-		emits: ["click"],
-		methods: {
-			backToTop() {
-				// #ifdef APP-NVUE
-				if (!this.$parent.$refs['up-back-top']) {
-					error(`nvue页面需要给页面最外层元素设置"ref='up-back-top'`)
-				}
-				dom.scrollToElement(this.$parent.$refs['up-back-top'], {
-					offset: 0
-				})
-				// #endif
-				
-				// #ifndef APP-NVUE
-				uni.pageScrollTo({
-					scrollTop: 0,
-					duration: this.duration
-				});
-				// #endif
-				this.$emit('click')
-			}
+		// #ifdef MP-WEIXIN
+		options: {
+			virtualHost: true
 		}
+		// #endif
+	})
+
+	const props = defineProps({
+		...commonProps,
+		...backTopProps.props
+	})
+	const emit = defineEmits(['click'])
+	const instance = getCurrentInstance()
+
+	const backTopStyle = computed(() => {
+		// 动画组件样式
+		const style = {
+			bottom: addUnit(props.bottom),
+			right: addUnit(props.right),
+			width: '40px',
+			height: '40px',
+			position: 'fixed',
+			zIndex: 10
+		}
+		return style
+	})
+
+	const show = computed(() => getPx(props.scrollTop) > getPx(props.top))
+
+	const contentStyle = computed(() => {
+		const style = {}
+		let radius = 0
+		// 是否圆形
+		if (props.mode === 'circle') {
+			radius = '100px'
+		} else {
+			radius = '4px'
+		}
+		// 为了兼容安卓nvue，只能这么分开写
+		style.borderRadius = radius
+		style.borderTopRightRadius = radius
+		style.borderBottomLeftRadius = radius
+		style.borderBottomRightRadius = radius
+		return deepMerge(style, addStyle(props.customStyle))
+	})
+
+	function backToTop() {
+		// #ifdef APP-NVUE
+		if (!instance.proxy.$parent.$refs['up-back-top']) {
+			error(`nvue页面需要给页面最外层元素设置"ref='up-back-top'`)
+		}
+		dom.scrollToElement(instance.proxy.$parent.$refs['up-back-top'], {
+			offset: 0
+		})
+		// #endif
+
+		// #ifndef APP-NVUE
+		uni.pageScrollTo({
+			scrollTop: 0,
+			duration: props.duration
+		})
+		// #endif
+		emit('click')
 	}
 </script>
 

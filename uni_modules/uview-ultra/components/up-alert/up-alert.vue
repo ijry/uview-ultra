@@ -59,76 +59,58 @@
 	</up-transition>
 </template>
 
-<script>
-	import { props } from './props.js';
-	import { mpMixin } from '../../libs/mixin/mpMixin.js';
-	import { mixin } from '../../libs/mixin/mixin.js';
-	import { addUnit, addStyle } from '../../libs/function/index.js';
-	/**
-	 * Alert  警告提示
-	 * @description 警告提示，展现需要关注的信息。
-	 * @tutorial https://ijry.github.io/uview-plus/components/alertTips.html
-	 * 
-	 * @property {String}			title       显示的文字 
-	 * @property {String}			type        使用预设的颜色  （默认 'warning' ）
-	 * @property {String}			description 辅助性文字，颜色比title浅一点，字号也小一点，可选  
-	 * @property {Boolean}			closable    关闭按钮(默认为叉号icon图标)  （默认 false ）
-	 * @property {Boolean}			showIcon    是否显示左边的辅助图标   （ 默认 false ）
-	 * @property {String}			effect      多图时，图片缩放裁剪的模式  （默认 'light' ）
-	 * @property {Boolean}			center		文字是否居中  （默认 false ）
-	 * @property {String | Number}	fontSize    字体大小  （默认 14 ）
-	 * @property {Object}			customStyle	定义需要用到的外部样式
-	 * @event    {Function}        click       点击组件时触发
-	 * @example  <up-alert :title="title"  type = "warning" :closable="closable" :description = "description"></up-alert>
-	 */
-	export default {
+<script setup>
+	import { computed, ref } from 'vue'
+	import { props as alertProps } from './props.js'
+	import { commonProps } from '../../libs/composable/useUltraUI.js'
+	import { addUnit, addStyle } from '../../libs/function/index.js'
+
+	defineOptions({
 		name: 'up-alert',
-		mixins: [mpMixin, mixin, props],
-		data() {
-			return {
-				show: true
-			}
-		},
-		computed: {
-			iconColor() {
-				return this.effect === 'light' ? this.type : '#fff'
-			},
-			// 不同主题对应不同的图标
-			iconName() {
-				switch (this.type) {
-					case 'success':
-						return 'checkmark-circle-fill';
-						break;
-					case 'error':
-						return 'close-circle-fill';
-						break;
-					case 'warning':
-						return 'error-circle-fill';
-						break;
-					case 'info':
-						return 'info-circle-fill';
-						break;
-					case 'primary':
-						return 'more-circle-fill';
-						break;
-					default: 
-						return 'error-circle-fill';
-				}
-			}
-		},
-		emits: ["click"],
-		methods: {
-			addUnit,
-			addStyle,
-			// 点击内容
-			clickHandler() {
-				this.$emit('click')
-			},
-			// 点击关闭按钮
-			closeHandler() {
-				this.show = false
-			}
+		// #ifdef MP-WEIXIN
+		options: {
+			virtualHost: true
 		}
+		// #endif
+	})
+
+	const props = defineProps({
+		...commonProps,
+		...alertProps.props
+	})
+	const emit = defineEmits(['click'])
+	const show = ref(true)
+
+	const iconColor = computed(() => {
+		return props.effect === 'light' ? props.type : '#fff'
+	})
+
+	// 不同主题对应不同的图标
+	const iconName = computed(() => {
+		switch (props.type) {
+			case 'success':
+				return 'checkmark-circle-fill'
+			case 'error':
+				return 'close-circle-fill'
+			case 'warning':
+				return 'error-circle-fill'
+			case 'info':
+				return 'info-circle-fill'
+			case 'primary':
+				return 'more-circle-fill'
+			default:
+				return 'error-circle-fill'
+		}
+	})
+
+	// 点击内容
+	function clickHandler() {
+		emit('click')
+	}
+
+	// 点击关闭按钮
+	function closeHandler() {
+		show.value = false
 	}
 </script>
 

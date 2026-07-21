@@ -20,11 +20,11 @@
 	</view>
 </template>
 
-<script>
-    import { props } from './props';
-    import { mpMixin } from '../../libs/mixin/mpMixin';
-	import { mixin } from '../../libs/mixin/mixin';
-	import { addUnit, $parent } from '../../libs/function/index';
+<script setup>
+	import { computed, onMounted, ref, toRef, watch } from 'vue'
+	import { props as dropdownItemProps } from './props'
+	import { commonProps, useUltraUI } from '../../libs/composable/useUltraUI.js'
+	import { addUnit } from '../../libs/function/index'
 	/**
 	 * dropdown-item 下拉菜单
 	 * @description 该组件一般用于向下展开菜单，同时可切换多个选项卡的场景
@@ -37,80 +37,83 @@
 	 * @property {String | Number} height 弹窗下拉内容的高度(内容超出将会滚动)（默认auto）
 	 * @example <up-dropdown-item title="标题"></up-dropdown-item>
 	 */
-	export default {
+	defineOptions({
 		name: 'up-dropdown-item',
-		mixins: [mpMixin, mixin, props],
-        options: {
-            styleIsolation: 'shared',
-        },
-		data() {
-			return {
-				active: false, // 当前项是否处于展开状态
-				activeColor: '#2979ff', // 激活时左边文字和右边对勾图标的颜色
-				inactiveColor: '#606266', // 未激活时左边文字和右边对勾图标的颜色
-			}
+		options: {
+			styleIsolation: 'shared',
+			// #ifdef MP-WEIXIN
+			virtualHost: true
+			// #endif
 		},
-		computed: {
-			// 监听props是否发生了变化，有些值需要传递给父组件u-dropdown，无法双向绑定
-			propsChange() {
-				return `${this.title}-${this.disabled}`;
-			}
-		},
-		watch: {
-			propsChange(n) {
-				// 当值变化时，通知父组件重新初始化，让父组件执行每个子组件的init()方法
-				// 将所有子组件数据重新整理一遍
-				if (this.parent) this.parent.init();
-			}
-		},
-		created() {
-			// 父组件的实例
-			this.parent = false;
-		},
-        emits: ['update:modelValue', 'change'],
-		methods: {
-			addUnit,
-			init() {
-				// 获取父组件u-dropdown
-				let parent = $parent.call(this, 'up-dropdown');
-				if (parent) {
-					this.parent = parent;
-					// 将子组件的激活颜色配置为父组件设置的激活和未激活时的颜色
-					this.activeColor = parent.activeColor;
-					this.inactiveColor = parent.inactiveColor;
-					// 将本组件的this，放入到父组件的children数组中，让父组件可以操作本(子)组件的方法和属性
-					// push进去前，显判断是否已经存在了本实例，因为在子组件内部数据变化时，会通过父组件重新初始化子组件
-					let exist = parent.children.find(val => {
-						return this === val;
-					})
-					if (!exist) parent.children.push(this);
-					if (parent.children.length == 1) this.active = true;
-					// 父组件无法监听children的变化，故将子组件的title，传入父组件的menuList数组中
-					parent.menuList.push({
-						title: this.title,
-						disabled: this.disabled
-					});
-				}
-			},
-			// cell被点击
-			cellClick(value) {
-				// 修改通过v-model绑定的值
-                // #ifdef VUE2
-				this.$emit('input', value);
-                // #endif
-		        // #ifdef VUE3
-                this.$emit('update:modelValue', value);
-                // #endif
-				// 通知父组件(u-dropdown)收起菜单
-				this.parent.close();
-				// 发出事件，抛出当前勾选项的value
-				this.$emit('change', value);
-			}
-		},
-		mounted() {
-			this.init();
+	})
+
+	const props = defineProps({
+		...commonProps,
+		...dropdownItemProps.props
+	})
+	const emit = defineEmits(['update:modelValue', 'input', 'change'])
+	const { parent, getParentData } = useUltraUI(props)
+	const active = ref(false) // 当前项是否处于展开状态
+	const activeColor = ref('#2979ff') // 激活时左边文字和右边对勾图标的颜色
+	const inactiveColor = ref('#606266') // 未激活时左边文字和右边对勾图标的颜色
+	const title = toRef(props, 'title')
+	const disabled = toRef(props, 'disabled')
+
+	// 监听props是否发生了变化，有些值需要传递给父组件up-dropdown，无法双向绑定
+	const propsChange = computed(() => {
+		return `${props.title}-${props.disabled}`
+	})
+
+	function init() {
+		// 获取父组件up-dropdown
+		getParentData('up-dropdown')
+		if (parent.value) {
+			// 将子组件的激活颜色配置为父组件设置的激活和未激活时的颜色
+			activeColor.value = parent.value.activeColor
+			inactiveColor.value = parent.value.inactiveColor
+			if (parent.value.children.length == 1) active.value = true
+			// 父组件无法监听children的变化，故将子组件的title，传入父组件的menuList数组中
+			parent.value.menuList.push({
+				title: props.title,
+				disabled: props.disabled
+			})
 		}
 	}
+
+	// cell被点击
+	function cellClick(value) {
+		// 修改通过v-model绑定的值
+		// #ifdef VUE2
+		emit('input', value)
+		// #endif
+		// #ifdef VUE3
+		emit('update:modelValue', value)
+		// #endif
+		// 通知父组件(up-dropdown)收起菜单
+		parent.value?.close()
+		// 发出事件，抛出当前勾选项的value
+		emit('change', value)
+	}
+
+	watch(propsChange, () => {
+		// 当值变化时，通知父组件重新初始化，让父组件执行每个子组件的init()方法
+		// 将所有子组件数据重新整理一遍
+		if (parent.value) parent.value.init()
+	})
+
+	onMounted(() => {
+		init()
+	})
+
+	defineExpose({
+		active,
+		activeColor,
+		inactiveColor,
+		title,
+		disabled,
+		init,
+		cellClick
+	})
 </script>
 
 <style scoped lang="scss">

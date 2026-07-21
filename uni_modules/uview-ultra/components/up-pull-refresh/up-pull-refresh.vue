@@ -1,5 +1,5 @@
 <template>
-  <view 
+  <view
     class="up-pull-refresh"
     @touchstart="onTouchStart"
     @touchmove="onTouchMove"
@@ -7,15 +7,15 @@
     @touchcancel="onTouchEnd"
   >
     <!-- 下拉刷新区域 -->
-    <view 
-      class="refresh-area" 
+    <view
+      class="refresh-area"
       :style="{ height: refreshDistance + 'px' }"
       :class="{ refreshing: isRefreshing }"
     >
       <!-- 不同状态的插槽 -->
-      <slot 
-        v-if="refreshStatus === 'pull'" 
-        name="pull" 
+      <slot
+        v-if="refreshStatus === 'pull'"
+        name="pull"
         :distance="refreshDistance"
         :threshold="threshold"
       >
@@ -27,10 +27,10 @@
           <text class="refresh-text">{{ t("up.pullRefresh.pull") }}</text>
         </view>
       </slot>
-      
-      <slot 
-        v-else-if="refreshStatus === 'release'" 
-        name="release" 
+
+      <slot
+        v-else-if="refreshStatus === 'release'"
+        name="release"
         :distance="refreshDistance"
         :threshold="threshold"
       >
@@ -42,9 +42,9 @@
           <text class="refresh-text">{{ t("up.pullRefresh.release") }}</text>
         </view>
       </slot>
-      
-      <slot 
-        v-else-if="refreshStatus === 'refreshing'" 
+
+      <slot
+        v-else-if="refreshStatus === 'refreshing'"
         name="refreshing"
       >
         <!-- 默认刷新中状态 -->
@@ -56,9 +56,9 @@
         </view>
       </slot>
     </view>
-    
+
     <!-- 内容区域 -->
-    <view 
+    <view
       class="refresh-content-wrapper"
       :style="{ transform: `translateY(${contentTranslateY}px)` }"
     >
@@ -73,17 +73,17 @@
         @scrolltolower="handleScrollToLower"
       >
         <slot></slot>
-        
+
         <!-- 使用 up-loadmore 组件实现上拉加载更多 -->
         <up-loadmore
           v-if="showLoadmore"
           v-bind="loadmoreProps"
         />
       </scroll-view>
-      
+
       <view v-else>
         <slot></slot>
-        
+
         <!-- 使用 up-loadmore 组件实现上拉加载更多 -->
         <up-loadmore
           v-if="showLoadmore"
@@ -94,187 +94,172 @@
   </view>
 </template>
 
-<script>
+<script setup>
+import { ref, watch } from 'vue'
+import { commonProps } from '../../libs/composable/useUltraUI.js'
 import { t } from '../../libs/i18n'
-export default {
-  name: 'up-pull-refresh',
-  props: {
-    // 是否正在刷新
-    refreshing: {
-      type: Boolean,
-      default: false
-    },
-    // 下拉刷新阈值
-    threshold: {
-      type: Number,
-      default: 80
-    },
-    // 阻尼系数
-    damping: {
-      type: Number,
-      default: 0.4
-    },
-    // 最大下拉距离
-    maxDistance: {
-      type: Number,
-      default: 120
-    },
-    // 是否显示加载更多
-    showLoadmore: {
-      type: Boolean,
-      default: false
-    },
-    // up-loadmore 组件的 props 配置
-    loadmoreProps: {
-      type: Object,
-      default: () => ({
-        status: 'loadmore',
-        // loadmoreText: '加载更多',
-        // loadingText: '正在加载...',
-        // nomoreText: '没有更多了'
-      })
-    },
-    // 是否使用 scroll-view 包装内容
-    useScrollView: {
-      type: Boolean,
-      default: true
-    },
-    // scroll-view 相关属性
-    enableBackToTop: {
-      type: Boolean,
-      default: false
-    },
-    lowerThreshold: {
-      type: [Number, String],
-      default: 50
-    },
-    scrollTop: {
-      type: [Number, String],
-      default: 0
-    }
-  },
-  data() {
-    return {
-      // 下拉刷新相关
-      isRefreshing: false,
-      refreshStatus: 'pull', // pull, release, refreshing
-      refreshDistance: 0,
-      startY: 0,
-      currentY: 0,
-      touching: false,
-      
-      // 动画相关
-      contentTranslateY: 0
-    }
-  },
-  emits: ['refresh', 'loadmore', 'scroll'],
-  watch: {
-    refreshing: {
-      handler(newVal) {
-        if (!newVal) {
-          this.finishRefresh()
-        } else {
-          this.startRefresh()
-        }
-      }
-    }
-  },
-  methods: {
-    t,
-    // 触摸开始
-    onTouchStart(e) {
-      if (this.isRefreshing) return
-      
-      this.touching = true
-      this.startY = e.touches[0].pageY
-      this.currentY = this.startY
-      this.refreshStatus = 'pull'
-    },
-    
-    // 触摸移动
-    onTouchMove(e) {
-      if (!this.touching || this.isRefreshing) return
-      
-      this.currentY = e.touches[0].pageY
-      const diff = this.currentY - this.startY
-      
-      // 只有在顶部且下拉时才触发下拉刷新
-      if (diff > 0 && this.isScrollViewAtTop()) {
-        this.refreshDistance = Math.min(diff * this.damping, this.maxDistance)
-        this.contentTranslateY = this.refreshDistance
-        
-        // 更新状态
-        if (this.refreshDistance >= this.threshold) {
-          this.refreshStatus = 'release'
-        } else {
-          this.refreshStatus = 'pull'
-        }
 
-        // 阻止默认滚动行为，防止触发页面级滚动
-        e.preventDefault()
-        e.stopPropagation()
-      }
-    },
-    
-    // 触摸结束
-    onTouchEnd() {
-      if (!this.touching) return
-      
-      this.touching = false
-      
-      if (this.refreshDistance >= this.threshold && !this.isRefreshing) {
-        // 触发刷新
-        this.startRefresh()
-        this.$emit('refresh')
-      } else {
-        // 回弹
-        this.resetRefresh()
-      }
-    },
-    
-    // 开始刷新
-    startRefresh() {
-      this.isRefreshing = true
-      this.refreshStatus = 'refreshing'
-      this.refreshDistance = this.threshold
-      this.contentTranslateY = this.threshold
-    },
-    
-    // 完成刷新
-    finishRefresh() {
-      this.isRefreshing = false
-      this.refreshStatus = 'pull'
-      this.resetRefresh()
-    },
-    
-    // 重置刷新状态
-    resetRefresh() {
-      this.refreshDistance = 0
-      this.contentTranslateY = 0
-    },
-    
-    // 检查 scroll-view 是否在顶部
-    isScrollViewAtTop() {
-      // 这里可以更精确地判断，但简单起见直接返回 true
-      // 实际项目中可能需要通过 scroll 事件获取 scrollTop 判断
-      return true
-    },
-    
-    // 处理滚动事件
-    handleScroll(e) {
-      this.$emit('scroll', e)
-    },
-    
-    // 处理滚动到底部事件
-    handleScrollToLower(e) {
-      // 只有当 loadmore 状态为 loadmore 时才触发
-      if (this.showLoadmore && this.loadmoreProps.status === 'loadmore') {
-        this.$emit('loadmore')
-      }
-    }
-  }
+defineOptions({
+	name: 'up-pull-refresh',
+	// #ifdef MP-WEIXIN
+	options: {
+		virtualHost: true
+	}
+	// #endif
+})
+
+const props = defineProps({
+	...commonProps,
+	// 是否正在刷新
+	refreshing: {
+		type: Boolean,
+		default: false
+	},
+	// 下拉刷新阈值
+	threshold: {
+		type: Number,
+		default: 80
+	},
+	// 阻尼系数
+	damping: {
+		type: Number,
+		default: 0.4
+	},
+	// 最大下拉距离
+	maxDistance: {
+		type: Number,
+		default: 120
+	},
+	// 是否显示加载更多
+	showLoadmore: {
+		type: Boolean,
+		default: false
+	},
+	// up-loadmore 组件的 props 配置
+	loadmoreProps: {
+		type: Object,
+		default: () => ({
+			status: 'loadmore',
+		})
+	},
+	// 是否使用 scroll-view 包装内容
+	useScrollView: {
+		type: Boolean,
+		default: true
+	},
+	// scroll-view 相关属性
+	enableBackToTop: {
+		type: Boolean,
+		default: false
+	},
+	lowerThreshold: {
+		type: [Number, String],
+		default: 50
+	},
+	scrollTop: {
+		type: [Number, String],
+		default: 0
+	}
+})
+const emit = defineEmits(['refresh', 'loadmore', 'scroll'])
+
+const isRefreshing = ref(false)
+const refreshStatus = ref('pull') // pull, release, refreshing
+const refreshDistance = ref(0)
+const startY = ref(0)
+const currentY = ref(0)
+const touching = ref(false)
+const contentTranslateY = ref(0)
+
+function startRefresh() {
+	isRefreshing.value = true
+	refreshStatus.value = 'refreshing'
+	refreshDistance.value = props.threshold
+	contentTranslateY.value = props.threshold
 }
+
+function resetRefresh() {
+	refreshDistance.value = 0
+	contentTranslateY.value = 0
+}
+
+function finishRefresh() {
+	isRefreshing.value = false
+	refreshStatus.value = 'pull'
+	resetRefresh()
+}
+
+function isScrollViewAtTop() {
+	return true
+}
+
+function onTouchStart(e) {
+	if (isRefreshing.value) return
+
+	touching.value = true
+	startY.value = e.touches[0].pageY
+	currentY.value = startY.value
+	refreshStatus.value = 'pull'
+}
+
+function onTouchMove(e) {
+	if (!touching.value || isRefreshing.value) return
+
+	currentY.value = e.touches[0].pageY
+	const diff = currentY.value - startY.value
+
+	if (diff > 0 && isScrollViewAtTop()) {
+		refreshDistance.value = Math.min(diff * props.damping, props.maxDistance)
+		contentTranslateY.value = refreshDistance.value
+
+		if (refreshDistance.value >= props.threshold) {
+			refreshStatus.value = 'release'
+		} else {
+			refreshStatus.value = 'pull'
+		}
+
+		e.preventDefault()
+		e.stopPropagation()
+	}
+}
+
+function onTouchEnd() {
+	if (!touching.value) return
+
+	touching.value = false
+
+	if (refreshDistance.value >= props.threshold && !isRefreshing.value) {
+		startRefresh()
+		emit('refresh')
+	} else {
+		resetRefresh()
+	}
+}
+
+function handleScroll(e) {
+	emit('scroll', e)
+}
+
+function handleScrollToLower(e) {
+	if (props.showLoadmore && props.loadmoreProps.status === 'loadmore') {
+		emit('loadmore')
+	}
+}
+
+watch(() => props.refreshing, (newVal) => {
+	if (!newVal) {
+		finishRefresh()
+	} else {
+		startRefresh()
+	}
+})
+
+defineExpose({
+	finishRefresh,
+	startRefresh
+})
 </script>
+
 
 <style scoped lang="scss">
 .up-pull-refresh {

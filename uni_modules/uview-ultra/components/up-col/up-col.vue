@@ -12,93 +12,81 @@
 	</view>
 </template>
 
-<script>
-	import { propsCol } from './props.js';
-	import { mpMixin } from '../../libs/mixin/mpMixin.js';
-	import { mixin } from '../../libs/mixin/mixin.js';
-	import { addStyle, addUnit, deepMerge, getPx } from '../../libs/function/index.js';
-	/**
-	 * CodeInput 栅格系统的列 
-	 * @description 该组件一般用于Layout 布局 通过基础的 12 分栏，迅速简便地创建布局
-	 * @tutorial https://ijry.github.io/uview-plus/components/Layout.html
-	 * @property {String | Number}	span		栅格占据的列数，总12等份 (默认 12 ) 
-	 * @property {String | Number}	offset		分栏左边偏移，计算方式与span相同 (默认 0 ) 
-	 * @property {String}			justify		水平排列方式，可选值为`start`(或`flex-start`)、`end`(或`flex-end`)、`center`、`around`(或`space-around`)、`between`(或`space-between`)  (默认 'start' ) 
-	 * @property {String}			align		垂直对齐方式，可选值为top、center、bottom、stretch (默认 'stretch' ) 
-	 * @property {String}			textAlign	文字水平对齐方式 (默认 'left' ) 
-	 * @property {Object}			customStyle	定义需要用到的外部样式
-	 * @event {Function}	click	col被点击，会阻止事件冒泡到row
-	 * @example	 <up-col  span="3" offset="3" > <view class="demo-layout bg-purple"></view> </up-col>
-	 */
-	export default {
+<script setup>
+	import { computed, onMounted, reactive, ref } from 'vue'
+	import { propsCol } from './props.js'
+	import { commonProps, useUltraUI } from '../../libs/composable/useUltraUI.js'
+	import { addStyle, addUnit, deepMerge, getPx } from '../../libs/function/index.js'
+
+	defineOptions({
 		name: 'up-col',
-		mixins: [mpMixin, mixin, propsCol],
-		data() {
-			return {
-				width: 0,
-				parentData: {
-					gutter: 0
-				},
-				gridNum: 12
-			}
-		},
-		//  微信小程序中 options 选项
 		// #ifdef MP-WEIXIN
 		options: {
-			virtualHost: true // 将自定义节点设置成虚拟的，更加接近Vue组件的表现。我们不希望自定义组件的这个节点本身可以设置样式、响应 flex 布局等
-		},
+			virtualHost: true
+		}
 		// #endif
-		computed: {
-			uJustify() {
-				if (this.justify == 'end' || this.justify == 'start') return 'flex-' + this.justify
-				else if (this.justify == 'around' || this.justify == 'between') return 'space-' + this.justify
-				else return this.justify
-			},
-			uAlignItem() {
-				if (this.align == 'top') return 'flex-start'
-				if (this.align == 'bottom') return 'flex-end'
-				else return this.align
-			},
-			colStyle() {
-				const style = {
-					// 这里写成"padding: 0 10px"的形式是因为nvue的需要
-					paddingLeft: addUnit(getPx(this.parentData.gutter)/2),
-					paddingRight: addUnit(getPx(this.parentData.gutter)/2),
-					alignItems: this.uAlignItem,
-					justifyContent: this.uJustify,
-					textAlign: this.textAlign,
-					// #ifndef APP-NVUE
-					// 在非nvue上，使用百分比形式
-					flex: `0 0 ${100 / this.gridNum * this.span}%`,
-					marginLeft: 100 / 12 * this.offset + '%',
-					// #endif
-					// #ifdef APP-NVUE
-					// 在nvue上，由于无法使用百分比单位，这里需要获取父组件的宽度，再计算得出该有对应的百分比尺寸
-					width: addUnit(Math.floor(this.width / this.gridNum * Number(this.span))),
-					marginLeft: addUnit(Math.floor(this.width / this.gridNum * Number(this.offset))),
-					// #endif
-				}
-				return deepMerge(style, addStyle(this.customStyle))
-			}
-		},
-		mounted() {
-			this.init()
-		},
-		emits: ["click"],
-		methods: {
-			async init() {
-				// 支付宝小程序不支持provide/inject，所以使用这个方法获取整个父组件，在created定义，避免循环引用
-				this.updateParentData()
-				this.width = await this.parent.getComponentWidth()
-			},
-			updateParentData() {
-				this.getParentData('up-row')
-			},
-			clickHandler(e) {
-				this.$emit('click');
-			}
-		},
+	})
+
+	const props = defineProps({
+		...commonProps,
+		...propsCol.props
+	})
+	const emit = defineEmits(['click'])
+	const parentData = reactive({
+		gutter: 0
+	})
+	const width = ref(0)
+	const gridNum = 12
+	const { parent, getParentData } = useUltraUI(props, parentData)
+
+	const uJustify = computed(() => {
+		if (props.justify == 'end' || props.justify == 'start') return 'flex-' + props.justify
+		else if (props.justify == 'around' || props.justify == 'between') return 'space-' + props.justify
+		else return props.justify
+	})
+
+	const uAlignItem = computed(() => {
+		if (props.align == 'top') return 'flex-start'
+		if (props.align == 'bottom') return 'flex-end'
+		else return props.align
+	})
+
+	const colStyle = computed(() => {
+		const style = {
+			// 这里写成"padding: 0 10px"的形式是因为nvue的需要
+			paddingLeft: addUnit(getPx(parentData.gutter) / 2),
+			paddingRight: addUnit(getPx(parentData.gutter) / 2),
+			alignItems: uAlignItem.value,
+			justifyContent: uJustify.value,
+			textAlign: props.textAlign,
+			// #ifndef APP-NVUE
+			// 在非nvue上，使用百分比形式
+			flex: `0 0 ${100 / gridNum * props.span}%`,
+			marginLeft: 100 / 12 * props.offset + '%',
+			// #endif
+			// #ifdef APP-NVUE
+			// 在nvue上，由于无法使用百分比单位，这里需要获取父组件的宽度，再计算得出该有对应的百分比尺寸
+			width: addUnit(Math.floor(width.value / gridNum * Number(props.span))),
+			marginLeft: addUnit(Math.floor(width.value / gridNum * Number(props.offset))),
+			// #endif
+		}
+		return deepMerge(style, addStyle(props.customStyle))
+	})
+
+	async function init() {
+		getParentData('up-row')
+		if (parent.value && typeof parent.value.getComponentWidth === 'function') {
+			width.value = await parent.value.getComponentWidth()
+		}
 	}
+
+	function clickHandler() {
+		emit('click')
+	}
+
+	onMounted(() => {
+		init()
+	})
 </script>
 
 <style lang="scss" scoped>

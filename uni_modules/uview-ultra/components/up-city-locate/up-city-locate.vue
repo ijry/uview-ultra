@@ -39,105 +39,104 @@
 	</view>
 </template>
 
-<script>
-	import { t } from '../../libs/i18n'
-	export default{
-		name: 'up-city-locate',
-		props:{
-			indexList: {
-				type: Array,
-				default: ['🔥']
-			},
-			cityList:{
-				type: Array,
-				default: () => {
-					return [
-						[{
-							name: '北京',
-							value: 'beijing'
-						},
-						{
-							name: '上海',
-							value: 'shanghai'
-						},
-						{
-							name: '广州',
-							value: 'guangzhou'
-						},
-						{
-							name: '深圳',
-							value: 'shenzhen'
-						},
-						{
-							name: '杭州',
-							value: 'hangzhou'
-						}]
-					]
-				}
-			},
-			locationType: {
-				type: String,
-				default: 'wgs84'
-			},
-			currentCity: {
-				type: String,
-				default: ''
-			},
-			nameKey: {
-				type: String,
-				default: 'name'
-			}
-		},
-		computed:{
-		},
-		watch:{
-			currentCity(val) {
-				this.locationCity = val;
-			}
-		},
-		data(){
-			return{
-				locationCity: t("up.cityLocate.locating") + '....'
-			}
-		},
-		emits: ['location-success', 'select-city'],
-		methods:{
-			t,
-			// 获取城市
-			selectedCity(city){
-				this.locationCity = city[this.nameKey];
-				this.$emit('select-city', {
-					locationCity: this.locationCity
-				});
-			},
-			// 定位操作
-			location(){
-				let That = this;
-				uni.getLocation({
-				    type: this.locationType,
-					geocode:true,
-				    success(res){
-						console.log(res);
-						That.locationCity = res.address && res.address.city;
-						That.$emit('location-success', {
-							...res,
-							locationCity: That.locationCity
-						});
-				    },
-					fail(){
-						That.locationCity = t("up.cityLocate.fail");
-					}
-				});
-			},
-		},
-		// 页面挂载后进行异步操作
-		created(){
-		},
-		mounted(){
-			this.location();
-		}
+<script setup>
+import { ref, watch, onMounted } from 'vue'
+import { commonProps } from '../../libs/composable/useUltraUI.js'
+import { t } from '../../libs/i18n'
+
+defineOptions({
+	name: 'up-city-locate',
+	// #ifdef MP-WEIXIN
+	options: {
+		virtualHost: true
 	}
+	// #endif
+})
+
+const props = defineProps({
+	...commonProps,
+	indexList: {
+		type: Array,
+		default: ['🔥']
+	},
+	cityList: {
+		type: Array,
+		default: () => {
+			return [
+				[{
+					name: '北京',
+					value: 'beijing'
+				},
+				{
+					name: '上海',
+					value: 'shanghai'
+				},
+				{
+					name: '广州',
+					value: 'guangzhou'
+				},
+				{
+					name: '深圳',
+					value: 'shenzhen'
+				},
+				{
+					name: '杭州',
+					value: 'hangzhou'
+				}]
+			]
+		}
+	},
+	locationType: {
+		type: String,
+		default: 'wgs84'
+	},
+	currentCity: {
+		type: String,
+		default: ''
+	},
+	nameKey: {
+		type: String,
+		default: 'name'
+	}
+})
+const emit = defineEmits(['location-success', 'select-city'])
+
+const locationCity = ref(t("up.cityLocate.locating") + '....')
+
+watch(() => props.currentCity, (val) => {
+	locationCity.value = val
+})
+
+function selectedCity(city) {
+	locationCity.value = city[props.nameKey]
+	emit('select-city', {
+		locationCity: locationCity.value
+	})
+}
+
+function location() {
+	uni.getLocation({
+		type: props.locationType,
+		geocode: true,
+		success(res) {
+			console.log(res)
+			locationCity.value = res.address && res.address.city
+			emit('location-success', {
+				...res,
+				locationCity: locationCity.value
+			})
+		},
+		fail() {
+			locationCity.value = t("up.cityLocate.fail")
+		}
+	})
+}
+
+onMounted(() => {
+	location()
+})
 </script>
+
 
 <style lang="scss">
 	.list__item {

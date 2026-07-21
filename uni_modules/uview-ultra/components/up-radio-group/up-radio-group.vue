@@ -7,10 +7,10 @@
 	</view>
 </template>
 
-<script>
-	import { props } from './props.js';
-	import { mpMixin } from '../../libs/mixin/mpMixin.js';
-	import { mixin } from '../../libs/mixin/mixin.js';
+<script setup>
+	import { computed, toRefs, watch } from 'vue'
+	import { props as radioGroupProps } from './props.js'
+	import { commonProps, useUltraUI } from '../../libs/composable/useUltraUI.js'
 
 	/**
 	 * radioRroup 单选框父组件
@@ -36,76 +36,132 @@
 	 * @event {Function} change 任一个radio状态发生变化时触发
 	 * @example <up-radio-group v-model="value"></up-radio-group>
 	 */
-	export default {
+	defineOptions({
 		name: 'up-radio-group',
-		mixins: [mpMixin, mixin, props],
-		computed: {
-			// 这里computed的变量，都是子组件up-radio需要用到的，由于头条小程序的兼容性差异，子组件无法实时监听父组件参数的变化
-			// 所以需要手动通知子组件，这里返回一个parentData变量，供watch监听，在其中去通知每一个子组件重新从父组件(up-radio-group)
-			// 拉取父组件新的变化后的参数
-			parentData() {
-				// #ifdef VUE3
-                return [this.modelValue, this.disabled, this.inactiveColor, this.activeColor, this.size, this.labelDisabled, this.shape,
-					this.iconSize, this.borderBottom, this.placement
-				]
-                // #endif
-                // #ifdef VUE2
-                return [this.value, this.disabled, this.inactiveColor, this.activeColor, this.size, this.labelDisabled, this.shape,
-					this.iconSize, this.borderBottom, this.placement
-				]
-				// #endif
-				
-			},
-			bemClass() {
-				// this.bem为一个computed变量，在mixin中
-				return this.bem('radio-group', ['placement'])
-			},
-		},
-		watch: {
-			// 当父组件需要子组件需要共享的参数发生了变化，手动通知子组件
-			parentData() {
-				if (this.children.length) {
-					this.children.map(child => {
-						// 判断子组件(up-radio)如果有init方法的话，就就执行(执行的结果是子组件重新从父组件拉取了最新的值)
-						typeof(child.init) === 'function' && child.init()
-					})
-				}
-			},
-		},
-		data() {
-			return {
-			}
-		},
-		created() {
-			this.children = []
-		},
-		// #ifdef VUE3
-		emits: ['update:modelValue', 'change'],
-    	// #endif
-		methods: {
-			// 将其他的radio设置为未选中的状态
-			unCheckedOther(childInstance) {
-				this.children.map(child => {
-					// 所有子radio中，被操作组件实例的checked的值无需修改
-					if (childInstance !== child) {
-						child.checked = false
-					}
-				})
-				const {
-					name
-				} = childInstance
-				// 通过emit事件，设置父组件通过v-model双向绑定的值
-				// #ifdef VUE3
-                this.$emit("update:modelValue", name);
-                // #endif
-                // #ifdef VUE2
-                this.$emit("input", name);
-				// #endif
-				// 发出事件
-				this.$emit('change', name)
-			},
+		// #ifdef MP-WEIXIN
+		options: {
+			virtualHost: true
+		}
+		// #endif
+	})
+
+	const props = defineProps({
+		...commonProps,
+		...radioGroupProps.props
+	})
+	const emit = defineEmits(['update:modelValue', 'input', 'change'])
+	const { children, bem } = useUltraUI(props)
+	const {
+		modelValue,
+		value,
+		disabled,
+		inactiveColor,
+		activeColor,
+		size,
+		labelDisabled,
+		shape,
+		iconSize,
+		borderBottom,
+		placement,
+		labelColor,
+		labelSize,
+		iconColor,
+		iconPlacement
+	} = toRefs(props)
+
+	const bemClass = computed(() => {
+		return bem('radio-group', ['placement'])
+	})
+
+	function updateChildData() {
+		children.value.map(child => {
+			// 判断子组件如果有init方法的话，就执行(执行的结果是子组件重新从父组件拉取了最新的值)
+			typeof child.init === 'function' && child.init()
+		})
+	}
+
+	function getProps() {
+		return {
+			modelValue: props.modelValue,
+			value: props.value,
+			disabled: props.disabled,
+			inactiveColor: props.inactiveColor,
+			activeColor: props.activeColor,
+			size: props.size,
+			labelDisabled: props.labelDisabled,
+			shape: props.shape,
+			iconSize: props.iconSize,
+			borderBottom: props.borderBottom,
+			placement: props.placement,
+			labelColor: props.labelColor,
+			labelSize: props.labelSize,
+			iconColor: props.iconColor,
+			iconPlacement: props.iconPlacement
 		}
 	}
+
+	// 将其他的radio设置为未选中的状态
+	function unCheckedOther(childInstance) {
+		children.value.map(child => {
+			// 所有子radio中，被操作组件实例的checked的值无需修改
+			if (childInstance !== child) {
+				child.checked = false
+			}
+		})
+		const { name } = childInstance
+		// 通过emit事件，设置父组件通过v-model双向绑定的值
+		// #ifdef VUE3
+		emit('update:modelValue', name)
+		// #endif
+		// #ifdef VUE2
+		emit('input', name)
+		// #endif
+		// 发出事件
+		emit('change', name)
+	}
+
+	// 当父组件需要子组件共享的参数发生变化，手动通知子组件
+	watch(() => [
+		props.modelValue,
+		props.value,
+		props.disabled,
+		props.inactiveColor,
+		props.activeColor,
+		props.size,
+		props.labelDisabled,
+		props.shape,
+		props.iconSize,
+		props.borderBottom,
+		props.placement,
+		props.labelColor,
+		props.labelSize,
+		props.iconColor,
+		props.iconPlacement
+	], () => {
+		updateChildData()
+	})
+
+	defineExpose({
+		children,
+		modelValue,
+		value,
+		disabled,
+		inactiveColor,
+		activeColor,
+		size,
+		labelDisabled,
+		shape,
+		iconSize,
+		borderBottom,
+		placement,
+		labelColor,
+		labelSize,
+		iconColor,
+		iconPlacement,
+		unCheckedOther,
+		getProps,
+		updateChildData
+	})
 </script>
 
 <style lang="scss" scoped>

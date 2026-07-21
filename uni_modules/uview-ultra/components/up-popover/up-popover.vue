@@ -30,10 +30,10 @@
 	</view>
 </template>
 
-<script>
-    import { props } from './props';
-	import { mpMixin } from '../../libs/mixin/mpMixin';
-	import { mixin } from '../../libs/mixin/mixin';
+<script setup>
+	import { ref } from 'vue'
+    import { props as popoverProps } from './props'
+	import { commonProps } from '../../libs/composable/useUltraUI.js'
 	/**
 	 * popover 气泡弹出框
 	 * @description 基于tooltip二次封装的popover组件，用于展示更丰富的内容
@@ -53,34 +53,48 @@
 	 * @event {Function}			click			点击触发器时触发
 	 * @example <up-popover text="提示内容"><template #trigger><up-button>点击</up-button></template></up-popover>
 	 */
-	export default {
+	defineOptions({
 		name: 'up-popover',
-		mixins: [mpMixin, mixin, props],
-		data() {
-			return {
-				
-			}
-		},
-		methods: {
-			onOpen() {
-				this.$emit('open');
-			},
-			onClose() {
-				this.$emit('close');
-			},
-			onClick() {
-				this.$emit('click');
-			},
-			// 打开popover
-			open() {
-				this.$refs.tooltip && this.$refs.tooltip.open();
-			},
-			// 关闭popover
-			close() {
-				this.$refs.tooltip && this.$refs.tooltip.close();
-			}
+		// #ifdef MP-WEIXIN
+		options: {
+			virtualHost: true
 		}
+		// #endif
+	})
+
+	defineProps({
+		...commonProps,
+		...popoverProps.props
+	})
+	const emit = defineEmits(['open', 'close', 'click'])
+	const tooltip = ref(null)
+
+	function onOpen() {
+		emit('open')
 	}
+
+	function onClose() {
+		emit('close')
+	}
+
+	function onClick() {
+		emit('click')
+	}
+
+	// 打开popover
+	function open() {
+		tooltip.value && tooltip.value.open()
+	}
+
+	// 关闭popover
+	function close() {
+		tooltip.value && tooltip.value.close()
+	}
+
+	defineExpose({
+		open,
+		close
+	})
 </script>
 
 <style lang="scss" scoped>	

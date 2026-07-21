@@ -2,7 +2,7 @@
     <view class="up-album">
         <view
             class="up-album__row"
-            ref="up-album__row"
+            ref="albumRowRefs"
             v-for="(arr, index) in showUrls"
             :forComputedUse="albumWidth"
             :key="index"
@@ -57,14 +57,13 @@
     </view>
 </template>
 
-<script>
-import { props } from './props.js';
-import { mpMixin } from '../../libs/mixin/mpMixin.js';
-import { mixin } from '../../libs/mixin/mixin.js';
-import { addUnit, sleep } from '../../libs/function/index.js';
-import test from '../../libs/function/test.js';
+<script setup>
+import { computed, ref, watch } from 'vue'
+import { props as albumProps } from './props.js'
+import { commonProps, useUltraUI } from '../../libs/composable/useUltraUI.js'
+import { addUnit, sleep } from '../../libs/function/index.js'
+import test from '../../libs/function/test.js'
 // #ifdef APP-NVUE
-// 由于weex为阿里的KPI业绩考核的产物，所以不支持百分比单位，这里需要通过dom查询组件的宽度
 const dom = uni.requireNativePlugin('dom')
 // #endif
 
@@ -91,171 +90,147 @@ const dom = uni.requireNativePlugin('dom')
  * @event    {Function}        albumWidth       某些特殊的情况下，需要让文字与相册的宽度相等，这里事件的形式对外发送  （回调参数 width ）
  * @example <up-album :urls="urls2" @albumWidth="width => albumWidth = width" multipleSize="68" ></up-album>
  */
-export default {
-    name: 'up-album',
-    mixins: [mpMixin, mixin, props],
-    data() {
-        return {
-            // 单图的宽度
-            singleWidth: 0,
-            // 单图的高度
-            singleHeight: 0,
-            // 单图时，如果无法获取图片的尺寸信息，让图片宽度默认为容器的一定百分比
-            singlePercent: 0.6
-        }
-    },
-    watch: {
-        urls: {
-            immediate: true,
-            handler(newVal) {
-                if (newVal.length === 1) {
-                    this.getImageRect()
-                }
-            }
-        }
-    },
-	emits: ["preview", "albumWidth"],
-    computed: {
-        imageStyle() {
-            return (index1, index2) => {
-                const { space, rowCount, multipleSize, urls } = this,
-                    { addUnit, addStyle } = uni.$u,
-                    rowLen = this.showUrls.length,
-                    allLen = this.urls.length
-                const style = {
-                    marginRight: addUnit(space),
-                    marginBottom: addUnit(space)
-                }
-                // 如果为最后一行，则每个图片都无需下边框
-                if (index1 === rowLen && !this.autoWrap) style.marginBottom = 0
-                // 每行的最右边一张和总长度的最后一张无需右边框
-                if (!this.autoWrap) {
-                    if (
-                        index2 === rowCount ||
-                        (index1 === rowLen &&
-                            index2 === this.showUrls[index1 - 1].length)
-                    )
-                        style.marginRight = 0
-                }
-                return style
-            }
-        },
-        // 将数组划分为二维数组
-        showUrls() {
-            if (this.autoWrap) {
-                return [ this.urls.slice(0, this.maxCount) ];
-            } else {
-                const arr = []
-                this.urls.map((item, index) => {
-                    // 限制最大展示数量
-                    if (index + 1 <= this.maxCount) {
-                        // 计算该元素为第几个素组内
-                        const itemIndex = Math.floor(index / this.rowCount)
-                        // 判断对应的索引是否存在
-                        if (!arr[itemIndex]) {
-                            arr[itemIndex] = []
-                        }
-                        arr[itemIndex].push(item)
-                    }
-                })
-                return arr
-            }
-        },
-        imageWidth() {
-            return addUnit(
-                this.urls.length === 1 ? this.singleWidth : this.multipleSize, this.unit
-            )
-        },
-        imageHeight() {
-            return addUnit(
-                this.urls.length === 1 ? this.singleHeight : this.multipleSize, this.unit
-            )
-        },
-        // 此变量无实际用途，仅仅是为了利用computed特性，让其在urls长度等变化时，重新计算图片的宽度
-        // 因为用户在某些特殊的情况下，需要让文字与相册的宽度相等，所以这里事件的形式对外发送
-        albumWidth() {
-            let width = 0
-            if (this.urls.length === 1) {
-                width = this.singleWidth
-            } else {
-                width =
-                    this.showUrls[0].length * this.multipleSize +
-                    this.space * (this.showUrls[0].length - 1)
-            }
-            this.$emit('albumWidth', width)
-            return width
-        }
-    },
-    methods: {
-        addUnit,
-        // 预览图片
-        onPreviewTap(e, url) {
-            const urls = this.urls.map((item) => {
-                return this.getSrc(item)
-            })
-            if (this.previewFullImage) {
-                uni.previewImage({
-                    current: url,
-                    urls
-                })
-                this.stop && this.preventEvent(e)
-            } else {
-                this.$emit('preview', {
-                    urls,
-                    currentIndex: urls.indexOf(url)
-                })
-            }
-        },
-        // 获取图片的路径
-        getSrc(item) {
-            return test.object(item)
-                ? (this.keyName && item[this.keyName]) || item.src
-                : item
-        },
-        // 单图时，获取图片的尺寸
-        // 在小程序中，需要将网络图片的的域名添加到小程序的download域名才可能获取尺寸
-        // 在没有添加的情况下，让单图宽度默认为盒子的一定宽度(singlePercent)
-        getImageRect() {
-            const src = this.getSrc(this.urls[0])
-            uni.getImageInfo({
-                src,
-                success: (res) => {
-                    // 判断图片横向还是竖向展示方式
-                    const isHorizotal = res.width >= res.height
-                    this.singleWidth = isHorizotal
-                        ? this.singleSize
-                        : (res.width / res.height) * this.singleSize
-                    this.singleHeight = !isHorizotal
-                        ? this.singleSize
-                        : (res.height / res.width) * this.singleWidth
-                },
-                fail: () => {
-                    this.getComponentWidth()
-                }
-            })
-        },
-        // 获取组件的宽度
-        async getComponentWidth() {
-            // 延时一定时间，以获取dom尺寸
-            await sleep(30)
-            // #ifndef APP-NVUE
-            this.$uGetRect('.up-album__row').then((size) => {
-                this.singleWidth = size.width * this.singlePercent
-            })
-            // #endif
+defineOptions({
+	name: 'up-album',
+	// #ifdef MP-WEIXIN
+	options: {
+		virtualHost: true
+	}
+	// #endif
+})
 
-            // #ifdef APP-NVUE
-            // 这里ref="up-album__row"所在的标签为通过for循环出来，导致this.$refs['up-album__row']是一个数组
-            const ref = this.$refs['up-album__row'][0]
-            ref &&
-                dom.getComponentRect(ref, (res) => {
-                    this.singleWidth = res.size.width * this.singlePercent
-                })
-            // #endif
-        }
-    }
+const props = defineProps({
+	...commonProps,
+	...albumProps.props
+})
+const emit = defineEmits(['preview', 'albumWidth'])
+const { $uGetRect, preventEvent } = useUltraUI(props)
+
+const singleWidth = ref(0)
+const singleHeight = ref(0)
+const singlePercent = 0.6
+const albumRowRefs = ref([])
+
+watch(() => props.urls, (newVal) => {
+	if (newVal.length === 1) {
+		getImageRect()
+	}
+}, { immediate: true })
+
+const showUrls = computed(() => {
+	if (props.autoWrap) {
+		return [props.urls.slice(0, props.maxCount)]
+	}
+	const arr = []
+	props.urls.map((item, index) => {
+		if (index + 1 <= props.maxCount) {
+			const itemIndex = Math.floor(index / props.rowCount)
+			if (!arr[itemIndex]) {
+				arr[itemIndex] = []
+			}
+			arr[itemIndex].push(item)
+		}
+	})
+	return arr
+})
+
+function imageStyle(index1, index2) {
+	const { space, rowCount } = props
+	const rowLen = showUrls.value.length
+	const style = {
+		marginRight: addUnit(space),
+		marginBottom: addUnit(space)
+	}
+	if (index1 === rowLen && !props.autoWrap) style.marginBottom = 0
+	if (!props.autoWrap) {
+		if (
+			index2 === rowCount ||
+			(index1 === rowLen && index2 === showUrls.value[index1 - 1].length)
+		) {
+			style.marginRight = 0
+		}
+	}
+	return style
+}
+
+const imageWidth = computed(() => addUnit(
+	props.urls.length === 1 ? singleWidth.value : props.multipleSize,
+	props.unit
+))
+const imageHeight = computed(() => addUnit(
+	props.urls.length === 1 ? singleHeight.value : props.multipleSize,
+	props.unit
+))
+
+const albumWidth = computed(() => {
+	let width = 0
+	if (props.urls.length === 1) {
+		width = singleWidth.value
+	} else {
+		width = showUrls.value[0].length * props.multipleSize + props.space * (showUrls.value[0].length - 1)
+	}
+	emit('albumWidth', width)
+	return width
+})
+
+function onPreviewTap(e, url) {
+	const urls = props.urls.map((item) => getSrc(item))
+	if (props.previewFullImage) {
+		uni.previewImage({
+			current: url,
+			urls
+		})
+		props.stop && preventEvent(e)
+	} else {
+		emit('preview', {
+			urls,
+			currentIndex: urls.indexOf(url)
+		})
+	}
+}
+
+function getSrc(item) {
+	return test.object(item)
+		? (props.keyName && item[props.keyName]) || item.src
+		: item
+}
+
+function getImageRect() {
+	const src = getSrc(props.urls[0])
+	uni.getImageInfo({
+		src,
+		success: (res) => {
+			const isHorizotal = res.width >= res.height
+			singleWidth.value = isHorizotal
+				? props.singleSize
+				: (res.width / res.height) * props.singleSize
+			singleHeight.value = !isHorizotal
+				? props.singleSize
+				: (res.height / res.width) * singleWidth.value
+		},
+		fail: () => {
+			getComponentWidth()
+		}
+	})
+}
+
+async function getComponentWidth() {
+	await sleep(30)
+	// #ifndef APP-NVUE
+	$uGetRect('.up-album__row').then((size) => {
+		singleWidth.value = size.width * singlePercent
+	})
+	// #endif
+
+	// #ifdef APP-NVUE
+	const refNode = Array.isArray(albumRowRefs.value) ? albumRowRefs.value[0] : albumRowRefs.value
+	refNode && dom.getComponentRect(refNode, (res) => {
+		singleWidth.value = res.size.width * singlePercent
+	})
+	// #endif
 }
 </script>
+
 
 <style lang="scss" scoped>
 @import '../../libs/css/components.scss';

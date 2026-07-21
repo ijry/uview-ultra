@@ -24,11 +24,11 @@
 	<!-- #endif -->
 </template>
 
-<script>
-	import { props } from './props';
-	import { mpMixin } from '../../libs/mixin/mpMixin';
-	import { mixin } from '../../libs/mixin/mixin';
-	import { addUnit, $parent, error } from '../../libs/function/index';
+<script setup>
+	import { computed, getCurrentInstance, onMounted, toRef } from 'vue'
+	import { props as anchorProps } from './props'
+	import { commonProps } from '../../libs/composable/useUltraUI.js'
+	import { addUnit, $parent, error } from '../../libs/function/index'
 	// #ifdef APP-NVUE
 	const dom = uni.requireNativePlugin('dom')
 	// #endif
@@ -43,48 +43,62 @@
 	 * @property {String | Number}	height	列表锚点高度，单位默认px ( 默认 32 )
 	 * @example <up-index-anchor :text="indexList[index]"></up-index-anchor>
 	 */
-	export default {
+	defineOptions({
 		name: 'up-index-anchor',
-		mixins: [mpMixin, mixin, props],
-		data() {
-			return {
-			}
-		},
-		mounted() {
-			this.init()
-		},
-		methods: {
-			addUnit,
-			init() {
-				// 此处会活动父组件实例，并赋值给实例的parent属性
-				const indexList = $parent.call(this, 'up-index-list')
-				if (!indexList) { 
-					return error('up-index-anchor必须要搭配up-index-list组件使用')
-				}
-				// 将当前实例放入到u-index-list中
-				indexList.anchors.push(this)
-				const indexListItem = $parent.call(this, 'up-index-item')
-				// #ifndef APP-NVUE
-				// 只有在非nvue下，up-index-anchor才是嵌套在u-index-item中的
-				if (!indexListItem) {
-					return error('up-index-anchor必须要搭配up-index-item组件使用')
-				}
-				// 设置up-index-item的id为anchor的text标识符，因为非nvue下滚动列表需要依赖scroll-view滚动到元素的特性
-				if (typeof this.text == 'string') {
-					indexListItem.id = this.text.charCodeAt(0)
-				} else {
-					indexListItem.id = this.text.name.charCodeAt(0)
-				}
-				// #endif
-			}
-		},
-		computed: {
-        parentSticky() {
-            const indexList = $parent.call(this, "up-index-list");
-            return indexList ? indexList.sticky : true;
-        	},
-		},
+		// #ifdef MP-WEIXIN
+		options: {
+			virtualHost: true
+		}
+		// #endif
+	})
+
+	const props = defineProps({
+		...commonProps,
+		...anchorProps.props
+	})
+	const instance = getCurrentInstance()
+	const proxy = instance?.proxy
+	const text = toRef(props, 'text')
+	const height = toRef(props, 'height')
+
+	function init() {
+		// 此处会活动父组件实例，并赋值给实例的parent属性
+		const indexList = $parent.call(proxy, 'up-index-list')
+		if (!indexList) {
+			return error('up-index-anchor必须要搭配up-index-list组件使用')
+		}
+		// 将当前实例放入到u-index-list中
+		indexList.anchors.push(proxy)
+		const indexListItem = $parent.call(proxy, 'up-index-item')
+		// #ifndef APP-NVUE
+		// 只有在非nvue下，up-index-anchor才是嵌套在u-index-item中的
+		if (!indexListItem) {
+			return error('up-index-anchor必须要搭配up-index-item组件使用')
+		}
+		// 设置up-index-item的id为anchor的text标识符，因为非nvue下滚动列表需要依赖scroll-view滚动到元素的特性
+		if (typeof props.text == 'string') {
+			indexListItem.id = props.text.charCodeAt(0)
+		} else {
+			indexListItem.id = props.text.name.charCodeAt(0)
+		}
+		// #endif
 	}
+
+	const parentSticky = computed(() => {
+		const indexList = $parent.call(proxy, "up-index-list")
+		return indexList ? indexList.sticky : true
+	})
+
+	onMounted(() => {
+		init()
+	})
+
+	defineExpose({
+		text,
+		height,
+		parentSticky,
+		init
+	})
 </script>
 
 <style lang="scss" scoped>

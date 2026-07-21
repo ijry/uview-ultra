@@ -42,148 +42,155 @@
 	</up-overlay>
 </template>
 
-<script>
-	import { props } from './props';
-	import { mpMixin } from '../../libs/mixin/mpMixin';
-	import { mixin } from '../../libs/mixin/mixin';
-	import { toast, getDeviceInfo } from '../../libs/function/index';
-	import { t } from '../../libs/i18n'
-	/**
-	 * noNetwork 无网络提示
-	 * @description 该组件无需任何配置，引入即可，内部自动处理所有功能和事件。
-	 * @tutorial https://uview-plus.jiangruyi.com/components/noNetwork.html
-	 * @property {String}			tips 	没有网络时的提示语 （默认：'哎呀，网络信号丢失' ）
-	 * @property {String | Number}	zIndex	组件的z-index值 
-	 * @property {String}			image	无网络的图片提示，可用的src地址或base64图片 
-	 * @event {Function}			retry	用户点击页面的"重试"按钮时触发
-	 * @example <up-no-network></up-no-network>
-	 */
-	export default {
-		name: "up-no-network",
-		mixins: [mpMixin, mixin,props],
-		data() {
-			return {
-				isConnected: true, // 是否有网络连接
-				networkType: "none", // 网络类型
-			}
-		},
-		mounted() {
-			this.isIOS = (getDeviceInfo().platform === 'ios')
-			uni.onNetworkStatusChange((res) => {
-				this.isConnected = res.isConnected
-				this.networkType = res.networkType
-				this.emitEvent(this.networkType)
-			})
-			uni.getNetworkType({
-				success: (res) => {
-					this.networkType = res.networkType
-					this.emitEvent(this.networkType)
-					if (res.networkType == 'none') {
-						this.isConnected = false
-					} else {
-						this.isConnected = true
-					}
-				}
-			})
-		},
-		emits: ["disconnected", "connected"],
-		methods: {
-			t,
-			retry() {
-				// 重新检查网络
-				uni.getNetworkType({
-					success: (res) => {
-						this.networkType = res.networkType
-						this.emitEvent(this.networkType)
-						if (res.networkType == 'none') {
-							toast(t("up.noNetwork.disconnect"))
-							this.isConnected = false
-						} else {
-							toast(t("up.noNetwork.connect"))
-							this.isConnected = true
-						}
-					}
-				})
-				this.$emit('retry')
-			},
-			// 发出事件给父组件
-			emitEvent(networkType) {
-				this.$emit(networkType === 'none' ? 'disconnected' : 'connected')
-			},
-			async openSettings() {
-				if (this.networkType == "none") {
-					this.openSystemSettings()
-					return
-				}
-			},
-			openAppSettings() {
-				this.gotoAppSetting()
-			},
-			openSystemSettings() {
-				// 以下方法来自5+范畴，如需深究，请自行查阅相关文档
-				// https://ask.dcloud.net.cn/docs/
-				if (this.isIOS) {
-					this.gotoiOSSetting()
-				} else {
-					this.gotoAndroidSetting()
-				}
-			},
-			network() {
-				var result = null
-				var cellularData = plus.ios.newObject("CTCellularData")
-				var state = cellularData.plusGetAttribute("restrictedState")
-				if (state == 0) {
-					result = null
-				} else if (state == 2) {
-					result = 1
-				} else if (state == 1) {
-					result = 2
-				}
-				plus.ios.deleteObject(cellularData)
-				return result
-			},
-			gotoAppSetting() {
-				if (this.isIOS) {
-					var UIApplication = plus.ios.import("UIApplication")
-					var application2 = UIApplication.sharedApplication()
-					var NSURL2 = plus.ios.import("NSURL")
-					var setting2 = NSURL2.URLWithString("app-settings:")
-					application2.openURL(setting2)
-					plus.ios.deleteObject(setting2)
-					plus.ios.deleteObject(NSURL2)
-					plus.ios.deleteObject(application2)
-				} else {
-					var Intent = plus.android.importClass("android.content.Intent")
-					var Settings = plus.android.importClass("android.provider.Settings")
-					var Uri = plus.android.importClass("android.net.Uri")
-					var mainActivity = plus.android.runtimeMainActivity()
-					var intent = new Intent()
-					intent.setAction(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
-					var uri = Uri.fromParts("package", mainActivity.getPackageName(), null)
-					intent.setData(uri)
-					mainActivity.startActivity(intent)
-				}
-			},
-			gotoiOSSetting() {
-				var UIApplication = plus.ios.import("UIApplication")
-				var application2 = UIApplication.sharedApplication()
-				var NSURL2 = plus.ios.import("NSURL")
-				var setting2 = NSURL2.URLWithString("App-prefs:root=General")
-				application2.openURL(setting2)
-				plus.ios.deleteObject(setting2)
-				plus.ios.deleteObject(NSURL2)
-				plus.ios.deleteObject(application2)
-			},
-			gotoAndroidSetting() {
-				var Intent = plus.android.importClass("android.content.Intent")
-				var Settings = plus.android.importClass("android.provider.Settings")
-				var mainActivity = plus.android.runtimeMainActivity()
-				var intent = new Intent(Settings.ACTION_SETTINGS)
-				mainActivity.startActivity(intent)
+<script setup>
+import { onMounted, ref } from 'vue'
+import { props as noNetworkProps } from './props'
+import { commonProps, useUltraUI } from '../../libs/composable/useUltraUI'
+import { toast, getDeviceInfo } from '../../libs/function/index'
+import { t } from '../../libs/i18n'
+/**
+ * noNetwork 无网络提示
+ * @description 该组件无需任何配置，引入即可，内部自动处理所有功能和事件。
+ * @tutorial https://uview-plus.jiangruyi.com/components/noNetwork.html
+ * @property {String}			tips 	没有网络时的提示语 （默认：'哎呀，网络信号丢失' ）
+ * @property {String | Number}	zIndex	组件的z-index值
+ * @property {String}			image	无网络的图片提示，可用的src地址或base64图片
+ * @event {Function}			retry	用户点击页面的"重试"按钮时触发
+ * @example <up-no-network></up-no-network>
+ */
+defineOptions({
+	name: 'up-no-network',
+	// #ifdef MP-WEIXIN
+	options: {
+		virtualHost: true
+	}
+	// #endif
+})
+
+const props = defineProps({
+	...commonProps,
+	...noNetworkProps.props
+})
+const emit = defineEmits(['disconnected', 'connected', 'retry'])
+const { noop } = useUltraUI(props)
+
+const isConnected = ref(true)
+const networkType = ref('none')
+const isIOS = ref(false)
+
+onMounted(() => {
+	isIOS.value = getDeviceInfo().platform === 'ios'
+	uni.onNetworkStatusChange((res) => {
+		isConnected.value = res.isConnected
+		networkType.value = res.networkType
+		emitEvent(networkType.value)
+	})
+	uni.getNetworkType({
+		success: (res) => {
+			networkType.value = res.networkType
+			emitEvent(networkType.value)
+			isConnected.value = res.networkType != 'none'
+		}
+	})
+})
+
+function retry() {
+	uni.getNetworkType({
+		success: (res) => {
+			networkType.value = res.networkType
+			emitEvent(networkType.value)
+			if (res.networkType == 'none') {
+				toast(t('up.noNetwork.disconnect'))
+				isConnected.value = false
+			} else {
+				toast(t('up.noNetwork.connect'))
+				isConnected.value = true
 			}
 		}
+	})
+	emit('retry')
+}
+
+function emitEvent(type) {
+	emit(type === 'none' ? 'disconnected' : 'connected')
+}
+
+async function openSettings() {
+	if (networkType.value == 'none') {
+		openSystemSettings()
 	}
+}
+
+function openAppSettings() {
+	gotoAppSetting()
+}
+
+function openSystemSettings() {
+	if (isIOS.value) {
+		gotoiOSSetting()
+	} else {
+		gotoAndroidSetting()
+	}
+}
+
+function network() {
+	var result = null
+	var cellularData = plus.ios.newObject('CTCellularData')
+	var state = cellularData.plusGetAttribute('restrictedState')
+	if (state == 0) {
+		result = null
+	} else if (state == 2) {
+		result = 1
+	} else if (state == 1) {
+		result = 2
+	}
+	plus.ios.deleteObject(cellularData)
+	return result
+}
+
+function gotoAppSetting() {
+	if (isIOS.value) {
+		var UIApplication = plus.ios.import('UIApplication')
+		var application2 = UIApplication.sharedApplication()
+		var NSURL2 = plus.ios.import('NSURL')
+		var setting2 = NSURL2.URLWithString('app-settings:')
+		application2.openURL(setting2)
+		plus.ios.deleteObject(setting2)
+		plus.ios.deleteObject(NSURL2)
+		plus.ios.deleteObject(application2)
+	} else {
+		var Intent = plus.android.importClass('android.content.Intent')
+		var Settings = plus.android.importClass('android.provider.Settings')
+		var Uri = plus.android.importClass('android.net.Uri')
+		var mainActivity = plus.android.runtimeMainActivity()
+		var intent = new Intent()
+		intent.setAction(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+		var uri = Uri.fromParts('package', mainActivity.getPackageName(), null)
+		intent.setData(uri)
+		mainActivity.startActivity(intent)
+	}
+}
+
+function gotoiOSSetting() {
+	var UIApplication = plus.ios.import('UIApplication')
+	var application2 = UIApplication.sharedApplication()
+	var NSURL2 = plus.ios.import('NSURL')
+	var setting2 = NSURL2.URLWithString('App-prefs:root=General')
+	application2.openURL(setting2)
+	plus.ios.deleteObject(setting2)
+	plus.ios.deleteObject(NSURL2)
+	plus.ios.deleteObject(application2)
+}
+
+function gotoAndroidSetting() {
+	var Intent = plus.android.importClass('android.content.Intent')
+	var Settings = plus.android.importClass('android.provider.Settings')
+	var mainActivity = plus.android.runtimeMainActivity()
+	var intent = new Intent(Settings.ACTION_SETTINGS)
+	mainActivity.startActivity(intent)
+}
 </script>
+
 
 <style lang="scss" scoped>
 

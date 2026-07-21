@@ -31,12 +31,12 @@
 	</view>
 </template>
 
-<script>
-	import { props } from './props.js';
-	import { mpMixin } from '../../libs/mixin/mpMixin.js';
-	import { mixin } from '../../libs/mixin/mixin.js';
-	import { addUnit } from '../../libs/function/index.js';
-	import test from '../../libs/function/test.js';
+<script setup>
+	import { computed } from 'vue'
+	import { props as avatarGroupProps } from './props.js'
+	import { commonProps } from '../../libs/composable/useUltraUI.js'
+	import { addUnit } from '../../libs/function/index.js'
+	import test from '../../libs/function/test.js'
 	/**
 	 * AvatarGroup  头像组
 	 * @description 本组件一般用于展示头像的地方，如个人中心，或者评论列表页的用户头像展示等场所。
@@ -54,27 +54,26 @@
 	 * @event    {Function}        showMore 头像组更多点击
 	 * @example  <up-avatar-group :urls="urls" size="35" gap="0.4" ></up-avatar-group>
 	 */
-	export default {
+	defineOptions({
 		name: 'up-avatar-group',
-		mixins: [mpMixin, mixin, props],
-		data() {
-			return {
+		// #ifdef MP-WEIXIN
+		options: {
+			virtualHost: true
+		}
+		// #endif
+	})
 
-			}
-		},
-		computed: {
-			showUrl() {
-				return this.urls.slice(0, this.maxCount)
-			}
-		},
-		emits: ["showMore"],
-		methods: {
-			addUnit,
-			testObject: test.object,
-			clickHandler() {
-				this.$emit('showMore')
-			}
-		},
+	const props = defineProps({
+		...commonProps,
+		...avatarGroupProps.props
+	})
+	const emit = defineEmits(['showMore'])
+
+	const showUrl = computed(() => props.urls.slice(0, props.maxCount))
+	const testObject = test.object
+
+	function clickHandler() {
+		emit('showMore')
 	}
 </script>
 

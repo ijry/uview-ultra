@@ -93,11 +93,11 @@
 	</up-popup>
 </template>
 
-<script>
-	import { props } from './props';
-	import { mpMixin } from '../../libs/mixin/mpMixin';
-	import { mixin } from '../../libs/mixin/mixin';
-	import { addUnit } from '../../libs/function/index';
+<script setup>
+	import { computed, ref, watch } from 'vue'
+	import { props as modalProps } from './props'
+	import { commonProps } from '../../libs/composable/useUltraUI.js'
+	import { addUnit } from '../../libs/function/index'
 	/**
 	 * Modal 模态框
 	 * @description 弹出模态框，常用于消息提示、消息确认、在当前页面内完成特定的交互操作。
@@ -124,71 +124,74 @@
 	 * @event {Function} close		点击遮罩关闭出发，closeOnClickOverlay为true有效
 	 * @example <up-modal :show="show" />
 	 */
-	export default {
+	defineOptions({
 		name: 'up-modal',
-		mixins: [mpMixin, mixin, props],
-		data() {
-			return {
-				loading: false
+		// #ifdef MP-WEIXIN
+		options: {
+			virtualHost: true
+		}
+		// #endif
+	})
+
+	const props = defineProps({
+		...commonProps,
+		...modalProps.props
+	})
+	const emit = defineEmits(['confirm', 'cancel', 'close', 'update:show', 'cancelOnAsync'])
+	const loading = ref(false)
+
+	watch(() => props.show, (n) => {
+		// 为了避免第一次打开modal，又使用了异步关闭的loading
+		// 第二次打开modal时，loading依然存在的情况
+		if (n && loading.value) loading.value = false
+	})
+
+	const contentStyleCpu = computed(() => {
+		const style = props.contentStyle
+		style.paddingTop = `${props.title ? 12 : 25}px`
+		return style
+	})
+
+	// 点击确定按钮
+	function confirmHandler() {
+		// 如果配置了异步关闭，将按钮值为loading状态
+		if (props.asyncClose) {
+			loading.value = true
+		} else {
+			emit('update:show', false)
+		}
+		emit('confirm')
+	}
+
+	// 点击取消按钮
+	function cancelHandler() {
+		// 如果点击了确定按钮，确定按钮正在请求接口执行异步操作，那么限制不能取消。
+		if (props.asyncClose && loading.value) {
+			if (props.asyncCloseTip) {
+				uni.showToast({
+					title: props.asyncCloseTip,
+					icon: 'none'
+				})
 			}
-		},
-		watch: {
-			show(n) {
-				// 为了避免第一次打开modal，又使用了异步关闭的loading
-				// 第二次打开modal时，loading依然存在的情况
-				if (n && this.loading) this.loading = false
+			emit('cancelOnAsync')
+		} else {
+			// 如果配置了取消时异步关闭
+			if (!props.asyncCancelClose) {
+				emit('update:show', false)
 			}
-		},
-		emits: ["confirm", "cancel", "close", "update:show", 'cancelOnAsync'],
-		computed: {
-			contentStyleCpu() {
-				let style = this.contentStyle;
-				style.paddingTop = `${this.title ? 12 : 25}px`
-				return style;
-			}
-		},
-		methods: {
-			addUnit,
-			// 点击确定按钮
-			confirmHandler() {
-				// 如果配置了异步关闭，将按钮值为loading状态
-				if (this.asyncClose) {
-					this.loading = true;
-				} else {
-					this.$emit('update:show', false)
-				}
-				this.$emit('confirm')
-			},
-			// 点击取消按钮
-			cancelHandler() {
-				// 如果点击了确定按钮，确定按钮正在请求接口执行异步操作，那么限制不能取消。
-				if (this.asyncClose && this.loading) {
-					if (this.asyncCloseTip) {
-						uni.showToast({
-							title: this.asyncCloseTip,
-							icon: 'none'
-						});
-					}
-					this.$emit('cancelOnAsync')
-				} else {
-					// 如果配置了取消时异步关闭
-					if (!this.asyncCancelClose) {
-						this.$emit('update:show', false)
-					}
-				}
-				this.$emit('cancel')
-			},
-			// 点击遮罩
-			// 从原理上来说，modal的遮罩点击，并不是真的点击到了遮罩
-			// 因为modal依赖于popup的中部弹窗类型，中部弹窗比较特殊，虽有然遮罩，但是为了让弹窗内容能flex居中
-			// 多了一个透明的遮罩，此透明的遮罩会覆盖在灰色的遮罩上，所以实际上是点击不到灰色遮罩的，popup内部在
-			// 透明遮罩的子元素做了.stop处理，所以点击内容区，也不会导致误触发
-			clickHandler() {
-				if (this.closeOnClickOverlay) {
-					this.$emit('update:show', false)
-					this.$emit('close')
-				}
-			}
+		}
+		emit('cancel')
+	}
+
+	// 点击遮罩
+	// 从原理上来说，modal的遮罩点击，并不是真的点击到了遮罩
+	// 因为modal依赖于popup的中部弹窗类型，中部弹窗比较特殊，虽有然遮罩，但是为了让弹窗内容能flex居中
+	// 多了一个透明的遮罩，此透明的遮罩会覆盖在灰色的遮罩上，所以实际上是点击不到灰色遮罩的，popup内部在
+	// 透明遮罩的子元素做了.stop处理，所以点击内容区，也不会导致误触发
+	function clickHandler() {
+		if (props.closeOnClickOverlay) {
+			emit('update:show', false)
+			emit('close')
 		}
 	}
 </script>

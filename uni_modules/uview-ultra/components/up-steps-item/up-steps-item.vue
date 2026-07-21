@@ -59,12 +59,12 @@
 	</view>
 </template>
 
-<script>
-	import { props } from './props';
-	import { mpMixin } from '../../libs/mixin/mpMixin';
-	import { mixin } from '../../libs/mixin/mixin';
-	import { sleep, error } from '../../libs/function/index';
-	import color from '../../libs/config/color';
+<script setup>
+	import { computed, getCurrentInstance, onMounted, reactive, ref, toRef } from 'vue'
+	import { props as stepsItemProps } from './props'
+	import { commonProps, useUltraUI } from '../../libs/composable/useUltraUI.js'
+	import { sleep, error } from '../../libs/function/index.js'
+	import color from '../../libs/config/color.js'
 	// #ifdef APP-NVUE
 	const dom = uni.requireNativePlugin('dom')
 	// #endif
@@ -78,154 +78,154 @@
 	 * @property {Boolean}			error			当前步骤是否处于失败状态  (默认 false )
 	 * @example <up-steps current="0"><up-steps-item title="已出库" desc="10:35" ></up-steps-item></up-steps>
 	 */
-	export default {
+	defineOptions({
 		name: 'up-steps-item',
-		mixins: [mpMixin, mixin, props],
-		data() {
-			return {
-				index: 0,
-				childLength: 0,
-				showLine: false,
-				size: {
-					height: 0,
-					width: 0
-				},
-				parentData: {
-					direction: 'row',
-					current: 0,
-					activeColor: '',
-					inactiveColor: '',
-					activeIcon: '',
-					inactiveIcon: '',
-					dot: false
-				}
-			}
-		},
-		watch: {
-			'parentData'(newValue, oldValue) {
-			}
-		},
-		created() {
-			this.init()
-		},
 		// #ifdef MP-TOUTIAO
 		options: {
 			virtualHost: false
-		},
-		// #endif
-		computed: {
-			lineStyle() {
-				const style = {}
-				if (this.parentData.direction === 'row') {
-					style.width = this.size.width + 'px'
-					style.left = this.size.width / 2 + 'px'
-				} else {
-					style.height = this.size.height + 'px'
-					// style.top = this.size.height / 2 + 'px'
-				}
-				style.backgroundColor = this.parent.children?.[this.index + 1]?.error ? color.error : this.index <
-					this
-					.parentData
-					.current ? this.parentData.activeColor : this.parentData.inactiveColor
-				return style
-			},
-			itemStyleInner() {
-				return {
-					...this.itemStyle
-				}
-			},
-			statusClass() {
-				const {
-					index,
-					error
-				} = this
-				const {
-					current
-				} = this.parentData
-				if (current == index) {
-					return error === true ? 'error' : 'process'
-				} else if (error) {
-					return 'error'
-				} else if (current > index) {
-					return 'finish'
-				} else {
-					return 'wait'
-				}
-			},
-			statusColor() {
-				let colorTmp = ''
-				switch (this.statusClass) {
-					case 'finish':
-						colorTmp = this.parentData.activeColor
-						break
-					case 'error':
-						colorTmp = color.error
-						break
-					case 'process':
-						colorTmp = this.parentData.dot ? this.parentData.activeColor : 'transparent'
-						break
-					default:
-						colorTmp = this.parentData.inactiveColor
-						break
-				}
-				return colorTmp
-			},
-			contentStyle() {
-				const style = {}
-				if (this.parentData.direction === 'column') {
-					style.marginLeft = this.parentData.dot ? '2px' : '6px'
-					style.marginTop = this.parentData.dot ? '0px' : '6px'
-				} else {
-					style.marginTop = this.parentData.dot ? '2px' : '6px'
-					style.marginLeft = this.parentData.dot ? '2px' : '6px'
-				}
-
-				return style
-			}
-		},
-		mounted() {
-			this.parent && this.parent.updateFromChild()
-			sleep().then(() => {
-				this.getStepsItemRect()
-			})
-		},
-		methods: {
-			init() {
-				// 初始化数据
-				this.updateParentData()
-				if (!this.parent) {
-					return error('up-steps-item必须要搭配up-steps组件使用')
-				}
-				this.index = this.parent.children.indexOf(this)
-				this.childLength = this.parent.children.length
-			},
-			updateParentData() {
-				// 此方法在mixin中
-				this.getParentData('up-steps')
-			},
-			// 父组件数据发生变化
-			updateFromParent() {
-				this.init()
-			},
-			// 获取组件的尺寸，用于设置横线的位置
-			getStepsItemRect() {
-				// #ifndef APP-NVUE
-				this.$uGetRect('.up-steps-item').then(size => {
-					this.size = size
-				})
-				// #endif
-
-				// #ifdef APP-NVUE
-				dom.getComponentRect(this.$refs['up-steps-item'], res => {
-					const {
-						size
-					} = res
-					this.size = size
-				})
-				// #endif
-			}
 		}
+		// #endif
+	})
+
+	const props = defineProps({
+		...commonProps,
+		...stepsItemProps.props
+	})
+	const instance = getCurrentInstance()
+	const index = ref(0)
+	const childLength = ref(0)
+	const showLine = ref(false)
+	const size = ref({
+		height: 0,
+		width: 0
+	})
+	const parentData = reactive({
+		direction: 'row',
+		current: 0,
+		activeColor: '',
+		inactiveColor: '',
+		activeIcon: '',
+		inactiveIcon: '',
+		dot: false
+	})
+	const { parent, getParentData, $uGetRect } = useUltraUI(props, parentData)
+	const errorProp = toRef(props, 'error')
+
+	const lineStyle = computed(() => {
+		const style = {}
+		if (parentData.direction === 'row') {
+			style.width = size.value.width + 'px'
+			style.left = size.value.width / 2 + 'px'
+		} else {
+			style.height = size.value.height + 'px'
+			// style.top = size.value.height / 2 + 'px'
+		}
+		const nextChild = parent.value?.children?.[index.value + 1]
+		style.backgroundColor = nextChild?.error ? color.error : index.value < parentData.current ? parentData.activeColor : parentData.inactiveColor
+		return style
+	})
+
+	const itemStyleInner = computed(() => {
+		return {
+			...props.itemStyle
+		}
+	})
+
+	const statusClass = computed(() => {
+		if (parentData.current == index.value) {
+			return props.error === true ? 'error' : 'process'
+		} else if (props.error) {
+			return 'error'
+		} else if (parentData.current > index.value) {
+			return 'finish'
+		} else {
+			return 'wait'
+		}
+	})
+
+	const statusColor = computed(() => {
+		let colorTmp = ''
+		switch (statusClass.value) {
+			case 'finish':
+				colorTmp = parentData.activeColor
+				break
+			case 'error':
+				colorTmp = color.error
+				break
+			case 'process':
+				colorTmp = parentData.dot ? parentData.activeColor : 'transparent'
+				break
+			default:
+				colorTmp = parentData.inactiveColor
+				break
+		}
+		return colorTmp
+	})
+
+	const contentStyle = computed(() => {
+		const style = {}
+		if (parentData.direction === 'column') {
+			style.marginLeft = parentData.dot ? '2px' : '6px'
+			style.marginTop = parentData.dot ? '0px' : '6px'
+		} else {
+			style.marginTop = parentData.dot ? '2px' : '6px'
+			style.marginLeft = parentData.dot ? '2px' : '6px'
+		}
+
+		return style
+	})
+
+	function init() {
+		// 初始化数据
+		updateParentData()
+		if (!parent.value) {
+			return error('up-steps-item必须要搭配up-steps组件使用')
+		}
+		index.value = parent.value.children.indexOf(instance.proxy)
+		childLength.value = parent.value.children.length
 	}
+
+	function updateParentData() {
+		getParentData('up-steps')
+	}
+
+	// 父组件数据发生变化
+	function updateFromParent() {
+		init()
+	}
+
+	// 获取组件的尺寸，用于设置横线的位置
+	function getStepsItemRect() {
+		// #ifndef APP-NVUE
+		$uGetRect('.up-steps-item').then(rect => {
+			size.value = rect
+		})
+		// #endif
+
+		// #ifdef APP-NVUE
+		dom.getComponentRect(instance.proxy.$refs['up-steps-item'], res => {
+			const {
+				size: rect
+			} = res
+			size.value = rect
+		})
+		// #endif
+	}
+
+	onMounted(() => {
+		init()
+		parent.value && parent.value.updateFromChild()
+		sleep().then(() => {
+			getStepsItemRect()
+		})
+	})
+
+	defineExpose({
+		error: errorProp,
+		init,
+		updateParentData,
+		updateFromParent
+	})
 </script>
 
 <style lang="scss" scoped>

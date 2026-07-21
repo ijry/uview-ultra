@@ -2,13 +2,11 @@
   <RootToastHost />
 </template>
 
-<script>
+<script setup>
 import RootToastHost from '../../libs/root/root-toast-host.vue'
 
-export default {
-  name: 'up-root-toast-host',
-  components: {
-    RootToastHost
-  }
-}
+defineOptions({
+	name: 'up-root-toast-host'
+})
 </script>
+

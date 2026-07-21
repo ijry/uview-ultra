@@ -35,144 +35,147 @@
 	</view>
 </template>
 
-<script>
-	import {
-		mpMixin
-	} from '../../libs/mixin/mpMixin';
-	import {
-		mixin
-	} from '../../libs/mixin/mixin';
-	import {
-		getWindowInfo
-	} from '../../libs/function/index';
-	export default {
-		name: "up-select",
-		mixins: [mpMixin, mixin],
-		emits: ['update:current', 'select'],
-		props: {
-			maxHeight: {
-				type: String,
-				default: '90vh'
-			},
-			overlay: {
-				type: Boolean,
-				default: true
-			},
-			overlayOpacity: {
-				type: Number,
-				default: 0.01
-			},
-			overlayStyle: {
-				type: Object,
-				default: () => {
-					return {}
-				}
-			},
-			duration: {
-				type: Number,
-				default: 300
-			},
-			label: {
-				type: String,
-				default: '选项'
-			},
-			options: {
-				type: Array,
-				default: () => {
-					return []
-				}
-			},
-			keyName: {
-				type: String,
-				default: 'id'
-			},
-			labelName: {
-				type: String,
-				default: 'name'
-			},
-			showOptionsLabel: {
-				type: Boolean,
-				default: false
-			},
-			current: {
-				type: [String, Number],
-				default: ''
-			},
-			zIndex: {
-				type: Number,
-				default: 11000
-			},
-			itemColor: {
-				type: String,
-				default: '#333333'
-			},
-			iconColor: {
-				type: String,
-				default: ''
-			},
-			iconSize: {
-				type: [String],
-				default: '13px'
-			},
-			// 是否禁用
-			disabled: {
-				type: Boolean,
-				default: false
-			}
-		},
-		data() {
-			return {
-				isOpen: false,
-				optionsWrapLeft: 'auto',
-				optionsWrapRight: 'auto'
-			}
-		},
-		computed: {
-			currentLabel() {
-				let name = '';
-				this.options.forEach((ele) => {
-					if (ele[this.keyName] === this.current) {
-						name = ele[this.labelName];
-					}
-				});
-				return name;
-			}
-		},
-		methods: {
-			openSelect() {
-				if (this.disabled) return;
-				this.isOpen = true;
-				this.$nextTick(() => {
-					if (this.isOpen) {
-						this.adjustOptionsWrapPosition();
-					}
-				});
-			},
-			closeSelect() {
-				this.isOpen = false;
-			},
-			overlayClick() {
-				this.isOpen = false;
-			},
-			selectItem(item) {
-				this.isOpen = false;
-				this.$emit('update:current', item[this.keyName]);
-				this.$emit('select', item);
-			},
-			adjustOptionsWrapPosition() {
-				let wi = getWindowInfo();
-				let windowWidth = wi.windowWidth;
-				this.$uGetRect('.up-select__options__wrap').then(rect => {
-					if (rect.left + rect.width > windowWidth) {
-						// 如果右侧被遮挡，则调整到左侧
-						this.optionsWrapLeft = 'auto';
-						this.optionsWrapRight = `0px`;
-					}
-				});
-			}
-		}
+<script setup>
+import { computed, nextTick, ref } from 'vue'
+import { commonProps, useUltraUI } from '../../libs/composable/useUltraUI'
+import { getWindowInfo } from '../../libs/function/index'
+/**
+ * select 下拉选择
+ */
+defineOptions({
+	name: 'up-select',
+	// #ifdef MP-WEIXIN
+	options: {
+		virtualHost: true
 	}
+	// #endif
+})
+
+const props = defineProps({
+	...commonProps,
+	maxHeight: {
+		type: String,
+		default: '90vh'
+	},
+	overlay: {
+		type: Boolean,
+		default: true
+	},
+	overlayOpacity: {
+		type: Number,
+		default: 0.01
+	},
+	overlayStyle: {
+		type: Object,
+		default: () => ({})
+	},
+	duration: {
+		type: Number,
+		default: 300
+	},
+	label: {
+		type: String,
+		default: '选项'
+	},
+	options: {
+		type: Array,
+		default: () => []
+	},
+	keyName: {
+		type: String,
+		default: 'id'
+	},
+	labelName: {
+		type: String,
+		default: 'name'
+	},
+	showOptionsLabel: {
+		type: Boolean,
+		default: false
+	},
+	current: {
+		type: [String, Number],
+		default: ''
+	},
+	zIndex: {
+		type: Number,
+		default: 11000
+	},
+	itemColor: {
+		type: String,
+		default: '#333333'
+	},
+	iconColor: {
+		type: String,
+		default: ''
+	},
+	iconSize: {
+		type: [String],
+		default: '13px'
+	},
+	disabled: {
+		type: Boolean,
+		default: false
+	}
+})
+const emit = defineEmits(['update:current', 'select'])
+const { $uGetRect, noop } = useUltraUI(props)
+
+const isOpen = ref(false)
+const optionsWrapLeft = ref('auto')
+const optionsWrapRight = ref('auto')
+
+const currentLabel = computed(() => {
+	let name = ''
+	props.options.forEach((ele) => {
+		if (ele[props.keyName] === props.current) {
+			name = ele[props.labelName]
+		}
+	})
+	return name
+})
+
+function openSelect() {
+	if (props.disabled) return
+	isOpen.value = true
+	nextTick(() => {
+		if (isOpen.value) {
+			adjustOptionsWrapPosition()
+		}
+	})
+}
+
+function closeSelect() {
+	isOpen.value = false
+}
+
+function overlayClick() {
+	isOpen.value = false
+}
+
+function selectItem(item) {
+	isOpen.value = false
+	emit('update:current', item[props.keyName])
+	emit('select', item)
+}
+
+function adjustOptionsWrapPosition() {
+	const wi = getWindowInfo()
+	const windowWidth = wi.windowWidth
+	$uGetRect('.up-select__options__wrap').then((rect) => {
+		if (rect.left + rect.width > windowWidth) {
+			optionsWrapLeft.value = 'auto'
+			optionsWrapRight.value = '0px'
+		}
+	})
+}
+
+defineExpose({
+	openSelect,
+	closeSelect
+})
 </script>
+
 
 <style lang="scss" scoped>
 	.up-select__content {

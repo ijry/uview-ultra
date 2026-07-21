@@ -1,13 +1,13 @@
 <template>
 	<view
 		class="up-scroll-list"
-		ref="up-scroll-list"
+		ref="scrollListRef"
 	>
 		<!-- #ifdef APP-NVUE -->
 		<!-- nvue使用bindingX实现，以得到更好的性能 -->
 		<scroller
 			class="up-scroll-list__scroll-view"
-			ref="up-scroll-list__scroll-view"
+			ref="scrollViewRef"
 			scroll-direction="horizontal"
 			:show-scrollbar="false"
 			:offset-accuracy="1"
@@ -64,9 +64,9 @@
 					:style="[lineStyle]"
 				>
 					<view
-						class="up-scroll-list__indicator-line-bar"
+						class="up-scroll-list__indicator__line__bar"
 						:style="[barStyle]"
-						ref="up-scroll-list__indicator-line-bar"
+						ref="indicatorBarRef"
 					></view>
 				</view>
 			</view>
@@ -79,7 +79,7 @@
 	lang="wxs"
 ></script>
 
-<script>
+<script setup>
 /**
  * scrollList 横向滚动列表
  * @description 该组件一般用于同时展示多个商品、分类的场景，也可以完成左右滑动的列表。
@@ -96,106 +96,126 @@
  */
 // #ifdef APP-NVUE
 const dom = uni.requireNativePlugin('dom')
-import nvueMixin from "./nvue.js"
+const BindingX = uni.requireNativePlugin('bindingx')
+import { os } from '../../libs/function/index'
 // #endif
-import { props } from './props';
-import { mpMixin } from '../../libs/mixin/mpMixin';
-import { mixin } from '../../libs/mixin/mixin';
-import { addStyle, addUnit, getPx, sleep } from '../../libs/function/index';
-export default {
-	name: 'up-scroll-list',
-	// #ifndef APP-NVUE
-	mixins: [mpMixin, mixin, props],
-	// #endif
-	// #ifdef APP-NVUE
-	mixins: [mpMixin, mixin, nvueMixin, props],
-	// #endif
-	data() {
-		return {
-			scrollInfo: {
-				scrollLeft: 0,
-				scrollWidth: 0
-			},
-			scrollWidth: 0
-		}
-	},
-	computed: {
-		// 指示器为线型的样式
-		barStyle() {
-			const style = {}
-			// #ifndef APP-NVUE || MP-WEIXIN || H5 || APP-VUE || MP-QQ
-			// 此为普通js方案，只有在非nvue和不支持wxs方案的端才使用、
-			// 此处的计算理由为：scroll-view的滚动距离与目标滚动距离(scroll-view的实际宽度减去包裹元素的宽度)之比，等于滑块当前移动距离与总需
-			// 滑动距离(指示器的总宽度减去滑块宽度)的比值
-			const scrollLeft = this.scrollInfo.scrollLeft,
-				scrollWidth = this.scrollInfo.scrollWidth,
-				barAllMoveWidth = this.indicatorWidth - this.indicatorBarWidth
-			const x = scrollLeft / (scrollWidth - this.scrollWidth) * barAllMoveWidth
-			style.transform = `translateX(${ x }px)`
-			// #endif
-			// 设置滑块的宽度和背景色，是每个平台都需要的
-			style.width = addUnit(this.indicatorBarWidth)
-			style.backgroundColor = this.indicatorActiveColor
-			return style
-		},
-		lineStyle() {
-			const style = {}
-			// 指示器整体的样式，需要设置其宽度和背景色
-			style.width = addUnit(this.indicatorWidth)
-			style.backgroundColor = this.indicatorColor
-			return style
-		}
-	},
-	mounted() {
-		this.init()
-	},
-	emits: ["left", "right"],
-	methods: {
-		addStyle,
-		getPx,
-		init() {
-			this.getComponentWidth()
-		},
-		// #ifndef APP-NVUE || MP-WEIXIN || H5 || APP-VUE || MP-QQ
-		// scroll-view触发滚动事件
-		scrollHandler(e) {
-			this.scrollInfo = e.detail
-		},
-		scrolltoupperHandler() {
-			this.scrollEvent('left')
-			this.scrollInfo.scrollLeft = 0
-		},
-		scrolltolowerHandler() {
-			this.scrollEvent('right')
-			// 在普通js方案中，滚动到右边时，通过设置this.scrollInfo，模拟出滚动到右边的情况
-			// 因为上方是用过computed计算的，设置后，会自动调整滑块的位置
-			this.scrollInfo.scrollLeft = getPx(this.indicatorWidth) - getPx(this.indicatorBarWidth)
-		},
-		// #endif
-		//
-		scrollEvent(status) {
-			this.$emit(status)
-		},
-		// 获取组件的宽度
-		async getComponentWidth() {
-			// 延时一定时间，以获取dom尺寸
-			await sleep(30)
-			// #ifndef APP-NVUE
-			this.$uGetRect('.up-scroll-list').then(size => {
-				this.scrollWidth = size.width
-			})
-			// #endif
+import { computed, onMounted, ref } from 'vue'
+import { props as scrollListProps } from './props'
+import { commonProps, useUltraUI } from '../../libs/composable/useUltraUI'
+import { addStyle, addUnit, getPx, sleep } from '../../libs/function/index'
 
-			// #ifdef APP-NVUE
-			const ref = this.$refs['up-scroll-list']
-			ref && dom.getComponentRect(ref, (res) => {
-				this.scrollWidth = res.size.width
-			})
-			// #endif
-		},
+defineOptions({
+	name: 'up-scroll-list',
+	// #ifdef MP-WEIXIN
+	options: {
+		virtualHost: true
 	}
+	// #endif
+})
+
+const props = defineProps({
+	...commonProps,
+	...scrollListProps.props
+})
+const emit = defineEmits(['left', 'right'])
+const { $uGetRect } = useUltraUI(props)
+
+const scrollInfo = ref({
+	scrollLeft: 0,
+	scrollWidth: 0
+})
+const scrollWidth = ref(0)
+const scrollListRef = ref(null)
+const scrollViewRef = ref(null)
+const indicatorBarRef = ref(null)
+
+const barStyle = computed(() => {
+	const style = {}
+	// #ifndef APP-NVUE || MP-WEIXIN || H5 || APP-VUE || MP-QQ
+	const scrollLeft = scrollInfo.value.scrollLeft
+	const contentWidth = scrollInfo.value.scrollWidth
+	const barAllMoveWidth = props.indicatorWidth - props.indicatorBarWidth
+	const x = scrollLeft / (contentWidth - scrollWidth.value) * barAllMoveWidth
+	style.transform = `translateX(${x}px)`
+	// #endif
+	style.width = addUnit(props.indicatorBarWidth)
+	style.backgroundColor = props.indicatorActiveColor
+	return style
+})
+
+const lineStyle = computed(() => {
+	const style = {}
+	style.width = addUnit(props.indicatorWidth)
+	style.backgroundColor = props.indicatorColor
+	return style
+})
+
+onMounted(() => {
+	init()
+})
+
+function init() {
+	getComponentWidth()
 }
+
+// #ifndef APP-NVUE || MP-WEIXIN || H5 || APP-VUE || MP-QQ
+function scrollHandler(e) {
+	scrollInfo.value = e.detail
+}
+function scrolltoupperHandler() {
+	scrollEvent('left')
+	scrollInfo.value.scrollLeft = 0
+}
+function scrolltolowerHandler() {
+	scrollEvent('right')
+	scrollInfo.value.scrollLeft = getPx(props.indicatorWidth) - getPx(props.indicatorBarWidth)
+}
+// #endif
+
+function scrollEvent(status) {
+	emit(status)
+}
+
+async function getComponentWidth() {
+	await sleep(30)
+	// #ifndef APP-NVUE
+	$uGetRect('.up-scroll-list').then((size) => {
+		scrollWidth.value = size.width
+	})
+	// #endif
+
+	// #ifdef APP-NVUE
+	const refNode = scrollListRef.value
+	refNode && dom.getComponentRect(refNode, (res) => {
+		scrollWidth.value = res.size.width
+	})
+	// #endif
+}
+
+// #ifdef APP-NVUE
+function nvueScrollHandler(e) {
+	const anchor = scrollViewRef.value?.ref
+	let element = {}
+	if (indicatorBarRef.value) {
+		element = indicatorBarRef.value.ref
+	}
+	const contentSize = e.contentSize.width
+	const barAllMoveWidth = props.indicatorWidth - props.indicatorBarWidth
+	const actionNum = os() === 'ios' ? 2 : 1
+	const expression = `(x / ${actionNum}) / ${contentSize - scrollWidth.value} * ${barAllMoveWidth}`
+	BindingX.bind({
+		anchor,
+		eventType: 'scroll',
+		props: [{
+			element,
+			property: 'transform.translateX',
+			expression
+		}]
+	})
+}
+// #endif
 </script>
+
 
 <style lang="scss" scoped>
 .up-scroll-list {
@@ -221,13 +241,13 @@ export default {
 			height: 4px;
 			border-radius: 100px;
 			overflow: hidden;
-		}
-	}
 
-	&__indicator-line-bar {
-		width: 20px;
-		height: 4px;
-		border-radius: 100px;
+			&__bar {
+				width: 20px;
+				height: 4px;
+				border-radius: 100px;
+			}
+		}
 	}
 }
 </style>

@@ -43,117 +43,132 @@
 	</view>
 </template>
 
-<script>
-	import { props } from './props';
-	import { mpMixin } from '../../libs/mixin/mpMixin';
-	import { mixin } from '../../libs/mixin/mixin';
-
-	/**
-	 * Guide 首屏引导
-	 * @description 全屏首屏引导组件，支持一次性记忆与多页滑动
-	 */
-	export default {
-		name: 'up-guide',
-		mixins: [mpMixin, mixin, props],
-		emits: ['update:show', 'change', 'skip', 'finish', 'close'],
-		data() {
-			return {
-				innerShow: false,
-				current: 0,
-				closing: false
-			}
-		},
-		computed: {
-			pageList() {
-				return Array.isArray(this.list) ? this.list : []
-			},
-			resolvedStorageKey() {
-				return this.storageKey || 'up-guide-default'
-			}
-		},
-		watch: {
-			show(value) {
-				this.innerShow = !!value
-			}
-		},
-		mounted() {
-			this.bootstrap()
-		},
-		methods: {
-			bootstrap() {
-				if (!this.pageList.length) {
-					if (process.env.NODE_ENV !== 'production') {
-						console.warn('[up-guide] list is empty')
-					}
-					return
-				}
-				if (this.once && this.readRemembered()) {
-					this.innerShow = false
-					this.$emit('update:show', false)
-					return
-				}
-				this.innerShow = !!this.show
-			},
-			isLastPage() {
-				return this.current >= this.pageList.length - 1
-			},
-			onSwiperChange(event) {
-				const next = Number(event?.detail?.current ?? 0)
-				this.current = next
-				this.$emit('change', { current: next })
-			},
-			onPrimaryAction() {
-				if (this.isLastPage()) {
-					this.$emit('finish')
-					this.close(true)
-					return
-				}
-				this.current += 1
-				this.$emit('change', { current: this.current })
-			},
-			onSkip() {
-				this.$emit('skip')
-				this.close(true)
-			},
-			open() {
-				this.current = 0
-				this.innerShow = true
-				this.$emit('update:show', true)
-			},
-			close(remember = true) {
-				if (this.closing) return
-				this.closing = true
-				if (remember && this.once) {
-					this.writeRemembered()
-				}
-				this.innerShow = false
-				this.$emit('update:show', false)
-				this.$emit('close')
-				this.$nextTick(() => {
-					this.closing = false
-				})
-			},
-			reset() {
-				try {
-					uni.removeStorageSync(this.resolvedStorageKey)
-				} catch (error) {}
-			},
-			readRemembered() {
-				try {
-					const value = uni.getStorageSync(this.resolvedStorageKey)
-					return value === true || value === 1 || value === '1'
-				} catch (error) {
-					return false
-				}
-			},
-			writeRemembered() {
-				try {
-					uni.setStorageSync(this.resolvedStorageKey, 1)
-				} catch (error) {}
-			}
-		}
+<script setup>
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
+import { props as guideProps } from './props'
+import { commonProps } from '../../libs/composable/useUltraUI'
+/**
+ * Guide 首屏引导
+ * @description 全屏首屏引导组件，支持一次性记忆与多页滑动
+ */
+defineOptions({
+	name: 'up-guide',
+	// #ifdef MP-WEIXIN
+	options: {
+		virtualHost: true
 	}
+	// #endif
+})
+
+const props = defineProps({
+	...commonProps,
+	...guideProps.props
+})
+const emit = defineEmits(['update:show', 'change', 'skip', 'finish', 'close'])
+
+const innerShow = ref(false)
+const current = ref(0)
+const closing = ref(false)
+
+const pageList = computed(() => (Array.isArray(props.list) ? props.list : []))
+const resolvedStorageKey = computed(() => props.storageKey || 'up-guide-default')
+
+watch(() => props.show, (value) => {
+	innerShow.value = !!value
+})
+
+onMounted(() => {
+	bootstrap()
+})
+
+function bootstrap() {
+	if (!pageList.value.length) {
+		if (process.env.NODE_ENV !== 'production') {
+			console.warn('[up-guide] list is empty')
+		}
+		return
+	}
+	if (props.once && readRemembered()) {
+		innerShow.value = false
+		emit('update:show', false)
+		return
+	}
+	innerShow.value = !!props.show
+}
+
+function isLastPage() {
+	return current.value >= pageList.value.length - 1
+}
+
+function onSwiperChange(event) {
+	const next = Number(event?.detail?.current ?? 0)
+	current.value = next
+	emit('change', { current: next })
+}
+
+function onPrimaryAction() {
+	if (isLastPage()) {
+		emit('finish')
+		close(true)
+		return
+	}
+	current.value += 1
+	emit('change', { current: current.value })
+}
+
+function onSkip() {
+	emit('skip')
+	close(true)
+}
+
+function open() {
+	current.value = 0
+	innerShow.value = true
+	emit('update:show', true)
+}
+
+function close(remember = true) {
+	if (closing.value) return
+	closing.value = true
+	if (remember && props.once) {
+		writeRemembered()
+	}
+	innerShow.value = false
+	emit('update:show', false)
+	emit('close')
+	nextTick(() => {
+		closing.value = false
+	})
+}
+
+function reset() {
+	try {
+		uni.removeStorageSync(resolvedStorageKey.value)
+	} catch (error) {}
+}
+
+function readRemembered() {
+	try {
+		const value = uni.getStorageSync(resolvedStorageKey.value)
+		return value === true || value === 1 || value === '1'
+	} catch (error) {
+		return false
+	}
+}
+
+function writeRemembered() {
+	try {
+		uni.setStorageSync(resolvedStorageKey.value, 1)
+	} catch (error) {}
+}
+
+defineExpose({
+	open,
+	close,
+	reset
+})
 </script>
+
 
 <style lang="scss" scoped>
 	.up-guide {

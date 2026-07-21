@@ -4,15 +4,15 @@
 	</view>
 </template>
 
-<script>
-	import { props } from "./props.js";
-	import { mpMixin } from '../../libs/mixin/mpMixin.js';
-	import { mixin } from '../../libs/mixin/mixin.js';
-	import Schema from "../../libs/util/async-validator.js";
-	import { toast, getProperty, setProperty, deepClone, error } from '../../libs/function/index.js';
-	import test from '../../libs/function/test.js';
+<script setup>
+	import { nextTick, provide, ref, toRefs, watch } from 'vue'
+	import { props as formProps } from './props.js'
+	import { commonProps, useUltraUI } from '../../libs/composable/useUltraUI.js'
+	import Schema from '../../libs/util/async-validator.js'
+	import { toast, getProperty, setProperty, deepClone, error } from '../../libs/function/index.js'
+	import test from '../../libs/function/test.js'
 	// 去除警告信息
-	Schema.warning = function() {};
+	Schema.warning = function() {}
 	/**
 	 * Form 表单
 	 * @description 此组件一般用于表单场景，可以配置Input输入框，Select弹出框，进行表单验证等。
@@ -27,225 +27,270 @@
 	 * @property {Object}						labelStyle		lable的样式，对象形式
 	 * @example <up-formlabelPosition="left" :model="model1" :rules="rules" ref="form1"></up-form>
 	 */
-	export default {
-		name: "up-form",
-		mixins: [mpMixin, mixin, props],
-		provide() {
-			return {
-				upForm: this,
-			};
-		},
-		data() {
-			return {
-				formRules: {},
-				// 规则校验器
-				validator: {},
-				// 原始的model快照，用于resetFields方法重置表单时使用
-				originalModel: null,
-			};
-		},
-		watch: {
-			// 监听规则的变化
-			rules: {
-				immediate: true,
-				handler(n) {
-					this.setRules(n);
-				},
-			},
-			// 监听属性的变化，通知子组件up-form-item重新获取信息
-			propsChange(n) {
-				if (this.children?.length) {
-					this.children.map((child) => {
-						// 判断子组件(up-form-item)如果有updateParentData方法的话，就就执行(执行的结果是子组件重新从父组件拉取了最新的值)
-						typeof child.updateParentData == "function" &&
-							child.updateParentData();
-					});
-				}
-			},
-			// 监听model的初始值作为重置表单的快照
-			model: {
-				immediate: true,
-				handler(n) {
-					if (!this.originalModel) {
-						this.originalModel = deepClone(n);
-					}
-				},
-			},
-		},
-		computed: {
-			propsChange() {
-				return [
-					this.errorType,
-					this.borderBottom,
-					this.labelPosition,
-					this.labelWidth,
-					this.labelAlign,
-					this.labelStyle,
-				];
-			},
-		},
-		created() {
-			// 存储当前form下的所有up-form-item的实例
-			// 不能定义在data中，否则微信小程序会造成循环引用而报错
-			this.children = [];
-		},
-		methods: {
-			// 手动设置校验的规则，如果规则中有函数的话，微信小程序中会过滤掉，所以只能手动调用设置规则
-			setRules(rules) {
-				// 判断是否有规则
-				if (Object.keys(rules).length === 0) return;
-				if (process.env.NODE_ENV === 'development' && Object.keys(this.model).length === 0) {
-					error('设置rules，model必须设置！如果已经设置，请刷新页面。');
-					return;
-				};
-				this.formRules = rules;
-				// 重新将规则赋予Validator
-				this.validator = new Schema(rules);
-			},
-			// 清空所有up-form-item组件的内容，本质上是调用了up-form-item组件中的resetField()方法
-			resetFields() {
-				this.resetModel();
-			},
-			// 重置model为初始值的快照
-			resetModel(obj) {
-				// 历遍所有up-form-item，根据其prop属性，还原model的原始快照
-				this.children.map((child) => {
-					const prop = child?.prop;
-					const value = getProperty(this.originalModel, prop);
-					setProperty(this.model, prop, value);
-				});
-			},
-			// 清空校验结果
-			clearValidate(props) {
-				props = [].concat(props);
-				this.children.map((child) => {
-					// 如果up-form-item的prop在props数组中，则清除对应的校验结果信息
-					if (props[0] === undefined || props.includes(child.prop)) {
-						child.message = null;
-					}
-				});
-			},
-			// 对部分表单字段进行校验
-			async validateField(value, callback, event = null) {
-				// $nextTick是必须的，否则model的变更，可能会延后于此方法的执行
-				this.$nextTick(() => {
-					// 校验错误信息，返回给回调方法，用于存放所有form-item的错误信息
-					const errorsRes = [];
-					// 如果为字符串，转为数组
-					value = [].concat(value);
-					// 历遍children所有子form-item
-					let promises = this.children.map(child => {
-						return new Promise((resolve, reject) => {
-							// 用于存放form-item的错误信息
-							const childErrors = [];
-							if (value.includes(child.prop)) {
-								// 获取对应的属性，通过类似'a.b.c'的形式
-								const propertyVal = getProperty(
-									this.model,
-									child.prop
-								);
-								// 属性链数组
-								const propertyChain = child.prop.split(".");
-								const propertyName =
-									propertyChain[propertyChain.length - 1];
+	defineOptions({
+		name: 'up-form',
+		// #ifdef MP-WEIXIN
+		options: {
+			virtualHost: true
+		}
+		// #endif
+	})
 
-								let rule = []
-								if (child.itemRules && child.itemRules.length > 0) {
-									rule = child.itemRules
-								} else {
-									rule = this.formRules[child.prop];
-								}
-								// 如果不存在对应的规则，直接返回，否则校验器会报错
-								if (!rule) {
-									resolve()
-									return;
-								}
-								// rule规则可为数组形式，也可为对象形式，此处拼接成为数组
-								const rules = [].concat(rule);
+	const props = defineProps({
+		...commonProps,
+		...formProps.props
+	})
+	const { children } = useUltraUI(props)
+	const {
+		model,
+		rules,
+		errorType,
+		borderBottom,
+		labelPosition,
+		labelWidth,
+		labelAlign,
+		labelStyle
+	} = toRefs(props)
+	const formRules = ref({})
+	// 规则校验器
+	const validator = ref({})
+	// 原始的model快照，用于resetFields方法重置表单时使用
+	const originalModel = ref(null)
 
-								// 对rules数组进行校验
-								if (!rules.length) {
-									resolve()
-								}
-								for (let i = 0; i < rules.length; i++) {
-									const ruleItem = rules[i];
-									// 将up-form-item的触发器转为数组形式
-									const trigger = [].concat(ruleItem?.trigger);
-									// 如果是有传入触发事件，但是此form-item却没有配置此触发器的话，不执行校验操作
-									if (event && !trigger.includes(event)) {
-										resolve()
-										continue;
-									}
-									// 实例化校验对象，传入构造规则
-									const validator = new Schema({
-										[propertyName]: ruleItem,
-									});
-									validator.validate({
-										[propertyName]: propertyVal,
-									},
-										(errors, fields) => {
-											if (test.array(errors)) {
-												errors.forEach(element => {
-													element.prop = child.prop;
-												});
-												errorsRes.push(...errors);
-												childErrors.push(...errors);
-											}
-											child.message =
-												childErrors[0]?.message ? childErrors[0].message : null;
+	function getProps() {
+		return {
+			errorType: props.errorType,
+			borderBottom: props.borderBottom,
+			labelPosition: props.labelPosition,
+			labelWidth: props.labelWidth,
+			labelAlign: props.labelAlign,
+			labelStyle: props.labelStyle
+		}
+	}
 
-											if (i == (rules.length - 1)) {
-												resolve(errorsRes)
-											}
-										}
-									)
-								}
-							} else {
-								resolve({})
-							}
-						});
-					});
+	function updateChildData() {
+		if (children.value?.length) {
+			children.value.map((child) => {
+				// 判断子组件(up-form-item)如果有updateParentData方法的话，就执行
+				typeof child.updateParentData == 'function' && child.updateParentData()
+			})
+		}
+	}
 
-					// 使用Promise.all来等待所有Promise完成  
-					Promise.all(promises)
-						.then(results => {
-							// 执行回调函数
-							typeof callback === "function" && callback(errorsRes);
-						})
-						.catch(error => {
-							console.error('An error occurred:', error);
-						});
-				});
-			},
-			// 校验全部数据
-			validate(callback) {
-				// 开发环境才提示，生产环境不会提示
-				if (process.env.NODE_ENV === 'development' && Object.keys(this.formRules).length === 0) {
-					error('未设置rules，请看文档说明！如果已经设置，请刷新页面。');
-					return;
-				}
+	// 手动设置校验的规则，如果规则中有函数的话，微信小程序中会过滤掉，所以只能手动调用设置规则
+	function setRules(nextRules) {
+		// 判断是否有规则
+		if (Object.keys(nextRules).length === 0) return
+		if (process.env.NODE_ENV === 'development' && Object.keys(props.model).length === 0) {
+			error('设置rules，model必须设置！如果已经设置，请刷新页面。')
+			return
+		}
+		formRules.value = nextRules
+		// 重新将规则赋予Validator
+		validator.value = new Schema(nextRules)
+	}
+
+	// 清空所有up-form-item组件的内容，本质上是调用了up-form-item组件中的resetField()方法
+	function resetFields() {
+		resetModel()
+	}
+
+	// 重置model为初始值的快照
+	function resetModel(obj) {
+		// 历遍所有up-form-item，根据其prop属性，还原model的原始快照
+		children.value.map((child) => {
+			const prop = child?.prop
+			const value = getProperty(originalModel.value, prop)
+			setProperty(props.model, prop, value)
+		})
+	}
+
+	// 清空校验结果
+	function clearValidate(validateProps) {
+		validateProps = [].concat(validateProps)
+		children.value.map((child) => {
+			// 如果up-form-item的prop在props数组中，则清除对应的校验结果信息
+			if (validateProps[0] === undefined || validateProps.includes(child.prop)) {
+				child.message = null
+			}
+		})
+	}
+
+	// 对部分表单字段进行校验
+	async function validateField(value, callback, event = null) {
+		// nextTick是必须的，否则model的变更，可能会延后于此方法的执行
+		nextTick(() => {
+			// 校验错误信息，返回给回调方法，用于存放所有form-item的错误信息
+			const errorsRes = []
+			// 如果为字符串，转为数组
+			value = [].concat(value)
+			// 历遍children所有子form-item
+			const promises = children.value.map(child => {
 				return new Promise((resolve, reject) => {
-					// $nextTick是必须的，否则model的变更，可能会延后于validate方法
-					this.$nextTick(() => {
-						// 获取所有form-item的prop，交给validateField方法进行校验
-						const formItemProps = this.children.map(
-							(item) => item.prop
-						);
-						// console.log(formItemProps)
-						this.validateField(formItemProps, (errors) => {
-							if(errors.length) {
-								// 如果错误提示方式为toast，则进行提示
-								this.errorType === 'toast' && toast(errors[0].message)
-								reject(errors)
-							} else {
-								resolve(true)
+					// 用于存放form-item的错误信息
+					const childErrors = []
+					if (value.includes(child.prop)) {
+						// 获取对应的属性，通过类似'a.b.c'的形式
+						const propertyVal = getProperty(
+							props.model,
+							child.prop
+						)
+						// 属性链数组
+						const propertyChain = child.prop.split('.')
+						const propertyName =
+							propertyChain[propertyChain.length - 1]
+
+						let rule = []
+						if (child.itemRules && child.itemRules.length > 0) {
+							rule = child.itemRules
+						} else {
+							rule = formRules.value[child.prop]
+						}
+						// 如果不存在对应的规则，直接返回，否则校验器会报错
+						if (!rule) {
+							resolve()
+							return
+						}
+						// rule规则可为数组形式，也可为对象形式，此处拼接成为数组
+						const rules = [].concat(rule)
+
+						// 对rules数组进行校验
+						if (!rules.length) {
+							resolve()
+						}
+						for (let i = 0; i < rules.length; i++) {
+							const ruleItem = rules[i]
+							// 将up-form-item的触发器转为数组形式
+							const trigger = [].concat(ruleItem?.trigger)
+							// 如果是有传入触发事件，但是此form-item却没有配置此触发器的话，不执行校验操作
+							if (event && !trigger.includes(event)) {
+								resolve()
+								continue
 							}
-						});
-					});
-				});
-			},
-		},
-	};
+							// 实例化校验对象，传入构造规则
+							const fieldValidator = new Schema({
+								[propertyName]: ruleItem,
+							})
+							fieldValidator.validate({
+								[propertyName]: propertyVal,
+							},
+								(errors, fields) => {
+									if (test.array(errors)) {
+										errors.forEach(element => {
+											element.prop = child.prop
+										})
+										errorsRes.push(...errors)
+										childErrors.push(...errors)
+									}
+									child.message =
+										childErrors[0]?.message ? childErrors[0].message : null
+
+									if (i == (rules.length - 1)) {
+										resolve(errorsRes)
+									}
+								}
+							)
+						}
+					} else {
+						resolve({})
+					}
+				})
+			})
+
+			// 使用Promise.all来等待所有Promise完成
+			Promise.all(promises)
+				.then(results => {
+					// 执行回调函数
+					typeof callback === 'function' && callback(errorsRes)
+				})
+				.catch(error => {
+					console.error('An error occurred:', error)
+				})
+		})
+	}
+
+	// 校验全部数据
+	function validate(callback) {
+		// 开发环境才提示，生产环境不会提示
+		if (process.env.NODE_ENV === 'development' && Object.keys(formRules.value).length === 0) {
+			error('未设置rules，请看文档说明！如果已经设置，请刷新页面。')
+			return
+		}
+		return new Promise((resolve, reject) => {
+			// nextTick是必须的，否则model的变更，可能会延后于validate方法
+			nextTick(() => {
+				// 获取所有form-item的prop，交给validateField方法进行校验
+				const formItemProps = children.value.map(
+					(item) => item.prop
+				)
+				validateField(formItemProps, (errors) => {
+					if (errors.length) {
+						// 如果错误提示方式为toast，则进行提示
+						props.errorType === 'toast' && toast(errors[0].message)
+						reject(errors)
+					} else {
+						resolve(true)
+					}
+				})
+			})
+		})
+	}
+
+	provide('upForm', {
+		children,
+		model,
+		rules,
+		validate,
+		validateField,
+		resetFields,
+		clearValidate
+	})
+
+	// 监听规则的变化
+	watch(() => props.rules, (n) => {
+		setRules(n)
+	}, { immediate: true })
+
+	// 监听属性的变化，通知子组件up-form-item重新获取信息
+	watch(() => [
+		props.errorType,
+		props.borderBottom,
+		props.labelPosition,
+		props.labelWidth,
+		props.labelAlign,
+		props.labelStyle
+	], () => {
+		updateChildData()
+	})
+
+	// 监听model的初始值作为重置表单的快照
+	watch(() => props.model, (n) => {
+		if (!originalModel.value) {
+			originalModel.value = deepClone(n)
+		}
+	}, { immediate: true })
+
+	defineExpose({
+		children,
+		model,
+		rules,
+		errorType,
+		borderBottom,
+		labelPosition,
+		labelWidth,
+		labelAlign,
+		labelStyle,
+		formRules,
+		validator,
+		originalModel,
+		getProps,
+		setRules,
+		resetFields,
+		resetModel,
+		clearValidate,
+		validateField,
+		validate
+	})
 </script>
 
 <style lang="scss" scoped>

@@ -56,12 +56,12 @@
 	</view>
 </template>
 
-<script>
-	import { props } from './props.js';
-	import { mpMixin } from '../../libs/mixin/mpMixin.js';
-	import { mixin } from '../../libs/mixin/mixin.js';
-	import { addUnit, error } from '../../libs/function/index.js';
-	import test from '../../libs/function/test.js';
+<script setup>
+	import { computed, ref, watch } from 'vue'
+	import { props as columnNoticeProps } from './props.js'
+	import { commonProps } from '../../libs/composable/useUltraUI.js'
+	import { addUnit, error } from '../../libs/function/index.js'
+	import test from '../../libs/function/test.js'
 	/**
 	 * ColumnNotice 滚动通知中的垂直滚动 内部组件
 	 * @description 该组件用于滚动通告场景，是其中的垂直滚动方式
@@ -78,52 +78,49 @@
 	 * @property {Boolean}			disableTouch	是否禁止用手滑动切换   目前HX2.6.11，只支持App 2.5.5+、H5 2.5.5+、支付宝小程序、字节跳动小程序 （ 默认 true ）
 	 * @example 
 	 */
-	export default {
-		mixins: [mpMixin, mixin, props],
-		watch: {
-			text: {
-				immediate: true,
-				handler(newValue, oldValue) {
-					if(!test.array(newValue)) {
-						error('noticebar组件direction为column时，要求text参数为数组形式')
-					}
-				}
-			}
-		},
-		computed: {
-			// 文字内容的样式
-			textStyle() {
-				let style = {}
-				style.color = this.color
-				style.fontSize = addUnit(this.fontSize)
-				return style
-			},
-			// 垂直或者水平滚动
-			vertical() {
-				if (this.mode == 'horizontal') return false
-				else return true
-			},
-		},
-		data() {
-			return {
-				index:0
-			}
-		},
-		emits: ["click", "close"],
-		methods: {
-			noticeChange(e){
-				this.index = e.detail.current
-			},
-			// 点击通告栏
-			clickHandler() {
-				this.$emit('click', this.index)
-			},
-			// 点击关闭按钮
-			close() {
-				this.$emit('close')
-			}
+	defineOptions({
+		name: 'up-column-notice',
+		// #ifdef MP-WEIXIN
+		options: {
+			virtualHost: true
 		}
-	};
+		// #endif
+	})
+
+	const props = defineProps({
+		...commonProps,
+		...columnNoticeProps.props
+	})
+	const emit = defineEmits(['click', 'close'])
+	const index = ref(0)
+
+	// 文字内容的样式
+	const textStyle = computed(() => {
+		const style = {}
+		style.color = props.color
+		style.fontSize = addUnit(props.fontSize)
+		return style
+	})
+
+	watch(() => props.text, (newValue) => {
+		if (!test.array(newValue)) {
+			error('noticebar组件direction为column时，要求text参数为数组形式')
+		}
+	}, { immediate: true })
+
+	function noticeChange(e) {
+		index.value = e.detail.current
+	}
+
+	// 点击通告栏
+	function clickHandler() {
+		emit('click', index.value)
+	}
+
+	// 点击关闭按钮
+	function close() {
+		emit('close')
+	}
 </script>
 
 <style lang="scss" scoped>

@@ -105,303 +105,318 @@ module.exports = {
   }
 }
 </script>
-<script>
+<script setup>
+import { getCurrentInstance, nextTick, onBeforeUnmount, onMounted, reactive } from 'vue'
 
+// #ifndef (H5 || APP-PLUS) && VUE3
 import node from './node'
-export default {
-  name: 'node',
-  options: {
-    // #ifdef MP-WEIXIN
-    virtualHost: true,
-    // #endif
-    // #ifdef MP-TOUTIAO
-    addGlobalClass: false
-    // #endif
-  },
-  data () {
-    return {
-      ctrl: {},
-      // #ifdef MP-WEIXIN
-      isiOS: uni.getSystemInfoSync().system.includes('iOS')
-      // #endif
-    }
-  },
-  props: {
-    name: String,
-    attrs: {
-      type: Object,
-      default () {
-        return {}
-      }
-    },
-    childs: Array,
-    opts: Array
-  },
-  components: {
+// #endif
 
-    // #ifndef (H5 || APP-PLUS) && VUE3
-    node
-    // #endif
-  },
-  mounted () {
-    this.$nextTick(() => {
-      for (this.root = this.$parent; this.root.$options.name !== 'u-parse'; this.root = this.root.$parent);
-    })
-    // #ifdef H5 || APP-PLUS
-    if (this.opts[0]) {
-      let i
-      for (i = this.childs.length; i--;) {
-        if (this.childs[i].name === 'img') break
-      }
-      if (i !== -1) {
-        this.observer = uni.createIntersectionObserver(this).relativeToViewport({
-          top: 500,
-          bottom: 500
-        })
-        this.observer.observe('._img', res => {
-          if (res.intersectionRatio) {
-            this.$set(this.ctrl, 'load', 1)
-            this.observer.disconnect()
-          }
-        })
-      }
-    }
-    // #endif
-  },
-  beforeUnmount () {
-    // #ifdef H5 || APP-PLUS
-    if (this.observer) {
-      this.observer.disconnect()
-    }
-    // #endif
-  },
-  methods:{
-    // #ifdef MP-WEIXIN
-    toJSON () { return this },
-    // #endif
-    /**
-     * @description 播放视频事件
-     * @param {Event} e
-     */
-    play (e) {
-      this.root.$emit('play')
-      // #ifndef APP-PLUS
-      if (this.root.pauseVideo) {
-        let flag = false
-        const id = e.target.id
-        for (let i = this.root._videos.length; i--;) {
-          if (this.root._videos[i].id === id) {
-            flag = true
-          } else {
-            this.root._videos[i].pause() // 自动暂停其他视频
-          }
-        }
-        // 将自己加入列表
-        if (!flag) {
-          const ctx = uni.createVideoContext(id
-            // #ifndef MP-BAIDU
-            , this
-            // #endif
-          )
-          ctx.id = id
-          if (this.root.playbackRate) {
-            ctx.playbackRate(this.root.playbackRate)
-          }
-          this.root._videos.push(ctx)
-        }
-      }
-      // #endif
-    },
+defineOptions({
+	name: 'node',
+	options: {
+		// #ifdef MP-WEIXIN
+		virtualHost: true,
+		// #endif
+		// #ifdef MP-TOUTIAO
+		addGlobalClass: false
+		// #endif
+	},
+	// #ifndef (H5 || APP-PLUS) && VUE3
+	components: {
+		node
+	}
+	// #endif
+})
 
-    /**
-     * @description 图片点击事件
-     * @param {Event} e
-     */
-    imgTap (e) {
-      const node = this.childs[e.currentTarget.dataset.i]
-      if (node.a) {
-        this.linkTap(node.a)
-        return
-      }
-      if (node.attrs.ignore) return
-      // #ifdef H5 || APP-PLUS
-      node.attrs.src = node.attrs.src || node.attrs['data-src']
-      // #endif
-      this.root.$emit('imgTap', node.attrs)
-      // 自动预览图片
-      if (this.root.previewImg) {
-        uni.previewImage({
-          // #ifdef MP-WEIXIN
-          showmenu: this.root.showImgMenu,
-          // #endif
-          // #ifdef MP-ALIPAY
-          enablesavephoto: this.root.showImgMenu,
-          enableShowPhotoDownload: this.root.showImgMenu,
-          // #endif
-          current: parseInt(node.attrs.i),
-          urls: this.root.imgList
-        })
-      }
-    },
+const props = defineProps({
+	name: String,
+	attrs: {
+		type: Object,
+		default() {
+			return {}
+		}
+	},
+	childs: Array,
+	opts: Array
+})
 
-    /**
-     * @description 图片长按
-     */
-    imgLongTap (e) {
-      // #ifdef APP-PLUS
-      const attrs = this.childs[e.currentTarget.dataset.i].attrs
-      if (this.opts[3] && !attrs.ignore) {
-        uni.showActionSheet({
-          itemList: ['保存图片'],
-          success: () => {
-            const save = path => {
-              uni.saveImageToPhotosAlbum({
-                filePath: path,
-                success () {
-                  uni.showToast({
-                    title: '保存成功'
-                  })
-                }
-              })
-            }
-            if (this.root.imgList[attrs.i].startsWith('http')) {
-              uni.downloadFile({
-                url: this.root.imgList[attrs.i],
-                success: res => save(res.tempFilePath)
-              })
-            } else {
-              save(this.root.imgList[attrs.i])
-            }
-          }
-        })
-      }
-      // #endif
-    },
+const instance = getCurrentInstance()
+const proxy = instance?.proxy
 
-    /**
-     * @description 图片加载完成事件
-     * @param {Event} e
-     */
-    imgLoad (e) {
-      const i = e.currentTarget.dataset.i
-      /* #ifndef H5 || (APP-PLUS && VUE2) */
-      if (!this.childs[i].w) {
-        // 设置原宽度
-        this.$set(this.ctrl, i, e.detail.width)
-      } else /* #endif */ if ((this.opts[1] && !this.ctrl[i]) || this.ctrl[i] === -1) {
-        // 加载完毕，取消加载中占位图
-        this.$set(this.ctrl, i, 1)
-      }
-      this.checkReady()
-    },
+const ctrl = reactive({})
+// #ifdef MP-WEIXIN
+const isiOS = uni.getSystemInfoSync().system.includes('iOS')
+// #endif
 
-    /**
-     * @description 检查是否所有图片加载完毕
-     */
-    checkReady () {
-      if (!this.root.lazyLoad) {
-        this.root._unloadimgs -= 1
-        if (!this.root._unloadimgs) {
-          setTimeout(() => {
-            this.root.getRect().then(rect => {
-              this.root.$emit('ready', rect)
-            }).catch(() => {
-              this.root.$emit('ready', {})
-            })
-          }, 350)
-        }
-      }
-    },
+let root = null
+let observer = null
 
-    /**
-     * @description 链接点击事件
-     * @param {Event} e
-     */
-    linkTap (e) {
-      const node = e.currentTarget ? this.childs[e.currentTarget.dataset.i] : {}
-      const attrs = node.attrs || e
-      const href = attrs.href
-      this.root.$emit('linkTap', Object.assign({
-        innerText: this.root.getText(node.children || []) // 链接内的文本内容
-      }, attrs))
-      if (href) {
-        if (href[0] === '#') {
-          // 跳转锚点
-          this.root.navigateTo(href.substring(1)).catch(() => { })
-        } else if (href.split('?')[0].includes('://')) {
-          // 复制外部链接
-          if (this.root.copyLink) {
-            // #ifdef H5
-            window.open(href)
-            // #endif
-            // #ifdef MP
-            uni.setClipboardData({
-              data: href,
-              success: () =>
-                uni.showToast({
-                  title: '链接已复制'
-                })
-            })
-            // #endif
-            // #ifdef APP-PLUS
-            plus.runtime.openWeb(href)
-            // #endif
-          }
-        } else {
-          // 跳转页面
-          uni.navigateTo({
-            url: href,
-            fail () {
-              uni.switchTab({
-                url: href,
-                fail () { }
-              })
-            }
-          })
-        }
-      }
-    },
+onMounted(() => {
+	nextTick(() => {
+		let p = instance?.parent
+		while (p) {
+			const n = p.type?.name || p.type?.__name || p.proxy?.$options?.name
+			if (n === 'up-parse' || n === 'u-parse') {
+				root = p.proxy
+				break
+			}
+			p = p.parent
+		}
+	})
+	// #ifdef H5 || APP-PLUS
+	if (props.opts[0]) {
+		let i
+		for (i = props.childs.length; i--;) {
+			if (props.childs[i].name === 'img') break
+		}
+		if (i !== -1) {
+			observer = uni.createIntersectionObserver(proxy).relativeToViewport({
+				top: 500,
+				bottom: 500
+			})
+			observer.observe('._img', res => {
+				if (res.intersectionRatio) {
+					ctrl.load = 1
+					observer.disconnect()
+				}
+			})
+		}
+	}
+	// #endif
+})
 
-    /**
-     * @description 错误事件
-     * @param {Event} e
-     */
-    mediaError (e) {
-      const i = e.currentTarget.dataset.i
-      const node = this.childs[i]
-      // 加载其他源
-      if (node.name === 'video' || node.name === 'audio') {
-        let index = (this.ctrl[i] || 0) + 1
-        if (index > node.src.length) {
-          index = 0
-        }
-        if (index < node.src.length) {
-          this.$set(this.ctrl, i, index)
-          return
-        }
-      } else if (node.name === 'img') {
-        // #ifdef H5 && VUE3
-        if (this.opts[0] && !this.ctrl.load) return
-        // #endif
-        // 显示错误占位图
-        if (this.opts[2]) {
-          this.$set(this.ctrl, i, -1)
-        }
-        this.checkReady()
-      }
-      if (this.root) {
-        this.root.$emit('error', {
-          source: node.name,
-          attrs: node.attrs,
-          // #ifndef H5 && VUE3
-          errMsg: e.detail.errMsg
-          // #endif
-        })
-      }
-    }
-  }
+onBeforeUnmount(() => {
+	// #ifdef H5 || APP-PLUS
+	if (observer) {
+		observer.disconnect()
+	}
+	// #endif
+})
+
+// #ifdef MP-WEIXIN
+function toJSON() { return proxy }
+// #endif
+
+/**
+ * @description 播放视频事件
+ */
+function play(e) {
+	root?.$emit('play')
+	// #ifndef APP-PLUS
+	if (root?.pauseVideo) {
+		let flag = false
+		const id = e.target.id
+		const videos = root._videos || []
+		for (let i = videos.length; i--;) {
+			if (videos[i].id === id) {
+				flag = true
+			} else {
+				videos[i].pause() // 自动暂停其他视频
+			}
+		}
+		// 将自己加入列表
+		if (!flag) {
+			const ctx = uni.createVideoContext(id
+				// #ifndef MP-BAIDU
+				, proxy
+				// #endif
+			)
+			ctx.id = id
+			if (root.playbackRate) {
+				ctx.playbackRate(root.playbackRate)
+			}
+			videos.push(ctx)
+			root._videos = videos
+		}
+	}
+	// #endif
+}
+
+/**
+ * @description 图片点击事件
+ */
+function imgTap(e) {
+	const nodeItem = props.childs[e.currentTarget.dataset.i]
+	if (nodeItem.a) {
+		linkTap(nodeItem.a)
+		return
+	}
+	if (nodeItem.attrs.ignore) return
+	// #ifdef H5 || APP-PLUS
+	nodeItem.attrs.src = nodeItem.attrs.src || nodeItem.attrs['data-src']
+	// #endif
+	root?.$emit('imgTap', nodeItem.attrs)
+	// 自动预览图片
+	if (root?.previewImg) {
+		uni.previewImage({
+			// #ifdef MP-WEIXIN
+			showmenu: root.showImgMenu,
+			// #endif
+			// #ifdef MP-ALIPAY
+			enablesavephoto: root.showImgMenu,
+			enableShowPhotoDownload: root.showImgMenu,
+			// #endif
+			current: parseInt(nodeItem.attrs.i),
+			urls: root.imgList
+		})
+	}
+}
+
+/**
+ * @description 图片长按
+ */
+function imgLongTap(e) {
+	// #ifdef APP-PLUS
+	const attrs = props.childs[e.currentTarget.dataset.i].attrs
+	if (props.opts[3] && !attrs.ignore) {
+		uni.showActionSheet({
+			itemList: ['保存图片'],
+			success: () => {
+				const save = path => {
+					uni.saveImageToPhotosAlbum({
+						filePath: path,
+						success() {
+							uni.showToast({
+								title: '保存成功'
+							})
+						}
+					})
+				}
+				if (root.imgList[attrs.i].startsWith('http')) {
+					uni.downloadFile({
+						url: root.imgList[attrs.i],
+						success: res => save(res.tempFilePath)
+					})
+				} else {
+					save(root.imgList[attrs.i])
+				}
+			}
+		})
+	}
+	// #endif
+}
+
+/**
+ * @description 图片加载完成事件
+ */
+function imgLoad(e) {
+	const i = e.currentTarget.dataset.i
+	/* #ifndef H5 || (APP-PLUS && VUE2) */
+	if (!props.childs[i].w) {
+		// 设置原宽度
+		ctrl[i] = e.detail.width
+	} else /* #endif */ if ((props.opts[1] && !ctrl[i]) || ctrl[i] === -1) {
+		// 加载完毕，取消加载中占位图
+		ctrl[i] = 1
+	}
+	checkReady()
+}
+
+/**
+ * @description 检查是否所有图片加载完毕
+ */
+function checkReady() {
+	if (!root?.lazyLoad) {
+		root._unloadimgs -= 1
+		if (!root._unloadimgs) {
+			setTimeout(() => {
+				root.getRect().then(rect => {
+					root.$emit('ready', rect)
+				}).catch(() => {
+					root.$emit('ready', {})
+				})
+			}, 350)
+		}
+	}
+}
+
+/**
+ * @description 链接点击事件
+ */
+function linkTap(e) {
+	const nodeItem = e.currentTarget ? props.childs[e.currentTarget.dataset.i] : {}
+	const attrs = nodeItem.attrs || e
+	const href = attrs.href
+	root?.$emit('linkTap', Object.assign({
+		innerText: root.getText(nodeItem.children || []) // 链接内的文本内容
+	}, attrs))
+	if (href) {
+		if (href[0] === '#') {
+			// 跳转锚点
+			root.navigateTo(href.substring(1)).catch(() => { })
+		} else if (href.split('?')[0].includes('://')) {
+			// 复制外部链接
+			if (root.copyLink) {
+				// #ifdef H5
+				window.open(href)
+				// #endif
+				// #ifdef MP
+				uni.setClipboardData({
+					data: href,
+					success: () =>
+						uni.showToast({
+							title: '链接已复制'
+						})
+				})
+				// #endif
+				// #ifdef APP-PLUS
+				plus.runtime.openWeb(href)
+				// #endif
+			}
+		} else {
+			// 跳转页面
+			uni.navigateTo({
+				url: href,
+				fail() {
+					uni.switchTab({
+						url: href,
+						fail() { }
+					})
+				}
+			})
+		}
+	}
+}
+
+/**
+ * @description 错误事件
+ */
+function mediaError(e) {
+	const i = e.currentTarget.dataset.i
+	const nodeItem = props.childs[i]
+	// 加载其他源
+	if (nodeItem.name === 'video' || nodeItem.name === 'audio') {
+		let index = (ctrl[i] || 0) + 1
+		if (index > nodeItem.src.length) {
+			index = 0
+		}
+		if (index < nodeItem.src.length) {
+			ctrl[i] = index
+			return
+		}
+	} else if (nodeItem.name === 'img') {
+		// #ifdef H5 && VUE3
+		if (props.opts[0] && !ctrl.load) return
+		// #endif
+		// 显示错误占位图
+		if (props.opts[2]) {
+			ctrl[i] = -1
+		}
+		checkReady()
+	}
+	if (root) {
+		root.$emit('error', {
+			source: nodeItem.name,
+			attrs: nodeItem.attrs,
+			// #ifndef H5 && VUE3
+			errMsg: e.detail.errMsg
+			// #endif
+		})
+	}
 }
 </script>
+
 <style>
 /* a 标签默认效果 */
 ._a {

@@ -19,18 +19,20 @@
         <slot></slot>
     </view>
 </template>
-<script>
-export default {
-    name: 'up-title',
-    props: {
-    },
-    data() {
-        return {
-        }
-    },
-    created: function () {
-    },
-    methods: {
-    }
-}
+<script setup>
+import { commonProps } from '../../libs/composable/useUltraUI.js'
+
+defineOptions({
+	name: 'up-title',
+	// #ifdef MP-WEIXIN
+	options: {
+		virtualHost: true
+	}
+	// #endif
+})
+
+defineProps({
+	...commonProps
+})
 </script>
+

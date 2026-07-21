@@ -33,12 +33,12 @@
 	</view>
 </template>
 
-<script>
-	import { props } from './props.js';
-	import { mpMixin } from '../../libs/mixin/mpMixin.js';
-	import { mixin } from '../../libs/mixin/mixin.js';
-	import { addStyle, addUnit, deepMerge, formValidate, error } from '../../libs/function/index.js';
-	import test from '../../libs/function/test.js';
+<script setup>
+	import { computed, getCurrentInstance, nextTick, onMounted, reactive, ref, toRef, watch } from 'vue'
+	import { props as checkboxProps } from './props.js'
+	import { commonProps, useUltraUI } from '../../libs/composable/useUltraUI.js'
+	import { addStyle, addUnit, deepMerge, formValidate, error } from '../../libs/function/index.js'
+	import test from '../../libs/function/test.js'
 	/**
 	 * checkbox  复选框
 	 * @description 复选框组件一般用于需要多个选择的场景，该组件功能完整，使用方便
@@ -61,226 +61,245 @@
 	 * @event {Function}	change	任一个checkbox状态发生变化时触发，回调为一个对象
 	 * @example <up-checkbox v-model="checked" :disabled="false">天涯</up-checkbox>
 	 */
-	export default {
-		name: "up-checkbox",
-		mixins: [mpMixin, mixin, props],
-		data() {
-			return {
-				isChecked: false,
-				// 父组件的默认值，因为头条小程序不支持在computed中使用this.parent.shape的形式
-				// 故只能使用如此方法
-				parentData: {
-					iconSize: 12,
-					labelDisabled: null,
-					disabled: null,
-					shape: 'square',
-					activeColor: null,
-					inactiveColor: null,
-					size: 18,
-					// #ifdef VUE2
-					value: null,
-					// #endif
-					// #ifdef VUE3
-					modelValue: null,
-					// #endif
-					iconColor: null,
-					placement: 'row',
-					borderBottom: false,
-					iconPlacement: 'left'
-				}
-			}
-		},
-		computed: {
-			// 是否禁用，如果父组件up-radios-group禁用的话，将会忽略子组件的配置
-			elDisabled() {
-				return this.disabled !== '' ? this.disabled : this.parentData.disabled !== null ? this.parentData.disabled : false;
-			},
-			// 是否禁用label点击
-			elLabelDisabled() {
-				return this.labelDisabled !== '' ? this.labelDisabled : this.parentData.labelDisabled !== null ? this.parentData.labelDisabled :
-					false;
-			},
-			// 组件尺寸，对应size的值，默认值为21px
-			elSize() {
-				return this.size ? this.size : (this.parentData.size ? this.parentData.size : 21);
-			},
-			// 组件的勾选图标的尺寸，默认12px
-			elIconSize() {
-				return this.iconSize ? this.iconSize : (this.parentData.iconSize ? this.parentData.iconSize : 12);
-			},
-			// 组件选中激活时的颜色
-			elActiveColor() {
-				return this.activeColor ? this.activeColor : (this.parentData.activeColor ? this.parentData.activeColor : '#2979ff');
-			},
-			// 组件选未中激活时的颜色
-			elInactiveColor() {
-				return this.inactiveColor ? this.inactiveColor : (this.parentData.inactiveColor ? this.parentData.inactiveColor :
-					'#c8c9cc');
-			},
-			// label的颜色
-			elLabelColor() {
-				return this.labelColor ? this.labelColor : (this.parentData.labelColor ? this.parentData.labelColor : '#606266')
-			},
-			// 组件的形状
-			elShape() {
-				return this.shape ? this.shape : (this.parentData.shape ? this.parentData.shape : 'circle');
-			},
-			// label大小
-			elLabelSize() {
-				return addUnit(this.labelSize ? this.labelSize : (this.parentData.labelSize ? this.parentData.labelSize :
-					'15'))
-			},
-			elIconColor() {
-				const iconColor = this.iconColor ? this.iconColor : (this.parentData.iconColor ? this.parentData.iconColor :
-					'#ffffff');
-				// 图标的颜色
-				if (this.elDisabled) {
-					// disabled状态下，已勾选的checkbox图标改为elInactiveColor
-					return this.isChecked ? this.elInactiveColor : 'transparent'
-				} else {
-					return this.isChecked ? iconColor : 'transparent'
-				}
-			},
-			iconClasses() {
-				let classes = []
-				// 组件的形状
-				classes.push('up-checkbox__icon-wrap--' + this.elShape)
-				if (this.elDisabled) {
-					classes.push('up-checkbox__icon-wrap--disabled')
-				}
-				if (this.isChecked) {
-					if (this.elDisabled) {
-						classes.push('up-checkbox__icon-wrap--disabled--checked')
-					} else {
-						classes.push('up-checkbox__icon-wrap--checked')
-					}
-				}
-				// 支付宝，头条小程序无法动态绑定一个数组类名，否则解析出来的结果会带有","，而导致失效
-				// #ifdef MP-ALIPAY || MP-TOUTIAO
-				classes = classes.join(' ')
-				// #endif
-				return classes
-			},
-			iconWrapStyle() {
-				// checkbox的整体样式
-				const style = {}
-				style.backgroundColor = this.isChecked && !this.elDisabled ? this.elActiveColor : '#ffffff'
-				style.borderColor = this.isChecked && !this.elDisabled ? this.elActiveColor : this.elInactiveColor
-				style.width = addUnit(this.elSize)
-				style.height = addUnit(this.elSize)
-				// 如果是图标在右边的话，移除它的右边距
-				if (!this.usedAlone) {
-					if (this.parentData.iconPlacement === 'right') {
-						style.marginRight = 0
-					}
-				}
-				return style
-			},
-			checkboxStyle() {
-				const style = {}
-				if (!this.usedAlone) {
-					if (this.parentData.borderBottom && this.parentData.placement === 'row') {
-						error('检测到您将borderBottom设置为true，需要同时将up-checkbox-group的placement设置为column才有效')
-					}
-					// 当父组件设置了显示下边框并且排列形式为纵向时，给内容和边框之间加上一定间隔
-					if (this.parentData.borderBottom && this.parentData.placement === 'column') {
-						style.paddingBottom = '8px'
-					}
-				}
-				return deepMerge(style, addStyle(this.customStyle))
-			}
-		},
-		mounted() {
-			this.init()
-		},
-		emits: ["change", "update:checked"],
-		methods: {
-			init() {
-				if (!this.usedAlone) {
-					// 支付宝小程序不支持provide/inject，所以使用这个方法获取整个父组件，在created定义，避免循环引用
-					this.updateParentData()
-					if (!this.parent) {
-						error('up-checkbox必须搭配up-checkbox-group组件使用')
-					}
-					// #ifdef VUE2
-					const value = this.parentData.value
-					// #endif
-					// #ifdef VUE3
-					const value = this.parentData.modelValue
-					// #endif
-					// 设置初始化时，是否默认选中的状态，父组件up-checkbox-group的value可能是array，所以额外判断
-					if (this.checked) {
-						this.isChecked = true
-					} else if (!this.usedAlone && test.array(value)) {
-						// 查找数组是是否存在this.name元素值
-						this.isChecked = value.some(item => {
-							return item === this.name
-						})
-					}
-				} else {
-					if (this.checked) {
-						this.isChecked = true
-					}
-				}
-			},
-			updateParentData() {
-				this.getParentData('up-checkbox-group')
-			},
-			// 横向两端排列时，点击组件即可触发选中事件
-			wrapperClickHandler(e) {
-				if (!this.usedAlone) {
-					this.parentData.iconPlacement === 'right' && this.iconClickHandler(e)
-				} else {
-					this.iconClickHandler(e)
-				}
-			},
-			// 点击图标
-			iconClickHandler(e) {
-				this.preventEvent(e)
-				// 如果整体被禁用，不允许被点击
-				if (!this.elDisabled) {
-					this.setRadioCheckedStatus()
-				}
-			},
-			// 点击label
-			labelClickHandler(e) {
-				this.preventEvent(e)
-				// 如果按钮整体被禁用或者label被禁用，则不允许点击文字修改状态
-				if (!this.elLabelDisabled && !this.elDisabled) {
-					this.setRadioCheckedStatus()
-				}
-			},
-			emitEvent() {
-				this.$emit('change', this.isChecked)
-				// 双向绑定
-				if (this.usedAlone) {
-					this.$emit('update:checked', this.isChecked)
-				}
-				// 尝试调用up-form的验证方法，进行一定延迟，否则微信小程序更新可能会不及时
-				this.$nextTick(() => {
-					formValidate(this, 'change')
-				})
-			},
-			// 改变组件选中状态
-			// 这里的改变的依据是，更改本组件的checked值为true，同时通过父组件遍历所有up-checkbox实例
-			// 将本组件外的其他up-checkbox的checked都设置为false(都被取消选中状态)，因而只剩下一个为选中状态
-			setRadioCheckedStatus() {
-				// 将本组件标记为与原来相反的状态
-				this.isChecked = !this.isChecked
-				this.emitEvent()
-				if (!this.usedAlone) {
-					typeof this.parent.unCheckedOther === 'function' && this.parent.unCheckedOther(this)
-				}
-			}
-		},
-		watch:{
-			checked(newValue, oldValue){
-				if (newValue !== this.isChecked) {
-					this.isChecked = newValue
-				}
+	defineOptions({
+		name: 'up-checkbox',
+		// #ifdef MP-WEIXIN
+		options: {
+			virtualHost: true
+		}
+		// #endif
+	})
+
+	const props = defineProps({
+		...commonProps,
+		...checkboxProps.props
+	})
+	const emit = defineEmits(['change', 'update:checked'])
+	const instance = getCurrentInstance()
+	const isChecked = ref(false)
+	// 父组件的默认值，因为头条小程序不支持在computed中使用parent.shape的形式
+	const parentData = reactive({
+		iconSize: 12,
+		labelDisabled: null,
+		disabled: null,
+		shape: 'square',
+		activeColor: null,
+		inactiveColor: null,
+		size: 18,
+		value: null,
+		modelValue: null,
+		labelColor: null,
+		labelSize: null,
+		iconColor: null,
+		placement: 'row',
+		borderBottom: false,
+		iconPlacement: 'left'
+	})
+	const name = toRef(props, 'name')
+	const { parent, getParentData, preventEvent } = useUltraUI(props, parentData)
+
+	// 是否禁用，如果父组件up-checkbox-group禁用的话，将会忽略子组件的配置
+	const elDisabled = computed(() => {
+		return props.disabled !== '' ? props.disabled : parentData.disabled !== null ? parentData.disabled : false
+	})
+
+	// 是否禁用label点击
+	const elLabelDisabled = computed(() => {
+		return props.labelDisabled !== '' ? props.labelDisabled : parentData.labelDisabled !== null ? parentData.labelDisabled : false
+	})
+
+	// 组件尺寸，对应size的值，默认值为21px
+	const elSize = computed(() => {
+		return props.size ? props.size : (parentData.size ? parentData.size : 21)
+	})
+
+	// 组件的勾选图标的尺寸，默认12px
+	const elIconSize = computed(() => {
+		return props.iconSize ? props.iconSize : (parentData.iconSize ? parentData.iconSize : 12)
+	})
+
+	// 组件选中激活时的颜色
+	const elActiveColor = computed(() => {
+		return props.activeColor ? props.activeColor : (parentData.activeColor ? parentData.activeColor : '#2979ff')
+	})
+
+	// 组件选未中激活时的颜色
+	const elInactiveColor = computed(() => {
+		return props.inactiveColor ? props.inactiveColor : (parentData.inactiveColor ? parentData.inactiveColor : '#c8c9cc')
+	})
+
+	// label的颜色
+	const elLabelColor = computed(() => {
+		return props.labelColor ? props.labelColor : (parentData.labelColor ? parentData.labelColor : '#606266')
+	})
+
+	// 组件的形状
+	const elShape = computed(() => {
+		return props.shape ? props.shape : (parentData.shape ? parentData.shape : 'circle')
+	})
+
+	// label大小
+	const elLabelSize = computed(() => {
+		return addUnit(props.labelSize ? props.labelSize : (parentData.labelSize ? parentData.labelSize : '15'))
+	})
+
+	const elIconColor = computed(() => {
+		const iconColor = props.iconColor ? props.iconColor : (parentData.iconColor ? parentData.iconColor : '#ffffff')
+		// 图标的颜色
+		if (elDisabled.value) {
+			// disabled状态下，已勾选的checkbox图标改为elInactiveColor
+			return isChecked.value ? elInactiveColor.value : 'transparent'
+		}
+		return isChecked.value ? iconColor : 'transparent'
+	})
+
+	const iconClasses = computed(() => {
+		let classes = []
+		// 组件的形状
+		classes.push('up-checkbox__icon-wrap--' + elShape.value)
+		if (elDisabled.value) {
+			classes.push('up-checkbox__icon-wrap--disabled')
+		}
+		if (isChecked.value) {
+			if (elDisabled.value) {
+				classes.push('up-checkbox__icon-wrap--disabled--checked')
+			} else {
+				classes.push('up-checkbox__icon-wrap--checked')
 			}
 		}
+		// 支付宝，头条小程序无法动态绑定一个数组类名，否则解析出来的结果会带有","，而导致失效
+		// #ifdef MP-ALIPAY || MP-TOUTIAO
+		classes = classes.join(' ')
+		// #endif
+		return classes
+	})
+
+	const iconWrapStyle = computed(() => {
+		// checkbox的整体样式
+		const style = {}
+		style.backgroundColor = isChecked.value && !elDisabled.value ? elActiveColor.value : '#ffffff'
+		style.borderColor = isChecked.value && !elDisabled.value ? elActiveColor.value : elInactiveColor.value
+		style.width = addUnit(elSize.value)
+		style.height = addUnit(elSize.value)
+		// 如果是图标在右边的话，移除它的右边距
+		if (!props.usedAlone && parentData.iconPlacement === 'right') {
+			style.marginRight = 0
+		}
+		return style
+	})
+
+	const checkboxStyle = computed(() => {
+		const style = {}
+		if (!props.usedAlone) {
+			if (parentData.borderBottom && parentData.placement === 'row') {
+				error('检测到您将borderBottom设置为true，需要同时将up-checkbox-group的placement设置为column才有效')
+			}
+			// 当父组件设置了显示下边框并且排列形式为纵向时，给内容和边框之间加上一定间隔
+			if (parentData.borderBottom && parentData.placement === 'column') {
+				style.paddingBottom = '8px'
+			}
+		}
+		return deepMerge(style, addStyle(props.customStyle))
+	})
+
+	function init() {
+		if (!props.usedAlone) {
+			// 支付宝小程序不支持provide/inject，所以使用这个方法获取整个父组件
+			updateParentData()
+			if (!parent.value) {
+				error('up-checkbox必须搭配up-checkbox-group组件使用')
+			}
+			// #ifdef VUE2
+			const value = parentData.value
+			// #endif
+			// #ifdef VUE3
+			const value = parentData.modelValue
+			// #endif
+			// 设置初始化时，是否默认选中的状态，父组件up-checkbox-group的value可能是array，所以额外判断
+			if (props.checked) {
+				isChecked.value = true
+			} else if (!props.usedAlone && test.array(value)) {
+				// 查找数组是是否存在name元素值
+				isChecked.value = value.some(item => {
+					return item === props.name
+				})
+			}
+		} else if (props.checked) {
+			isChecked.value = true
+		}
 	}
+
+	function updateParentData() {
+		getParentData('up-checkbox-group')
+	}
+
+	// 横向两端排列时，点击组件即可触发选中事件
+	function wrapperClickHandler(e) {
+		if (!props.usedAlone) {
+			parentData.iconPlacement === 'right' && iconClickHandler(e)
+		} else {
+			iconClickHandler(e)
+		}
+	}
+
+	// 点击图标
+	function iconClickHandler(e) {
+		preventEvent(e)
+		// 如果整体被禁用，不允许被点击
+		if (!elDisabled.value) {
+			setRadioCheckedStatus()
+		}
+	}
+
+	// 点击label
+	function labelClickHandler(e) {
+		preventEvent(e)
+		// 如果按钮整体被禁用或者label被禁用，则不允许点击文字修改状态
+		if (!elLabelDisabled.value && !elDisabled.value) {
+			setRadioCheckedStatus()
+		}
+	}
+
+	function emitEvent() {
+		emit('change', isChecked.value)
+		// 双向绑定
+		if (props.usedAlone) {
+			emit('update:checked', isChecked.value)
+		}
+		// 尝试调用up-form的验证方法，进行一定延迟，否则微信小程序更新可能会不及时
+		nextTick(() => {
+			formValidate(instance.proxy, 'change')
+		})
+	}
+
+	// 改变组件选中状态
+	// 这里的改变的依据是，更改本组件的checked值为true，同时通过父组件遍历所有up-checkbox实例
+	// 将本组件外的其他up-checkbox的checked都设置为false(都被取消选中状态)，因而只剩下一个为选中状态
+	function setRadioCheckedStatus() {
+		// 将本组件标记为与原来相反的状态
+		isChecked.value = !isChecked.value
+		emitEvent()
+		if (!props.usedAlone) {
+			typeof parent.value?.unCheckedOther === 'function' && parent.value.unCheckedOther(instance.proxy)
+		}
+	}
+
+	watch(() => props.checked, (newValue) => {
+		if (newValue !== isChecked.value) {
+			isChecked.value = newValue
+		}
+	})
+
+	onMounted(() => {
+		init()
+	})
+
+	defineExpose({
+		name,
+		isChecked,
+		init,
+		updateParentData
+	})
 </script>
 
 <style lang="scss" scoped>

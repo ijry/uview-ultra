@@ -24,95 +24,96 @@
 	</view>
 </template>
 
-<script>
-export default {
+<script setup>
+import { computed, ref, watch } from 'vue'
+import { commonProps } from '../../libs/composable/useUltraUI.js'
+
+defineOptions({
 	name: 'up-picker-data',
-	props: {
-		modelValue: {
-			type: [String, Number],
-			default: ''
-		},
-		title: {
-			type: String,
-			default: ''
-		},
-		description: {
-			type: String,
-			default: ''
-		},
-		options: {
-			type: Array,
-			default: () => []
-		},
-		valueKey: {
-			type: String,
-			default: 'id'
-		},
-		labelKey: {
-			type: String,
-			default: 'name'
-		}
-	},
-	emits: ['update:modelValue', 'cancel', 'close', 'confirm'],
-	data() {
-		return {
-			show: false,
-			current: '',
-			defaultIndex: []
-		}
-	},
-	computed: {
-		columns() {
-			return [this.options]
-		}
-	},
-	watch: {
-		modelValue: {
-			handler() {
-				this.syncCurrent()
-			},
-			immediate: true
-		},
-		options: {
-			handler() {
-				this.syncCurrent()
-			},
-			immediate: true
-		}
-	},
-	methods: {
-		syncCurrent() {
-			const model = this.modelValue == null ? '' : this.modelValue.toString()
-			this.current = ''
-			this.defaultIndex = []
-			this.options.forEach((item, index) => {
-				if ((item[this.valueKey] == null ? '' : item[this.valueKey].toString()) == model) {
-					this.current = item[this.labelKey] == null ? '' : item[this.labelKey].toString()
-					this.defaultIndex = [index]
-				}
-			})
-		},
-		cancel() {
-			this.show = false
-			this.$emit('cancel')
-		},
-		close() {
-			this.show = false
-			this.$emit('close')
-		},
-		confirm(e) {
-			const value = e.value || []
-			const item = value[0]
-			this.show = false
-			if (item) {
-				this.$emit('update:modelValue', item[this.valueKey])
-				this.current = item[this.labelKey] == null ? '' : item[this.labelKey].toString()
-			}
-			this.$emit('confirm')
-		}
+	// #ifdef MP-WEIXIN
+	options: {
+		virtualHost: true
 	}
+	// #endif
+})
+
+const props = defineProps({
+	...commonProps,
+	modelValue: {
+		type: [String, Number],
+		default: ''
+	},
+	title: {
+		type: String,
+		default: ''
+	},
+	description: {
+		type: String,
+		default: ''
+	},
+	options: {
+		type: Array,
+		default: () => []
+	},
+	valueKey: {
+		type: String,
+		default: 'id'
+	},
+	labelKey: {
+		type: String,
+		default: 'name'
+	}
+})
+const emit = defineEmits(['update:modelValue', 'cancel', 'close', 'confirm'])
+
+const show = ref(false)
+const current = ref('')
+const defaultIndex = ref([])
+
+const columns = computed(() => {
+	return [props.options]
+})
+
+function syncCurrent() {
+	const model = props.modelValue == null ? '' : props.modelValue.toString()
+	current.value = ''
+	defaultIndex.value = []
+	props.options.forEach((item, index) => {
+		if ((item[props.valueKey] == null ? '' : item[props.valueKey].toString()) == model) {
+			current.value = item[props.labelKey] == null ? '' : item[props.labelKey].toString()
+			defaultIndex.value = [index]
+		}
+	})
+}
+
+watch(() => props.modelValue, () => {
+	syncCurrent()
+}, { immediate: true })
+
+watch(() => props.options, () => {
+	syncCurrent()
+}, { immediate: true })
+
+function cancel() {
+	show.value = false
+	emit('cancel')
+}
+function close() {
+	show.value = false
+	emit('close')
+}
+function confirm(e) {
+	const value = e.value || []
+	const item = value[0]
+	show.value = false
+	if (item) {
+		emit('update:modelValue', item[props.valueKey])
+		current.value = item[props.labelKey] == null ? '' : item[props.labelKey].toString()
+	}
+	emit('confirm')
 }
 </script>
+
 
 <style lang="scss" scoped>
 .up-picker-data__trigger {

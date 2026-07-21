@@ -75,11 +75,10 @@
     </view>
 </template>
 
-<script>
-import { props } from "./props.js";
-import { mpMixin } from '../../libs/mixin/mpMixin.js';
-import { mixin } from '../../libs/mixin/mixin.js';
-import { debounce } from '../../libs/function/debounce.js';
+<script setup>
+import { computed, getCurrentInstance, nextTick, ref, watch } from 'vue'
+import { props as inputProps } from "./props.js";
+import { commonProps } from '../../libs/composable/useUltraUI.js'
 import { addStyle, addUnit, deepMerge, formValidate, $parent, sleep, os } from '../../libs/function/index.js';
 /**
  * Input 输入框
@@ -123,216 +122,255 @@ import { addStyle, addUnit, deepMerge, formValidate, $parent, sleep, os } from '
  * @property {Boolean}			ignoreCompositionEvent	是否忽略组件内对文本合成系统事件的处理。
  * @example <up-input v-model="value" :password="true" suffix-icon="lock-fill" />
  */
-export default {
+defineOptions({
     name: "up-input",
-    mixins: [mpMixin, mixin, props],
-    data() {
-        return {
-            // 清除操作
-            clearInput: false,
-            // 输入框的值
-            innerValue: "",
-            // 是否处于获得焦点状态
-            focused: false,
-            // value是否第一次变化，在watch中，由于加入immediate属性，会在第一次触发，此时不应该认为value发生了变化
-            firstChange: true,
-            // value绑定值的变化是由内部还是外部引起的
-            changeFromInner: false,
-            // 记录blur时原生输入框的值，用于识别blur阶段的外部格式化回流
-            blurValue: null,
-			// 过滤处理方法
-			innerFormatter: value => value
-        };
-    },
-    created() {
-        // 格式化过滤方法
-        if (this.formatter) {
-            this.innerFormatter = this.formatter;
-        }
-    },
-    watch: {
-        modelValue: {
-            immediate: true,
-            handler(newVal, oldVal) {
-                // console.log(newVal, oldVal)
-                const isBlurFormattedValue =
-                    this.blurValue !== null &&
-                    newVal !== this.blurValue &&
-                    newVal !== this.innerValue;
-                if ((this.changeFromInner && !isBlurFormattedValue) || this.innerValue === newVal) {
-                    this.changeFromInner = false; // 重要否则会出现双向绑定失效问题https://github.com/ijry/uview-plus/issues/419
-                    this.blurValue = null;
-                    return;
-                }
-                this.innerValue = newVal;
-                this.blurValue = null;
-                // 在H5中，外部value变化后，修改input中的值，不会触发@input事件，此时手动调用值变化方法
-                if (
-                    this.firstChange === false &&
-					this.changeFromInner === false
-                ) {
-                    this.valueChange(this.innerValue, true);
-                } else {
-					// 尝试调用up-form的验证方法
-                    if(!this.firstChange) formValidate(this, "change");
-				}
-                this.firstChange = false;
-                // 重置changeFromInner的值为false，标识下一次引起默认为外部引起的
-                this.changeFromInner = false;
-            }
-        }
-    },
-    computed: {
-        // 是否显示清除控件
-        isShowClear() {
-            const { clearable, readonly, focused, innerValue } = this;
-            return !!clearable && !readonly && !!focused && innerValue !== "";
-        },
-        // 组件的类名
-        inputClass() {
-            let classes = [],
-                { border, disabled, shape } = this;
-            border === "surround" &&
-                (classes = classes.concat(["up-border", "up-input--radius"]));
-            classes.push(`up-input--${shape}`);
-            border === "bottom" &&
-                (classes = classes.concat([
-                    "up-border-bottom",
-                    "up-input--no-radius",
-                ]));
-            return classes.join(" ");
-        },
-        // 组件的样式
-        wrapperStyle() {
-            const style = {};
-            // 禁用状态下，被背景色加上对应的样式
-            if (this.disabled) {
-                style.backgroundColor = this.disabledColor;
-            }
-            // 无边框时，去除内边距
-            if (this.border === "none") {
-                style.padding = "0";
-            } else {
-                // 由于uni-app的iOS开发者能力有限，导致需要分开写才有效
-                style.paddingTop = "6px";
-                style.paddingBottom = "6px";
-                style.paddingLeft = "9px";
-                style.paddingRight = "9px";
-            }
-            return deepMerge(style, addStyle(this.customStyle));
-        },
-        // 输入框的样式
-        inputStyle() {
-            const style = {
-                color: this.color,
-                fontSize: addUnit(this.fontSize),
-				textAlign: this.inputAlign
-            };
-            return style;
-        },
-    },
-    // #ifdef VUE3
-    emits: ['update:modelValue', 'focus', 'blur', 'change', 'confirm', 'clear', 'keyboardheightchange'],
+    // #ifdef MP-WEIXIN
+    options: {
+        virtualHost: true
+    }
     // #endif
-    methods: {
-		// 在微信小程序中，不支持将函数当做props参数，故只能通过ref形式调用
-		setFormatter(e) {
-			this.innerFormatter = e
-		},
-        // 当键盘输入时，触发input事件
-        onInput(e) {
-            let { value = "" } = e.detail || {};
-            // 为了避免props的单向数据流特性，需要先将innerValue值设置为当前值，再在$nextTick中重新赋予设置后的值才有效
-            // console.log('onInput', value, this.innerValue)
-            this.innerValue = value;
-            this.$nextTick(() => {
-                let formatValue = this.innerFormatter(value);
-            	this.innerValue = formatValue;
-                this.valueChange(formatValue);
-            })
-        },
-        // 输入框失去焦点时触发
-        onBlur(event) {
-            this.blurValue = event?.detail?.value;
-            this.$emit("blur", event.detail.value);
-            // H5端的blur会先于点击清除控件的点击click事件触发，导致focused
-            // 瞬间为false，从而隐藏了清除控件而无法被点击到
-            sleep(150).then(() => {
-                this.focused = false;
-            });
-            // 尝试调用up-form的验证方法
-            formValidate(this, "blur");
-        },
-        // 输入框聚焦时触发
-        onFocus(event) {
-            this.focused = true;
-            this.$emit("focus");
-        },
-        doFocus() {
-            this.$refs['input-native'].focus();
-        },
-        doBlur() {
-            this.$refs['input-native'].blur();
-        },
-        // 点击完成按钮时触发
-        onConfirm(event) {
-            this.$emit("confirm", this.innerValue);
-        },
-        // 键盘高度发生变化的时候触发此事件
-        // 兼容性：微信小程序2.7.0+、App 3.1.0+
-		onkeyboardheightchange(event) {
-            this.$emit("keyboardheightchange", event);
-        },
-        // 内容发生变化，进行处理
-        valueChange(value, isOut = false) {
-            if(this.clearInput) {
-                this.innerValue = '';
-                this.clearInput = false;
-            }
-            this.$nextTick(() => {
-                if (!isOut || this.clearInput) {
-                    // 标识value值的变化是由内部引起的
-                    this.changeFromInner = true;
-                    this.$emit("change", value);
+})
 
-                    // #ifdef VUE3
-                    this.$emit("update:modelValue", value);
-                    // #endif
-                    // #ifdef VUE2
-                    this.$emit("input", value);
-                    // #endif
-                }
+const props = defineProps({
+    ...commonProps,
+    ...inputProps.props
+})
+const emit = defineEmits(['update:modelValue', 'input', 'focus', 'blur', 'change', 'confirm', 'clear', 'keyboardheightchange'])
+const instance = getCurrentInstance()
+const proxy = instance?.proxy
+// 清除操作
+const clearInput = ref(false)
+// 输入框的值
+const innerValue = ref("")
+// 是否处于获得焦点状态
+const focused = ref(false)
+// value是否第一次变化，在watch中，由于加入immediate属性，会在第一次触发，此时不应该认为value发生了变化
+const firstChange = ref(true)
+// value绑定值的变化是由内部还是外部引起的
+const changeFromInner = ref(false)
+// 记录blur时原生输入框的值，用于识别blur阶段的外部格式化回流
+const blurValue = ref(null)
+// 过滤处理方法
+const innerFormatter = ref(value => value)
 
-                // 尝试调用up-form的验证方法
-                formValidate(this, "change");
-            });
-        },
-        // 点击清除控件
-        onClear() {
-            this.clearInput = true;
-            this.innerValue = "";
-            this.$nextTick(() => {
-                this.valueChange("");
-                this.$emit("clear");
-            });
-        },
-        /**
-         * 在安卓nvue上，事件无法冒泡
-         * 在某些时间，我们希望监听up-from-item的点击事件，此时会导致点击up-form-item内的up-input后
-         * 无法触发up-form-item的点击事件，这里通过手动调用up-form-item的方法进行触发
-         */
-        clickHandler() {
-            // #ifdef APP-NVUE
-            if (os() === "android") {
-                const formItem = $parent.call(this, "up-form-item");
-                if (formItem) {
-                    formItem.clickHandler();
-                }
-            }
+// 格式化过滤方法
+if (props.formatter) {
+    innerFormatter.value = props.formatter
+}
+
+watch(() => props.modelValue, (newVal) => {
+    // console.log(newVal, oldVal)
+    const isBlurFormattedValue =
+        blurValue.value !== null &&
+        newVal !== blurValue.value &&
+        newVal !== innerValue.value
+    if ((changeFromInner.value && !isBlurFormattedValue) || innerValue.value === newVal) {
+        changeFromInner.value = false // 重要否则会出现双向绑定失效问题https://github.com/ijry/uview-plus/issues/419
+        blurValue.value = null
+        return
+    }
+    innerValue.value = newVal
+    blurValue.value = null
+    // 在H5中，外部value变化后，修改input中的值，不会触发@input事件，此时手动调用值变化方法
+    if (
+        firstChange.value === false &&
+        changeFromInner.value === false
+    ) {
+        valueChange(innerValue.value, true)
+    } else {
+        // 尝试调用up-form的验证方法
+        if(!firstChange.value) formValidate(proxy, "change")
+    }
+    firstChange.value = false
+    // 重置changeFromInner的值为false，标识下一次引起默认为外部引起的
+    changeFromInner.value = false
+}, {
+    immediate: true
+})
+
+// 是否显示清除控件
+const isShowClear = computed(() => {
+    return !!props.clearable && !props.readonly && !!focused.value && innerValue.value !== ""
+})
+
+// 组件的类名
+const inputClass = computed(() => {
+    let classes = []
+    const { border, shape } = props
+    border === "surround" &&
+        (classes = classes.concat(["up-border", "up-input--radius"]))
+    classes.push(`up-input--${shape}`)
+    border === "bottom" &&
+        (classes = classes.concat([
+            "up-border-bottom",
+            "up-input--no-radius",
+        ]))
+    return classes.join(" ")
+})
+
+// 组件的样式
+const wrapperStyle = computed(() => {
+    const style = {}
+    // 禁用状态下，被背景色加上对应的样式
+    if (props.disabled) {
+        style.backgroundColor = props.disabledColor
+    }
+    // 无边框时，去除内边距
+    if (props.border === "none") {
+        style.padding = "0"
+    } else {
+        // 由于uni-app的iOS开发者能力有限，导致需要分开写才有效
+        style.paddingTop = "6px"
+        style.paddingBottom = "6px"
+        style.paddingLeft = "9px"
+        style.paddingRight = "9px"
+    }
+    return deepMerge(style, addStyle(props.customStyle))
+})
+
+// 输入框的样式
+const inputStyle = computed(() => {
+    const style = {
+        color: props.color,
+        fontSize: addUnit(props.fontSize),
+        textAlign: props.inputAlign
+    }
+    return style
+})
+
+// 在微信小程序中，不支持将函数当做props参数，故只能通过ref形式调用
+function setFormatter(e) {
+    innerFormatter.value = e
+}
+
+// 当键盘输入时，触发input事件
+function onInput(e) {
+    let { value = "" } = e.detail || {}
+    // 为了避免props的单向数据流特性，需要先将innerValue值设置为当前值，再在$nextTick中重新赋予设置后的值才有效
+    // console.log('onInput', value, innerValue.value)
+    innerValue.value = value
+    nextTick(() => {
+        const formatValue = innerFormatter.value(value)
+        innerValue.value = formatValue
+        valueChange(formatValue)
+    })
+}
+
+// 输入框失去焦点时触发
+function onBlur(event) {
+    blurValue.value = event?.detail?.value
+    emit("blur", event.detail.value)
+    // H5端的blur会先于点击清除控件的点击click事件触发，导致focused
+    // 瞬间为false，从而隐藏了清除控件而无法被点击到
+    sleep(150).then(() => {
+        focused.value = false
+    })
+    // 尝试调用up-form的验证方法
+    formValidate(proxy, "blur")
+}
+
+// 输入框聚焦时触发
+function onFocus(event) {
+    focused.value = true
+    emit("focus")
+}
+
+function doFocus() {
+    const inputNative = proxy?.$refs?.['input-native']
+    inputNative && inputNative.focus()
+}
+
+function doBlur() {
+    const inputNative = proxy?.$refs?.['input-native']
+    inputNative && inputNative.blur()
+}
+
+// 点击完成按钮时触发
+function onConfirm(event) {
+    emit("confirm", innerValue.value)
+}
+
+// 键盘高度发生变化的时候触发此事件
+// 兼容性：微信小程序2.7.0+、App 3.1.0+
+function onkeyboardheightchange(event) {
+    emit("keyboardheightchange", event)
+}
+
+// 内容发生变化，进行处理
+function valueChange(value, isOut = false) {
+    if(clearInput.value) {
+        innerValue.value = ''
+        clearInput.value = false
+    }
+    nextTick(() => {
+        if (!isOut || clearInput.value) {
+            // 标识value值的变化是由内部引起的
+            changeFromInner.value = true
+            emit("change", value)
+
+            // #ifdef VUE3
+            emit("update:modelValue", value)
             // #endif
-        },
-    },
-};
+            // #ifdef VUE2
+            emit("input", value)
+            // #endif
+        }
+
+        // 尝试调用up-form的验证方法
+        formValidate(proxy, "change")
+    })
+}
+
+// 点击清除控件
+function onClear() {
+    clearInput.value = true
+    innerValue.value = ""
+    nextTick(() => {
+        valueChange("")
+        emit("clear")
+    })
+}
+
+/**
+ * 在安卓nvue上，事件无法冒泡
+ * 在某些时间，我们希望监听up-from-item的点击事件，此时会导致点击up-form-item内的up-input后
+ * 无法触发up-form-item的点击事件，这里通过手动调用up-form-item的方法进行触发
+ */
+function clickHandler() {
+    // #ifdef APP-NVUE
+    if (os() === "android") {
+        const formItem = $parent.call(proxy, "up-form-item")
+        if (formItem) {
+            formItem.clickHandler()
+        }
+    }
+    // #endif
+}
+
+defineExpose({
+    clearInput,
+    innerValue,
+    focused,
+    firstChange,
+    changeFromInner,
+    blurValue,
+    innerFormatter,
+    isShowClear,
+    inputClass,
+    wrapperStyle,
+    inputStyle,
+    setFormatter,
+    onInput,
+    onBlur,
+    onFocus,
+    doFocus,
+    doBlur,
+    onConfirm,
+    onkeyboardheightchange,
+    valueChange,
+    onClear,
+    clickHandler
+})
 </script>
 
 <style lang="scss" scoped>

@@ -29,7 +29,7 @@
 				class="up-image__loading"
 				:style="{
 					borderRadius: shape == 'circle' ? '50%' : addUnit(radius),
-					backgroundColor: this.bgColor,
+					backgroundColor: bgColor,
 					width: addUnit(width),
 					height: addUnit(height)
 				}"
@@ -63,11 +63,11 @@
 	</up-transition>
 </template>
 
-<script>
-	import { propsImage } from './props.js';
-	import { mpMixin } from '../../libs/mixin/mpMixin.js';
-	import { mixin } from '../../libs/mixin/mixin.js';
-	import { addUnit, addStyle, deepMerge } from '../../libs/function/index.js';
+<script setup>
+	import { computed, onMounted, ref, watch } from 'vue'
+	import { propsImage } from './props.js'
+	import { commonProps } from '../../libs/composable/useUltraUI.js'
+	import { addUnit, addStyle, deepMerge } from '../../libs/function/index.js'
 	/**
 	 * Image 图片
 	 * @description 此组件为uni-app的image组件的加强版，在继承了原有功能外，还支持淡入动画、加载中、加载失败提示、圆角值和形状等。
@@ -94,109 +94,125 @@
 	 * @event {Function} load 图片加载成功时触发
 	 * @example <up-image width="100%" height="300px" :src="src"></up-image>
 	 */
-	export default {
+	defineOptions({
 		name: 'up-image',
-		mixins: [mpMixin, mixin, propsImage],
-		data() {
-			return {
-				// 图片是否加载错误，如果是，则显示错误占位图
-				isError: false,
-				// 初始化组件时，默认为加载中状态
-				loading: true,
-				// 不透明度，为了实现淡入淡出的效果
-				opacity: 1,
-				// 过渡时间，因为props的值无法修改，故需要一个中间值
-				durationTime: this.duration,
-				// 图片加载完成时，去掉背景颜色，因为如果是png图片，就会显示灰色的背景
-				backgroundStyle: {},
-				// 用于fade模式的控制组件显示与否
-				show: false
-			};
-		},
-		watch: {
-			src: {
-				immediate: true,
-				handler(n) {
-					if (!n) {
-						// 如果传入null或者''，或者false，或者undefined，标记为错误状态
-						this.isError = true
-						
-					} else {
-						this.isError = false;
-						this.loading = true;
-					}
-				}
-			}
-		},
-		computed: {
-			wrapStyle() {
-				let style = {};
-				// 通过调用addUnit()方法，如果有单位，如百分比，px单位等，直接返回，如果是纯粹的数值，则加上rpx单位
-				style.width = addUnit(this.width);
-				style.height = addUnit(this.height);
-				// 如果是显示圆形，设置一个很多的半径值即可
-				style.borderRadius = this.shape == 'circle' ? '10000px' : addUnit(this.radius)
-				// 如果设置圆角，必须要有hidden，否则可能圆角无效
-				style.overflow = this.radius > 0 ? 'hidden' : 'visible'
-				// if (this.fade) {
-				// 	style.opacity = this.opacity
-				// 	// nvue下，这几个属性必须要分开写
-				// 	style.transitionDuration = `${this.durationTime}ms`
-				// 	style.transitionTimingFunction = 'ease-in-out'
-				// 	style.transitionProperty = 'opacity'
-				// }
-				return deepMerge(style, addStyle(this.customStyle));
-
-			}
-		},
-		mounted() {
-			this.show = true
-		},
-		emits: ['click', 'error', 'load'],
-		methods: {
-			addUnit,
-			// 点击图片
-			onClick() {
-				this.$emit('click')
-			},
-			// 图片加载失败
-			onErrorHandler(err) {
-				this.loading = false
-				this.isError = true
-				this.$emit('error', err)
-			},
-			// 图片加载完成，标记loading结束
-			onLoadHandler(event) {
-				this.loading = false
-				this.isError = false
-				this.$emit('load', event)
-				this.removeBgColor()
-				// 如果不需要动画效果，就不执行下方代码，同时移除加载时的背景颜色
-				// 否则无需fade效果时，png图片依然能看到下方的背景色
-				// if (!this.fade) return this.removeBgColor();
-				// // 原来opacity为1(不透明，是为了显示占位图)，改成0(透明，意味着该元素显示的是背景颜色，默认的灰色)，再改成1，是为了获得过渡效果
-				// this.opacity = 0;
-				// // 这里设置为0，是为了图片展示到背景全透明这个过程时间为0，延时之后延时之后重新设置为duration，是为了获得背景透明(灰色)
-				// // 到图片展示的过程中的淡入效果
-				// this.durationTime = 0;
-				// // 延时50ms，否则在浏览器H5，过渡效果无效
-				// setTimeout(() => {
-				// 	this.durationTime = this.duration;
-				// 	this.opacity = 1;
-				// 	setTimeout(() => {
-				// 		this.removeBgColor();
-				// 	}, this.durationTime);
-				// }, 50);
-			},
-			// 移除图片的背景色
-			removeBgColor() {
-				// 淡入动画过渡完成后，将背景设置为透明色，否则png图片会看到灰色的背景
-				this.backgroundStyle = {
-					backgroundColor: 'transparent'
-				};
-			}
+		// #ifdef MP-WEIXIN
+		options: {
+			virtualHost: true
 		}
-	};
+		// #endif
+	})
+
+	const props = defineProps({
+		...commonProps,
+		...propsImage.props
+	})
+	const emit = defineEmits(['click', 'error', 'load'])
+	// 图片是否加载错误，如果是，则显示错误占位图
+	const isError = ref(false)
+	// 初始化组件时，默认为加载中状态
+	const loading = ref(true)
+	// 不透明度，为了实现淡入淡出的效果
+	const opacity = ref(1)
+	// 过渡时间，因为props的值无法修改，故需要一个中间值
+	const durationTime = ref(props.duration)
+	// 图片加载完成时，去掉背景颜色，因为如果是png图片，就会显示灰色的背景
+	const backgroundStyle = ref({})
+	// 用于fade模式的控制组件显示与否
+	const show = ref(false)
+
+	watch(() => props.src, (n) => {
+		if (!n) {
+			// 如果传入null或者''，或者false，或者undefined，标记为错误状态
+			isError.value = true
+		} else {
+			isError.value = false
+			loading.value = true
+		}
+	}, {
+		immediate: true
+	})
+
+	const wrapStyle = computed(() => {
+		const style = {}
+		// 通过调用addUnit()方法，如果有单位，如百分比，px单位等，直接返回，如果是纯粹的数值，则加上rpx单位
+		style.width = addUnit(props.width)
+		style.height = addUnit(props.height)
+		// 如果是显示圆形，设置一个很多的半径值即可
+		style.borderRadius = props.shape == 'circle' ? '10000px' : addUnit(props.radius)
+		// 如果设置圆角，必须要有hidden，否则可能圆角无效
+		style.overflow = props.radius > 0 ? 'hidden' : 'visible'
+		// if (props.fade) {
+		// 	style.opacity = opacity.value
+		// 	// nvue下，这几个属性必须要分开写
+		// 	style.transitionDuration = `${durationTime.value}ms`
+		// 	style.transitionTimingFunction = 'ease-in-out'
+		// 	style.transitionProperty = 'opacity'
+		// }
+		return deepMerge(style, addStyle(props.customStyle))
+	})
+
+	onMounted(() => {
+		show.value = true
+	})
+
+	// 点击图片
+	function onClick() {
+		emit('click')
+	}
+
+	// 图片加载失败
+	function onErrorHandler(err) {
+		loading.value = false
+		isError.value = true
+		emit('error', err)
+	}
+
+	// 图片加载完成，标记loading结束
+	function onLoadHandler(event) {
+		loading.value = false
+		isError.value = false
+		emit('load', event)
+		removeBgColor()
+		// 如果不需要动画效果，就不执行下方代码，同时移除加载时的背景颜色
+		// 否则无需fade效果时，png图片依然能看到下方的背景色
+		// if (!props.fade) return removeBgColor();
+		// // 原来opacity为1(不透明，是为了显示占位图)，改成0(透明，意味着该元素显示的是背景颜色，默认的灰色)，再改成1，是为了获得过渡效果
+		// opacity.value = 0;
+		// // 这里设置为0，是为了图片展示到背景全透明这个过程时间为0，延时之后延时之后重新设置为duration，是为了获得背景透明(灰色)
+		// // 到图片展示的过程中的淡入效果
+		// durationTime.value = 0;
+		// // 延时50ms，否则在浏览器H5，过渡效果无效
+		// setTimeout(() => {
+		// 	durationTime.value = props.duration;
+		// 	opacity.value = 1;
+		// 	setTimeout(() => {
+		// 		removeBgColor();
+		// 	}, durationTime.value);
+		// }, 50);
+	}
+
+	// 移除图片的背景色
+	function removeBgColor() {
+		// 淡入动画过渡完成后，将背景设置为透明色，否则png图片会看到灰色的背景
+		backgroundStyle.value = {
+			backgroundColor: 'transparent'
+		}
+	}
+
+	defineExpose({
+		isError,
+		loading,
+		opacity,
+		durationTime,
+		backgroundStyle,
+		show,
+		wrapStyle,
+		onClick,
+		onErrorHandler,
+		onLoadHandler,
+		removeBgColor
+	})
 </script>
 
 <style lang="scss" scoped>

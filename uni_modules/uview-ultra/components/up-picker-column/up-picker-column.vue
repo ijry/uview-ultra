@@ -5,10 +5,9 @@
 	</picker-view-column>
 </template>
 
-<script>
-	import { props } from './props.js';
-	import { mpMixin } from '../../libs/mixin/mpMixin.js';
-	import { mixin } from '../../libs/mixin/mixin.js';
+<script setup>
+	import { props as pickerColumnProps } from './props.js'
+	import { commonProps } from '../../libs/composable/useUltraUI.js'
 	/**
 	 * PickerColumn 
 	 * @description 
@@ -17,10 +16,19 @@
 	 * @event {Function}
 	 * @example
 	 */
-	export default {
+	defineOptions({
 		name: 'up-picker-column',
-		mixins: [mpMixin, mixin, props],
-	}
+		// #ifdef MP-WEIXIN
+		options: {
+			virtualHost: true
+		}
+		// #endif
+	})
+
+	defineProps({
+		...commonProps,
+		...pickerColumnProps.props
+	})
 </script>
 
 <style lang="scss" scoped>

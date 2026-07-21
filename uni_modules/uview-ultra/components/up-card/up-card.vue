@@ -71,11 +71,10 @@
 	</view>
 </template>
 
-<script>
-    import { propsCard } from './props.js';
-    import { mpMixin } from '../../libs/mixin/mpMixin.js';
-    import { mixin } from '../../libs/mixin/mixin.js';
-    import { addStyle, addUnit, getPx } from '../../libs/function/index.js';
+<script setup>
+	import { propsCard } from './props.js'
+	import { commonProps } from '../../libs/composable/useUltraUI.js'
+	import { addUnit, getPx } from '../../libs/function/index.js'
     /**
      * card 卡片
      * @description 卡片组件一般用于多个列表条目，且风格统一的场景
@@ -108,31 +107,36 @@
      * @event {Function} foot-click 卡片底部部分被点击时触发
      * @example <up-card paddingFoot="2px 15px" title="card"></up-card>
      */
-    export default {
-        name: 'up-card',
-        data() {
-            return {};
-        },
-        mixins: [mpMixin, mixin, propsCard],
-        emits: ['click', 'head-click', 'body-click', 'foot-click'],
-        methods: {
-			addStyle,
-			addUnit,
-			getPx,
-            click() {
-                this.$emit('click', this.index);
-            },
-            headClick() {
-                this.$emit('head-click', this.index);
-            },
-            bodyClick() {
-                this.$emit('body-click', this.index);
-            },
-            footClick() {
-                this.$emit('foot-click', this.index);
-            }
-        }
-    };
+	defineOptions({
+		name: 'up-card',
+		// #ifdef MP-WEIXIN
+		options: {
+			virtualHost: true
+		}
+		// #endif
+	})
+
+	const props = defineProps({
+		...commonProps,
+		...propsCard.props
+	})
+	const emit = defineEmits(['click', 'head-click', 'body-click', 'foot-click'])
+
+	function click() {
+		emit('click', props.index)
+	}
+
+	function headClick() {
+		emit('head-click', props.index)
+	}
+
+	function bodyClick() {
+		emit('body-click', props.index)
+	}
+
+	function footClick() {
+		emit('foot-click', props.index)
+	}
 </script>
 
 <style lang="scss" scoped>

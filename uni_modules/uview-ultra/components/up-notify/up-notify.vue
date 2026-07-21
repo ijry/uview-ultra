@@ -32,12 +32,12 @@
 	</up-transition>
 </template>
 
-<script>
-	import { props } from './props.js';
-	import { mpMixin } from '../../libs/mixin/mpMixin.js';
-	import { mixin } from '../../libs/mixin/mixin.js';
+<script setup>
+	import { computed, onBeforeUnmount, ref } from 'vue'
+	import { props as notifyProps } from './props.js'
+	import { commonProps } from '../../libs/composable/useUltraUI.js'
 	import defProps from '../../libs/config/props.js'
-	import { addUnit, addStyle, deepMerge } from '../../libs/function/index.js';
+	import { addUnit, addStyle, deepMerge } from '../../libs/function/index.js'
 	/**
 	 * notify 顶部提示
 	 * @description 该组件一般用于页面顶部向下滑出一个提示，尔后自动收起的场景
@@ -55,121 +55,152 @@
 	 * @event {Function}	close	关闭组件式调用的函数
 	 * @example <up-notify message="Hi uView"></up-notify>
 	 */
-	export default {
+	defineOptions({
 		name: 'up-notify',
-		mixins: [mpMixin, mixin,props],
-		data() {
-			return {
-				// 是否展示组件
-				open: false,
-				timer: null,
-				config: {
-					// 到顶部的距离
-					top: defProps.notify.top,
-					// type主题，primary，success，warning，error
-					type: defProps.notify.type,
-					// 字体颜色
-					color: defProps.notify.color,
-					// 背景颜色
-					bgColor: defProps.notify.bgColor,
-					// 展示的文字内容
-					message: defProps.notify.message,
-					// 展示时长，为0时不消失，单位ms
-					duration: defProps.notify.duration,
-					// 字体大小
-					fontSize: defProps.notify.fontSize,
-					// 是否留出顶部安全距离（状态栏高度）
-					safeAreaInsetTop: defProps.notify.safeAreaInsetTop
-				},
-				// 合并后的配置，避免多次调用组件后，可能会复用之前使用的配置参数
-				tmpConfig: {}
-			}
-		},
-		computed: {
-			containerStyle() {
-				let top = 0
-				if (this.tmpConfig.top === 0) {
-					// #ifdef H5
-					// H5端，导航栏为普通元素，需要将组件移动到导航栏的下边沿
-					// H5的导航栏高度为44px
-					top = 44
-					// #endif
-				}
-				const style = {
-					top: addUnit(this.tmpConfig.top === 0 ? top : this.tmpConfig.top),
-					// 因为组件底层为up-transition组件，必须将其设置为fixed定位
-					// 让其出现在导航栏底部
-					position: 'fixed',
-					left: 0,
-					right: 0,
-					zIndex: 10076
-				}
-				return style
-			},
-			// 组件背景颜色
-			backgroundColor() {
-				const style = {}
-				if (this.tmpConfig.bgColor) {
-					style.backgroundColor = this.tmpConfig.bgColor
-				}
-				return style
-			},
-			// 默认主题下的图标
-			icon() {
-				let icon
-				if (this.tmpConfig.type === 'success') {
-					icon = 'checkmark-circle'
-				} else if (this.tmpConfig.type === 'error') {
-					icon = 'close-circle'
-				} else if (this.tmpConfig.type === 'warning') {
-					icon = 'error-circle'
-				}
-				return icon
-			}
-		},
-		created() {
-			// 通过主题的形式调用toast，批量生成方法函数
-			['primary', 'success', 'error', 'warning'].map(item => {
-				this[item] = message => this.show({
-					type: item,
-					message
-				})
-			})
-		},
-		methods: {
-			addStyle,
-			addUnit,
-			show(options) {
-				// 不将结果合并到this.config变量，避免多次调用up-toast，前后的配置造成混乱
-				this.tmpConfig = deepMerge(this.config, options)
-				// 任何定时器初始化之前，都要执行清除操作，否则可能会造成混乱
-				this.clearTimer()
-				this.open = true
-				if (this.tmpConfig.duration > 0) {
-					this.timer = setTimeout(() => {
-						this.open = false
-						// 倒计时结束，清除定时器，隐藏toast组件
-						this.clearTimer()
-						// 判断是否存在callback方法，如果存在就执行
-						typeof(this.tmpConfig.complete) === 'function' && this.tmpConfig.complete()
-					}, this.tmpConfig.duration)
-				}
-			},
-			// 关闭notify
-			close() {
-				this.clearTimer()
-			},
-			clearTimer() {
-				this.open = false
-				// 清除定时器
-				clearTimeout(this.timer)
-				this.timer = null
-			}
-		},
-		beforeUnmount() {
-			this.clearTimer()
+		// #ifdef MP-WEIXIN
+		options: {
+			virtualHost: true
+		}
+		// #endif
+	})
+
+	defineProps({
+		...commonProps,
+		...notifyProps.props
+	})
+
+	// 是否展示组件
+	const open = ref(false)
+	const timer = ref(null)
+	const config = {
+		// 到顶部的距离
+		top: defProps.notify.top,
+		// type主题，primary，success，warning，error
+		type: defProps.notify.type,
+		// 字体颜色
+		color: defProps.notify.color,
+		// 背景颜色
+		bgColor: defProps.notify.bgColor,
+		// 展示的文字内容
+		message: defProps.notify.message,
+		// 展示时长，为0时不消失，单位ms
+		duration: defProps.notify.duration,
+		// 字体大小
+		fontSize: defProps.notify.fontSize,
+		// 是否留出顶部安全距离（状态栏高度）
+		safeAreaInsetTop: defProps.notify.safeAreaInsetTop
+	}
+	// 合并后的配置，避免多次调用组件后，可能会复用之前使用的配置参数
+	const tmpConfig = ref({})
+
+	const containerStyle = computed(() => {
+		let top = 0
+		if (tmpConfig.value.top === 0) {
+			// #ifdef H5
+			// H5端，导航栏为普通元素，需要将组件移动到导航栏的下边沿
+			// H5的导航栏高度为44px
+			top = 44
+			// #endif
+		}
+		const style = {
+			top: addUnit(tmpConfig.value.top === 0 ? top : tmpConfig.value.top),
+			// 因为组件底层为up-transition组件，必须将其设置为fixed定位
+			// 让其出现在导航栏底部
+			position: 'fixed',
+			left: 0,
+			right: 0,
+			zIndex: 10076
+		}
+		return style
+	})
+
+	// 组件背景颜色
+	const backgroundColor = computed(() => {
+		const style = {}
+		if (tmpConfig.value.bgColor) {
+			style.backgroundColor = tmpConfig.value.bgColor
+		}
+		return style
+	})
+
+	// 默认主题下的图标
+	const icon = computed(() => {
+		let icon
+		if (tmpConfig.value.type === 'success') {
+			icon = 'checkmark-circle'
+		} else if (tmpConfig.value.type === 'error') {
+			icon = 'close-circle'
+		} else if (tmpConfig.value.type === 'warning') {
+			icon = 'error-circle'
+		}
+		return icon
+	})
+
+	function show(options) {
+		// 不将结果合并到config变量，避免多次调用up-toast，前后的配置造成混乱
+		tmpConfig.value = deepMerge(config, options)
+		// 任何定时器初始化之前，都要执行清除操作，否则可能会造成混乱
+		clearTimer()
+		open.value = true
+		if (tmpConfig.value.duration > 0) {
+			timer.value = setTimeout(() => {
+				open.value = false
+				// 倒计时结束，清除定时器，隐藏toast组件
+				clearTimer()
+				// 判断是否存在callback方法，如果存在就执行
+				typeof(tmpConfig.value.complete) === 'function' && tmpConfig.value.complete()
+			}, tmpConfig.value.duration)
 		}
 	}
+
+	// 关闭notify
+	function close() {
+		clearTimer()
+	}
+
+	function clearTimer() {
+		open.value = false
+		// 清除定时器
+		clearTimeout(timer.value)
+		timer.value = null
+	}
+
+	function primary(message) {
+		show({ type: 'primary', message })
+	}
+
+	function success(message) {
+		show({ type: 'success', message })
+	}
+
+	function error(message) {
+		show({ type: 'error', message })
+	}
+
+	function warning(message) {
+		show({ type: 'warning', message })
+	}
+
+	onBeforeUnmount(() => {
+		clearTimer()
+	})
+
+	defineExpose({
+		open,
+		timer,
+		config,
+		tmpConfig,
+		containerStyle,
+		backgroundColor,
+		icon,
+		show,
+		close,
+		clearTimer,
+		primary,
+		success,
+		error,
+		warning
+	})
 </script>
 
 <style lang="scss" scoped>

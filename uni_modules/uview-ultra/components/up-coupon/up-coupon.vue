@@ -1,5 +1,5 @@
 <template>
-	<view class="up-coupon" :class="[`up-coupon--${shape}`, `up-coupon--${type}`, `up-coupon--${size}`, {'up-coupon--disabled': disabled}]" 
+	<view class="up-coupon" :class="[`up-coupon--${shape}`, `up-coupon--${type}`, `up-coupon--${size}`, {'up-coupon--disabled': disabled}]"
 		:style="[couponStyle]" @click="handleClick">
 		<view class="up-coupon__content">
 			<!-- 左侧金额区域 -->
@@ -17,7 +17,7 @@
 					<text class="up-coupon__amount-limit" v-if="limit">{{ limit }}</text>
 				</slot>
 			</view>
-			
+
 			<!-- 中间描述区域 -->
 			<view class="up-coupon__info">
 				<slot name="title" :title="title">
@@ -30,7 +30,7 @@
 					<text class="up-coupon__info-time" v-if="time">{{ time }}</text>
 				</slot>
 			</view>
-			
+
 			<!-- 右侧操作区域 -->
 			<view class="up-coupon__action up-padding-right-20">
 				<slot name="action" :actionText="actionText" :circle="circle">
@@ -41,120 +41,130 @@
 				</slot>
 			</view>
 		</view>
-		
+
 		<!-- 红包绳子效果 -->
 		<view v-if="shape === 'envelope'" class="up-coupon__rope"></view>
-		
+
 		<!-- 默认插槽，可用于添加额外内容 -->
 		<slot></slot>
 	</view>
 </template>
 
-<script>
-	export default {
-		name: 'up-coupon',
-		props: {
-			// 金额
-			amount: {
-				type: [String, Number],
-				default: ''
-			},
-			// 金额单位
-			unit: {
-				type: String,
-				default: '￥'
-			},
-			// 单位位置
-			unitPosition: {
-				type: String,
-				default: 'left'
-			},
-			// 使用限制
-			limit: {
-				type: String,
-				default: ''
-			},
-			// 标题
-			title: {
-				type: String,
-				default: '优惠券'
-			},
-			// 描述
-			desc: {
-				type: String,
-				default: ''
-			},
-			// 有效期
-			time: {
-				type: String,
-				default: ''
-			},
-			// 操作按钮文字
-			actionText: {
-				type: String,
-				default: '使用'
-			},
-			// 形状：coupon-优惠券, envelope-红包, card-卡片
-			shape: {
-				type: String,
-				default: 'coupon'
-			},
-			// 尺寸：small, medium, large
-			size: {
-				type: String,
-				default: 'medium'
-			},
-			// 是否圆形按钮
-			circle: {
-				type: Boolean,
-				default: false
-			},
-			// 是否禁用
-			disabled: {
-				type: Boolean,
-				default: false
-			},
-			// 背景颜色
-			bgColor: {
-				type: String,
-				default: ''
-			},
-			// 文字颜色
-			color: {
-				type: String,
-				default: ''
-			},
-            // 内置背景类型
-            type: {
-				type: String,
-				default: ''
-			},
-		},
-		computed: {
-			couponStyle() {
-				const style = {};
-				if (this.bgColor) style.background = this.bgColor;
-				if (this.color) style.color = this.color;
-				return style;
-			},
-			dotCount() {
-				// 根据尺寸计算锯齿数量
-				const map = {
-					small: 8,
-					medium: 10,
-					large: 12
-				};
-				return map[this.size] || 10;
-			}
-		},
-		methods: {
-			handleClick() {
-				if (this.disabled) return;
-				this.$emit('click');
-			}
-		}
+<script setup>
+import { computed } from 'vue'
+import { commonProps } from '../../libs/composable/useUltraUI.js'
+
+defineOptions({
+	name: 'up-coupon',
+	// #ifdef MP-WEIXIN
+	options: {
+		virtualHost: true
 	}
+	// #endif
+})
+
+const props = defineProps({
+	...commonProps,
+	// 金额
+	amount: {
+		type: [String, Number],
+		default: ''
+	},
+	// 金额单位
+	unit: {
+		type: String,
+		default: '￥'
+	},
+	// 单位位置
+	unitPosition: {
+		type: String,
+		default: 'left'
+	},
+	// 使用限制
+	limit: {
+		type: String,
+		default: ''
+	},
+	// 标题
+	title: {
+		type: String,
+		default: '优惠券'
+	},
+	// 描述
+	desc: {
+		type: String,
+		default: ''
+	},
+	// 有效期
+	time: {
+		type: String,
+		default: ''
+	},
+	// 操作按钮文字
+	actionText: {
+		type: String,
+		default: '使用'
+	},
+	// 形状：coupon-优惠券, envelope-红包, card-卡片
+	shape: {
+		type: String,
+		default: 'coupon'
+	},
+	// 尺寸：small, medium, large
+	size: {
+		type: String,
+		default: 'medium'
+	},
+	// 是否圆形按钮
+	circle: {
+		type: Boolean,
+		default: false
+	},
+	// 是否禁用
+	disabled: {
+		type: Boolean,
+		default: false
+	},
+	// 背景颜色
+	bgColor: {
+		type: String,
+		default: ''
+	},
+	// 文字颜色
+	color: {
+		type: String,
+		default: ''
+	},
+	// 内置背景类型
+	type: {
+		type: String,
+		default: ''
+	},
+})
+const emit = defineEmits(['click'])
+
+const couponStyle = computed(() => {
+	const style = {}
+	if (props.bgColor) style.background = props.bgColor
+	if (props.color) style.color = props.color
+	return style
+})
+
+const dotCount = computed(() => {
+	const map = {
+		small: 8,
+		medium: 10,
+		large: 12
+	}
+	return map[props.size] || 10
+})
+
+function handleClick() {
+	if (props.disabled) return
+	emit('click')
+}
 </script>
+
 
 <style lang="scss" scoped>
 	.up-coupon {
@@ -164,11 +174,11 @@
 		background: #ffebf0;
 		color: $up-main-color;
         width: 100%;
-		
+
 		&--coupon {
 			border-radius: 16rpx;
 			overflow: hidden;
-			
+
 			&::before {
 				content: '';
 				position: absolute;
@@ -180,7 +190,7 @@
 				background-color: #fff;
 				border-radius: 50%;
 			}
-			
+
 			&::after {
 				content: '';
 				position: absolute;
@@ -193,10 +203,10 @@
 				border-radius: 50%;
 			}
 		}
-		
+
 		&--envelope {
 			border-radius: 16rpx;
-			
+
 			&::before {
 				content: '';
 				position: absolute;
@@ -207,30 +217,30 @@
 				background: repeating-linear-gradient(-45deg, #ffd000, #ffd000 10rpx, #ffa000 10rpx, #ffa000 20rpx);
 			}
 		}
-		
+
 		&--card {
 			border-radius: 16rpx;
 		}
-		
+
 		&--small {
 			// width: 520rpx;
 			height: 160rpx;
 		}
-		
+
 		&--medium {
 			// width: 600rpx;
 			height: 180rpx;
 		}
-		
+
 		&--large {
 			// width: 700rpx;
 			height: 220rpx;
 		}
-		
+
 		&--disabled {
 			opacity: 0.5;
 		}
-		
+
 		&__content {
 			display: flex;
             flex-direction: row;
@@ -241,7 +251,7 @@
 			position: relative;
 			z-index: 2;
 		}
-		
+
 		&__amount {
 			display: flex;
 			flex-direction: column;
@@ -249,12 +259,12 @@
             padding-left: 10rpx;
 			padding-right: 30rpx;
             border-right: 1px dashed #ccc;
-			
+
 			&-unit {
 				font-size: 24rpx;
 				font-weight: normal;
 			}
-			
+
 			&-value {
 				font-size: 56rpx;
 				font-weight: bold;
@@ -262,45 +272,45 @@
 				line-height: 1;
 				margin: 10rpx 0;
 			}
-			
+
 			&-limit {
 				font-size: 24rpx;
 				opacity: 0.9;
 			}
 		}
-		
+
 		&__info {
 			flex: 1;
 			display: flex;
 			flex-direction: column;
 			align-items: flex-start;
             padding-left: 30rpx;
-			
+
 			&-title {
 				font-size: 32rpx;
 				font-weight: bold;
 				margin-bottom: 10rpx;
 			}
-			
+
 			&-desc {
 				font-size: 24rpx;
 				opacity: 0.9;
 				margin-bottom: 10rpx;
 			}
-			
+
 			&-time {
 				font-size: 20rpx;
 				opacity: 0.8;
 			}
 		}
-		
+
 		&__action {
 			display: flex;
             flex-direction: row;
 			align-items: center;
 			justify-content: center;
 		}
-		
+
 		&__dots {
 			position: absolute;
 			left: 0;
@@ -313,7 +323,7 @@
 			padding: 30rpx 0;
 			z-index: 1;
 		}
-		
+
 		&__dot {
 			width: 32rpx;
 			height: 32rpx;
@@ -322,7 +332,7 @@
 			margin: 0 -16rpx;
 			z-index: 3;
 		}
-		
+
 		&__rope {
 			position: absolute;
 			top: -40rpx;
@@ -333,7 +343,7 @@
 			background: linear-gradient(to right, #ffd000, #ffa000);
 			border-radius: 40rpx 40rpx 0 0;
 			z-index: 1;
-			
+
 			&::before {
 				content: '';
 				position: absolute;
@@ -344,7 +354,7 @@
 				background: linear-gradient(to bottom, #ffd000, #ffa000);
 				border-radius: 10rpx 0 0 10rpx;
 			}
-			
+
 			&::after {
 				content: '';
 				position: absolute;
@@ -356,7 +366,7 @@
 				border-radius: 0 10rpx 10rpx 0;
 			}
 		}
-		
+
 		// 不同主题样式
 		&--primary {
 			background: linear-gradient(90deg, #43afff, #3b8cff);
@@ -368,7 +378,7 @@
                 color: #fff;
             }
 		}
-		
+
 		&--success {
 			background: linear-gradient(90deg, #67dda9, #19be6b);
             color: #fff !important;
@@ -379,7 +389,7 @@
                 color: #fff;
             }
 		}
-		
+
 		&--warning {
 			background: linear-gradient(90deg, #ff9739, #ff6a39);
             color: #fff;
@@ -390,7 +400,7 @@
                 color: #fff;
             }
 		}
-		
+
 		&--error {
 			background: linear-gradient(90deg, #ff7070, #ff4747);
             color: #fff;
