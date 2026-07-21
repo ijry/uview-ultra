@@ -14,7 +14,7 @@
                 :key="getItemKey(item, index)"
                 :id="`up-dragsort-item-${index}`"
                 class="up-dragsort-item"
-                :class="{ dragging: dragIndex == index, disabled: !draggable || isItemDisabled(item) }"
+                :class="{ 'up-dragsort-item--dragging': dragIndex == index, 'up-dragsort-item--disabled': !draggable || isItemDisabled(item) }"
                 :style="getItemStyle(item, index)"
                 @touchstart="onItemTouchStart(index, $event)"
                 @touchend="onTouchEnd"
@@ -26,7 +26,7 @@
                         {{ getItemLabel(item) }}
                     </slot>
                     <view
-                        class="ui-dragSort-item-handler"
+                        class="up-dragsort-item__handler"
                         v-if="hasHandlerSlot()"
                         data-action="handler"
                         @touchstart.stop="onHandlerTouchStart(index, $event)"
@@ -693,65 +693,46 @@ defineExpose({
 .up-dragsort {
     width: 100%;
     height: auto;
+}
 
-    .up-dragsort-area {
-        width: 100%;
-        height: 100%;
-        position: relative;
-    }
+.up-dragsort-area {
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
 
-    .up-dragsort-item {
-        position: absolute;
-        width: 100%;
-        transition: left 0.2s ease, top 0.2s ease, box-shadow 0.45s ease-out;
+.up-dragsort-item {
+    position: absolute;
+    width: 100%;
+    height: auto;
+    transition: left 0.2s ease, top 0.2s ease, box-shadow 0.45s ease-out;
+}
 
-        &.dragging {
-            z-index: 1000;
-            transition: none;
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
-        }
+.up-dragsort-item--dragging {
+    z-index: 1000;
+    transition: none;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
 
-        .up-dragsort-item-content {
-            position: relative;
-            padding: 0;
-            box-sizing: border-box;
-        }
+.up-dragsort-item-content {
+    position: relative;
+    padding: 0;
+    box-sizing: border-box;
+}
 
-        .ui-dragSort-item-handler {
-            position: absolute;
-            left: 0;
-            top: 0;
-            bottom: 0;
-            width: 48px;
-            height: 100%;
-            min-width: 44px;
-            min-height: 44px;
-            display: flex;
-            flex-direction: row;
-            align-items: center;
-            justify-content: center;
-            z-index: 10;
-        }
-    }
-
-    &.up-dragsort--vertical {
-        .up-dragsort-item {
-            height: auto;
-        }
-    }
-
-    &.up-dragsort--horizontal {
-        .up-dragsort-item {
-            width: auto;
-            height: auto;
-        }
-    }
-
-    &.up-dragsort--all {
-        .up-dragsort-item {
-            width: auto;
-            height: auto;
-        }
-    }
+.up-dragsort-item__handler {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 48px;
+    height: 100%;
+    min-width: 44px;
+    min-height: 44px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
 }
 </style>

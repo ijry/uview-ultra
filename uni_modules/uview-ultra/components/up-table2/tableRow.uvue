@@ -10,13 +10,14 @@
     border-top: 1px solid #ebeef5;
     border-left: 1px solid #ebeef5;
     border-right: 1px solid #ebeef5;
-    .up-table-cell {
-        border-right: 1px solid #ebeef5;
-    }
-    
-    .up-table-cell:last-child {
-        border-right: none;
-    }
+}
+
+.up-table-cell--border {
+    border-right: 1px solid #ebeef5;
+}
+
+.up-table-cell--last {
+    border-right: none;
 }
 
 .up-table-cell {
@@ -80,7 +81,9 @@
             :class="[col.align ? 'up-text-' + col.align : '',
                 cellClassName ? cellClassName(row, col) : '',
                 getFixedClass(col),
-                getCellSpanClass(rowIndex, colIndex)
+                getCellSpanClass(rowIndex, colIndex),
+                border ? 'up-table-cell--border' : '',
+                colIndex == columns.length - 1 ? 'up-table-cell--last' : ''
             ]"
             :style="[cellStyleInner({row: row, column: col, rowIndex: rowIndex, columnIndex: colIndex, level: level}), getCellSpanStyle(rowIndex, colIndex)]">
                 <!-- 澶嶉€夋鍒?-->
@@ -98,7 +101,7 @@
                     </view>
                     <slot name="cellChild" :row="row" :column="col" :prow="parentRow"
                         :rowIndex="rowIndex" :columnIndex="colIndex" :level="level">
-                        <view class="up-table-cell_content">
+                        <view class="up-table-cell__content">
                             {{ row[col.key] }}
                         </view>
                     </slot>
@@ -272,6 +275,10 @@ const props = defineProps({
     spanMethod: {
         type: Function as PropType<UTSCallback | null>,
         default: null
+    },
+    border: {
+        type: Boolean,
+        default: false
     }
 })
 

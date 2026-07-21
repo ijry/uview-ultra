@@ -4,7 +4,7 @@
     <view
       :class="[
         'up-pagination-btn',
-        { disabled: currentPage === 1 }
+        { 'up-pagination-btn--disabled': currentPage === 1 }
       ]"
       :style="{ backgroundColor: buttonBgColor, borderColor: buttonBorderColor }"
       @click="prev"
@@ -22,7 +22,7 @@
         :key="index"
         :class="[
           'up-pagination-item',
-          { active: page === currentPage }
+          { 'up-pagination-item--active': page === currentPage }
         ]"
         @click="goTo(page)"
       >
@@ -52,7 +52,7 @@
     <view
       :class="[
         'up-pagination-btn',
-        { disabled: currentPage === totalPages }
+        { 'up-pagination-btn--disabled': currentPage === totalPages }
       ]"
       :style="{ backgroundColor: buttonBgColor, borderColor: buttonBorderColor }"
       @click="next"
@@ -369,49 +369,49 @@ defineExpose({
   flex-wrap: wrap;
   font-size: 14px;
   color: #606266;
+}
 
-  .up-pagination-total {
-    margin-right: 10px;
-  }
+.up-pagination-total {
+  margin-right: 10px;
+}
 
-  .up-pagination-sizes {
-    margin-right: 10px;
-    padding: 4px 4px;
-    border: 1rpx solid #dcdfe6;
-    border-radius: 4px;
-  }
+.up-pagination-sizes {
+  margin-right: 10px;
+  padding: 4px 4px;
+  border: 1rpx solid #dcdfe6;
+  border-radius: 4px;
+}
 
-  .up-pagination-btn {
-    margin: 0 3px;
-    padding: 4px 4px;
-    border: 1rpx solid #dcdfe6;
-    border-radius: 4px;
-    background-color: #f5f7fa;
+.up-pagination-btn {
+  margin: 0 3px;
+  padding: 4px 4px;
+  border: 1rpx solid #dcdfe6;
+  border-radius: 4px;
+  background-color: #f5f7fa;
+}
 
-    &.disabled {
-      opacity: 0.5;
-    }
-  }
+.up-pagination-btn--disabled {
+  opacity: 0.5;
+}
 
-  .up-pagination-item {
-    margin: 0 2px;
-    padding: 4px 8px;
-    border-radius: 4px;
+.up-pagination-item {
+  margin: 0 2px;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
 
-    &.active {
-      background-color: #409eff;
-      color: white;
-    }
-  }
+.up-pagination-item--active {
+  background-color: #409eff;
+  color: white;
+}
 
-  .up-pagination-jumper {
-    width: 40px;
-    height: 28px;
-    margin: 0 5px;
-    padding: 0 5px;
-    border: 1rpx solid #dcdfe6;
-    border-radius: 4px;
-    font-size: 14px;
-  }
+.up-pagination-jumper {
+  width: 40px;
+  height: 28px;
+  margin: 0 5px;
+  padding: 0 5px;
+  border: 1rpx solid #dcdfe6;
+  border-radius: 4px;
+  font-size: 14px;
 }
 </style>

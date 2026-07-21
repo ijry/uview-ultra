@@ -98,7 +98,7 @@
                     </view>
                     <slot name="cellChild" :row="row" :column="col" :prow="parentRow"
                         :rowIndex="rowIndex" :columnIndex="colIndex" :level="level">
-                        <view class="up-table-cell_content">
+                        <view class="up-table-cell__content">
                             {{ row[col.key] }}
                         </view>
                     </slot>

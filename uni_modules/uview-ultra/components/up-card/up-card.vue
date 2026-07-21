@@ -19,10 +19,10 @@
 			@tap="headClick"
 		>
 			<view v-if="!$slots.head" class="up-flex up-row-between">
-				<view class="up-card__head--left up-flex up-line-1" v-if="title">
+				<view class="up-card__head-left up-flex up-line-1" v-if="title">
 					<image
 						:src="thumb"
-						class="up-card__head--left__thumb"
+						class="up-card__head-left__thumb"
 						mode="aspectFill"
 						v-if="thumb"
 						:style="{ 
@@ -32,7 +32,7 @@
 						}"
 					></image>
 					<text
-						class="up-card__head--left__title up-line-1"
+						class="up-card__head-left__title up-line-1"
 						:style="{
 							fontSize: addUnit(titleSize),
 							color: titleColor
@@ -41,7 +41,7 @@
 						{{ title }}
 					</text>
 				</view>
-				<view class="up-card__head--right up-line-1" v-if="subTitle">
+				<view class="up-card__head-right up-line-1" v-if="subTitle">
 					<text
 						class="up-card__head__title__text"
 						:style="{
@@ -156,23 +156,21 @@
 		border-radius: 16rpx;
 	}
 
-	&__head {
-		&--left {
-			color: $up-main-color;
-			
-			&__thumb {
-				margin-right: 16rpx;
-			}
-			
-			&__title {
-				max-width: 400rpx;
-			}
-		}
+	&__head-left {
+		color: $up-main-color;
+	}
 
-		&--right {
-			color: $up-tips-color;
-			margin-left: 6rpx;
-		}
+	&__head-left__thumb {
+		margin-right: 16rpx;
+	}
+
+	&__head-left__title {
+		max-width: 400rpx;
+	}
+
+	&__head-right {
+		color: $up-tips-color;
+		margin-left: 6rpx;
 	}
 
 	&__body {

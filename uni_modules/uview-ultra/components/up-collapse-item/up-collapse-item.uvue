@@ -272,11 +272,9 @@
 
 			&__text {
 				padding: 12px 15px;
-				.text {
-					color: $up-content-color;
-					font-size: 14px;
-					line-height: 18px;
-				}
+				color: $up-content-color;
+				font-size: 14px;
+				line-height: 18px;
 			}
 		}
 	}

@@ -26,7 +26,7 @@
             }"
         >
             <slot :showList="showList">
-                <up-icon class="cursor-pointer" :class="{ 'show-list': showList }" name="plus" :color="color"></up-icon>
+                <up-icon class="cursor-pointer" :class="{ 'up-float-button__icon--open': showList }" name="plus" :color="color"></up-icon>
             </slot>
         </view>
         <view
@@ -177,9 +177,6 @@ const itemClick = (item: UTSJSONObject, index: number): void => {
 .up-float-button {
     z-index: 999;
 
-    .show-list {
-        transform: rotate(45deg);
-    }
 
     &__list {
         position: absolute;
@@ -190,5 +187,8 @@ const itemClick = (item: UTSJSONObject, index: number): void => {
         z-index: 999;
         align-items: center;
     }
+}
+.up-float-button__icon--open {
+    transform: rotate(45deg);
 }
 </style>

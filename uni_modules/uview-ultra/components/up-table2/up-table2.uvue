@@ -12,7 +12,7 @@
                         v-for="(col, colIndex) in columns"
                         :key="getColumnKey(col, colIndex)"
                         class="up-table-cell up-table-header-cell"
-                        :class="[getHeaderAlignClass(col)]"
+                        :class="[getHeaderAlignClass(col), getHeaderCellExtraClass(colIndex, columns.length)]"
                         :style="getHeaderCellStyle(col)"
                         @click="handleHeaderClick(col)"
                     >
@@ -63,7 +63,7 @@
                                     :columnIndex="safeToNumber(cell['colIndex'])"
                                     :level="safeToNumber(item['level'], 1)"
                                 >
-                                    <text class="up-table-cell-text">{{ getCellText(item['row'] as UTSJSONObject, cell['col'] as UTSJSONObject) }}</text>
+                                    <text :class="getCellTextClass(item['row'] as UTSJSONObject, cell['col'] as UTSJSONObject, safeToNumber(item['rowIndex']), safeToNumber(cell['colIndex']))">{{ getCellText(item['row'] as UTSJSONObject, cell['col'] as UTSJSONObject) }}</text>
                                 </slot>
                             </template>
                         </view>
@@ -89,7 +89,7 @@
                     v-for="(col, fixedIndex) in fixedLeftColumns"
                     :key="getColumnKey(col, fixedIndex)"
                     class="up-table-cell up-table-header-cell"
-                    :class="[getHeaderAlignClass(col)]"
+                    :class="[getHeaderAlignClass(col), getHeaderCellExtraClass(fixedIndex, fixedLeftColumns.length)]"
                     :style="getFixedHeaderCellStyle(col)"
                     @click="handleHeaderClick(col)"
                 >
@@ -132,7 +132,7 @@
                                 <text>{{ isExpanded(item['row'] as UTSJSONObject) ? '-' : '+' }}</text>
                             </view>
                             <!-- 固定列浮动视图直接内联渲染，不使用 slot，避免与主表体 slot name="cell" 重名报错 -->
-                            <text class="up-table-cell-text">{{ getCellText(item['row'] as UTSJSONObject, cell['col'] as UTSJSONObject) }}</text>
+                            <text :class="getCellTextClass(item['row'] as UTSJSONObject, cell['col'] as UTSJSONObject, safeToNumber(item['rowIndex']), safeToNumber(cell['colIndex']))">{{ getCellText(item['row'] as UTSJSONObject, cell['col'] as UTSJSONObject) }}</text>
                         </template>
                     </view>
                 </view>
@@ -831,14 +831,41 @@ function getFixedCellStyle(row: UTSJSONObject, col: UTSJSONObject, rowIndex: num
 }
 
 function getCellSpanClass(row: UTSJSONObject, column: UTSJSONObject, rowIndex: number, columnIndex: number): string {
+    const classes = [] as string[];
+    classes.push('up-table-cell--body');
+    if (props.border) {
+        classes.push('up-table-cell--border');
+    }
+    const cols = props.columns as UTSJSONObject[];
+    if (columnIndex == cols.length - 1) {
+        classes.push('up-table-cell--last');
+    }
     const span = getCellSpan(row, column, rowIndex, columnIndex);
     if ((span['rowspan'] as number) == 0 || (span['colspan'] as number) == 0) {
-        return 'up-table-cell-hidden';
+        classes.push('up-table-cell-hidden');
+    } else if ((span['rowspan'] as number) > 1 || (span['colspan'] as number) > 1) {
+        classes.push('up-table-cell-merged');
     }
+    return classes.join(' ');
+}
+
+function getHeaderCellExtraClass(colIndex: number, colCount: number): string {
+    const classes = [] as string[];
+    if (props.border) {
+        classes.push('up-table-cell--border');
+    }
+    if (colCount > 0 && colIndex == colCount - 1) {
+        classes.push('up-table-cell--last');
+    }
+    return classes.join(' ');
+}
+
+function getCellTextClass(row: UTSJSONObject, column: UTSJSONObject, rowIndex: number, columnIndex: number): string {
+    const span = getCellSpan(row, column, rowIndex, columnIndex);
     if ((span['rowspan'] as number) > 1 || (span['colspan'] as number) > 1) {
-        return 'up-table-cell-merged';
+        return 'up-table-cell-text up-table-cell-text--merged';
     }
-    return '';
+    return 'up-table-cell-text';
 }
 
 function isHiddenBySameRowColspan(row: UTSJSONObject, rowIndex: number, columnIndex: number): boolean {
@@ -1280,6 +1307,8 @@ defineExpose({
     getCellSpanArray,
     getCellSpan,
     getCellSpanClass,
+    getHeaderCellExtraClass,
+    getCellTextClass,
     isHiddenBySameRowColspan,
     isCellRendered,
     getRowCells,
@@ -1358,7 +1387,7 @@ defineExpose({
     width: 100%;
 }
 
-.up-table-body .up-table-cell {
+.up-table-cell--body {
     font-size: 12px;
     padding-top: 4px;
     padding-bottom: 4px;
@@ -1438,11 +1467,11 @@ defineExpose({
     border-right: 1px solid #ebeef5;
 }
 
-.up-table-border .up-table-cell {
+.up-table-cell--border {
     border-right: 1px solid #ebeef5;
 }
 
-.up-table-border .up-table-cell:last-child {
+.up-table-cell--last {
     border-right: none;
 }
 
@@ -1458,7 +1487,7 @@ defineExpose({
     overflow: visible;
 }
 
-.up-table-cell-merged .up-table-cell-text {
+.up-table-cell-text--merged {
     overflow: visible;
     text-overflow: clip;
 }

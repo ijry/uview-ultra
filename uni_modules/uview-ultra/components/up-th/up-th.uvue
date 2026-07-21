@@ -82,10 +82,12 @@
 		flex: 1;
 		justify-content: center;
 		background-color: rgb(245, 246, 248);
-		.up-th__text {
+	}
+
+	.up-th__text {
 			font-size: 14px;
 			color: $up-main-color;
 			font-weight: bold;
-		}
+	
 	}
 </style>

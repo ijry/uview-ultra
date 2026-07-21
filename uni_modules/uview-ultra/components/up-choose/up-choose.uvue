@@ -1,13 +1,4 @@
 <style scoped lang="scss">
-	.up-choose {
-		::v-deep .up-tag {
-		    font-weight: 600;
-		}
-		&:last-child {
-			margin-right: 0;
-		}
-	}
-	
 	.up-choose-wrap {
 		flex-wrap: wrap;
 	}
@@ -28,7 +19,7 @@
                     <up-tag :type="index === currentIndex ? 'primary' : 'info'"
                         size="large" :plain="index === currentIndex ? false : true"
                         :class="currentIndex === index ? 'active': ''" :height="itemHeight"
-                        :style="{width: itemWidth, padding: itemPadding}"
+                        :style="{width: itemWidth, padding: itemPadding, fontWeight: '600'}"
                         @click="change(index)">
                         {{getItemLabel(item)}}
                     </up-tag>

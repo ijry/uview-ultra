@@ -439,14 +439,14 @@ defineExpose({
 </script>
 
 <style lang="scss" scoped>
+	.up-goods-sku-container {
+		padding: 4rpx 30rpx;
+	}
+
 	.up-goods-sku {
 		background-color: #fff;
 		overflow: hidden;
 
-        .up-goods-sku-container {
-            padding: 4rpx 30rpx;
-        }
-		
 		&__header {
 			display: flex;
             flex-direction: row;

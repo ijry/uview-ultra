@@ -8,6 +8,7 @@
     >
       <view
         class="up-tree-node__content"
+        :class="getNodeContentClass(item)"
         :style="getNodeContentStyle(item)"
         @tap="handleNodeClick(item)"
       >
@@ -375,6 +376,13 @@ function getNodeClass(item: UTSJSONObject): string {
   return classes.join(' ');
 }
 
+function getNodeContentClass(item: UTSJSONObject): string {
+  if (componentProps.highlightCurrent && valueToString(item['key']) == currentKey.value) {
+    return 'up-tree-node__content--current';
+  }
+  return '';
+}
+
 function resolveNodeKey(node: UTSJSONObject, parentKey: string, index: number): string {
   const rawKey = node[keyField.value];
   const normalized = valueToString(rawKey);
@@ -734,6 +742,7 @@ defineExpose({
   isNodeDisabled,
   includesKey,
   getNodeClass,
+  getNodeContentClass,
   getNodeContentStyle,
   getIndentValue,
   handleNodeClick,
@@ -777,7 +786,7 @@ defineExpose({
   border-radius: 8rpx;
 }
 
-.up-tree-node--current .up-tree-node__content {
+.up-tree-node__content--current {
   background-color: var(--up-primary-light, #ecf5ff);
 }
 

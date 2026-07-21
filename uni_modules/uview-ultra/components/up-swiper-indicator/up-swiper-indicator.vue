@@ -10,7 +10,7 @@
 			}"
 		>
 			<view
-				class="up-swiper-indicator__wrapper--line__bar"
+				class="up-swiper-indicator__line-bar"
 				:style="[lineStyle]"
 			></view>
 		</view>
@@ -81,21 +81,12 @@
 <style lang="scss" scoped>
 
 	.up-swiper-indicator {
-
 		&__wrapper {
 			@include flex;
 
 			&--line {
 				border-radius: 100px;
 				height: 4px;
-
-				&__bar {
-					width: 22px;
-					height: 4px;
-					border-radius: 100px;
-					background-color: #FFFFFF;
-					transition: transform 0.3s;
-				}
 			}
 
 			&__dot {
@@ -108,7 +99,14 @@
 					width: 12px;
 				}
 			}
+		}
 
+		&__line-bar {
+			width: 22px;
+			height: 4px;
+			border-radius: 100px;
+			background-color: #FFFFFF;
+			transition: transform 0.3s;
 		}
 	}
 </style>

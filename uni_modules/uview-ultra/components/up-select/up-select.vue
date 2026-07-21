@@ -20,10 +20,10 @@
 				:style="{ overflowY: 'auto', zIndex: zIndex + 1, left: optionsWrapLeft, right: optionsWrapRight, maxHeight: maxHeight}">
 				<view class="up-select__options" v-if="isOpen">
 					<slot name="options">
-						<view class="up-select__options_item" :class="current == item[keyName] ? 'active': ''"
+						<view class="up-select__options-item" :class="current == item[keyName] ? 'up-select__options-item--active': ''"
 							:key="index" v-for="(item, index) in options" @click="selectItem(item)">
 							<slot name="optionItem" :item="item">
-								<text class="up-select__item_text" :style="{color: itemColor}">
+								<text class="up-select__item-text" :style="{color: itemColor}">
 									{{item[labelName]}}
 								</text>
 							</slot>
@@ -177,65 +177,59 @@
 <style lang="scss" scoped>
 	.up-select__content {
 		position: relative;
-
-		.up-select__label {
-			display: flex;
-			justify-content: space-between;
-
-			/* #ifdef H5 */
-			&:hover {
-				cursor: pointer;
-			}
-
-			/* #endif */
-		}
-
-		.up-select__text {
-			margin-right: 2px;
-		}
-
-		&.disabled {
-			opacity: 0.6;
-			pointer-events: none;
-		}
-
-		.up-select__options__wrap {
-			margin-bottom: 46px;
-			position: absolute;
-			top: 20px;
-			left: 0;
-		}
-
-		.up-select__options {
-			min-width: 100px;
-			box-sizing: border-box;
-			border-radius: 4px;
-			border: 1px solid #f1f1f1;
-			background-color: #fff;
-
-			.up-select__options_item {
-				padding: 10px 12px;
-				box-sizing: border-box;
-				width: 100%;
-				height: 100%;
-
-				&:hover {
-					background-color: #f7f7f7;
-				}
-
-				/* #ifdef H5 */
-				&:hover {
-					cursor: pointer;
-				}
-
-				.up-select__item_text {
-					&:hover {
-						cursor: pointer;
-					}
-				}
-
-				/* #endif */
-			}
-		}
 	}
+
+	.up-select__content--disabled {
+		opacity: 0.6;
+		pointer-events: none;
+	}
+
+	.up-select__label {
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		justify-content: space-between;
+	}
+
+	/* #ifdef H5 */
+	.up-select__label:hover {
+		cursor: pointer;
+	}
+	/* #endif */
+
+	.up-select__text {
+		margin-right: 2px;
+	}
+
+	.up-select__options__wrap {
+		position: fixed;
+		top: 0;
+		left: 0;
+	}
+
+	.up-select__options {
+		min-width: 100px;
+		box-sizing: border-box;
+		border-radius: 4px;
+		border: 1px solid #f1f1f1;
+		background-color: #fff;
+	}
+
+	.up-select__options-item {
+		padding: 10px 12px;
+		box-sizing: border-box;
+		width: 100%;
+		height: 100%;
+	}
+
+	/* #ifdef H5 */
+	.up-select__options-item:hover {
+		background-color: #f7f7f7;
+		cursor: pointer;
+	}
+
+	.up-select__item-text:hover {
+		cursor: pointer;
+	}
+	/* #endif */
 </style>

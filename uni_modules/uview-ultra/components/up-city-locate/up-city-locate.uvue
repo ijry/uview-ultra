@@ -178,10 +178,11 @@
 		display: flex !important;
 		flex-direction: row !important;
 		padding: 12px 0;
-		.hot-city-item {
-			padding: 6px 12px;
-			margin: 5px;
-			border: 1px solid #ededed;
-		}
+	}
+
+	.hot-city-item {
+		padding: 6px 12px;
+		margin: 5px;
+		border: 1px solid #ededed;
 	}
 </style>

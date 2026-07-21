@@ -114,9 +114,11 @@
 		align-self: stretch;
 		box-sizing: border-box;
 		height: 100%;
-		.up-td__text {
+	}
+
+	.up-td__text {
 			font-size: 14px;
 			color: $up-content-color;
-		}
+	
 	}
 </style>

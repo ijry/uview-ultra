@@ -16,7 +16,7 @@
             <up-select v-model:current="cateId" label="分类"
                 :options="scenesList">
                 <template #optionItem="{item}">
-                    <text class="u-select__item_text">
+                    <text class="up-select__item-text">
                         自定义选项
                     </text>
                 </template>

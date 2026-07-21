@@ -11,7 +11,7 @@
                 @touchstart="onTouchStart(index, $event)" @touchend="onTouchEnd" @touchcancel="onTouchEnd" @touchmove="onTouchMove">
                 <view class="up-dragsort-item-content">
                     <view
-                        class="ui-dragSort-item-handler"
+                        class="up-dragsort-item__handler"
                         v-if="$slots.handler"
                         data-action="handler"
                         @touchstart="onTouchStart(index, $event)"

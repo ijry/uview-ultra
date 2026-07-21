@@ -64,9 +64,9 @@
 					:style="[lineStyle]"
 				>
 					<view
-						class="up-scroll-list__indicator__line__bar"
+						class="up-scroll-list__indicator-line-bar"
 						:style="[barStyle]"
-						ref="up-scroll-list__indicator__line__bar"
+						ref="up-scroll-list__indicator-line-bar"
 					></view>
 				</view>
 			</view>
@@ -221,13 +221,13 @@ export default {
 			height: 4px;
 			border-radius: 100px;
 			overflow: hidden;
-
-			&__bar {
-				width: 20px;
-				height: 4px;
-				border-radius: 100px;
-			}
 		}
+	}
+
+	&__indicator-line-bar {
+		width: 20px;
+		height: 4px;
+		border-radius: 100px;
 	}
 }
 </style>

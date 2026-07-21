@@ -572,11 +572,7 @@ defineExpose({
 					display: flex;
 					align-items: center;
 					
-					.speed-text {
-						color: #fff;
-						font-size: 12px;
-						margin-right: 4px;
-					}
+
 				}
 			}
 			
@@ -648,5 +644,10 @@ defineExpose({
 		
 		&__progress {
 		}
+	}
+	.up-short-video__speed-text {
+		color: #fff;
+		font-size: 12px;
+		margin-right: 4px;
 	}
 </style>

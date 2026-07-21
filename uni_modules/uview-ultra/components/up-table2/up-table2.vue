@@ -56,7 +56,7 @@
                                     </view>
                                     <slot name="cell" :row="item.row" :column="col" :prow="item.parentRow"
                                         :rowIndex="item.rowIndex" :columnIndex="colIndex" :level="item.level">
-                                        <view class="up-table-cell_content">
+                                        <view class="up-table-cell__content">
                                             {{ item.row[col.key] }}
                                         </view>
                                     </slot>
@@ -166,7 +166,7 @@
                                         </view>
                                     </view>
                                     <!-- 固定列浮动视图直接内联渲染，避免与主表体 slot name="cell" 重名（微信小程序不允许同组件多个同名 slot） -->
-                                    <view class="up-table-cell_content">
+                                    <view class="up-table-cell__content">
                                         {{ item.row[col.key] }}
                                     </view>
                                 </template>

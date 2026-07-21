@@ -21,11 +21,11 @@
 		>
 			<view v-if="$slots['head'] == null"
 				class="up-flex up-row-between up-flex-between up-flex-items-center">
-				<view class="up-card__head--left up-flex up-flex-items-center up-line-11"
+				<view class="up-card__head-left up-flex up-flex-items-center up-line-11"
 					v-if="title != ''">
 					<image
 						:src="thumb"
-						class="up-card__head--left__thumb"
+						class="up-card__head-left__thumb"
 						mode="aspectFill"
 						v-if="thumb"
 						:style="{ 
@@ -35,7 +35,7 @@
 						}"
 					></image>
 					<text
-						class="up-card__head--left__title up-line-1"
+						class="up-card__head-left__title up-line-1"
 						:style="{
 							fontSize: $up.addUnit(titleSize),
 							color: titleColor
@@ -44,7 +44,7 @@
 						{{ title }}
 					</text>
 				</view>
-				<view class="up-card__head--right up-line-1"
+				<view class="up-card__head-right up-line-1"
 					v-if="subTitle != ''">
 					<text
 						class="up-card__head__title__text"
@@ -279,24 +279,23 @@ const footClick = () => {
 		border-radius: 16rpx;
 	}
 
-	&__head {
-		&--left {
-			color: $up-main-color;
-			
-			&__thumb {
-				margin-right: 16rpx;
-			}
-			
-			&__title {
-				max-width: 400rpx;
-			}
-		}
-
-		&--right {
-			color: $up-tips-color;
-			margin-left: 16rpx;
-		}
+	&__head-left {
+		color: $up-main-color;
 	}
+
+	&__head-left__thumb {
+		margin-right: 16rpx;
+	}
+
+	&__head-left__title {
+		max-width: 400rpx;
+	}
+
+	&__head-right {
+		color: $up-tips-color;
+		margin-left: 16rpx;
+	}
+
 
 	&__body {
 		color: $up-content-color;

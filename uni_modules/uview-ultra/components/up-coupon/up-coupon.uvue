@@ -227,7 +227,7 @@
 			align-items: flex-start;
             padding-left: 10rpx;
 			padding-right: 30rpx;
-            border-right: 1px dashed #ccc;
+            border-right: 1px dashed var(--up-coupon-amount-border, #ccc);
 			
 			&-unit {
 				font-size: 24rpx;
@@ -237,7 +237,7 @@
 			&-value {
 				font-size: 56rpx;
 				font-weight: bold;
-                color: red;
+                color: var(--up-coupon-amount-value-color, red);
 				line-height: 1;
 				margin: 10rpx 0;
 			}
@@ -318,45 +318,29 @@
 		&--primary {
 			background: linear-gradient(90deg, #43afff, #3b8cff);
             color: #fff;
-            .up-coupon__amount {
-                border-right: 1px dashed #eee;
-            }
-            .up-coupon__amount-value {
-                color: #fff;
-            }
+            --up-coupon-amount-border: #eee;
+            --up-coupon-amount-value-color: #fff;
 		}
 		
 		&--success {
 			background: linear-gradient(90deg, #67dda9, #19be6b);
             color: #fff !important;
-            .up-coupon__amount {
-                border-right: 1px dashed #eee;
-            }
-            .up-coupon__amount-value {
-                color: #fff;
-            }
+            --up-coupon-amount-border: #eee;
+            --up-coupon-amount-value-color: #fff;
 		}
 		
 		&--warning {
 			background: linear-gradient(90deg, #ff9739, #ff6a39);
             color: #fff;
-            .up-coupon__amount {
-                border-right: 1px dashed #eee;
-            }
-            .up-coupon__amount-value {
-                color: #fff;
-            }
+            --up-coupon-amount-border: #eee;
+            --up-coupon-amount-value-color: #fff;
 		}
 		
 		&--error {
 			background: linear-gradient(90deg, #ff7070, #ff4747);
             color: #fff;
-            .up-coupon__amount {
-                border-right: 1px dashed #eee;
-            }
-            .up-coupon__amount-value {
-                color: #fff;
-            }
+            --up-coupon-amount-border: #eee;
+            --up-coupon-amount-value-color: #fff;
 		}
 	}
 </style>
