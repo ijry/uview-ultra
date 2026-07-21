@@ -1,10 +1,6 @@
 // 看到此报错，是因为没有配置vite.config.js的【transpileDependencies】
 // const pleaseSetTranspileDependencies = {}, babelTest = pleaseSetTranspileDependencies?.test
 
-// 引入全局mixin
-import { mixin } from './libs/mixin/mixin.js'
-// 小程序特有的mixin
-import { mpMixin } from './libs/mixin/mpMixin.js'
 // 全局挂载引入http相关请求拦截插件
 import Request from './libs/luch-request'
 
@@ -62,7 +58,7 @@ import platform from './libs/function/platform'
 // 导出
 const http = new Request()
 let themeType = ['primary', 'success', 'error', 'warning', 'info'];
-export { route, http, debounce, throttle, calc, digit, platform, themeType, mixin, mpMixin, props, color, test, zIndex, i18n, t }
+export { route, http, debounce, throttle, calc, digit, platform, themeType, props, color, test, zIndex, i18n, t }
 export * from './libs/function/index.js'
 export * from './libs/function/colorGradient.js'
 
@@ -179,8 +175,6 @@ const $u = {
     digit,
     i18n,
     t,
-    mixin,
-    mpMixin,
     props,
     ...index,
     color,
@@ -292,10 +286,9 @@ const install = (Vue) => {
     initThemeSystem()
 
     // #ifndef APP-NVUE
-    // 只有vue，挂载到Vue.prototype才有意义，因为nvue中全局Vue.prototype和Vue.mixin是无效的
+    // 只有vue，挂载到Vue.prototype才有意义，因为nvue中全局Vue.prototype无效
     Vue.config.globalProperties.$u = $u
     defineGlobalThemeHelpers(Vue)
-    Vue.mixin(mixin)
     // #endif
 }
 

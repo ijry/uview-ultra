@@ -177,8 +177,6 @@ declare module 'uview-plus' {
 		setRootToastRef: (ref?: any) => void;
 		rootNotify: (options?: string | { message?: string; title?: string; duration?: number; [key: string]: any }) => void;
 		setRootNotifyRef: (ref?: any) => void;
-		mixin: {},
-		mpMixin: {},
 		props: {},
 		color: Color;
 		platform: string;
