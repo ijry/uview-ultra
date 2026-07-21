@@ -1,3 +1,11 @@
+## 4.5.2
+fix: 发布 uview-ultra 4.5.2，修复拖拽层级并清理 UTS mixin
+
+- 修复 up-dragsort 向上拖拽只能移动一层的问题，调整拖拽排序计算与示例页联动。
+- 清理 UTS 版本遗留 mixin 与无用 composable，移除全局 mixin 注册，组件改为显式公共 props，action-sheet 保留 button/openType 事件转发。
+- up-calendar 新增 closeable、closeIconPos、zoom 透传，pageInline 场景列表高度不再保留底部弹层占位。
+- 补充 Vue runtime parity 后续实施计划，并忽略本地生成调试产物。
+
 ## 4.5.1
 fix: 修复日历组件透传弹层属性
 
