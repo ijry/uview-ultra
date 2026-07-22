@@ -1,3 +1,9 @@
+## 4.5.6
+fix: 同步修复 swipeAction 关闭态右侧删除按钮露边
+
+- 同步 uview-plus #843：H5 关闭态内容层与容器 1px 亚像素缝隙导致删除按钮露边
+- vue/uvue 同步补齐内容层覆盖、box-shadow 封边与容器合成层裁剪
+
 ## 4.5.5
 feat: 发布 uview-ultra 4.5.5，Vue 组件全面 script setup 化
 
