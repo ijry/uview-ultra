@@ -1,3 +1,11 @@
+## 4.5.5
+feat: 发布 uview-ultra 4.5.5，Vue 组件全面 script setup 化
+
+- 143 个 Vue `.vue` 组件迁移为 true `<script setup>`，新增 `useUltraUI.js` 替代运行时 mixin 能力
+- 移除 Vue 侧遗留 `libs/mixin` 与全局 `Vue.mixin` 注册；公共 props/方法改为组件显式接入
+- 修复 up-swipe-action-item 关闭态右侧删除按钮 H5 亚像素露边（同步 uview-plus #843，vue/uvue）
+- 保留 APP-NVUE 条件编译与 proxy/$refs 适配；calendar popup 透传与 navbar interceptor 已对齐
+
 ## 4.5.4
 feat: 适配蒸汽模式与 BEM 样式，兼容样式隔离 2.0
 
