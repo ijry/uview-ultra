@@ -421,6 +421,13 @@ const resizeCrop = (point: CropTouch): void => {
 	const maxH = numberValue(canvasHeight.value, 0) - 24
 	nextW = clamp(nextW, minSize, maxW)
 	nextH = clamp(nextH, minSize, maxH)
+	// inner 模式：裁剪框不得大于当前图片显示尺寸，避免露出空白
+	if (innerMode.value as boolean) {
+		const displayW = numberValue(displayWidth.value, 0)
+		const displayH = numberValue(displayHeight.value, 0)
+		if (displayW > 0) nextW = Math.min(nextW, displayW)
+		if (displayH > 0) nextH = Math.min(nextH, displayH)
+	}
 	const lockedWidth = rpxToPx(props.lockWidth, 0)
 	const lockedHeight = rpxToPx(props.lockHeight, 0)
 	if (lockedWidth > 0) nextW = lockedWidth
@@ -432,8 +439,19 @@ const resizeCrop = (point: CropTouch): void => {
 const handlePinch = (first: CropTouch, second: CropTouch): void => {
 	const currentDistance = distanceBetween(first, second)
 	if (startPinchDistance.value > 0 && (canScaleLocal.value as boolean)) {
-		const minScale = numberValue(minScaleValue.value, 0.3)
+		let minScale = numberValue(minScaleValue.value, 0.3)
 		const maxScale = numberValue(maxScaleValue.value, 4)
+		// inner 模式：缩放下限至少保证图片覆盖裁剪框
+		if (innerMode.value as boolean) {
+			const baseW = Math.max(1, numberValue(baseDisplayWidth.value, 1))
+			const baseH = Math.max(1, numberValue(baseDisplayHeight.value, 1))
+			const cropW = numberValue(cropWidth.value, 0)
+			const cropH = numberValue(cropHeight.value, 0)
+			const coverScale = Math.max(cropW / baseW, cropH / baseH)
+			if (coverScale > minScale) {
+				minScale = coverScale
+			}
+		}
 		const nextScale = clamp(startScaleValue.value * currentDistance / startPinchDistance.value, minScale, maxScale)
 		applyScale(nextScale)
 	}

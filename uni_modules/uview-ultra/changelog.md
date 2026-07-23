@@ -1,3 +1,11 @@
+## 4.5.8
+feat: cropper 支持并文档化 inner 限制裁剪框在图片内
+
+- 同步 uview-plus #921：暴露 `inner` 属性，开启后拖动/缩放保持裁剪框在图片内，并禁用旋转
+- 修复 `chooseImage` 开启 `inner` 时未同步禁用旋转的问题
+- `inner + canChangeSize` 时调整裁剪框也限制在图片显示范围内（vue/uvue）
+- 补充组件示例与文档说明
+
 ## 4.5.7
 fix: App 端内置图标字体改为包内本地加载
 

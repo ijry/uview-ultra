@@ -773,7 +773,8 @@ function windowResize() {
 
 					expWidth && (state.expWidth = expWidth.indexOf('rpx') >= 0 ? parseInt(expWidth) * state.pxRatio : parseInt(expWidth));
 					expHeight && (state.expHeight = expHeight.indexOf('rpx') >= 0 ? parseInt(expHeight) * state.pxRatio : parseInt(expHeight));
-					state.letRotate = canRotate === false ? 0 : 1;
+					state.isin = inner === true ? 1 : 0;
+					state.letRotate = (canRotate === false || state.isin) ? 0 : 1;
 					state.letScale = canScale === false ? 0 : 1;
 					// 设置是否允许调整裁剪框大小
 					state.letChangeSize = canChangeSize || false;
@@ -781,7 +782,6 @@ function windowResize() {
 					state.mnScale = minScale || 0.3;
 					state.mxScale = maxScale || 4;
 					state.stc = stretch;
-					state.isin = inner === true ? 1 : 0;
 					state.lck = lock;
 					if (state.isin) {
 						state.btnWidth = '24%';
@@ -941,17 +941,41 @@ function windowResize() {
 								break;
 						}
 
-						// 确保最小尺寸
-						if (parseInt(style.width) >= minWidth && parseInt(style.height) >= minHeight) {
-							// 确保裁剪框不超出屏幕边界
-							if (parseInt(style.left) >= 0 &&
-								parseInt(style.top) >= 0 &&
-								(parseInt(style.left) + parseInt(style.width)) <= state.windowWidth &&
-								(parseInt(style.top) + parseInt(style.height)) <= (state.windowHeight - tabHeight)) {
-								state.selStyle = style;
-								// 重新绘制操作层
-								drawInit();
-							}
+						// 约束裁剪框：最小尺寸、屏幕边界，inner 模式下再限制在图片内
+						let nl = parseInt(style.left);
+						let nt = parseInt(style.top);
+						let nw = parseInt(style.width);
+						let nh = parseInt(style.height);
+
+						// 屏幕边界
+						if (nl < 0) nl = 0;
+						if (nt < 0) nt = 0;
+						if (nl + nw > state.windowWidth) nw = state.windowWidth - nl;
+						if (nt + nh > state.windowHeight - tabHeight) nh = state.windowHeight - tabHeight - nt;
+
+						if (state.isin) {
+							const imgWidth = state.useWidth * state.scaleSize;
+							const imgHeight = state.useHeight * state.scaleSize;
+							const rx0 = state.posWidth + state.useWidth / 2;
+							const ry0 = state.posHeight + state.useHeight / 2;
+							const imgL = rx0 - imgWidth / 2;
+							const imgT = ry0 - imgHeight / 2;
+							const imgR = imgL + imgWidth;
+							const imgB = imgT + imgHeight;
+							if (nl < imgL) nl = imgL;
+							if (nt < imgT) nt = imgT;
+							if (nl + nw > imgR) nw = imgR - nl;
+							if (nt + nh > imgB) nh = imgB - nt;
+						}
+
+						if (nw >= minWidth && nh >= minHeight) {
+							style.left = nl + 'px';
+							style.top = nt + 'px';
+							style.width = nw + 'px';
+							style.height = nh + 'px';
+							state.selStyle = style;
+							// 重新绘制操作层
+							drawInit();
 						}
 					} else {
 						// 原有的移动图片逻辑

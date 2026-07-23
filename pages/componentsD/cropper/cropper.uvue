@@ -31,6 +31,15 @@
 				<up-cropper ref="wideRef" @confirm="cutImage"></up-cropper>
 			</view>
 		</view>
+		<view class="u-page__item">
+			<text class="u-page__item__title">限制在图片内</text>
+			<view class="u-page__item__content">
+				<view class="avatar-wrapper" @click="chooseInnerImage">
+					<up-avatar :src="innerUrl" size="120px"></up-avatar>
+				</view>
+				<up-cropper ref="innerRef" @confirm="cutImage"></up-cropper>
+			</view>
+		</view>
 		<!-- #ifdef APP -->
 		</scroll-view>
 		<!-- #endif -->
@@ -46,7 +55,9 @@ import { ref } from 'vue'
 
 const avatarUrl = ref('')
 const wideUrl = ref('')
+const innerUrl = ref('')
 const wideRef = ref<ComponentPublicInstance | null>(null)
+const innerRef = ref<ComponentPublicInstance | null>(null)
 
 function chooseWideImage(): void {
 	const cropper = wideRef.value
@@ -62,11 +73,28 @@ function chooseWideImage(): void {
 	} as UTSJSONObject)
 }
 
+function chooseInnerImage(): void {
+	const cropper = innerRef.value
+	if (cropper == null) {
+		return
+	}
+	cropper.$callMethod('chooseImage', 2, {
+		inner: true,
+		canChangeSize: false,
+		areaWidth: '300rpx',
+		areaHeight: '300rpx',
+		exportWidth: '260rpx',
+		exportHeight: '260rpx'
+	} as UTSJSONObject)
+}
+
 function cutImage(result: UTSJSONObject): void {
 	const path = result['path'] == null ? '' : result['path'].toString()
 	const index = result['index'] == null ? 0 : parseInt(result['index'].toString())
 	if (index == 1) {
 		wideUrl.value = path
+	} else if (index == 2) {
+		innerUrl.value = path
 	} else {
 		avatarUrl.value = path
 	}
