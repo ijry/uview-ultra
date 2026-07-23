@@ -55,10 +55,13 @@ import color from './libs/config/color.js'
 // 平台
 import platform from './libs/function/platform'
 
+// fontUtil
+import fontUtil from './components/up-icon/util.js'
+
 // 导出
 const http = new Request()
 let themeType = ['primary', 'success', 'error', 'warning', 'info'];
-export { route, http, debounce, throttle, calc, digit, platform, themeType, props, color, test, zIndex, i18n, t }
+export { route, http, debounce, throttle, calc, digit, platform, themeType, props, color, test, zIndex, fontUtil, i18n, t }
 export * from './libs/function/index.js'
 export * from './libs/function/colorGradient.js'
 
