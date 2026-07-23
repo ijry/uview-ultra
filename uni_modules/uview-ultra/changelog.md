@@ -1,3 +1,9 @@
+## 4.5.7
+fix: App 端内置图标字体改为包内本地加载
+
+- 同步 uview-plus #1044：App / App-nvue 内置 up-icon 字体改为从包内 `upicon.ttf` 加载，不再依赖 alicdn 网络请求
+- 使用 `upicon.ttf?url` 由构建产物发射本地字体资源，配合 `uni.loadFontFace` / weex `addRule`，避免弱网阻塞页面渲染
+- 无需手动拷贝到 static；Vue 入口导出 `fontUtil` 便于可选手动加载
 ## 4.5.6
 fix: 同步修复 swipeAction 关闭态右侧删除按钮露边
 
