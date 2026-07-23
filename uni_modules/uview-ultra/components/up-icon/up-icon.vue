@@ -36,16 +36,6 @@
 
 <script setup>
 	import { computed } from 'vue'
-	// #ifdef APP-NVUE
-	// nvue通过weex的dom模块引入字体，相关文档地址如下：
-	// https://weex.apache.org/zh/docs/modules/dom.html#addrule
-	const fontUrl = 'https://at.alicdn.com/t/font_2225171_8kdcwk4po24.ttf'
-	const domModule = weex.requireModule('dom')
-	domModule.addRule('fontFace', {
-		'fontFamily': "upicon-iconfont",
-		'src': `url('${fontUrl}')`
-	})
-	// #endif
 
 	// 引入图标名称，已经对应的unicode
 	import icons from './icons.js'
@@ -178,13 +168,12 @@
 	$up-icon-error: $up-error !default;
 	$up-icon-label-line-height:1 !default;
 
-	/* #ifndef APP-NVUE */
-	// 非nvue下加载字体
+	/* #ifdef MP-QQ || MP-TOUTIAO || MP-BAIDU || MP-KUAISHOU || MP-XHS */
+	// App端通过 uni.loadFontFace 加载包内本地字体，避免远程字体阻塞页面渲染。
 	@font-face {
 		font-family: 'upicon-iconfont';
 		src: url('https://at.alicdn.com/t/font_2225171_8kdcwk4po24.ttf') format('truetype');
 	}
-
 	/* #endif */
 
 	.up-icon {
