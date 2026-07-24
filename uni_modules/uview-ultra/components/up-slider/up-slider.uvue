@@ -258,53 +258,101 @@
 		return style
 	})
 
+	function toSliderNumber(value: any, fallback: number = 0): number {
+		if (value == null) return fallback
+		const number = parseFloat(value.toString())
+		return isNaN(number) ? fallback : number
+	}
+
+	function getSliderStep(): number {
+		const step = toSliderNumber(props.step, 1)
+		return step > 0 ? step : 1
+	}
+
+	function digitLengthLocal(value: number): number {
+		const eSplit = value.toString().split(/[eE]/)
+		const baseSplit = eSplit[0].split('.')
+		let decimalLength = 0
+		if (baseSplit.length > 1) {
+			decimalLength = baseSplit[1].length
+		}
+		let exponent = 0
+		if (eSplit.length > 1) {
+			exponent = parseInt(eSplit[1])
+		}
+		const len = decimalLength - exponent
+		return len > 0 ? len : 0
+	}
+
+	function stripLocal(num: number, precision: number = 15): number {
+		return parseFloat((num as Number).toPrecision(precision))
+	}
+
+	function normalizeSliderValue(value: number, ...refs: number[]): number {
+		let precision = digitLengthLocal(value)
+		precision = Math.max(precision, digitLengthLocal(toSliderNumber(props.min)))
+		precision = Math.max(precision, digitLengthLocal(toSliderNumber(props.max, 100)))
+		precision = Math.max(precision, digitLengthLocal(getSliderStep()))
+		refs.forEach((item: number) => {
+			precision = Math.max(precision, digitLengthLocal(toSliderNumber(item)))
+		})
+		precision = Math.min(15, precision)
+		return parseFloat(stripLocal(value).toFixed(precision))
+	}
+
+	function formatByStep(value: number, lowerLimit: number, upperLimit: number): number {
+		const min = toSliderNumber(props.min)
+		const max = toSliderNumber(props.max, 100)
+		const step = getSliderStep()
+		const lower = Math.min(Math.max(toSliderNumber(lowerLimit, min), min), max)
+		const upper = Math.max(Math.min(toSliderNumber(upperLimit, max), max), lower)
+		const boundedValue = Math.max(lower, Math.min(toSliderNumber(value, min), upper))
+		const steps = Math.round((boundedValue - min) / step)
+		const valueFormat = normalizeSliderValue(min + steps * step, boundedValue)
+		return normalizeSliderValue(Math.max(lower, Math.min(valueFormat, upper)), boundedValue)
+	}
+
 	function formatValue(value: number, index: number = 1): number {
-		// 将小数变成整数，为了减少对视图的更新，造成视图层与逻辑层的阻塞
 		if (props.isRange) {
+			const min = toSliderNumber(props.min)
+			const max = toSliderNumber(props.max, 100)
+			const step = getSliderStep()
 			switch (index) {
 				case 0:
-					return Math.round(
+					return formatByStep(
+						value,
+						min,
 						// @ts-ignore
-						Math.max(parseFloat(props.min.toString()), Math.min(value, parseFloat(props.rangeValue[1].toString()) - parseFloat(props.step.toString()), parseFloat(props.max.toString())))
-						// @ts-ignore
-						/ parseFloat(props.step.toString())
-						// @ts-ignore
-					) * parseInt(props.step.toString())
+						normalizeSliderValue(toSliderNumber(props.rangeValue[1], max) - step)
+					)
 				case 1:
-					return Math.round(
+					return formatByStep(
+						value,
 						// @ts-ignore
-						Math.max(parseFloat(props.min.toString()), parseFloat(props.rangeValue[0].toString()) + parseFloat(props.step.toString()), Math.min(value, parseFloat(props.max.toString())))
-						// @ts-ignore
-						/ parseFloat(props.step.toString())
-						// @ts-ignore
-					) * parseFloat(props.step.toString())
+						normalizeSliderValue(toSliderNumber(props.rangeValue[0], min) + step),
+						max
+					)
 				default:
-					break
+					return formatByStep(value, min, max)
 			}
-		} else {
-			return Math.round(
-				// @ts-ignore
-				Math.max(parseFloat(props.min.toString()), Math.min(value, parseFloat(props.max.toString())))
-				// @ts-ignore
-				/ parseFloat(props.step.toString())
-			// @ts-ignore
-			) * parseFloat(props.step.toString())
 		}
-		return 0
+		return formatByStep(value, toSliderNumber(props.min), toSliderNumber(props.max, 100))
 	}
 
 	function updateValue(value: number, drag: boolean, index: number = 1): Array<number> | number {
-		// 去掉小数部分，同时也是对step步进的处理
 		let valueFormat: number = formatValue(value, index)
+		const min = toSliderNumber(props.min)
+		const max = toSliderNumber(props.max, 100)
+		const range = max - min
 		// 不允许滑动的值超过max最大值
-		// @ts-ignore
-		if (valueFormat > parseFloat(props.max.toString())) {
-			// @ts-ignore
-			valueFormat = parseFloat(props.max.toString())
+		if (valueFormat > max) {
+			valueFormat = max
+		}
+		if (valueFormat < min) {
+			valueFormat = min
 		}
 		// 设置移动的距离，不能用百分比，因为NVUE不支持。
-		// @ts-ignore
-		let width = Math.min((valueFormat - parseFloat(props.min.toString())) / (parseFloat(props.max.toString()) - parseFloat(props.min.toString())) * sliderRect.value.width, sliderRect.value.width)
+		let width = range == 0 ? 0 : Math.min((valueFormat - min) / range * sliderRect.value.width, sliderRect.value.width)
 		let nextBarStyle = {
 			width: width.toString() + 'px'
 		} as barStyleType
@@ -399,8 +447,9 @@
 		distanceX.value = clientX - sliderRect.value.left
 		// 获得移动距离对整个滑块的值，此为带有多位小数的值，不能用此更新视图
 		// 否则造成通信阻塞，需要每改变一个step值时修改一次视图
-		// @ts-ignore
-		newValue.value = ((distanceX.value / sliderRect.value.width) * (parseFloat(props.max.toString()) - parseFloat(props.min.toString()))) + parseFloat(props.min.toString())
+		const min = toSliderNumber(props.min)
+		const max = toSliderNumber(props.max, 100)
+		newValue.value = ((distanceX.value / sliderRect.value.width) * (max - min)) + min
 		status.value = 'moving'
 		// 发出moving事件
 		let crtFmtValue = updateValue(newValue.value, true, index)
@@ -424,8 +473,9 @@
 		distanceX.value = clientX - sliderRect.value.left
 		// 获得移动距离对整个滑块的值，此为带有多位小数的值，不能用此更新视图
 		// 否则造成通信阻塞，需要每改变一个step值时修改一次视图
-		// @ts-ignore
-		newValue.value = ((distanceX.value / sliderRect.value.width) * (parseFloat(props.max.toString()) - parseFloat(props.min.toString()))) + parseFloat(props.min.toString())
+		const min = toSliderNumber(props.min)
+		const max = toSliderNumber(props.max, 100)
+		newValue.value = ((distanceX.value / sliderRect.value.width) * (max - min)) + min
 		status.value = 'moving'
 		// 发出moving事件
 		let crtFmtValue = updateValue(newValue.value, true, index)
@@ -466,8 +516,9 @@
 		// #ifndef APP-NVUE
 		// nvue下暂时无法获取坐标
 		let clientX = event.x - sliderRect.value.left
-		// @ts-ignore
-		newValue.value = ((clientX / sliderRect.value.width) * (parseFloat(props.max.toString()) - parseFloat(props.min.toString()))) + parseFloat(props.min.toString())
+		const min = toSliderNumber(props.min)
+		const max = toSliderNumber(props.max, 100)
+		newValue.value = ((clientX / sliderRect.value.width) * (max - min)) + min
 		updateValue(newValue.value, false, 1)
 		// #endif
 	}

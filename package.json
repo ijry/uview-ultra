@@ -1,7 +1,9 @@
 {
   "name": "uviewultra",
   "version": "4.0.0",
-  "scripts": {},
+  "scripts": {
+    "verify:slider-decimal-step": "node scripts/verify-slider-decimal-step.mjs"
+  },
   "dependencies": {
   }
 }

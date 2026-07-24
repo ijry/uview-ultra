@@ -102,6 +102,7 @@ import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { props as sliderProps } from './props'
 import { commonProps, useUltraUI } from '../../libs/composable/useUltraUI'
 import { addStyle, getPx, sleep } from '../../libs/function/index.js'
+import { digitLength, strip } from '../../libs/function/digit.js'
 // #ifdef APP-NVUE
 const dom = uni.requireNativePlugin('dom')
 // #endif
@@ -262,8 +263,10 @@ function onTouchStart(event, index = 1) {
 	// #ifdef APP-NVUE
 	clientX = touches.screenX
 	// #endif
+	const min = toSliderNumber(props.min)
+	const max = toSliderNumber(props.max, 100)
 	distanceX.value = clientX - sliderRect.value.left
-	newValue.value = ((distanceX.value / sliderRect.value.width) * (props.max - props.min)) + parseFloat(props.min)
+	newValue.value = ((distanceX.value / sliderRect.value.width) * (max - min)) + min
 	status.value = 'moving'
 	const $crtFmtValue = updateValue(newValue.value, true, index)
 	emit('changing', $crtFmtValue)
@@ -280,8 +283,10 @@ function onTouchMove(event, index = 1) {
 	// #ifdef APP-NVUE
 	clientX = touches.screenX
 	// #endif
+	const min = toSliderNumber(props.min)
+	const max = toSliderNumber(props.max, 100)
 	distanceX.value = clientX - sliderRect.value.left
-	newValue.value = ((distanceX.value / sliderRect.value.width) * (props.max - props.min)) + parseFloat(props.min)
+	newValue.value = ((distanceX.value / sliderRect.value.width) * (max - min)) + min
 	status.value = 'moving'
 	const $crtFmtValue = updateValue(newValue.value, true, index)
 	emit('changing', $crtFmtValue)
@@ -315,17 +320,25 @@ function onClick(event) {
 	if (props.disabled) return
 	// #ifndef APP-NVUE
 	const clientX = event.detail.x - sliderRect.value.left
-	newValue.value = ((clientX / sliderRect.value.width) * (props.max - props.min)) + parseFloat(props.min)
+	const min = toSliderNumber(props.min)
+	const max = toSliderNumber(props.max, 100)
+	newValue.value = ((clientX / sliderRect.value.width) * (max - min)) + min
 	updateValue(newValue.value, false, 1)
 	// #endif
 }
 
 function updateValue(value, drag, index = 1) {
 	let valueFormat = format(value, index)
-	if (valueFormat > props.max) {
-		valueFormat = props.max
+	const min = toSliderNumber(props.min)
+	const max = toSliderNumber(props.max, 100)
+	const range = max - min
+	if (valueFormat > max) {
+		valueFormat = max
 	}
-	const width = Math.min((valueFormat - props.min) / (props.max - props.min) * sliderRect.value.width, sliderRect.value.width)
+	if (valueFormat < min) {
+		valueFormat = min
+	}
+	const width = range === 0 ? 0 : Math.min((valueFormat - min) / range * sliderRect.value.width, sliderRect.value.width)
 	const nextBarStyle = {
 		width: width + 'px'
 	}
@@ -362,28 +375,65 @@ function updateValue(value, drag, index = 1) {
 	return valueFormat
 }
 
+function toSliderNumber(value, fallback = 0) {
+	const number = Number(value)
+	return Number.isFinite(number) ? number : fallback
+}
+
+function getSliderStep() {
+	const step = toSliderNumber(props.step, 1)
+	return step > 0 ? step : 1
+}
+
+function normalizeSliderValue(value, ...refs) {
+	const precision = Math.min(
+		15,
+		Math.max(
+			digitLength(value),
+			digitLength(toSliderNumber(props.min)),
+			digitLength(toSliderNumber(props.max, 100)),
+			digitLength(getSliderStep()),
+			...refs.map(item => digitLength(toSliderNumber(item)))
+		)
+	)
+	return Number(strip(value).toFixed(precision))
+}
+
+function formatByStep(value, lowerLimit, upperLimit) {
+	const min = toSliderNumber(props.min)
+	const max = toSliderNumber(props.max, 100)
+	const step = getSliderStep()
+	const lower = Math.min(Math.max(toSliderNumber(lowerLimit, min), min), max)
+	const upper = Math.max(Math.min(toSliderNumber(upperLimit, max), max), lower)
+	const boundedValue = Math.max(lower, Math.min(toSliderNumber(value, min), upper))
+	const steps = Math.round((boundedValue - min) / step)
+	const valueFormat = normalizeSliderValue(min + steps * step, boundedValue)
+	return normalizeSliderValue(Math.max(lower, Math.min(valueFormat, upper)), boundedValue)
+}
+
 function format(value, index = 1) {
 	if (props.isRange) {
+		const min = toSliderNumber(props.min)
+		const max = toSliderNumber(props.max, 100)
+		const step = getSliderStep()
 		switch (index) {
 			case 0:
-				return Math.round(
-					Math.max(props.min, Math.min(value, props.rangeValue[1] - parseInt(props.step), props.max))
-					/ parseInt(props.step)
-				) * parseInt(props.step)
+				return formatByStep(
+					value,
+					min,
+					normalizeSliderValue(toSliderNumber(props.rangeValue[1], max) - step)
+				)
 			case 1:
-				return Math.round(
-					Math.max(props.min, props.rangeValue[0] + parseInt(props.step), Math.min(value, props.max))
-					/ parseInt(props.step)
-				) * parseInt(props.step)
+				return formatByStep(
+					value,
+					normalizeSliderValue(toSliderNumber(props.rangeValue[0], min) + step),
+					max
+				)
 			default:
-				break
+				return formatByStep(value, min, max)
 		}
-	} else {
-		return Math.round(
-			Math.max(props.min, Math.min(value, props.max))
-			/ parseInt(props.step)
-		) * parseInt(props.step)
 	}
+	return formatByStep(value, props.min, props.max)
 }
 </script>
 
