@@ -22,7 +22,26 @@ import digit from './libs/function/digit.js'
 // 公共文件写入的方法
 import index from './libs/function/index.js'
 // i18n
-import i18n, { t } from './libs/i18n/index.js'
+import i18n, {
+    t,
+    registerLocale,
+    hasLocale,
+    getLocale,
+    setLocale
+} from './libs/i18n/index.js'
+import {
+    en,
+    es,
+    fr,
+    de,
+    ko,
+    ja,
+    ru,
+    th,
+    zhHans,
+    zhHant,
+    all as allLocales
+} from './libs/i18n/locale-packs.js'
 import {
     themeState,
     setTheme,
@@ -61,7 +80,38 @@ import fontUtil from './components/up-icon/util.js'
 // 导出
 const http = new Request()
 let themeType = ['primary', 'success', 'error', 'warning', 'info'];
-export { route, http, debounce, throttle, calc, digit, platform, themeType, props, color, test, zIndex, fontUtil, i18n, t }
+export {
+    route,
+    http,
+    debounce,
+    throttle,
+    calc,
+    digit,
+    platform,
+    themeType,
+    props,
+    color,
+    test,
+    zIndex,
+    fontUtil,
+    i18n,
+    t,
+    registerLocale,
+    hasLocale,
+    getLocale,
+    setLocale,
+    en,
+    es,
+    fr,
+    de,
+    ko,
+    ja,
+    ru,
+    th,
+    zhHans,
+    zhHant,
+    allLocales
+}
 export * from './libs/function/index.js'
 export * from './libs/function/colorGradient.js'
 
@@ -178,6 +228,10 @@ const $u = {
     digit,
     i18n,
     t,
+    registerLocale,
+    hasLocale,
+    getLocale,
+    setLocale,
     props,
     ...index,
     color,

@@ -1,0 +1,23 @@
+import zhHans from './zh-Hans.uts'
+import zhHant from './zh-Hant.uts'
+import en from './en.uts'
+import es from './es.uts'
+import fr from './fr.uts'
+import de from './de.uts'
+import ko from './ko.uts'
+import ja from './ja.uts'
+import ru from './ru.uts'
+import th from './th.uts'
+
+export default {
+    'zh-Hans': zhHans,
+    'zh-Hant': zhHant,
+    en,
+    es,
+    fr,
+    de,
+    ko,
+    ja,
+    ru,
+    th
+} as UTSJSONObject

@@ -2,6 +2,22 @@
 declare module 'uview-plus' {
 	export function install(): void  //必要
 	export function t(value: string, params?: Record<string, string | number>): string;
+	export function registerLocale(locale: string, messages: Record<string, string>): void;
+	export function registerLocale(localeMap: Record<string, Record<string, string>>): void;
+	export function hasLocale(locale: string): boolean;
+	export function getLocale(): string;
+	export function setLocale(locale: string): string;
+	export const en: Record<string, string>;
+	export const es: Record<string, string>;
+	export const fr: Record<string, string>;
+	export const de: Record<string, string>;
+	export const ko: Record<string, string>;
+	export const ja: Record<string, string>;
+	export const ru: Record<string, string>;
+	export const th: Record<string, string>;
+	export const zhHans: Record<string, string>;
+	export const zhHant: Record<string, string>;
+	export const allLocales: Record<string, Record<string, string>>;
 	export const i18n: {
 		settings: {
 			lang: string;

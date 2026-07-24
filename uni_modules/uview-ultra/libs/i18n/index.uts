@@ -1,63 +1,129 @@
 import zhHans from './locales/zh-Hans.uts'
-import zhHant from './locales/zh-Hant.uts'
-import en from './locales/en.uts'
-import es from './locales/es.uts'
-import fr from './locales/fr.uts'
-import de from './locales/de.uts'
-import ko from './locales/ko.uts'
-import ja from './locales/ja.uts'
-import ru from './locales/ru.uts'
 
 let settings = {
-    // lang: uni.getLocale(),
-	lang: 'zh-Hans',
+    lang: 'zh-Hans',
     locales: {
-        en,
-        es,
-        fr,
-        de,
-        ko,
-        ja,
-        ru,
-        'zh-Hant': zhHant,
         'zh-Hans': zhHans
     } as UTSJSONObject
 } as UTSJSONObject
 
-// uni.onLocaleChange((locale) => {
-//     settings['lang'] = locale;
-// })
+// 尽量同步系统语言；部分 UTS 平台 getLocale/onLocaleChange 可用性不一
+try {
+    // @ts-ignore
+    if (typeof uni !== 'undefined' && typeof uni.getLocale === 'function') {
+        // @ts-ignore
+        const current = uni.getLocale()
+        if (current != null && current != '') {
+            settings['lang'] = current
+        }
+    }
+} catch (e) {
+}
+
+try {
+    // @ts-ignore
+    if (typeof uni !== 'undefined' && typeof uni.onLocaleChange === 'function') {
+        // @ts-ignore
+        uni.onLocaleChange((locale: any | null) => {
+            if (locale == null) return
+            if (typeof locale == 'string') {
+                settings['lang'] = locale
+            } else {
+                const localeObj = locale as UTSJSONObject
+                if (localeObj['locale'] != null) {
+                    settings['lang'] = localeObj['locale'] as string
+                }
+            }
+        })
+    }
+} catch (e) {
+}
+
+function isPlainObject(value: any | null): boolean {
+    return value != null && typeof value == 'object'
+}
+
+export function hasLocale(locale: string): boolean {
+    if (locale == '') return false
+    const locales = settings['locales'] as UTSJSONObject
+    return locales[locale] != null
+}
+
+export function getLocale(): string {
+    return settings['lang'] as string
+}
+
+export function setLocale(locale: string): string {
+    if (locale == '') return settings['lang'] as string
+    settings['lang'] = locale
+    try {
+        // @ts-ignore
+        if (typeof uni !== 'undefined' && typeof uni.setLocale === 'function') {
+            // @ts-ignore
+            uni.setLocale(locale)
+        }
+    } catch (e) {
+    }
+    return settings['lang'] as string
+}
 
 /**
- * 多语言方法
+ * registerLocale('en', messages)
+ * registerLocale({ en: messages, ja: messages2 })
  */
-export function t(value: string, params: UTSJSONObject = {}): string {
-    // console.log(settings['locales'][settings['lang']])
-    if (value != '') {
-		value = value.replaceAll('.', '_')
-		// console.log('**************', value)
-        let lang = settings['lang']
-		let locales = settings['locales'] as UTSJSONObject
-        // if (locales != null && locales[settings['lang']] == null) {
-            lang = 'zh-Hans'
-        // }
-		let result = ''
-		if (locales[lang] != null) {
-			// @ts-ignore
-			result = (locales[lang] as UTSJSONObject)[value].toString()
-		} else {
-			result = value
-		}
-		let resultStr = result.toString()
-        // 替换{xxx}格式的变量
-        // UTSJSONObject.keys(params).forEach((key: string) => {
-        //     const reg = new RegExp(`{${key}}`, 'g');
-        //     resultStr = resultStr.replace(reg, params[key]);
-        // });
-         return resultStr;
-    } else {
-        return value;
+export function registerLocale(localeOrMap: any, messages: any | null = null): void {
+    const locales = settings['locales'] as UTSJSONObject
+    if (typeof localeOrMap == 'string') {
+        if (localeOrMap == '' || !isPlainObject(messages)) return
+        locales[localeOrMap] = messages
+        settings['locales'] = locales
+        return
     }
+    if (!isPlainObject(localeOrMap)) return
+    const mapObj = localeOrMap as UTSJSONObject
+    // UTS 下遍历键
+    const keys = UTSJSONObject.keys(mapObj)
+    for (let i = 0; i < keys.length; i++) {
+        const key = keys[i]
+        const value = mapObj[key]
+        if (isPlainObject(value)) {
+            locales[key] = value
+        }
+    }
+    settings['locales'] = locales
+}
+
+/**
+ * 多语言方法（ultra 保留 . -> _ 变换）
+ */
+export function t(value: string, params: UTSJSONObject = {} as UTSJSONObject): string {
+    if (value == '') {
+        return value
+    }
+    let key = value.replaceAll('.', '_')
+    let lang = settings['lang'] as string
+    let locales = settings['locales'] as UTSJSONObject
+    if (locales[lang] == null) {
+        lang = 'zh-Hans'
+    }
+    let result = value
+    if (locales[lang] != null) {
+        const pack = locales[lang] as UTSJSONObject
+        if (pack[key] != null) {
+            // @ts-ignore
+            result = pack[key].toString()
+        }
+    }
+    let resultStr = result.toString()
+    const paramKeys = UTSJSONObject.keys(params)
+    for (let i = 0; i < paramKeys.length; i++) {
+        const paramKey = paramKeys[i]
+        const paramValue = params[paramKey]
+        if (paramValue != null) {
+            resultStr = resultStr.replaceAll('{' + paramKey + '}', paramValue.toString())
+        }
+    }
+    return resultStr
 }
 
 export default {

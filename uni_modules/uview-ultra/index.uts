@@ -4,6 +4,31 @@ import config from './libs/config/config.uts'
 import color from './libs/config/color.uts'
 import * as index from './libs/function/index.uts'
 export {config, color}
+
+// i18n
+export {
+    t,
+    registerLocale,
+    hasLocale,
+    getLocale,
+    setLocale
+} from './libs/i18n/index.uts'
+export {
+    en,
+    es,
+    fr,
+    de,
+    ko,
+    ja,
+    ru,
+    th,
+    zhHans,
+    zhHant,
+    all as allLocales
+} from './libs/i18n/locale-packs.uts'
+import i18n from './libs/i18n/index.uts'
+export { i18n }
+
 export * from './libs/function/index'
 
 // export class UPArray = {

@@ -1,55 +1,88 @@
 import zhHans from './locales/zh-Hans.js'
-import zhHant from './locales/zh-Hant.js'
-import en from './locales/en.js'
-import es from './locales/es.js'
-import fr from './locales/fr.js'
-import de from './locales/de.js'
-import ko from './locales/ko.js'
-import ja from './locales/ja.js'
-import ru from './locales/ru.js'
 
-let settings = {
-    lang: uni.getLocale(),
+const settings = {
+    lang: typeof uni !== 'undefined' && typeof uni.getLocale === 'function'
+        ? uni.getLocale()
+        : 'zh-Hans',
     locales: {
-        en,
-        es,
-        fr,
-        de,
-        ko,
-        ja,
-        ru,
-        'zh-Hant': zhHant,
         'zh-Hans': zhHans
     }
-};
+}
 
-uni.onLocaleChange((locale) => {
-    settings.lang = locale;
-})
+if (typeof uni !== 'undefined' && typeof uni.onLocaleChange === 'function') {
+    uni.onLocaleChange((locale) => {
+        settings.lang = typeof locale === 'string'
+            ? locale
+            : (locale && locale.locale) || settings.lang
+    })
+}
+
+function isPlainObject(value) {
+    return Object.prototype.toString.call(value) === '[object Object]'
+}
+
+export function hasLocale(locale) {
+    return !!(locale && settings.locales[locale])
+}
+
+export function getLocale() {
+    return settings.lang
+}
+
+export function setLocale(locale) {
+    if (!locale || typeof locale !== 'string') return settings.lang
+    settings.lang = locale
+    if (typeof uni !== 'undefined' && typeof uni.setLocale === 'function') {
+        try {
+            uni.setLocale(locale)
+        } catch (e) {
+            // ignore platform limitations
+        }
+    }
+    return settings.lang
+}
 
 /**
- * 多语言方法
+ * registerLocale('en', messages)
+ * registerLocale({ en: messages, ja: messages2 })
+ */
+export function registerLocale(localeOrMap, messages) {
+    if (typeof localeOrMap === 'string') {
+        if (!localeOrMap || !isPlainObject(messages)) return
+        settings.locales[localeOrMap] = messages
+        return
+    }
+    if (!isPlainObject(localeOrMap)) return
+    Object.keys(localeOrMap).forEach((key) => {
+        const value = localeOrMap[key]
+        if (isPlainObject(value)) {
+            settings.locales[key] = value
+        }
+    })
+}
+
+/**
+ * 多语言方法（ultra 保留 . -> _ 变换）
  */
 export function t(value, params = {}) {
-    // console.log(settings.locales[settings.lang])
-    if (value != '' && value != null) {
-		value = value.replaceAll('.', '_')
+    if (value != null && value !== '') {
+        let key = String(value).replaceAll('.', '_')
         let lang = settings.lang
         if (!settings.locales[settings.lang]) {
             lang = 'zh-Hans'
         }
-        let result = settings.locales[lang][value] || value;
-        // 替换{xxx}格式的变量
-        Object.keys(params).forEach(key => {
-            const reg = new RegExp(`{${key}}`, 'g');
-            result = result.replace(reg, params[key]);
-        });
-        return result;
-    } else {
-        return value;
+        let result = settings.locales[lang][key] || value
+        if (params && typeof params === 'object') {
+            Object.keys(params).forEach((paramKey) => {
+                const reg = new RegExp(`{${paramKey}}`, 'g')
+                result = String(result).replace(reg, params[paramKey])
+            })
+        }
+        return result
     }
+    return value
 }
 
 export default {
-    settings: settings
+    settings
 }
