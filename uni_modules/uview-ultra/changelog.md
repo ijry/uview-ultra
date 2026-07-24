@@ -1,12 +1,11 @@
 ## 4.5.9
-feat!: i18n 语言包改为按需注册，默认仅内置 zh-Hans（#908）
+feat!: i18n 语言包按需注册，默认仅内置 zh-Hans（#908）
 
-- 重大变更：不再默认打包 en/es/fr/de/ko/ja/ru/zh-Hant 等语言包，主包体积可明显下降
-- JS / UTS 双端支持 registerLocale / hasLocale / getLocale / setLocale
-- 包入口导出 en/ja/.../allLocales，业务无需手写深层路径
-- 迁移：非中文项目需在应用启动时 registerLocale 注册所需语言；可用 allLocales 一键恢复旧行为
-- 兼容：组件 t() 调用与 underscore key 变换保持不变；未注册语言回退 zh-Hans
-- 文档：i18n 指南补充按需注册与重大变更说明
+- 重大变更：默认不再打包 en/es/fr/de/ko/ja/ru/zh-Hant 等语言包
+- JS/UTS 支持 registerLocale/hasLocale/getLocale/setLocale
+- 包入口导出 en/ja/.../allLocales，可用 allLocales 一键恢复旧行为
+- 未注册语言回退 zh-Hans；组件 t() 与 underscore key 变换保持不变
+
 ## 4.5.8
 feat: cropper 支持并文档化 inner 限制裁剪框在图片内
 
