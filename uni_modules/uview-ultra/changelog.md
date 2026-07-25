@@ -4,6 +4,7 @@ fix: 同步 .w-full 盒模型样式
 - 公共样式补充 `.w-full { box-sizing: border-box; }`，与 uview-plus 对齐
 - 避免宽度 100% 工具类在 padding/border 场景下撑破布局
 - 同步忽略本地 `cachePath/` 调试产物
+
 ## 4.5.10
 fix: slider 支持自定义模式小数步长
 
