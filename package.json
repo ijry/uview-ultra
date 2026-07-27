@@ -3,7 +3,8 @@
   "version": "4.0.0",
   "scripts": {
     "verify:slider-decimal-step": "node scripts/verify-slider-decimal-step.mjs",
-    "verify:swiper-vertical": "node scripts/verify-swiper-vertical.mjs"
+    "verify:swiper-vertical": "node scripts/verify-swiper-vertical.mjs",
+    "verify:tabbar-mid-button-top-border": "node scripts/verify-tabbar-mid-button-top-border.mjs"
   },
   "dependencies": {
   }

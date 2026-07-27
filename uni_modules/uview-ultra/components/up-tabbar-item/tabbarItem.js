@@ -16,6 +16,12 @@ export default {
         dot: false,
         text: '',
         badgeStyle: 'top: 6px;right:2px;',
-        mode: ''
+        mode: '',
+        midButtonBgColor: '',
+        midButtonIconColor: '',
+        midButtonIconSize: 26,
+        midButtonBoxShadow: '',
+        midButtonInnerBoxShadow: '',
+        midButtonOffsetY: -10
     }
 }

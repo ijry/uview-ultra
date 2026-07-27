@@ -30,6 +30,32 @@ declare interface TabbarItemProps {
    */
   badgeStyle?: Record<string, any> | string
   /**
+   * 中间按钮背景色
+   */
+  midButtonBgColor?: string
+  /**
+   * 中间按钮图标颜色
+   */
+  midButtonIconColor?: string
+  /**
+   * 中间按钮图标大小
+   * @default 26
+   */
+  midButtonIconSize?: string | number
+  /**
+   * 中间按钮外层阴影
+   */
+  midButtonBoxShadow?: string
+  /**
+   * 中间按钮内层阴影
+   */
+  midButtonInnerBoxShadow?: string
+  /**
+   * 中间按钮垂直偏移，负值为上移
+   * @default -10
+   */
+  midButtonOffsetY?: string | number
+  /**
    * 切换选项时触发
    * @param index 当前要切换项的name
    */

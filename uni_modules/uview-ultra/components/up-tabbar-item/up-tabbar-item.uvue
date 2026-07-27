@@ -2,52 +2,58 @@
 	<view
 	    class="up-tabbar-item"
 	    :style="rootStyle"
-	    :class="[isMidButton ? 'up-tabbar-item--mid-button' : '']"
+	    :class="itemClassNames"
 	    @tap="clickHandler"
 	>
-		<view 
-			class="up-tabbar-item__icon"
-			:class="[isMidButton ? 'up-tabbar-item__icon--mid-button' : '']"
-		>
-			<view class="up-tabbar-item--mid-button-cover" v-if="isMidButton">
+		<view class="up-tabbar-item__content" :class="contentClassNames" :style="midButtonContentStyle">
+			<view
+				class="up-tabbar-item__icon"
+				:class="[isMidButton ? 'up-tabbar-item__icon--mid-button' : '']"
+				:style="midButtonShellStyle"
+			>
+				<view v-if="isMidButton" class="up-tabbar-item__mid-button-border" :style="midButtonBorderStyle">
+					<view class="up-tabbar-item__mid-button-border-circle"></view>
+				</view>
+				<view v-if="isMidButton" class="up-tabbar-item__mid-button-inner" :style="midButtonInnerStyle"></view>
+				<up-icon
+				    v-if="icon"
+				    :name="icon"
+				    :color="isMidButton ? resolvedMidButtonIconColor : iconColor"
+				    :size="isMidButton ? midButtonIconSize : 20"
+				    :customStyle="midButtonIconStyle"
+				></up-icon>
+				<template v-else>
+					<slot
+					    v-if="isActive"
+					    name="active-icon"
+					/>
+					<slot
+					    v-else
+					    name="inactive-icon"
+					/>
+				</template>
+				<up-badge
+					absolute
+					:offset="[0, dot ? '34rpx' : parseInt(badge.toString()) > 9 ? '14rpx' : '20rpx']"
+				    :customStyle="badgeStyle"
+				    :isDot="dot"
+				    :value="badge != null  ? (dot ? 1 : badge) : 0"
+				    :show="dot ? dot : parseInt(badge.toString()) > 0"
+				></up-badge>
 			</view>
-			<up-icon
-			    v-if="icon"
-			    :name="icon"
-			    :color="iconColor"
-			    :size="isMidButton ? 26 : 20"
-			></up-icon>
-			<template v-else>
-				<slot
-				    v-if="isActive"
-				    name="active-icon"
-				/>
-				<slot
-				    v-else
-				    name="inactive-icon"
-				/>
-			</template>
-			<up-badge
-				absolute
-				:offset="[0, dot ? '34rpx' : parseInt(badge.toString()) > 9 ? '14rpx' : '20rpx']"
-			    :customStyle="badgeStyle"
-			    :isDot="dot"
-			    :value="badge != null  ? (dot ? 1 : badge) : 0"
-			    :show="dot ? dot : parseInt(badge.toString()) > 0"
-			></up-badge>
+
+			<slot name="text">
+				<text
+				    class="up-tabbar-item__text"
+				    :style="textStyle"
+				>{{ text }}</text>
+			</slot>
 		</view>
-		
-		<slot name="text">
-			<text
-			    class="up-tabbar-item__text"
-			    :style="textStyle"
-			>{{ text }}</text>
-		</slot>
 	</view>
 </template>
 
 <script setup lang="uts">
-	import { computed, getCurrentInstance, nextTick, onBeforeUnmount, onMounted, ref } from 'vue';
+	import { computed, getCurrentInstance, nextTick, onBeforeUnmount, onMounted, ref, useSlots } from 'vue';
 	import defProps from './tabbarItem.uts';
 	import { addStyle, error } from '../../libs/function/index.uts';
 	import { useUltraUI } from '../../libs/composable/useUltraUI.uts';
@@ -116,6 +122,30 @@
 			type: String,
 			default: (defProps['tabbarItem'] as UTSJSONObject)['mode']
 		},
+		midButtonBgColor: {
+			type: String,
+			default: (defProps['tabbarItem'] as UTSJSONObject)['midButtonBgColor']
+		},
+		midButtonIconColor: {
+			type: String,
+			default: (defProps['tabbarItem'] as UTSJSONObject)['midButtonIconColor']
+		},
+		midButtonIconSize: {
+			type: [String, Number],
+			default: (defProps['tabbarItem'] as UTSJSONObject)['midButtonIconSize']
+		},
+		midButtonBoxShadow: {
+			type: String,
+			default: (defProps['tabbarItem'] as UTSJSONObject)['midButtonBoxShadow']
+		},
+		midButtonInnerBoxShadow: {
+			type: String,
+			default: (defProps['tabbarItem'] as UTSJSONObject)['midButtonInnerBoxShadow']
+		},
+		midButtonOffsetY: {
+			type: [String, Number],
+			default: (defProps['tabbarItem'] as UTSJSONObject)['midButtonOffsetY']
+		},
 		customStyle: {
 			type: [Object, String],
 			default: () => ({})
@@ -126,10 +156,28 @@
 	const isActive = ref(false)
 	const routeSyncTimer = ref(0 as number)
 	const routeSyncLast = ref('')
+	const slots = useSlots()
 
 	// 计算是否为中间按钮
 	const isMidButton = computed((): boolean => {
 		return props.mode === 'midButton'
+	})
+
+	const hasMidButtonText = computed((): boolean => {
+		return slots['text'] != null || props.text.length > 0
+	})
+
+	const itemClassNames = computed((): Array<string> => {
+		return [
+			isMidButton.value ? 'up-tabbar-item--mid-button' : '',
+			isMidButton.value && !hasMidButtonText.value ? 'up-tabbar-item--mid-button-no-text' : ''
+		]
+	})
+
+	const contentClassNames = computed((): Array<string> => {
+		return [
+			isMidButton.value ? 'up-tabbar-item__content--mid-button' : ''
+		]
 	})
 
 	const rootStyle = computed((): UTSJSONObject => {
@@ -141,10 +189,63 @@
 		return color != null ? color.toString() : ''
 	})
 
+	const resolvedMidButtonIconColor = computed((): string => {
+		return props.midButtonIconColor.length > 0 ? props.midButtonIconColor : '#3c9cff'
+	})
+
 	const textStyle = computed((): UTSJSONObject => {
 		return {
 			color: iconColor.value
 		} as UTSJSONObject
+	})
+
+	const midButtonOffsetValue = computed((): number => {
+		const offset = parseFloat(props.midButtonOffsetY.toString())
+		return isNaN(offset) ? -10 : offset
+	})
+
+	const midButtonContentStyle = computed((): UTSJSONObject => {
+		const style = {} as UTSJSONObject
+		if (isMidButton.value) {
+			style['transform'] = 'translateY(' + midButtonOffsetValue.value.toString() + 'px)'
+		}
+		return style
+	})
+
+	const midButtonBorderStyle = computed((): UTSJSONObject => {
+		const style = {} as UTSJSONObject
+		if (isMidButton.value) {
+			const clipBaseHeight = hasMidButtonText.value ? 15.5 : 7
+			const clipHeight = Math.min(Math.max(clipBaseHeight - midButtonOffsetValue.value, 0), 64)
+			style['height'] = clipHeight.toString() + 'px'
+		}
+		return style
+	})
+
+	const midButtonShellStyle = computed((): UTSJSONObject => {
+		const style = {} as UTSJSONObject
+		if (isMidButton.value) {
+			style['boxShadow'] = props.midButtonBoxShadow.length > 0 ? props.midButtonBoxShadow : 'none'
+		}
+		return style
+	})
+
+	const midButtonInnerStyle = computed((): UTSJSONObject => {
+		const style = {} as UTSJSONObject
+		if (isMidButton.value) {
+			style['background'] = props.midButtonBgColor.length > 0 ? props.midButtonBgColor : '#ffffff'
+			style['boxShadow'] = props.midButtonInnerBoxShadow
+		}
+		return style
+	})
+
+	const midButtonIconStyle = computed((): UTSJSONObject => {
+		const style = {} as UTSJSONObject
+		if (isMidButton.value) {
+			style['position'] = 'relative'
+			style['zIndex'] = 2
+		}
+		return style
 	})
 
 	const getChildIndexLocal = (): number => {
@@ -258,6 +359,16 @@
 		rootStyle,
 		iconColor,
 		textStyle,
+		hasMidButtonText,
+		itemClassNames,
+		contentClassNames,
+		resolvedMidButtonIconColor,
+		midButtonOffsetValue,
+		midButtonContentStyle,
+		midButtonBorderStyle,
+		midButtonShellStyle,
+		midButtonInnerStyle,
+		midButtonIconStyle,
 		clearRouteSync,
 		getCurrentRoutePath,
 		normalizeRoutePath,
@@ -293,6 +404,19 @@
 			justify-content: center;
 		}
 
+		&__content {
+			@include flex(column);
+			align-items: center;
+			justify-content: center;
+			width: 100%;
+			height: 100%;
+
+			&--mid-button {
+				position: relative;
+				z-index: 1;
+			}
+		}
+
 		&__text {
 			margin-top: 2px;
 			font-size: 12px;
@@ -302,30 +426,57 @@
 	
 	// 中间按钮样式
 	.up-tabbar-item--mid-button {
-		/* #ifndef APP-NVUE */
-		transform: translateY(-10px);
-		/* #endif */
-	}
-	
-	.up-tabbar-item--mid-button-cover {
-		background-color: #fff;
-		position: absolute;
-		top: 22px;
-		left: -10px;
-		// right: -10px;
-		width: 90px;
-		bottom: 0;
+		z-index: 2;
+		flex: 1;
 	}
 	
 	.up-tabbar-item__icon--mid-button {
-		width: 70px;
-		height: 70px;
-		border-radius: 100px;
-		background-color: #ffffff;
-		box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+		width: 64px;
+		height: 64px;
+		border-radius: 999px;
+		background: #ffffff;
+		box-shadow: none;
 		display: flex;
 		align-items: center;
 		justify-content: center;
+		position: relative;
+		overflow: visible;
+	}
+
+	.up-tabbar-item__mid-button-border {
+		position: absolute;
+		left: 0;
+		top: 0;
+		width: 64px;
+		box-sizing: border-box;
+		background: transparent;
+		overflow: hidden;
+		pointer-events: none;
+		z-index: 0;
+	}
+
+	.up-tabbar-item__mid-button-border-circle {
+		width: 64px;
+		height: 64px;
+		box-sizing: border-box;
+		background: transparent;
+		border: 1px solid var(--up-border-color, rgba(0, 0, 0, 0.08));
+		border-radius: 999px;
+	}
+
+	.up-tabbar-item__mid-button-inner {
+		position: absolute;
+		left: 6px;
+		top: 6px;
+		right: 6px;
+		bottom: 6px;
+		border-radius: 999px;
+		z-index: 1;
+	}
+
+	.up-tabbar-item--mid-button .up-tabbar-item__text {
+		margin-top: 0;
+		transform: translateY(-4px);
 	}
 
 	/* #ifdef MP */

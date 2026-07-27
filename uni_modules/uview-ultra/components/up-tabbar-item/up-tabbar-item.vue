@@ -2,54 +2,60 @@
 	<view
 	    class="up-tabbar-item"
 	    :style="[addStyle(customStyle)]"
-	    :class="[isMidButton ? 'up-tabbar-item--mid-button' : '']"
+	    :class="itemClassNames"
 	    @tap="clickHandler"
 	>
-		<view 
-			class="up-tabbar-item__icon"
-			:class="[isMidButton ? 'up-tabbar-item__icon--mid-button' : '']"
-		>
-			<view class="up-tabbar-item--mid-button-cover" v-if="isMidButton">
+		<view class="up-tabbar-item__content" :class="contentClassNames" :style="midButtonContentStyle">
+			<view
+				class="up-tabbar-item__icon"
+				:class="[isMidButton ? 'up-tabbar-item__icon--mid-button' : '']"
+				:style="midButtonShellStyle"
+			>
+				<view v-if="isMidButton" class="up-tabbar-item__mid-button-border" :style="midButtonBorderStyle">
+					<view class="up-tabbar-item__mid-button-border-circle"></view>
+				</view>
+				<view v-if="isMidButton" class="up-tabbar-item__mid-button-inner" :style="midButtonInnerStyle"></view>
+				<up-icon
+				    v-if="icon"
+				    :name="icon"
+				    :color="isMidButton ? resolvedMidButtonIconColor : (isActive? parentData.activeColor : parentData.inactiveColor)"
+				    :size="isMidButton ? midButtonIconSize : 20"
+				    :customStyle="midButtonIconStyle"
+				></up-icon>
+				<template v-else>
+					<slot
+					    v-if="isActive"
+					    name="active-icon"
+					/>
+					<slot
+					    v-else
+					    name="inactive-icon"
+					/>
+				</template>
+				<up-badge
+					absolute
+					:offset="[0, dot ? '34rpx' : badge > 9 ? '14rpx' : '20rpx']"
+				    :customStyle="badgeStyle"
+				    :isDot="dot"
+				    :value="badge || (dot ? 1 : null)"
+				    :show="dot || badge > 0"
+				></up-badge>
 			</view>
-			<up-icon
-			    v-if="icon"
-			    :name="icon"
-			    :color="isActive? parentData.activeColor : parentData.inactiveColor"
-			    :size="isMidButton ? 26 : 20"
-			></up-icon>
-			<template v-else>
-				<slot
-				    v-if="isActive"
-				    name="active-icon"
-				/>
-				<slot
-				    v-else
-				    name="inactive-icon"
-				/>
-			</template>
-			<up-badge
-				absolute
-				:offset="[0, dot ? '34rpx' : badge > 9 ? '14rpx' : '20rpx']"
-			    :customStyle="badgeStyle"
-			    :isDot="dot"
-			    :value="badge || (dot ? 1 : null)"
-			    :show="dot || badge > 0"
-			></up-badge>
+
+			<slot name="text">
+				<text
+				    class="up-tabbar-item__text"
+				    :style="{
+						color: isActive? parentData.activeColor : parentData.inactiveColor
+					}"
+				>{{ text }}</text>
+			</slot>
 		</view>
-		
-		<slot name="text">
-			<text
-			    class="up-tabbar-item__text"
-			    :style="{
-					color: isActive? parentData.activeColor : parentData.inactiveColor
-				}"
-			>{{ text }}</text>
-		</slot>
 	</view>
 </template>
 
 <script setup>
-	import { computed, getCurrentInstance, nextTick, onBeforeUnmount, onMounted, reactive, ref, toRef } from 'vue'
+	import { computed, getCurrentInstance, nextTick, onBeforeUnmount, onMounted, reactive, ref, toRef, useSlots } from 'vue'
 	import { props as tabbarItemProps } from './props'
 	import { commonProps, useUltraUI } from '../../libs/composable/useUltraUI.js'
 	import { addStyle, error } from '../../libs/function/index'
@@ -81,6 +87,7 @@
 	})
 	const emit = defineEmits(['click', 'change'])
 	const instance = getCurrentInstance()
+	const slots = useSlots()
 	const parentData = reactive({
 		value: null,
 		activeColor: '',
@@ -95,6 +102,75 @@
 	// 计算是否为中间按钮
 	const isMidButton = computed(() => {
 		return props.mode === 'midButton'
+	})
+
+	const hasMidButtonText = computed(() => {
+		return !!slots.text || String(props.text || '').length > 0
+	})
+
+	const itemClassNames = computed(() => {
+		return [
+			isMidButton.value ? 'up-tabbar-item--mid-button' : '',
+			isMidButton.value && !hasMidButtonText.value ? 'up-tabbar-item--mid-button-no-text' : ''
+		]
+	})
+
+	const contentClassNames = computed(() => {
+		return [
+			isMidButton.value ? 'up-tabbar-item__content--mid-button' : ''
+		]
+	})
+
+	const resolvedMidButtonIconColor = computed(() => {
+		return props.midButtonIconColor || '#3c9cff'
+	})
+
+	const midButtonOffsetValue = computed(() => {
+		const offset = Number.parseFloat(props.midButtonOffsetY)
+		return Number.isFinite(offset) ? offset : -10
+	})
+
+	const midButtonContentStyle = computed(() => {
+		return isMidButton.value
+			? {
+				transform: `translateY(${midButtonOffsetValue.value}px)`
+			}
+			: {}
+	})
+
+	const midButtonBorderStyle = computed(() => {
+		if (!isMidButton.value) return {}
+		const clipBaseHeight = hasMidButtonText.value ? 15.5 : 7
+		const clipHeight = Math.min(Math.max(clipBaseHeight - midButtonOffsetValue.value, 0), 64)
+		return {
+			height: `${clipHeight}px`
+		}
+	})
+
+	const midButtonShellStyle = computed(() => {
+		return isMidButton.value
+			? {
+				boxShadow: props.midButtonBoxShadow || 'none'
+			}
+			: {}
+	})
+
+	const midButtonInnerStyle = computed(() => {
+		return isMidButton.value
+			? {
+				background: props.midButtonBgColor || '#ffffff',
+				boxShadow: props.midButtonInnerBoxShadow
+			}
+			: {}
+	})
+
+	const midButtonIconStyle = computed(() => {
+		return isMidButton.value
+			? {
+				position: 'relative',
+				zIndex: 2
+			}
+			: {}
 	})
 
 	function clearRouteSync() {
@@ -218,6 +294,19 @@
 			justify-content: center;
 		}
 
+		&__content {
+			@include flex(column);
+			align-items: center;
+			justify-content: center;
+			width: 100%;
+			height: 100%;
+
+			&--mid-button {
+				position: relative;
+				z-index: 1;
+			}
+		}
+
 		&__text {
 			margin-top: 2px;
 			font-size: 12px;
@@ -227,30 +316,57 @@
 	
 	// 中间按钮样式
 	.up-tabbar-item--mid-button {
-		/* #ifndef APP-NVUE */
-		transform: translateY(-10px);
-		/* #endif */
-	}
-	
-	.up-tabbar-item--mid-button-cover {
-		background-color: #fff;
-		position: absolute;
-		top: 22px;
-		left: -10px;
-		// right: -10px;
-		width: 90px;
-		bottom: 0;
+		z-index: 2;
+		flex: 1;
 	}
 	
 	.up-tabbar-item__icon--mid-button {
-		width: 70px;
-		height: 70px;
-		border-radius: 100px;
-		background-color: #ffffff;
-		box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+		width: 64px;
+		height: 64px;
+		border-radius: 999px;
+		background: #ffffff;
+		box-shadow: none;
 		display: flex;
 		align-items: center;
 		justify-content: center;
+		position: relative;
+		overflow: visible;
+	}
+
+	.up-tabbar-item__mid-button-border {
+		position: absolute;
+		left: 0;
+		top: 0;
+		width: 64px;
+		box-sizing: border-box;
+		background: transparent;
+		overflow: hidden;
+		pointer-events: none;
+		z-index: 0;
+	}
+
+	.up-tabbar-item__mid-button-border-circle {
+		width: 64px;
+		height: 64px;
+		box-sizing: border-box;
+		background: transparent;
+		border: 1px solid var(--up-border-color, rgba(0, 0, 0, 0.08));
+		border-radius: 999px;
+	}
+
+	.up-tabbar-item__mid-button-inner {
+		position: absolute;
+		left: 6px;
+		top: 6px;
+		right: 6px;
+		bottom: 6px;
+		border-radius: 999px;
+		z-index: 1;
+	}
+
+	.up-tabbar-item--mid-button .up-tabbar-item__text {
+		margin-top: 0;
+		transform: translateY(-4px);
 	}
 
 	/* #ifdef MP */
