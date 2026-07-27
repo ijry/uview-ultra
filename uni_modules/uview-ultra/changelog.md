@@ -1,3 +1,9 @@
+## Next
+docs: 完善 swiper vertical 纵向滑动说明（#936）
+
+- 补充 Vue 与 uni-app x 的 `vertical` 属性注释、纵向滑动示例与自动校验
+- 文档明确 `vertical` 透传原生 swiper，默认 `false` 保持横向兼容
+
 ## 4.5.11
 fix: 同步 .w-full 盒模型样式
 

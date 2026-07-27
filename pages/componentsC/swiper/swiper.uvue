@@ -15,6 +15,19 @@
 		</view>
 		<view class="u-demo-block">
 			<view class="u-demo-block__title">
+				<text class="text">纵向滑动</text>
+			</view>
+			<up-swiper
+				:list="list1"
+				vertical
+				indicator
+				indicatorMode="dot"
+				:autoplay="false"
+				height="200"
+			></up-swiper>
+		</view>
+		<view class="u-demo-block">
+			<view class="u-demo-block__title">
 				<text class="text">带标题</text>
 			</view>
 			<up-swiper
