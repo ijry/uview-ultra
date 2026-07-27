@@ -1,4 +1,4 @@
-## Next
+## 4.5.12
 docs: 完善 swiper vertical 纵向滑动说明（#936）
 
 - 补充 Vue 与 uni-app x 的 `vertical` 属性注释、纵向滑动示例与自动校验
