@@ -9,6 +9,7 @@ let settings = {
 
 // 尽量同步系统语言；部分 UTS 平台 getLocale/onLocaleChange 可用性不一
 try {
+    // #ifdef WEB || MP
     // @ts-ignore
     if (typeof uni !== 'undefined' && typeof uni.getLocale === 'function') {
         // @ts-ignore
@@ -17,10 +18,12 @@ try {
             settings['lang'] = current
         }
     }
+    // #endif
 } catch (e) {
 }
 
 try {
+    // #ifdef WEB || MP
     // @ts-ignore
     if (typeof uni !== 'undefined' && typeof uni.onLocaleChange === 'function') {
         // @ts-ignore
@@ -36,6 +39,7 @@ try {
             }
         })
     }
+    // #endif
 } catch (e) {
 }
 
@@ -57,11 +61,13 @@ export function setLocale(locale: string): string {
     if (locale == '') return settings['lang'] as string
     settings['lang'] = locale
     try {
+        // #ifdef WEB || MP
         // @ts-ignore
         if (typeof uni !== 'undefined' && typeof uni.setLocale === 'function') {
             // @ts-ignore
             uni.setLocale(locale)
         }
+        // #endif
     } catch (e) {
     }
     return settings['lang'] as string
@@ -100,7 +106,8 @@ export function t(value: string, params: UTSJSONObject = {} as UTSJSONObject): s
     if (value == '') {
         return value
     }
-    let key = value.replaceAll('.', '_')
+    //let key = value.replaceAll('.', '_')
+    let key = value.replace(/\./g, '_')
     let lang = settings['lang'] as string
     let locales = settings['locales'] as UTSJSONObject
     if (locales[lang] == null) {
@@ -120,7 +127,9 @@ export function t(value: string, params: UTSJSONObject = {} as UTSJSONObject): s
         const paramKey = paramKeys[i]
         const paramValue = params[paramKey]
         if (paramValue != null) {
-            resultStr = resultStr.replaceAll('{' + paramKey + '}', paramValue.toString())
+            const targetKey = new RegExp('{' + paramKey + '}','g') //'{' + paramKey + '}'
+            resultStr = resultStr.replace(targetKey, paramValue.toString())
+            //resultStr = resultStr.replaceAll('{' + paramKey + '}', paramValue.toString())
         }
     }
     return resultStr
