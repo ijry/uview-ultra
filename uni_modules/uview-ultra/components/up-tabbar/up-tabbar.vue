@@ -69,6 +69,7 @@
 		border,
 		activeColor,
 		inactiveColor,
+		borderColor,
 		fixed,
 		placeholder
 	} = toRefs(props)
@@ -123,11 +124,12 @@
 		return {
 			value: props.value,
 			activeColor: props.activeColor,
-			inactiveColor: props.inactiveColor
+			inactiveColor: props.inactiveColor,
+			borderColor: props.borderColor
 		}
 	}
 
-	watch(() => [props.value, props.activeColor, props.inactiveColor], () => {
+	watch(() => [props.value, props.activeColor, props.inactiveColor, props.borderColor], () => {
 		// 如果updateChildren中的元素发生了变化，则执行子元素初始化操作
 		updateChildren()
 	})
@@ -146,6 +148,7 @@
 		value,
 		activeColor,
 		inactiveColor,
+		borderColor,
 		placeholderHeight,
 		updateChildren,
 		setPlaceholderHeight,

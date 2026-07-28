@@ -9,6 +9,8 @@ const read = filePath => readFileSync(resolve(root, filePath), 'utf8')
 const packageJson = JSON.parse(read('package.json'))
 const tabbarItemVue = read('uni_modules/uview-ultra/components/up-tabbar-item/up-tabbar-item.vue')
 const tabbarItemUvue = read('uni_modules/uview-ultra/components/up-tabbar-item/up-tabbar-item.uvue')
+const tabbarVue = read('uni_modules/uview-ultra/components/up-tabbar/up-tabbar.vue')
+const tabbarUvue = read('uni_modules/uview-ultra/components/up-tabbar/up-tabbar.uvue')
 const propsVue = read('uni_modules/uview-ultra/components/up-tabbar-item/props.js')
 const propsUts = read('uni_modules/uview-ultra/components/up-tabbar-item/props.uts')
 const defaultsVue = read('uni_modules/uview-ultra/components/up-tabbar-item/tabbarItem.js')
@@ -19,6 +21,14 @@ assert.equal(
 	packageJson.scripts['verify:tabbar-mid-button-top-border'],
 	'node scripts/verify-tabbar-mid-button-top-border.mjs'
 )
+
+for (const [name, source] of [
+	['Vue tabbar', tabbarVue],
+	['UVue tabbar', tabbarUvue]
+]) {
+	assert.match(source, /borderColor:\s*props\.borderColor/, `expected ${name} to expose borderColor to items`)
+	assert.match(source, /props\.value[\s\S]*props\.activeColor[\s\S]*props\.inactiveColor[\s\S]*props\.borderColor/, `expected ${name} to update items when borderColor changes`)
+}
 
 for (const [name, source] of [
 	['Vue props', propsVue],
@@ -48,6 +58,9 @@ for (const [name, source] of [
 	assert.match(source, /midButtonInnerStyle/, `expected ${name} to render configurable inner background`)
 	assert.match(source, /midButtonShellStyle/, `expected ${name} to render configurable shell shadow`)
 	assert.match(source, /midButtonOffsetValue/, `expected ${name} to normalize mid button offset`)
+	assert.match(source, /:style="midButtonBorderCircleStyle"/, `expected ${name} to style circle border dynamically`)
+	assert.match(source, /borderColor:\s*''/, `expected ${name} to keep parent borderColor in item state`)
+	assert.match(source, /midButtonBorderCircleStyle[\s\S]*borderColor/, `expected ${name} to apply parent borderColor to mid button border`)
 	assert.match(source, /\.up-tabbar-item__icon--mid-button[\s\S]*width:\s*64px[\s\S]*height:\s*64px/, `expected ${name} to use 64px mid button size`)
 	assert.match(source, /\.up-tabbar-item__mid-button-border[\s\S]*overflow:\s*hidden[\s\S]*z-index:\s*0/, `expected ${name} to clip border under inner circle`)
 	assert.match(source, /\.up-tabbar-item__mid-button-border-circle[\s\S]*width:\s*64px[\s\S]*height:\s*64px/, `expected ${name} to draw a full 64px circle`)

@@ -12,7 +12,7 @@
 				:style="midButtonShellStyle"
 			>
 				<view v-if="isMidButton" class="up-tabbar-item__mid-button-border" :style="midButtonBorderStyle">
-					<view class="up-tabbar-item__mid-button-border-circle"></view>
+					<view class="up-tabbar-item__mid-button-border-circle" :style="midButtonBorderCircleStyle"></view>
 				</view>
 				<view v-if="isMidButton" class="up-tabbar-item__mid-button-inner" :style="midButtonInnerStyle"></view>
 				<up-icon
@@ -91,7 +91,8 @@
 	const parentData = reactive({
 		value: null,
 		activeColor: '',
-		inactiveColor: ''
+		inactiveColor: '',
+		borderColor: ''
 	})
 	const { parent, getParentData } = useUltraUI(props, parentData)
 	const name = toRef(props, 'name')
@@ -145,6 +146,14 @@
 		return {
 			height: `${clipHeight}px`
 		}
+	})
+
+	const midButtonBorderCircleStyle = computed(() => {
+		return isMidButton.value && parentData.borderColor
+			? {
+				borderColor: parentData.borderColor
+			}
+			: {}
 	})
 
 	const midButtonShellStyle = computed(() => {

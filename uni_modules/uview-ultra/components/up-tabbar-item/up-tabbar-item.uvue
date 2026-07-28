@@ -12,7 +12,7 @@
 				:style="midButtonShellStyle"
 			>
 				<view v-if="isMidButton" class="up-tabbar-item__mid-button-border" :style="midButtonBorderStyle">
-					<view class="up-tabbar-item__mid-button-border-circle"></view>
+					<view class="up-tabbar-item__mid-button-border-circle" :style="midButtonBorderCircleStyle"></view>
 				</view>
 				<view v-if="isMidButton" class="up-tabbar-item__mid-button-inner" :style="midButtonInnerStyle"></view>
 				<up-icon
@@ -74,7 +74,8 @@
 	const { parent, parentData, getParentData } = useUltraUI({
 		value: null as string | number | null,
 		activeColor: '',
-		inactiveColor: ''
+		inactiveColor: '',
+		borderColor: ''
 	} as UTSJSONObject)
 	const instance = getCurrentInstance()!.proxy!
 
@@ -218,6 +219,17 @@
 			const clipBaseHeight = hasMidButtonText.value ? 15.5 : 7
 			const clipHeight = Math.min(Math.max(clipBaseHeight - midButtonOffsetValue.value, 0), 64)
 			style['height'] = clipHeight.toString() + 'px'
+		}
+		return style
+	})
+
+	const midButtonBorderCircleStyle = computed((): UTSJSONObject => {
+		const style = {} as UTSJSONObject
+		if (isMidButton.value) {
+			const borderColor = parentData.value['borderColor']
+			if (borderColor != null && borderColor.toString().length > 0) {
+				style['borderColor'] = borderColor.toString()
+			}
 		}
 		return style
 	})
@@ -366,6 +378,7 @@
 		midButtonOffsetValue,
 		midButtonContentStyle,
 		midButtonBorderStyle,
+		midButtonBorderCircleStyle,
 		midButtonShellStyle,
 		midButtonInnerStyle,
 		midButtonIconStyle,

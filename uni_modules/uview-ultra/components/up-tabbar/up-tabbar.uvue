@@ -117,7 +117,8 @@
 		return {
 			value: props.value,
 			activeColor: props.activeColor,
-			inactiveColor: props.inactiveColor
+			inactiveColor: props.inactiveColor,
+			borderColor: props.borderColor
 		} as UTSJSONObject
 	})
 
@@ -137,7 +138,7 @@
 
 	// 监听多个参数的变化，通过在computed执行对应的操作
 	const updateChild = computed((): Array<any | null> => {
-		return [props.value, props.activeColor, props.inactiveColor] as Array<any | null>
+		return [props.value, props.activeColor, props.inactiveColor, props.borderColor] as Array<any | null>
 	})
 
 	const updatePlaceholder = computed((): Array<any> => {
