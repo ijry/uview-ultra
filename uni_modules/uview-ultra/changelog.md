@@ -1,3 +1,10 @@
+## 4.5.16
+fix: 同步文本组件 flex1 默认行为
+
+- up-text 默认不再占满剩余空间，未显式开启 flex1 时避免影响父级布局
+- 为 Vue 与 uvue 文本组件补齐 flex1 配置、props 与类型声明
+- 仅在 flex1 为 true 时写入 flex 和宽度样式，与 uview-plus 保持一致
+
 ## 4.5.15
 fix: 修复 plain 按钮默认白底
 
