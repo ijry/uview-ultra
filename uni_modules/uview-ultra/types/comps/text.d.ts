@@ -94,6 +94,11 @@ declare interface TextProps {
    */
   wordWrap?: 'normal' | 'break-word' | 'any-where'
   /**
+   * 是否占满剩余空间
+   * @default false
+   */
+  flex1?: boolean
+  /**
    * 点击触发事件
    */
   onClick?: () => any

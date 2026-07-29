@@ -216,6 +216,11 @@ const props = defineProps({
         type: String,
         default: defProps.getString('text.wordWrap')
     },
+    // 占满剩余空间
+    flex1: {
+        type: Boolean,
+        default: defProps.getBoolean('text.flex1')
+    },
     // 指定返回用户信息的语言，zh_CN 简体中文，zh_TW 繁体中文，en 英文。只微信小程序有效
     lang: {
         type: String,
@@ -273,10 +278,15 @@ const props = defineProps({
 const emit = defineEmits(['click'])
 
 const rootStyle = computed((): UTSJSONObject => {
-    return {
+    const style = {
         margin: props.margin,
         justifyContent: props.align === 'left' ? 'flex-start' : props.align === 'center' ? 'center' : 'flex-end'
     } as UTSJSONObject
+    if (props.flex1) {
+        style['flex'] = 1
+        style['width'] = '100%'
+    }
+    return style
 })
 
 const iconCustomStyle = computed((): UTSJSONObject => {
@@ -459,8 +469,6 @@ defineExpose({
     @include flex(row);
     align-items: center;
     flex-wrap: nowrap;
-    flex: 1;
-	width: 100%;
 
     &__price {
         font-size: 14px;

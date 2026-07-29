@@ -109,6 +109,11 @@ export const propsText = defineMixin({
             type: String,
             default: () => defProps.text.wordWrap
         },
+        // 占满剩余空间
+        flex1: {
+            type: Boolean,
+            default: () => defProps.text.flex1
+        },
         // 指定返回用户信息的语言，zh_CN 简体中文，zh_TW 繁体中文，en 英文。只微信小程序有效
         lang: {
             type: String,

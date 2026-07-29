@@ -3,10 +3,7 @@
         class="up-text"
         :class="[customClass]"
         v-if="show"
-        :style="{
-            margin: margin,
-			justifyContent: align === 'left' ? 'flex-start' : align === 'center' ? 'center' : 'flex-end'
-        }"
+        :style="wrapStyle"
         @tap="clickHandler"
     >
         <text
@@ -169,6 +166,20 @@ const valueStyle = computed(() => {
     return deepMerge(style, addStyle(props.customStyle))
 })
 
+const wrapStyle = computed(() => {
+    const style = {
+        margin: props.margin,
+        justifyContent: props.align === 'left' ? 'flex-start' : props.align === 'center' ? 'center' : 'flex-end'
+    }
+    if (props.flex1) {
+        style.flex = 1
+        // #ifndef APP-NVUE
+        style.width = '100%'
+        // #endif
+    }
+    return style
+})
+
 const value = computed(() => {
     const {
         text,
@@ -291,10 +302,6 @@ function onOpenSetting(event) {
     @include flex(row);
     align-items: center;
     flex-wrap: nowrap;
-    flex: 1;
-	/* #ifndef APP-NVUE */
-	width: 100%;
-	/* #endif */
 
     &__price {
         font-size: 14px;
