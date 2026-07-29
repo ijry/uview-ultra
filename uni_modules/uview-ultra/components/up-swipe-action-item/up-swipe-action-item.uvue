@@ -28,7 +28,7 @@
 			</slot>
 		</view>
 		<view class="up-swipe-action-item__content" @click="clickHandler" @touchstart="touchstart" @touchmove="touchmove"
-			@touchend="touchend" :style="sliderStyle">
+			@touchend="touchend" @touchcancel="touchcancel" :style="sliderStyle">
 			<slot></slot>
 		</view>
 	</view>
@@ -49,9 +49,11 @@
 	 * @property {String | Number}	index			标识符，如果是v-for，可用index索引
 	 * @property {Boolean}			disabled		是否禁用（默认 false ）
 	 * @property {Boolean}			autoClose		是否自动关闭其他swipe按钮组（默认 true ）
+	 * @property {Boolean}			scrolling		是否正在横向滑动，可用于v-model:scrolling暂停外部滚动（默认 false ）
 	 * @property {Number}			threshold		滑动距离阈值，只有大于此值，才被认为是要打开菜单（默认 30 ）
 	 * @property {Array}			options			右侧按钮内容
 	 * @property {String | Number}	duration		动画过渡时间，单位ms（默认 350 ）
+	 * @event {Function(value)}	scrolling	横向滑动状态变化时触发，参数为Boolean
 	 * @event {Function(index)}	open	组件打开时触发
 	 * @event {Function(index)}	close	组件关闭时触发
 	 * @example	<up-swipe-action><up-swipe-action-item :options="options1" ></up-swipe-action-item></up-swipe-action>
@@ -91,6 +93,11 @@
 			type: Boolean,
 			default: (defProps['swipeActionItem'] as UTSJSONObject)['autoClose']
 		},
+		// 是否正在横向滑动，可用于 v-model:scrolling 暂停外部滚动
+		scrolling: {
+			type: Boolean,
+			default: (defProps['swipeActionItem'] as UTSJSONObject)['scrolling']
+		},
 		// 滑动距离阈值，只有大于此值，才被认为是要打开菜单
 		threshold: {
 			type: Number,
@@ -108,12 +115,13 @@
 		}
 	})
 
-	const emit = defineEmits(['click', 'update:show'])
+	const emit = defineEmits(['click', 'update:show', 'update:scrolling', 'scrolling'])
 	// 按钮的尺寸信息
 	const size = ref<UTSJSONObject>({} as UTSJSONObject)
 	// 当前状态，open-打开，close-关闭
 	const status = ref('')
 	const sliderStyle = ref<UTSJSONObject>({} as UTSJSONObject)
+	const innerScrolling = ref(props.scrolling)
 	const state = ref<UTSJSONObject>({
 		moving: false,
 		startX: 0,
@@ -153,6 +161,14 @@
 		status.value = statusValue
 	}
 
+	const setScrolling = (value: boolean): void => {
+		const next = value == true
+		if (innerScrolling.value == next) return
+		innerScrolling.value = next
+		emit('update:scrolling', next)
+		emit('scrolling', next)
+	}
+
 	// 获取过渡时间
 	const getDuration = (value: any): string => {
 		if (value.toString().indexOf('s') >= 0) return value as string
@@ -175,6 +191,7 @@
 
 	// 一次性收起滑动菜单
 	const closeSwipeAction = (): void => {
+		setScrolling(false)
 		// 处理duration单位问题
 		var duration = getDuration(props.duration)
 		sliderStyle.value = {
@@ -185,6 +202,7 @@
 	}
 
 	const closeHandler = (): void => {
+		setScrolling(false)
 		closeSwipeAction()
 	}
 
@@ -235,7 +253,10 @@
 	}
 
 	const touchmove = (event: UniTouchEvent): void => {
-		if (props.disabled || state.value['moving'] == null) return
+		if (props.disabled || state.value['moving'] == false) {
+			setScrolling(false)
+			return
+		}
 		var touches = event.touches
 		var pageX = touches[0].pageX
 		var pageY = touches[0].pageY
@@ -252,6 +273,7 @@
 		}
 		// 如果移动的X轴距离小于Y轴距离，也即终点位置与起点位置连线，与Y轴夹角小于45度时，认为是页面上下滑动，而不是左右滑动单元格
 		if (Math.abs(moveX) < Math.abs(moveY)) return
+		setScrolling(true)
 
 		if (status.value === 'open') {
 			// 在开启状态下，向左滑动，需忽略
@@ -271,8 +293,12 @@
 	}
 
 	const touchend = (event: UniTouchEvent): void => {
-		if (state.value['moving'] == false || props.disabled) return
+		if (state.value['moving'] == false || props.disabled) {
+			setScrolling(false)
+			return
+		}
 		state.value['moving'] = false
+		setScrolling(false)
 		var touches: UniTouch = event.changedTouches[0] as UniTouch
 		var pageX = touches.pageX
 		var startX = state.value['startX'] as number
@@ -303,11 +329,26 @@
 		}
 	}
 
+	const touchcancel = (_event: UniTouchEvent): void => {
+		state.value['moving'] = false
+		setScrolling(false)
+	}
+
 	watch((): boolean => props.show, (newValue: boolean) => {
 		if (newValue) {
 			status.value = 'open'
 		} else {
 			status.value = 'close'
+		}
+	})
+
+	watch((): boolean => props.scrolling, (newValue: boolean) => {
+		innerScrolling.value = newValue == true
+	})
+
+	watch((): boolean => props.disabled, (newValue: boolean) => {
+		if (newValue) {
+			setScrolling(false)
 		}
 	})
 
@@ -340,6 +381,7 @@
 
 	onBeforeUnmount(() => {
 		closeHandler()
+		setScrolling(false)
 	})
 
 	defineExpose({
@@ -356,11 +398,13 @@
 		buttonClickHandler,
 		clickHandler,
 		closeHandler,
+		setScrolling,
 		setStatus,
 		getBtnWidth,
 		touchstart,
 		touchmove,
 		touchend,
+		touchcancel,
 		openSwipeAction,
 		closeSwipeAction,
 		moveSwipeAction,

@@ -1,6 +1,6 @@
 <template>
 	<!-- #ifdef APP -->
-	<scroll-view style="flex:1">
+	<scroll-view style="flex:1" :scroll-y="!swipeScrolling">
 	<!-- #endif -->
 	<view class="u-page">
 		<view class="u-demo-block">
@@ -12,6 +12,7 @@
 					<up-swipe-action-item
 						v-if="show1"
 						:show="true"
+						v-model:scrolling="swipeScrolling"
 						:options="options1"
 						@click="click"
 					>
@@ -111,6 +112,7 @@
 	import { UPSwipeActionItemOption } from '@/uni_modules/uview-ultra/types/index.uts'
 
 	const show1 = ref(true)
+	const swipeScrolling = ref(false)
 	const options1 = [{
 		text: '删除',
 		style: {
