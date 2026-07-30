@@ -1,4 +1,4 @@
-## 待发布
+## 4.5.18
 fix: 修复自定义 action-sheet 插槽点击不关闭
 
 - Vue 与 UVue 版 up-action-sheet 的自定义 slot 点击现在遵守 closeOnClickAction
