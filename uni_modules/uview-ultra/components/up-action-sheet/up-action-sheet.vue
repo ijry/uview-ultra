@@ -34,7 +34,14 @@
 			>
 				<text class="up-action-sheet__description__text">{{description}}</text>
 			</view>
-			<slot>
+			<view
+			    class="up-action-sheet__slot"
+			    v-if="$slots.default"
+			    @tap="slotClickHandler"
+			>
+				<slot></slot>
+			</view>
+			<template v-else>
 				<up-line v-if="description"></up-line>
 				<scroll-view scroll-y class="up-action-sheet__item-wrap" :style="{maxHeight: wrapMaxHeight}">
 					<view :key="index" v-for="(item, index) in actions">
@@ -88,7 +95,7 @@
 						<up-line v-if="index !== actions.length - 1"></up-line>
 					</view>
 				</scroll-view>
-			</slot>
+			</template>
 			<up-gap
 			    bgColor="#eaeaec"
 			    height="6"
@@ -107,6 +114,7 @@
 </template>
 
 <script setup>
+import { provide } from 'vue'
 import { props as actionSheetProps } from './props.js'
 import { commonProps } from '../../libs/composable/useUltraUI.js'
 import { addUnit } from '../../libs/function/index.js'
@@ -200,6 +208,15 @@ function cancel() {
 	emit('update:show')
 	emit('close')
 }
+
+function slotClickHandler() {
+	if (props.closeOnClickAction) {
+		emit('update:show')
+		emit('close')
+	}
+}
+
+provide('upActionSheet', { slotClickHandler })
 
 function selectHandler(index) {
 	const item = props.actions[index]

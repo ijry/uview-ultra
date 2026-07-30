@@ -1,3 +1,10 @@
+## 待发布
+fix: 修复自定义 action-sheet 插槽点击不关闭
+
+- Vue 与 UVue 版 up-action-sheet 的自定义 slot 点击现在遵守 closeOnClickAction
+- Vue 版兼容 up-cell 默认阻止事件冒泡的场景
+- 同步 uview-plus issue #905，并补充对应验证脚本
+
 ## 4.5.17
 feat: swipe-action-item 新增 scrolling / v-model:scrolling，用于横向滑动时联动暂停页面或 scroll-view 容器滚动。
 fix: 补充 touchcancel、关闭、禁用和卸载释放逻辑，避免外部滚动锁状态卡住。

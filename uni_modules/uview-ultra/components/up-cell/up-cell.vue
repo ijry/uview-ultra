@@ -47,7 +47,7 @@
 </template>
 
 <script setup>
-	import { computed } from 'vue'
+	import { computed, inject } from 'vue'
 	import { propsCell } from './props.js'
 	import { commonProps, useUltraUI } from '../../libs/composable/useUltraUI.js'
 	import { addStyle } from '../../libs/function/index.js'
@@ -95,6 +95,7 @@
 	})
 	const emit = defineEmits(['click'])
 	const { openPage, preventEvent } = useUltraUI(props)
+	const upActionSheet = inject('upActionSheet', null)
 	const testEmpty = test.empty
 
 	const titleTextStyle = computed(() => {
@@ -107,6 +108,9 @@
 		emit('click', {
 			name: props.name
 		})
+		if (props.stop && typeof upActionSheet?.slotClickHandler === 'function') {
+			upActionSheet.slotClickHandler()
+		}
 		// 如果配置了url参数，跳转页面
 		openPage()
 		// 是否阻止事件传播
