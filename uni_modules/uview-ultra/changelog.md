@@ -1,4 +1,4 @@
-## 待发布
+## 4.5.19
 fix: 修复 H5 严格类型检查告警
 
 - 修复 up-search label prop 使用 null 构造器导致的 TS2769 编译错误
