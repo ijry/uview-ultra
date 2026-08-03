@@ -236,6 +236,11 @@ const testArray = (obj: any): boolean => {
 	return testArrayFn(obj)
 }
 
+const getKeyName = (): string => {
+	const keyName = props.keyName
+	return keyName != null ? keyName.toString() : 'text'
+}
+
 const pickerViewHeight = computed((): string => {
 	// @ts-ignore
 	let tmp = parseInt(props.visibleItemCount.toString())
@@ -254,9 +259,11 @@ const inputLabel = computed((): string[] => {
 	})
 	let res: string[] = []
 	items.forEach(element => {
-		if (typeof element == 'object') {
-			// @ts-ignore
-			res.push((element as UTSJSONObject)[props.keyName].toString())
+		if (typeof element == 'object' && element != null) {
+			const itemText = (element as UTSJSONObject)[getKeyName()]
+			if (itemText != null) {
+				res.push(itemText.toString())
+			}
 		}
 	})
 	return res
@@ -287,8 +294,8 @@ const inputValue = computed((): Array<any> => {
 
 // 获取item需要显示的文字，判别为对象还是文本
 const getItemText = (item: any): any | null => {
-	if (typeof item == 'object') {
-		let ele1 = (item as UTSJSONObject)[props.keyName]
+	if (typeof item == 'object' && item != null) {
+		let ele1 = (item as UTSJSONObject)[getKeyName()]
 		if (ele1 != null) {
 			return ele1.toString()
 		}

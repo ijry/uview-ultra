@@ -169,8 +169,9 @@
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import type { ComponentPublicInstance } from 'vue'
 import uHeader from './header.uvue'
-import { UPCalendarMonthsItemDate } from './types.uts'
-import uMonth, { monthsItem } from './month.uvue'
+import { UPCalendarMonthsItemDate, UPCalendarMonthsItem } from './types.uts'
+import uMonth from './month.uvue'
+type monthsItem = UPCalendarMonthsItem
 import { dayuts } from '@/uni_modules/lime-dayuts'
 import { t } from '../../libs/i18n/index.uts'
 import { addUnit as addUnitFn, range, error, padZero } from '../../libs/function/index.uts'
@@ -200,10 +201,10 @@ const props = defineProps({
 	color: { type: String, default: (defProps['calendar'] as UTSJSONObject)['color'] },
 	minDate: { type: [String, Number], default: (defProps['calendar'] as UTSJSONObject)['minDate'] },
 	maxDate: { type: [String, Number], default: (defProps['calendar'] as UTSJSONObject)['maxDate'] },
-	defaultDate: { type: [Array, String, Date, null], default: (defProps['calendar'] as UTSJSONObject)['defaultDate'] },
+	defaultDate: { type: [Array, String, Date], default: (defProps['calendar'] as UTSJSONObject)['defaultDate'] },
 	maxCount: { type: [String, Number], default: (defProps['calendar'] as UTSJSONObject)['maxCount'] },
 	rowHeight: { type: [String, Number], default: (defProps['calendar'] as UTSJSONObject)['rowHeight'] },
-	formatter: { type: [Function, null], default: (defProps['calendar'] as UTSJSONObject)['formatter'] },
+	formatter: { type: Function, default: (defProps['calendar'] as UTSJSONObject)['formatter'] },
 	showLunar: { type: Boolean, default: (defProps['calendar'] as UTSJSONObject)['showLunar'] },
 	showMark: { type: Boolean, default: (defProps['calendar'] as UTSJSONObject)['showMark'] },
 	confirmText: { type: String, default: (defProps['calendar'] as UTSJSONObject)['confirmText'] },
@@ -217,7 +218,7 @@ const props = defineProps({
 	safeAreaInsetBottom: { type: Boolean, default: (defProps['calendar'] as UTSJSONObject)['safeAreaInsetBottom'] },
 	safeAreaInsetTop: { type: Boolean, default: (defProps['calendar'] as UTSJSONObject)['safeAreaInsetTop'] },
 	bgColor: { type: String, default: (defProps['calendar'] as UTSJSONObject)['bgColor'] },
-	closeable: { type: [Boolean, null], default: (defProps['calendar'] as UTSJSONObject)['closeable'] },
+	closeable: { type: Boolean, default: (defProps['calendar'] as UTSJSONObject)['closeable'] },
 	closeIconPos: { type: String, default: (defProps['calendar'] as UTSJSONObject)['closeIconPos'] },
 	closeOnClickOverlay: { type: Boolean, default: (defProps['calendar'] as UTSJSONObject)['closeOnClickOverlay'] },
 	zoom: { type: Boolean, default: (defProps['calendar'] as UTSJSONObject)['zoom'] },
@@ -262,8 +263,8 @@ const rangeEndTime = ref('00:00')
 const innerFormatter = ref((value: UPCalendarMonthsItemDate): UPCalendarMonthsItemDate => value)
 
 const addUnit = (e: any): string => addUnitFn(e)
-const innerMaxDate = computed((): string => testNumber(props.maxDate) ? (props.maxDate as number).toString() : props.maxDate.toString())
-const innerMinDate = computed((): string => testNumber(props.minDate) ? (props.minDate as number).toString() : props.minDate.toString())
+const innerMaxDate = computed((): string => props.maxDate == null ? '' : props.maxDate.toString())
+const innerMinDate = computed((): string => props.minDate == null ? '' : props.minDate.toString())
 const todayDate = computed((): string => dayuts().format('YYYY-MM-DD'))
 const todayText = computed((): string => t('up.calendar.today'))
 const todayDisabled = computed((): boolean => {
@@ -444,7 +445,7 @@ function getDefaultMonthIndex(): number {
 	let selectedMonth = dayuts().format('YYYY-MM')
 	if (props.defaultDate != null) {
 		if (!testArray(props.defaultDate)) {
-			selectedMonth = dayuts(props.defaultDate).format('YYYY-MM')
+			selectedMonth = dayuts(props.defaultDate as any).format('YYYY-MM')
 		} else if ((props.defaultDate as Array<any>).length > 0) {
 			selectedMonth = dayuts((props.defaultDate as Array<any>)[0]).format('YYYY-MM')
 		}
@@ -457,14 +458,14 @@ function getDefaultMonthIndex(): number {
 }
 
 function setMonth(): void {
-	const minDate = (innerMinDate.value != '' && innerMinDate.value != '0') ? innerMinDate.value : dayuts().valueOf()
-	const maxDate = (innerMaxDate.value != '' && innerMaxDate.value != '0') ? innerMaxDate.value : dayuts(minDate).add((props.monthNum as number) - 1, 'month').valueOf()
+	const minDate: any = (innerMinDate.value != '' && innerMinDate.value != '0') ? innerMinDate.value : dayuts().valueOf()
+	const maxDate: any = (innerMaxDate.value != '' && innerMaxDate.value != '0') ? innerMaxDate.value : dayuts(minDate as any).add((props.monthNum as number) - 1, 'month').valueOf()
 	const monthCount = range(1, props.monthNum as number, getMonths(minDate, maxDate))
 	months.value = [] as monthsItem[]
-	const minDateStr = dayuts(minDate).format('YYYY-MM-DD')
-	const maxDateStr = dayuts(maxDate).format('YYYY-MM-DD')
+	const minDateStr = dayuts(minDate as any).format('YYYY-MM-DD')
+	const maxDateStr = dayuts(maxDate as any).format('YYYY-MM-DD')
 	for (let i = 0; i < monthCount; i++) {
-		const monthBase = dayuts(minDate).add(i, 'month')
+		const monthBase = dayuts(minDate as any).add(i, 'month')
 		const daysInMonth = monthBase.daysInMonth()
 		const monthValue = monthBase.month() + 1
 		const yearValue = monthBase.year()
@@ -580,7 +581,7 @@ function updateMonthTopM(topArr: Array<number>): void {
 	}
 	let selectedMonth = dayuts().format("YYYY-MM")
 	if (!testArray(props.defaultDate)) {
-		selectedMonth = dayuts(props.defaultDate).format("YYYY-MM")
+		selectedMonth = dayuts(props.defaultDate as any).format("YYYY-MM")
 	} else {
 		selectedMonth = dayuts((props.defaultDate as Array<any>)[0]).format("YYYY-MM")
 	}
@@ -597,14 +598,14 @@ watch((): string => watchValueSignature(props.defaultDate), () => {
 watch(selectedChange, () => {
 	if (inited.value) setMonth()
 })
-watch((): string => props.timePrecision, () => {
+watch((): string => props.timePrecision != null ? props.timePrecision : 'minute', () => {
 	initTimeOptions()
 	initTimeValues()
 })
-watch((): string => props.defaultTime, () => {
+watch((): string => props.defaultTime != null ? props.defaultTime : '', () => {
 	initTimeValues()
 })
-watch((): boolean => props.show, (nval: boolean) => {
+watch((): boolean => props.show == true, (nval: boolean) => {
 	if (nval) {
 		if (!inited.value) init()
 		else if ((months.value as Array<monthsItem>).length == 0) setMonth()

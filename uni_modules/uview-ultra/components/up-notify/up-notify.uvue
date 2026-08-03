@@ -132,6 +132,13 @@
 		return value == null ? fallback : value.toString()
 	}
 
+	function getConfigNumber(key: string, fallback: number = 0): number {
+		const value = tmpConfig.value[key]
+		if (value == null) return fallback
+		const parsed = parseInt(value.toString())
+		return isNaN(parsed) ? fallback : parsed
+	}
+
 	const containerStyle = computed((): UTSJSONObject => {
 		let top = 0
 		const topValue = tmpConfig.value['top']
@@ -212,7 +219,8 @@
 		// 任何定时器初始化之前，都要执行清除操作，否则可能会造成混乱
 		clearTimer()
 		open.value = true
-		if (parseInt(tmpConfig.value['duration'].toString()) > 0) {
+		const duration = getConfigNumber('duration', 3000)
+		if (duration > 0) {
 			timer.value = setTimeout(() => {
 				open.value = false
 				// 倒计时结束，清除定时器，隐藏toast组件
@@ -222,7 +230,7 @@
 				if (typeof complete === 'function') {
 					;(complete as () => void)()
 				}
-			}, parseInt(tmpConfig.value['duration'].toString()))
+			}, duration)
 		}
 	}
 

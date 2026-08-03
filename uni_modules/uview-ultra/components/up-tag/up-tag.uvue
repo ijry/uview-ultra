@@ -238,12 +238,12 @@
 
 	// 点击关闭按钮
 	const closeHandler = (): void => {
-		emit('close', props.name.toString())
+		emit('close', props.name != null ? props.name.toString() : '')
 	}
 
 	// 点击标签
 	const clickHandler = (): void => {
-		emit('click', props.name.toString())
+		emit('click', props.name != null ? props.name.toString() : '')
 	}
 
 	defineExpose({

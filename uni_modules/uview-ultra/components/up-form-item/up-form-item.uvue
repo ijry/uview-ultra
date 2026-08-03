@@ -230,7 +230,7 @@
 	}
 	
 	// 监听规则的变化todo
-	watch((): Array<UTSJSONObject>|UTSJSONObject => props.rules, (newVal: Array<UTSJSONObject>|UTSJSONObject) => {
+	watch((): any => props.rules != null ? props.rules : {} as UTSJSONObject, (newVal: Array<UTSJSONObject>|UTSJSONObject) => {
 		setRules(newVal);
 	}, { immediate: true })
 	

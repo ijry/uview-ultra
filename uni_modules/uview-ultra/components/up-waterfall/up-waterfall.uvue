@@ -35,7 +35,7 @@
      * @property {String Number} columns 瀑布流列数，默认为2，设置为auto时自动根据屏幕宽度调整列数
      * @example <up-waterfall :flowList="flowList"></up-waterfall>
      */
-    import { computed, getCurrentInstance, nextTick, onMounted, ref, watch } from 'vue';
+    import { computed, getCurrentInstance, nextTick, onMounted, ref, watch, watchEffect } from 'vue';
     import defProps from './waterfall.uts';
     import { sleep, upGetRect } from '../../libs/function/index.uts';
 
@@ -87,6 +87,16 @@
     const windowWidth = ref(375)
     const windowHeight = ref(0)
     const resizeTimer = ref(0)
+	const safeModelValue = (): UTSJSONObject[] => props.modelValue != null ? props.modelValue : [] as UTSJSONObject[]
+	const safeColumnsMin = (): number => {
+		const value = props.columnsMin != null ? parseInt(props.columnsMin.toString()) : 2
+		return isNaN(value) ? 2 : value
+	}
+	const safeColumns = (): number => {
+		const value = props.columns != null ? parseInt(props.columns.toString()) : 2
+		return isNaN(value) ? 2 : value
+	}
+	const safeMinColumnWidth = (): number => props.minColumnWidth != null ? props.minColumnWidth : 230
 
     // 复制而不是引用对象和数组
     const cloneData = (data: UTSJSONObject[]): UTSJSONObject[] => {
@@ -96,10 +106,10 @@
     // 破坏flowList变量的引用，否则watch的结果新旧值是一样的
     const copyFlowList = computed((): UTSJSONObject[] => {
         // @ts-ignore
-        if (props.modelValue.length == 0) {
+        if (safeModelValue().length == 0) {
             return [] as UTSJSONObject[]
         }
-        return cloneData(props.modelValue)
+        return cloneData(safeModelValue())
     })
 
     // 获取列数，支持auto模式
@@ -108,14 +118,14 @@
             // 列间距为10rpx(约等于7px)
             const columnGap = 7
             // 计算可容纳的列数
-            let columnCount = Math.max(1, Math.floor(windowWidth.value / (props.minColumnWidth + columnGap)))
-            const minColumns = parseInt(props.columnsMin.toString())
+            let columnCount = Math.max(1, Math.floor(windowWidth.value / (safeMinColumnWidth() + columnGap)))
+			const minColumns = safeColumnsMin()
             if (columnCount < minColumns) {
                 columnCount = minColumns
             }
             return columnCount
         }
-        return parseInt(props.columns.toString()) ?? 2
+		return safeColumns()
     }
 
     // 初始化列数据数组
@@ -242,12 +252,12 @@
 
         // 同时清除父组件的数据中的对应id的条目
         // @ts-ignore
-        const modelValueIndex = props.modelValue.findIndex((val: UTSJSONObject) => {
+        const modelValueIndex = safeModelValue().findIndex((val: UTSJSONObject) => {
             // @ts-ignore
             return val[props.idKey].toString() == id.toString()
         })
         if (modelValueIndex != -1) {
-            const newModelValue = cloneData(props.modelValue)
+            const newModelValue = cloneData(safeModelValue())
             newModelValue.splice(modelValueIndex, 1)
             emit('update:modelValue', newModelValue)
         }
@@ -277,12 +287,12 @@
         if (found && targetItem != null) {
             // 修改父组件的数据中的对应id的条目
             // @ts-ignore
-            const modelValueIndex = props.modelValue.findIndex((val: UTSJSONObject) => {
+            const modelValueIndex = safeModelValue().findIndex((val: UTSJSONObject) => {
                 // @ts-ignore
                 return val[props.idKey] != null && val[props.idKey].toString() == id.toString()
             })
             if (modelValueIndex != -1) {
-                let data = cloneData(props.modelValue)
+                let data = cloneData(safeModelValue())
                 data[modelValueIndex][key] = value
                 emit('update:modelValue', data)
             }
@@ -291,20 +301,23 @@
 
     initColumnList()
 
-    watch(copyFlowList, (nVal: UTSJSONObject[], oVal: UTSJSONObject[]) => {
-        // @ts-ignore
-        if (nVal.length == 0) {
-            clear(false)
-        } else {
-            if (columnList.value.length == 1) {
-                initColumnList()
+    let previousFlowLength = 0
+    watchEffect(() => {
+        const nVal = copyFlowList.value
+        const startIndex = nVal.length < previousFlowLength ? 0 : previousFlowLength
+        previousFlowLength = nVal.length
+        const addedData = nVal.slice(startIndex)
+        nextTick(() => {
+            if (nVal.length == 0) {
+                clear(false)
+            } else {
+                if (columnList.value.length == 1) {
+                    initColumnList()
+                }
+                handleData(addedData)
             }
-            // 取差值，即这一次数组变化新增的部分
-            let startIndex = Array.isArray(oVal) && oVal.length > 0 ? oVal.length : 0
-            // 直接处理数据，不再使用tempList和splitData
-            handleData(nVal.slice(startIndex))
-        }
-    }, { immediate: true })
+        })
+    })
 
     watch((): any => props.columns, () => {
         initColumnList()

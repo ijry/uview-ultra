@@ -17,7 +17,7 @@
 					>
 						<view
 							class="up-tabs__wrapper__nav__item"
-							v-for="(item, index) in list"
+							v-for="(item, index) in safeList"
 							:key="index"
 							@tap="clickHandler(item, index)"
 							@longpress="longPressHandler(item,index)"
@@ -45,7 +45,7 @@
 								:class="[(item['disabled'] != null && (item['disabled'] as boolean)) ?'up-tabs__wrapper__nav__item__text--disabled' : '']"
 								class="up-tabs__wrapper__nav__item__text"
 								:style="[textStyle(index)]"
-							>{{ item[keyName] }}</text>
+							>{{ getItemText(item) }}</text>
 							<up-badge
 								:show="getShowValue(item)"
 								:isDot="getBadgePropValue(item, 'isDot')"
@@ -184,6 +184,12 @@
 	} as NodeInfo)
 	const innerCurrent = ref(0)
 	const moving = ref(false)
+	const safeList = computed((): Array<UTSJSONObject> => props.list != null ? props.list : [] as Array<UTSJSONObject>)
+	const keyNameValue = computed((): string => props.keyName != null ? props.keyName : 'name')
+	const getItemText = (item: UTSJSONObject): string => {
+		const value = item[keyNameValue.value]
+		return value == null ? '' : value.toString()
+	}
 
 	const propsBadge = computed((): UTSJSONObject => {
 		return badgeProps['badge'] as UTSJSONObject
@@ -203,7 +209,7 @@
 		return {
 			width: _addUnit(props.lineWidth),
 			transform: 'translateX(' + lineOffsetLeft.value + 'px)',
-			transitionDuration: (firstTime.value ? 0 : props.duration).toString() + 'ms',
+			transitionDuration: (firstTime.value ? 0 : (props.duration != null ? props.duration : 300)).toString() + 'ms',
 			height: _addUnit(props.lineHeight),
 			backgroundColor: props.lineColor,
 			backgroundSize: props.lineBgSize
@@ -333,7 +339,7 @@
 	// 获取所有标签的尺寸
 	const getAllItemRect = (): Promise<Array<NodeInfo>> => {
 		return new Promise(resolve => {
-			const promiseAllArr = (props.list as Array<UTSJSONObject>).map((item: UTSJSONObject, index: number) => {
+			const promiseAllArr = safeList.value.map((_item: UTSJSONObject, index: number) => {
 				return queryRect(`up-tabs__wrapper__nav__item-${index}`)
 			})
 			Promise.all(promiseAllArr).then((sizes: NodeInfo[]) => resolve(sizes))
@@ -343,7 +349,7 @@
 	// 获取所有标签的尺寸
 	const resize = (): void => {
 		// 如果不存在list，则不处理
-		if ((props.list as Array<UTSJSONObject>).length == 0) {
+		if (safeList.value.length == 0) {
 			return
 		}
 		getTabsRect().then((tabsRes: Array<NodeInfo>) => {
@@ -399,7 +405,7 @@
 		})
 	}
 
-	watch((): string | number => props.current, (newValue: string | number) => {
+	watch((): string | number => props.current != null ? props.current : 0, (newValue: string | number) => {
 		// 内外部值不相等时，才尝试移动滑块
 		if (newValue !== innerCurrent.value) {
 			if (typeof newValue == 'string') {
@@ -414,7 +420,7 @@
 	}, { immediate: true })
 
 	// list变化时，重新渲染list各项信息
-	watch((): Array<UTSJSONObject> => props.list as Array<UTSJSONObject>, () => {
+	watch((): Array<UTSJSONObject> => safeList.value, () => {
 		nextTick(() => {
 			resize()
 		})
@@ -514,7 +520,7 @@
 
 				&__line {
 					height: 3px;
-					backgroundColor: $up-primary;
+					background-color: $up-primary;
 					width: 30px;
 					position: absolute;
 					bottom: 2px;

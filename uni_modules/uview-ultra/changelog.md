@@ -1,3 +1,12 @@
+## 待发布
+fix: 修复 H5 严格类型检查告警
+
+- 修复 up-search label prop 使用 null 构造器导致的 TS2769 编译错误
+- 移除 up-tabbar、up-tabbar-item、up-calendar 中会破坏 Vue props 推断的 null 构造器
+- 为 steps、radio、picker、text、number-box、popup、tag、rate、swipe-action、checkbox、subsection、waterfall、skeleton、swiper、tabs 等组件增加安全空值兜底
+- 收窄 calendar、form、async-validator、canvas、图片加载和滚动事件相关类型，消除 H5 UTS/TypeScript 编译告警
+- 恢复 up-row 的子组件注册方法，并处理节点尺寸查询为空，修复 H5 运行时 `getChildren not found` 和读取空节点 `width` 的异常
+
 ## 4.5.18
 fix: 修复自定义 action-sheet 插槽点击不关闭
 

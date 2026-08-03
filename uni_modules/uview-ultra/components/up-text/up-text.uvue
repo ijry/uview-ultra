@@ -342,7 +342,10 @@ const linkStyle = computed((): UTSJSONObject => {
 
 // 经处理后需要显示的值
 const value = computed((): string => {
-    let textStr = props.text.toString()
+	const textValue = props.text
+	const textStr = textValue != null ? textValue.toString() : ''
+	const formatValue = props.format
+	const formatStr = formatValue != null ? formatValue.toString() : ''
 
     // 价格类型
     if (props.mode === 'price') {
@@ -369,9 +372,9 @@ const value = computed((): string => {
         //     // 如果用户传入的是函数，使用函数格式化
         //     return format(textStr)
         // }
-		if (props.format != '') {
+		if (formatStr != '') {
             // 如果format非正则，非函数，则使用默认的时间格式化方法进行操作
-            return timeFormat(textStr, props.format.toString())
+            return timeFormat(textStr, formatStr)
         }
         // 如果没有设置format，则设置为默认的时间格式化形式
         return timeFormat(textStr, 'yyyy-mm-dd')
@@ -383,7 +386,7 @@ const value = computed((): string => {
         //     // 如果用户传入的是函数，使用函数格式化
         //     return format(text)
         // }
-		if (props.format === 'encrypt') {
+		if (formatStr === 'encrypt') {
             // 如果format为encrypt，则将手机号进行星号加密处理
             return `${textStr.substring(0, 3)}****${textStr.substring(7)}`
         }
@@ -397,7 +400,7 @@ const value = computed((): string => {
         //     // 如果用户传入的是函数，使用函数格式化
         //     return format(textStr)
         // }
-		if (props.format === 'encrypt') {
+		if (formatStr === 'encrypt') {
             // 如果format为encrypt，则将姓名进行星号加密处理
             return formatName(textStr)
         }

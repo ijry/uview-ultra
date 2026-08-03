@@ -251,7 +251,7 @@
 	}
 
 	const innerStyleCpu = computed((): UTSJSONObject => {
-		let style: UTSJSONObject = props.innerStyle
+		let style: UTSJSONObject = props.innerStyle != null ? props.innerStyle : {} as UTSJSONObject
 		style['height'] = (props.isRange && props.showValue)
 			? (parseFloat(getPx(props.blockSize)) + 24).toString() + 'px'
 			: (getPx(props.blockSize)) + 'px'
@@ -388,6 +388,8 @@
 		return valueFormat
 	}
 
+	const modelValueNumber = (): number => props.modelValue != null ? props.modelValue : 0
+
 	const init = (): void => {
 		if (props.isRange) {
 			// @ts-ignore
@@ -395,7 +397,7 @@
 			// @ts-ignore
 			updateValue(parseFloat(props.rangeValue[1].toString()), false, 1)
 		} else {
-			updateValue(props.modelValue, false)
+			updateValue(modelValueNumber(), false)
 		}
 	}
 
@@ -432,7 +434,7 @@
 			// @ts-ignore
 			startValue.value = formatValue(parseFloat(props.rangeValue[1].toString()), 1)
 		} else {
-			startValue.value = formatValue(props.modelValue)
+			startValue.value = formatValue(modelValueNumber())
 		}
 		// 标示当前的状态为开始触摸滑动
 		status.value = 'start'
@@ -523,10 +525,10 @@
 		// #endif
 	}
 
-	watch((): number => props.modelValue, () => {
+	watch((): number => modelValueNumber(), () => {
 		// 只有在非滑动状态时，才可以通过value更新滑块值，这里监听，是为了让用户触发
 		if (status.value == 'end') {
-			const crtFmtValue = updateValue(props.modelValue, false)
+			const crtFmtValue = updateValue(modelValueNumber(), false)
 			emit('change', crtFmtValue)
 		}
 	})

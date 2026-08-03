@@ -59,7 +59,7 @@ export const props = defineMixin({
 		},
 		// 搜索框左侧文本
 		label: {
-			type: [String, Number, null],
+			type: [String, Number],
 			default: () => defProps.search.label
 		},
 		// 输入框内容对齐方式，可选值为：left|center|right

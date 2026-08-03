@@ -322,9 +322,9 @@ const makeCode = (): void => {
             renderCanvas()
         })
         emit('result', result.value)
-    } catch (err) {
+	} catch (err: any) {
         loading.value = false
-        const errObj = err as UTSJSONObject
+		const errObj = err as UTSJSONObject
         const message = errObj['message']
         error.value = message == null ? err.toString() : message.toString()
         cells.value = [] as Array<UTSJSONObject>

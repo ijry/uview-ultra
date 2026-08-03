@@ -55,7 +55,7 @@ export const props = defineMixin({
         },
         // 默认选中的日期，mode为multiple或range是必须为数组格式
         defaultDate: {
-            type: [Array, String, Date, null],
+            type: [Array, String, Date],
             default: () => defProps.calendar.defaultDate
         },
         // mode=multiple时，最多可选多少个日期
@@ -70,7 +70,7 @@ export const props = defineMixin({
         },
         // 日期格式化函数
         formatter: {
-            type: [Function, null],
+            type: Function,
             default: () => defProps.calendar.formatter
         },
         // 是否显示农历
@@ -140,7 +140,7 @@ export const props = defineMixin({
         },
         // 是否显示关闭图标，未设置时普通弹层显示，pageInline 模式隐藏
         closeable: {
-            type: [Boolean, null],
+            type: Boolean,
             default: () => defProps.calendar.closeable
         },
         // 自定义关闭图标位置

@@ -191,18 +191,22 @@
 
 	// 组件尺寸，对应size的值，默认值为21px
 	const elSize = computed((): string => {
-		return props.size.toString() != ''
-			? props.size.toString()
-			// @ts-ignore
-			: (parentData.value['size'].toString() != '' ? parentData.value['size'].toString() : '21px')
+		const sizeValue = props.size
+		if (sizeValue != null && sizeValue.toString() != '') {
+			return sizeValue.toString()
+		}
+		const parentSize = parentData.value['size']
+		return parentSize != null && parentSize.toString() != '' ? parentSize.toString() : '21px'
 	})
 
 	// 组件的勾选图标的尺寸，默认12px
-	const elIconSize = computed((): any => {
-		return props.iconSize.toString() != ''
-			? props.iconSize.toString()
-			// @ts-ignore
-			: (parentData.value['iconSize'].toString() != '' ? parentData.value['iconSize'].toString() : '12px')
+	const elIconSize = computed((): string => {
+		const iconSizeValue = props.iconSize
+		if (iconSizeValue != null && iconSizeValue.toString() != '') {
+			return iconSizeValue.toString()
+		}
+		const parentIconSize = parentData.value['iconSize']
+		return parentIconSize != null && parentIconSize.toString() != '' ? parentIconSize.toString() : '12px'
 	})
 
 	// 组件选中激活时的颜色
@@ -235,21 +239,20 @@
 
 	// label大小
 	const elLabelSize = computed((): string => {
-		// @ts-ignore
-		return addUnit(
-			props.labelSize.toString() != ''
-				// @ts-ignore
-				? props.labelSize.toString()
-				// @ts-ignore
-				: (parentData.value['labelSize'].toString() != '' ? parentData.value['labelSize'].toString() : '15'))
+		const labelSizeValue = props.labelSize
+		if (labelSizeValue != null && labelSizeValue.toString() != '') {
+			return addUnit(labelSizeValue.toString())
+		}
+		const parentLabelSize = parentData.value['labelSize']
+		return addUnit(parentLabelSize != null && parentLabelSize.toString() != '' ? parentLabelSize.toString() : '15')
 	})
 
 	const elIconColor = computed((): string => {
-		// @ts-ignore
-		const iconColor = props.iconColor.toString() != ''
-			? props.iconColor.toString()
-			// @ts-ignore
-			: (parentData.value['iconColor'].toString() != '' ? parentData.value['iconColor'] as string : '#ffffff')
+		const iconColorValue = props.iconColor
+		const parentIconColor = parentData.value['iconColor']
+		const iconColor = iconColorValue != null && iconColorValue.toString() != ''
+			? iconColorValue.toString()
+			: (parentIconColor != null && parentIconColor.toString() != '' ? parentIconColor.toString() : '#ffffff')
 		// 图标的颜色
 		if (elDisabled.value) {
 			// disabled状态下，已勾选的radio图标改为elInactiveColor

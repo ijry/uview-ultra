@@ -93,7 +93,9 @@
 	const rafId = ref(0) // requestAnimationFrame ID
 
 	const uZindex = computed((): number => {
-		return props.zIndex.toString() != '' ? (props.zIndex as number) : zIndex['sticky'] as number
+		if (props.zIndex == null || props.zIndex.toString() == '') return zIndex['sticky'] as number
+		const value = parseInt(props.zIndex.toString())
+		return isNaN(value) ? zIndex['sticky'] as number : value
 	})
 
 	// 组件样式

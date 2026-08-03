@@ -142,7 +142,7 @@
 	// 定位操作
 	const location = (): void => {
 		uni.getLocation({
-			type: props.locationType,
+			type: props.locationType == 'gcj02' ? 'gcj02' : 'wgs84',
 			geocode: true,
 			success(res: any) {
 				const result = res as UTSJSONObject

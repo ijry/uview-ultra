@@ -73,7 +73,7 @@ export const props = defineMixin({
         },
         // 显示的小数位数
         decimalLength: {
-            type: [String, Number, null],
+            type: [String, Number],
             default: () => defProps.numberBox.decimalLength
         },
         // 是否开启长按加减手势

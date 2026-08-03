@@ -122,6 +122,7 @@
 	const status = ref('')
 	const sliderStyle = ref<UTSJSONObject>({} as UTSJSONObject)
 	const innerScrolling = ref(props.scrolling)
+	const thresholdValue = (): number => props.threshold != null ? props.threshold : 30
 	const state = ref<UTSJSONObject>({
 		moving: false,
 		startX: 0,
@@ -267,7 +268,7 @@
 		var moveY = pageY - startY
 
 		// 移动的X轴距离大于Y轴距离，也即终点与起点位置连线，与X轴夹角小于45度时，禁止页面滚动
-		if (Math.abs(moveX) > Math.abs(moveY) || Math.abs(moveX) > props.threshold) {
+		if (Math.abs(moveX) > Math.abs(moveY) || Math.abs(moveX) > thresholdValue()) {
 			event.preventDefault()
 			event.stopPropagation()
 		}
@@ -312,7 +313,7 @@
 				return
 			}
 			// 在开启状态下，滑动距离小于阈值，则默认为不关闭，同时恢复原来的打开状态
-			if (Math.abs(moveX) < props.threshold) {
+			if (Math.abs(moveX) < thresholdValue()) {
 				openSwipeAction()
 			} else {
 				// 如果滑动距离大于阈值，则执行收起逻辑
@@ -321,7 +322,7 @@
 		} else {
 			// 在关闭的状态下，右滑，无需操作
 			if (moveX > 0) return
-			if (Math.abs(moveX) < props.threshold) {
+			if (Math.abs(moveX) < thresholdValue()) {
 				closeSwipeAction()
 			} else {
 				openSwipeAction()
@@ -334,7 +335,7 @@
 		setScrolling(false)
 	}
 
-	watch((): boolean => props.show, (newValue: boolean) => {
+	watch((): boolean => props.show == true, (newValue: boolean) => {
 		if (newValue) {
 			status.value = 'open'
 		} else {
@@ -342,11 +343,11 @@
 		}
 	})
 
-	watch((): boolean => props.scrolling, (newValue: boolean) => {
+	watch((): boolean => props.scrolling == true, (newValue: boolean) => {
 		innerScrolling.value = newValue == true
 	})
 
-	watch((): boolean => props.disabled, (newValue: boolean) => {
+	watch((): boolean => props.disabled == true, (newValue: boolean) => {
 		if (newValue) {
 			setScrolling(false)
 		}

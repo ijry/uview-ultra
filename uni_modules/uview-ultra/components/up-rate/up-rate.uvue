@@ -194,7 +194,8 @@
 	})
 
 	const rateCount = computed((): number => {
-		return parseInt(props.count.toString())
+		const value = props.count != null ? parseInt(props.count.toString()) : 5
+		return isNaN(value) ? 5 : value
 	})
 
 	const activeIndexNumber = computed((): number => {
@@ -211,7 +212,8 @@
 
 	const iconStyle = computed((): UTSJSONObject => {
 		const style = {} as UTSJSONObject
-		style['padding'] = '0 ' + addUnit(parseInt(props.gutter.toString()) / 2)
+		const gutter = props.gutter != null ? parseInt(props.gutter.toString()) : 4
+		style['padding'] = '0 ' + addUnit((isNaN(gutter) ? 4 : gutter) / 2)
 		return style
 	})
 

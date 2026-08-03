@@ -594,7 +594,7 @@ const drawCanvasText = (context: CanvasRenderingContext2D, barcodeY: number, tex
   context.font = props.fontOptions.length > 0
     ? props.fontOptions + ' ' + props.fontSize.toString() + 'px ' + props.font
     : props.fontSize.toString() + 'px ' + props.font
-  context.textAlign = props.textAlign
+  context.textAlign = props.textAlign == 'left' || props.textAlign == 'right' ? props.textAlign : 'center'
   context.fillText(text, textX, textY)
 }
 

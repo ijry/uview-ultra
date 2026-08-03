@@ -150,8 +150,9 @@
 		} as UTSJSONObject
 	})
 
-	const bemClass = computed((): any => {
-		return bem('radio-group', [props.placement], [])
+	const bemClass = computed((): string => {
+		const placement = props.placement
+		return bem('radio-group', [placement != null ? placement.toString() : 'row'], [])
 	})
 
 	// 将其他的radio设置为未选中的状态

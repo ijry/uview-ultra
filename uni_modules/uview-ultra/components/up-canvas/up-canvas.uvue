@@ -188,14 +188,14 @@ const fill = (): void => {
     }
 }
 
-function setLineCap(lineCap: string = 'round'): void {
+function setLineCap(lineCap: CanvasLineCap = 'round'): void {
     const context = ctx.value
     if (context != null) {
         context.lineCap = lineCap
     }
 }
 
-function setLineJoin(lineJoin: string = 'round'): void {
+function setLineJoin(lineJoin: CanvasLineJoin = 'round'): void {
     const context = ctx.value
     if (context != null) {
         context.lineJoin = lineJoin

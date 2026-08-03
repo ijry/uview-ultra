@@ -38,13 +38,8 @@
 	import { array as testArray } from '../../libs/function/test.uts';
 	import defProps from './calendar.uts';
 	import {dayuts} from '@/uni_modules/lime-dayuts';
-	import { UPCalendarMonthsItemDate } from './types.uts'
-	export type monthsItem = {
-	  top: number
-	  year: string 
-	  month: string 
-	  date: Array<UPCalendarMonthsItemDate>
-	}
+	import { UPCalendarMonthsItemDate, UPCalendarMonthsItem } from './types.uts'
+	type monthsItem = UPCalendarMonthsItem
 	defineOptions({
 		styleIsolation: 'app-and-page',
 		name: 'up-calendar-month'
@@ -350,7 +345,7 @@ const clickHandler = (index1: number, index21: number, currentItem: UPCalendarMo
 				arr.push(endDate)
 				nextSelected = arr
 			} else {
-				if (nextSelected[0] === date && !props.allowSameDay) return
+				if (nextSelected[0] === date && props.allowSameDay != true) return
 				nextSelected.push(date)
 			}
 		}
@@ -365,13 +360,13 @@ const setDefaultDate = (): void => {
 		return
 	}
 	let defaultDate = [] as Array<string>
-	const minDateData = props.minDate.toString()
-	const maxDateData = props.maxDate.toString()
+	const minDateData = props.minDate != null ? props.minDate.toString() : ''
+	const maxDateData = props.maxDate != null ? props.maxDate.toString() : ''
 	const minDate = minDateData != '' ? minDateData : dayuts().format("YYYY-MM-DD")
 	const maxDate = maxDateData != '' ? maxDateData : dayuts(minDate).add(props.maxMonth as number - 1, 'month').format("YYYY-MM-DD")
 	if (props.mode === 'single') {
 		if (!testArray(props.defaultDate)) {
-			defaultDate = [dayuts(props.defaultDate).format("YYYY-MM-DD")]
+			defaultDate = [dayuts(props.defaultDate as any).format("YYYY-MM-DD")]
 		} else {
 			const tmp = dayuts((props.defaultDate as Array<any>)[0]).format("YYYY-MM-DD")
 			defaultDate = [tmp]
