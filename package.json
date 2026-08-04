@@ -2,6 +2,7 @@
   "name": "uviewultra",
   "version": "4.0.0",
   "scripts": {
+    "verify:waterfall-distribution": "node scripts/verify-waterfall-distribution.mjs",
     "verify:dragsort-stable-identity": "node scripts/verify-dragsort-stable-identity.mjs",
     "verify:swipe-action-scrolling": "node scripts/verify-swipe-action-scrolling.mjs",
     "verify:slider-decimal-step": "node scripts/verify-slider-decimal-step.mjs",

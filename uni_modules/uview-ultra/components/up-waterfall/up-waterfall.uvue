@@ -87,6 +87,9 @@
     const windowWidth = ref(375)
     const windowHeight = ref(0)
     const resizeTimer = ref(0)
+	const distributionQueue = ref<UTSJSONObject[]>([] as UTSJSONObject[])
+	const distributionRunning = ref(false)
+	const distributionGeneration = ref(0)
 	const safeModelValue = (): UTSJSONObject[] => props.modelValue != null ? props.modelValue : [] as UTSJSONObject[]
 	const safeColumnsMin = (): number => {
 		const value = props.columnsMin != null ? parseInt(props.columnsMin.toString()) : 2
@@ -138,6 +141,17 @@
         }
     }
 
+    // 清空数据列表
+    function clear(bak: boolean = true): void {
+        distributionGeneration.value += 1
+        distributionQueue.value = [] as UTSJSONObject[]
+        initColumnList()
+        // 同时清除父组件列表中的数据
+        if (bak) {
+            emit('update:modelValue', [] as UTSJSONObject[])
+        }
+    }
+
     // 窗口大小变化处理函数
     const getColumnStyle = (index: number): UTSJSONObject => {
         const style = {} as UTSJSONObject
@@ -147,61 +161,126 @@
         return style
     }
 
-    // 处理新增数据
-    const handleData = async (newData: UTSJSONObject[]): Promise<void> => {
-        // @ts-ignore
-        if (newData.length == 0) return
+    // 判断新数据是否只在原数组末尾追加
+    const isPureAppend = (newData: UTSJSONObject[], oldData: UTSJSONObject[]): boolean => {
+        if (oldData.length == 0) return true
+        if (newData.length < oldData.length) return false
+        for (let index = 0; index < oldData.length; index++) {
+            if (JSON.stringify(oldData[index]) != JSON.stringify(newData[index])) {
+                return false
+            }
+        }
+        return true
+    }
 
-        // 初始化列高度数组
-        let columnHeights: Array<number> = []
-        for (var index = 0; index < columnList.value.length; index++) {
+    // 获取最短列；高度相同或暂不可测时按列数据量打散
+    const getMinHeightColumnIndex = (columnHeights: Array<number>): number => {
+        let minIndex = 0
+        for (let index = 1; index < columnHeights.length; index++) {
+            const currentHeight = columnHeights[index]
+            const minHeight = columnHeights[minIndex]
+            if (currentHeight < minHeight) {
+                minIndex = index
+            } else if (currentHeight == minHeight) {
+                const currentLength = columnList.value[index].length
+                const minLength = columnList.value[minIndex].length
+                if (currentLength < minLength) {
+                    minIndex = index
+                }
+            }
+        }
+        return minIndex
+    }
+
+    // 获取当前所有列的真实高度
+    const getColumnHeights = async (): Promise<Array<number>> => {
+        const columnHeights = [] as Array<number>
+        for (let index = 0; index < columnList.value.length; index++) {
             columnHeights.push(0)
         }
-
-        // 获取各列当前高度
-        for (let i = 0; i < columnList.value.length; i++) {
-            // @ts-ignore
-            const rect: NodeInfo = await upGetRect(`#up-column-${i}`, false, instance)
-            columnHeights[i] = rect.height ?? 0
+        for (let index = 0; index < columnList.value.length; index++) {
+            try {
+                // @ts-ignore
+                const rect: NodeInfo = await upGetRect(`#up-column-${index}`, false, instance)
+                columnHeights[index] = rect.height ?? 0
+            } catch (e) {
+                columnHeights[index] = 0
+            }
         }
+        return columnHeights
+    }
 
-        // 分配新数据到最短的列
-        for (let item of newData) {
-            const minHeightIndex = columnHeights.indexOf(Math.min(...columnHeights))
+    // 逐项测量并分配数据，代数变化时立即退出
+    const distributeData = async (newData: UTSJSONObject[], generation: number): Promise<void> => {
+        let columnHeights = [] as Array<number>
+        for (let dataIndex = 0; dataIndex < newData.length; dataIndex++) {
+            if (generation != distributionGeneration.value) return
+            columnHeights = await getColumnHeights()
+            if (generation != distributionGeneration.value) return
+
+            const item = newData[dataIndex]
+            const minHeightIndex = getMinHeightColumnIndex(columnHeights)
             columnList.value[minHeightIndex].push(item)
 
-            // 获取实际渲染后的元素高度而不是估算
             await sleep(props.addTime as number)
+            if (generation != distributionGeneration.value) return
             await nextTick()
+            if (generation != distributionGeneration.value) return
             try {
                 // @ts-ignore
                 const rect: NodeInfo = await upGetRect(`#up-column-${minHeightIndex}`, false, instance)
+                if (generation != distributionGeneration.value) return
                 if (rect.height != null) {
                     columnHeights[minHeightIndex] = rect.height ?? 0
-                    // 加载一个后置事件
                     emit('after-add-one', {
                         ...item,
                         height: rect.height
                     })
                 }
             } catch (e) {
-                // console.log(e)
             }
         }
-        // 加载所有后置事件
+        if (generation != distributionGeneration.value) return
         emit('after-add-all', {
             columnHeights: columnHeights,
             newData: newData
         })
     }
 
+    // 串行消费所有待分配数据
+    async function runDistributionQueue(): Promise<void> {
+        if (distributionRunning.value) return
+        distributionRunning.value = true
+        while (distributionQueue.value.length > 0) {
+            const task = distributionQueue.value.shift()
+            if (task == null) continue
+            const generation = task['generation'] as number
+            if (generation != distributionGeneration.value) continue
+            const data = task['data'] as UTSJSONObject[]
+            await distributeData(data, generation)
+        }
+        distributionRunning.value = false
+        if (distributionQueue.value.length > 0) {
+            runDistributionQueue()
+        }
+    }
+
+    // 将新增数据加入共享队列，确保只有一个分配循环运行
+    const handleData = (newData: UTSJSONObject[]): void => {
+        if (newData.length == 0) return
+        const task = {} as UTSJSONObject
+        task['generation'] = distributionGeneration.value
+        task['data'] = cloneData(newData)
+        distributionQueue.value.push(task)
+        if (!distributionRunning.value) {
+            runDistributionQueue()
+        }
+    }
+
     // 重新分配所有数据
-    const redistributeData = async (): Promise<void> => {
-        // 清空所有列
-        initColumnList()
-        // 保存所有数据
-        const allData = cloneData(copyFlowList.value)
-        // 重新分配数据
+    function redistributeData(data: UTSJSONObject[] | null = null): void {
+        clear(false)
+        const allData = cloneData(data != null ? data : copyFlowList.value)
         handleData(allData)
     }
 
@@ -222,16 +301,7 @@
         const newColumnsCount = getColumnsCount()
         const oldColumnsCount = columnList.value.length
         if (newColumnsCount != oldColumnsCount) {
-            redistributeData()
-        }
-    }
-
-    // 清空数据列表
-    function clear(bak: boolean = true): void {
-        initColumnList()
-        // 同时清除父组件列表中的数据
-        if (bak) {
-            emit('update:modelValue', [] as UTSJSONObject[])
+            redistributeData(copyFlowList.value)
         }
     }
 
@@ -301,12 +371,11 @@
 
     initColumnList()
 
-    let previousFlowLength = 0
+    let previousFlowList = [] as UTSJSONObject[]
     watchEffect(() => {
         const nVal = copyFlowList.value
-        const startIndex = nVal.length < previousFlowLength ? 0 : previousFlowLength
-        previousFlowLength = nVal.length
-        const addedData = nVal.slice(startIndex)
+        const oVal = previousFlowList
+        previousFlowList = cloneData(nVal)
         nextTick(() => {
             if (nVal.length == 0) {
                 clear(false)
@@ -314,16 +383,20 @@
                 if (columnList.value.length == 1) {
                     initColumnList()
                 }
-                handleData(addedData)
+                if (!isPureAppend(nVal, oVal)) {
+                    redistributeData(nVal)
+                    return
+                }
+                handleData(nVal.slice(oVal.length))
             }
         })
     })
 
     watch((): any => props.columns, () => {
-        initColumnList()
-        // 重新分配数据
         if (copyFlowList.value.length > 0) {
-            redistributeData()
+            redistributeData(copyFlowList.value)
+        } else {
+            clear(false)
         }
     })
 

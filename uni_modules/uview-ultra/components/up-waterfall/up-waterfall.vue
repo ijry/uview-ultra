@@ -106,6 +106,10 @@ const initialized = ref(false)
 const windowWidth = ref(375)
 const windowHeight = ref(0)
 let resizeTimer = null
+const distributionQueue = []
+let distributionRunning = false
+let distributionPromise = null
+let distributionGeneration = 0
 
 const copyFlowList = computed(() => {
 	// #ifdef VUE3
@@ -119,6 +123,8 @@ const copyFlowList = computed(() => {
 	// #endif
 })
 
+initColumnList()
+
 watch(copyFlowList, (nVal, oVal) => {
 	if (!nVal || nVal.length == 0) {
 		clear(false)
@@ -126,19 +132,22 @@ watch(copyFlowList, (nVal, oVal) => {
 		if (columnList.value.length == 1) {
 			initColumnList()
 		}
+		if (!isPureAppend(nVal, oVal)) {
+			redistributeData(nVal)
+			return
+		}
 		const startIndex = Array.isArray(oVal) && oVal.length > 0 ? oVal.length : 0
 		handleData(nVal.slice(startIndex))
 	}
 }, { immediate: true })
 
 watch(() => props.columns, () => {
-	initColumnList()
 	if (copyFlowList.value.length > 0) {
-		redistributeData()
+		redistributeData(copyFlowList.value)
+	} else {
+		clear(false)
 	}
 })
-
-initColumnList()
 
 onMounted(() => {
 	initialized.value = true
@@ -185,22 +194,91 @@ function handleWindowResize(res) {
 		const newColumnsCount = getColumnsCount()
 		const oldColumnsCount = columnList.value.length
 		if (newColumnsCount !== oldColumnsCount) {
-			redistributeData()
+			redistributeData(copyFlowList.value)
 		}
 	}, 300)
 }
 
-async function redistributeData() {
-	initColumnList()
-	const allData = cloneData(copyFlowList.value)
-	handleData(allData)
+function redistributeData(data) {
+	clear(false)
+	const allData = cloneData(data || [])
+	return handleData(allData)
 }
 
-async function handleData(newData) {
-	if (!newData || newData.length === 0) return
+function isPureAppend(newData, oldData) {
+	if (!Array.isArray(oldData) || oldData.length === 0) return true
+	if (!Array.isArray(newData) || newData.length < oldData.length) return false
+	return oldData.every((item, index) => JSON.stringify(item) === JSON.stringify(newData[index]))
+}
 
+function handleData(newData) {
+	if (!newData || newData.length === 0) {
+		return distributionPromise || Promise.resolve()
+	}
+	distributionQueue.push({
+		generation: distributionGeneration,
+		data: cloneData(newData)
+	})
+	if (!distributionRunning) {
+		distributionPromise = runDistributionQueue()
+	}
+	return distributionPromise
+}
+
+async function runDistributionQueue() {
+	if (distributionRunning) return
+	distributionRunning = true
+	try {
+		while (distributionQueue.length > 0) {
+			const task = distributionQueue.shift()
+			if (task.generation !== distributionGeneration) continue
+			await distributeData(task.data, task.generation)
+		}
+	} finally {
+		distributionRunning = false
+		distributionPromise = null
+		if (distributionQueue.length > 0) {
+			distributionPromise = runDistributionQueue()
+		}
+	}
+}
+
+async function distributeData(newData, generation) {
+	let columnHeights = new Array(columnList.value.length).fill(0)
+	for (const item of newData) {
+		if (generation !== distributionGeneration) return
+		columnHeights = await getColumnHeights()
+		if (generation !== distributionGeneration) return
+
+		const minHeightIndex = getMinHeightColumnIndex(columnHeights)
+		columnList.value[minHeightIndex].push(item)
+
+		await sleep(props.addTime)
+		if (generation !== distributionGeneration) return
+		await nextTick()
+		if (generation !== distributionGeneration) return
+		try {
+			const rect = await $uGetRect(`#up-column-${minHeightIndex}`)
+			if (generation !== distributionGeneration) return
+			if (rect.height) {
+				columnHeights[minHeightIndex] = rect.height
+				emit('after-add-one', {
+					...item,
+					height: rect.height
+				})
+			}
+		} catch (e) {
+		}
+	}
+	if (generation !== distributionGeneration) return
+	emit('after-add-all', {
+		columnHeights: columnHeights,
+		newData: newData
+	})
+}
+
+async function getColumnHeights() {
 	const columnHeights = new Array(columnList.value.length).fill(0)
-
 	for (let i = 0; i < columnList.value.length; i++) {
 		try {
 			const rect = await $uGetRect(`#up-column-${i}`)
@@ -209,30 +287,25 @@ async function handleData(newData) {
 			columnHeights[i] = 0
 		}
 	}
+	return columnHeights
+}
 
-	for (let item of newData) {
-		const minHeightIndex = columnHeights.indexOf(Math.min(...columnHeights))
-		columnList.value[minHeightIndex].push(item)
-
-		await sleep(props.addTime)
-		await nextTick(async () => {
-			try {
-				const rect = await $uGetRect(`#up-column-${minHeightIndex}`)
-				if (rect.height) {
-					columnHeights[minHeightIndex] = rect.height
-					emit('after-add-one', {
-						...item,
-						height: rect.height
-					})
-				}
-			} catch (e) {
+function getMinHeightColumnIndex(columnHeights) {
+	let minIndex = 0
+	for (let i = 1; i < columnHeights.length; i++) {
+		const currentHeight = Number(columnHeights[i]) || 0
+		const minHeight = Number(columnHeights[minIndex]) || 0
+		if (currentHeight < minHeight) {
+			minIndex = i
+		} else if (currentHeight === minHeight) {
+			const currentLength = columnList.value[i] ? columnList.value[i].length : 0
+			const minLength = columnList.value[minIndex] ? columnList.value[minIndex].length : 0
+			if (currentLength < minLength) {
+				minIndex = i
 			}
-		})
+		}
 	}
-	emit('after-add-all', {
-		columnHeights: columnHeights,
-		newData: newData
-	})
+	return minIndex
 }
 
 function cloneData(data) {
@@ -240,6 +313,8 @@ function cloneData(data) {
 }
 
 function clear(bak = true) {
+	distributionGeneration += 1
+	distributionQueue.splice(0)
 	initColumnList()
 	if (bak) {
 		// #ifdef VUE2
