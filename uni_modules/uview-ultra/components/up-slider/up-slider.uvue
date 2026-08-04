@@ -258,10 +258,14 @@
 		return style
 	})
 
-	function toSliderNumber(value: any, fallback: number = 0): number {
+	function toSliderNumber(value: any | null, fallback: number = 0): number {
 		if (value == null) return fallback
 		const number = parseFloat(value.toString())
 		return isNaN(number) ? fallback : number
+	}
+
+	function rangeValueNumber(index: number, fallback: number = 0): number {
+		return toSliderNumber(props.rangeValue[index], fallback)
 	}
 
 	function getSliderStep(): number {
@@ -323,13 +327,13 @@
 						value,
 						min,
 						// @ts-ignore
-						normalizeSliderValue(toSliderNumber(props.rangeValue[1], max) - step)
+						normalizeSliderValue(rangeValueNumber(1, max) - step)
 					)
 				case 1:
 					return formatByStep(
 						value,
 						// @ts-ignore
-						normalizeSliderValue(toSliderNumber(props.rangeValue[0], min) + step),
+						normalizeSliderValue(rangeValueNumber(0, min) + step),
 						max
 					)
 				default:
@@ -393,9 +397,9 @@
 	const init = (): void => {
 		if (props.isRange) {
 			// @ts-ignore
-			updateValue(parseFloat(props.rangeValue[0].toString()), false, 0)
+			updateValue(rangeValueNumber(0), false, 0)
 			// @ts-ignore
-			updateValue(parseFloat(props.rangeValue[1].toString()), false, 1)
+			updateValue(rangeValueNumber(1), false, 1)
 		} else {
 			updateValue(modelValueNumber(), false)
 		}
@@ -430,9 +434,9 @@
 		// 此处的modelValue虽为props值，但是通过$emit('update:modelValue')进行了修改
 		if (props.isRange) {
 			// @ts-ignore
-			startValue0.value = formatValue(parseFloat(props.rangeValue[0].toString()), 0)
+			startValue0.value = formatValue(rangeValueNumber(0), 0)
 			// @ts-ignore
-			startValue.value = formatValue(parseFloat(props.rangeValue[1].toString()), 1)
+			startValue.value = formatValue(rangeValueNumber(1), 1)
 		} else {
 			startValue.value = formatValue(modelValueNumber())
 		}

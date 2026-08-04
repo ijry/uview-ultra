@@ -218,7 +218,7 @@ const props = defineProps({
 	safeAreaInsetBottom: { type: Boolean, default: (defProps['calendar'] as UTSJSONObject)['safeAreaInsetBottom'] },
 	safeAreaInsetTop: { type: Boolean, default: (defProps['calendar'] as UTSJSONObject)['safeAreaInsetTop'] },
 	bgColor: { type: String, default: (defProps['calendar'] as UTSJSONObject)['bgColor'] },
-	closeable: { type: Boolean, default: (defProps['calendar'] as UTSJSONObject)['closeable'] },
+	closeable: { type: [Boolean, String], default: (defProps['calendar'] as UTSJSONObject)['closeable'] },
 	closeIconPos: { type: String, default: (defProps['calendar'] as UTSJSONObject)['closeIconPos'] },
 	closeOnClickOverlay: { type: Boolean, default: (defProps['calendar'] as UTSJSONObject)['closeOnClickOverlay'] },
 	zoom: { type: Boolean, default: (defProps['calendar'] as UTSJSONObject)['zoom'] },
@@ -300,8 +300,8 @@ const rangeStartDateLabel = computed((): string => selected.value.length > 0 ? s
 const rangeEndDateLabel = computed((): string => selected.value.length > 1 ? selected.value[selected.value.length - 1] : '--')
 const buttonDisabled = computed((): boolean => props.mode === 'range' ? selected.value.length <= 1 : false)
 const calendarCloseable = computed((): boolean => {
-	if (props.closeable == null) return !props.pageInline
-	return props.closeable as boolean
+	if (props.closeable == null || props.closeable == '') return props.pageInline != true
+	return props.closeable == true || props.closeable == 'true'
 })
 
 const padTime = (num: number): string => {

@@ -140,7 +140,7 @@ export const props = defineMixin({
         },
         // 是否显示关闭图标，未设置时普通弹层显示，pageInline 模式隐藏
         closeable: {
-            type: Boolean,
+            type: [Boolean, String],
             default: () => defProps.calendar.closeable
         },
         // 自定义关闭图标位置

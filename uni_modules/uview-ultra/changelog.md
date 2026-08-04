@@ -1,3 +1,9 @@
+## 4.5.20（2026-08-04）
+fix: 修复 uni-app x 跨端编译与 Android 运行时兼容问题
+
+- 修复 up-calendar 未设置 closeable 时 Android Boolean 空值拆箱崩溃，并保留 pageInline 动态默认行为
+- 修复多个组件的 H5 严格类型告警及 Android 平台类型不兼容
+- 修复 Android 布局查询空结果、组件导航重复触发及不支持的 view 文本样式告警
 ## 4.5.19
 fix: 修复 H5 严格类型检查告警
 

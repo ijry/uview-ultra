@@ -7,11 +7,10 @@ let settings = {
     } as UTSJSONObject
 } as UTSJSONObject
 
-// 尽量同步系统语言；部分 UTS 平台 getLocale/onLocaleChange 可用性不一
+// App-UTS 不支持 getLocale/onLocaleChange，App 端通过 setLocale 显式切换语言。
+// #ifndef APP
 try {
-    // @ts-ignore
     if (typeof uni !== 'undefined' && typeof uni.getLocale === 'function') {
-        // @ts-ignore
         const current = uni.getLocale()
         if (current != null && current != '') {
             settings['lang'] = current
@@ -21,9 +20,7 @@ try {
 }
 
 try {
-    // @ts-ignore
     if (typeof uni !== 'undefined' && typeof uni.onLocaleChange === 'function') {
-        // @ts-ignore
         uni.onLocaleChange((locale: any | null) => {
             if (locale == null) return
             if (typeof locale == 'string') {
@@ -38,6 +35,7 @@ try {
     }
 } catch (e) {
 }
+// #endif
 
 function isPlainObject(value: any | null): boolean {
     return value != null && typeof value == 'object'
@@ -56,14 +54,14 @@ export function getLocale(): string {
 export function setLocale(locale: string): string {
     if (locale == '') return settings['lang'] as string
     settings['lang'] = locale
+    // #ifndef APP
     try {
-        // @ts-ignore
         if (typeof uni !== 'undefined' && typeof uni.setLocale === 'function') {
-            // @ts-ignore
             uni.setLocale(locale)
         }
     } catch (e) {
     }
+    // #endif
     return settings['lang'] as string
 }
 

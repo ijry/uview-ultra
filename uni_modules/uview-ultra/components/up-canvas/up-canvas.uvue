@@ -35,6 +35,9 @@ function makeId(prefix: string): string {
     return prefix + Date.now().toString()
 }
 
+type UPLineCap = 'butt' | 'round' | 'square'
+type UPLineJoin = 'bevel' | 'round' | 'miter'
+
 defineOptions({
     styleIsolation: 'app-and-page',
     name: 'up-canvas'
@@ -188,14 +191,14 @@ const fill = (): void => {
     }
 }
 
-function setLineCap(lineCap: CanvasLineCap = 'round'): void {
+function setLineCap(lineCap: UPLineCap = 'round'): void {
     const context = ctx.value
     if (context != null) {
         context.lineCap = lineCap
     }
 }
 
-function setLineJoin(lineJoin: CanvasLineJoin = 'round'): void {
+function setLineJoin(lineJoin: UPLineJoin = 'round'): void {
     const context = ctx.value
     if (context != null) {
         context.lineJoin = lineJoin

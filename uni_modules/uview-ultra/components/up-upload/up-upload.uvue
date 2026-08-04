@@ -844,9 +844,15 @@
 					break
 			}
 		}
+		// #ifdef APP
+		const previewItem = item as UTSJSONObject
+		// #endif
+		// #ifndef APP
+		const previewItem = item as any
+		// #endif
 		emit(
 			'clickPreview',
-			UTSJSONObject.assign(UTSJSONObject.assign({}, item as any), getDetail(index))
+			UTSJSONObject.assign(UTSJSONObject.assign({}, previewItem), getDetail(index))
 		)
 	}
 	watch((): Array<UTSJSONObject> => props.fileList as Array<UTSJSONObject>, () => {

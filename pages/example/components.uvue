@@ -49,6 +49,7 @@
 
 	const list = JSON.parse<groupType[]>(JSON.stringify(componentsConfig)) as groupType[]
 	const desc = 'uview-ultra 是全面兼容的uni-app-x/uni-app/nvue/鸿蒙等全生态的框架，全面的组件和便捷的工具与兼容的API会让开发体验保持一致。'
+	let navigating = false
 
 	function getIcon(path: string): string {
 		let iconName = path
@@ -65,9 +66,19 @@
 	}
 
 	function openPage(detail: UTSJSONObject) {
-		const path = detail['name']
+		const pathValue = detail['name']
+		if (pathValue == null || navigating) return
+		const path = pathValue.toString()
+		if (path == '') return
+		navigating = true
 		uni.navigateTo({
-			url: path as string
+			url: path,
+			success: () => {
+				navigating = false
+			},
+			fail: () => {
+				navigating = false
+			}
 		})
 	}
 </script>
