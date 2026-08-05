@@ -1,3 +1,11 @@
+## 4.5.22
+fix: 修复 overlay 动态挂载二维码时的 Canvas 初始化竞态
+
+- Vue 与 UVue 版 up-qrcode 统一迁移到 up-canvas，由画布组件集中管理节点、context、DPR、图片加载与导出
+- up-canvas 共享同一实例的 in-flight 初始化 Promise，增加 refresh 强制重新初始化入口，避免重复创建 context、重设尺寸或清空画布导致二维码只绘制局部
+- Vue H5 继续交由 uni-h5 内置 HiDPI 处理；Vue 小程序与 UVue Canvas 在宿主层重设 backing store 并只应用一次 pixelRatio 变换
+- 增加 overlay 内二维码示例和 Vue/UVue 静态回归校验
+
 ## 4.5.21
 fix: 修复 up-waterfall 快速更新时并发分配错乱
 

@@ -4,12 +4,16 @@
             <text class="up-qrcode__error-text">{{ error }}</text>
         </view>
         <view v-else class="up-qrcode__matrix" :style="matrixStyle">
-            <canvas
+            <up-canvas
+                ref="qrcodeCanvas"
                 class="up-qrcode__canvas"
-                :id="canvasId"
                 :canvas-id="canvasId"
+                :width="sizeLocal"
+                :height="sizeLocal"
+                :unit="unit"
+                bg-color="transparent"
                 :style="canvasStyle"
-            ></canvas>
+            ></up-canvas>
             <image
                 v-if="icon.length > 0"
                 class="up-qrcode__icon"
@@ -25,7 +29,7 @@
 </template>
 
 <script setup lang="uts">
-import { computed, getCurrentInstance, nextTick, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { createQrCells, getQrRenderCountWithQuietZone } from './qrcode.uts'
 
 function makeId(prefix: string): string {
@@ -38,14 +42,6 @@ function isEmpty(value: any | null): boolean {
     }
     const text = value.toString()
     return text.length == 0 || text == 'undefined' || text == 'null' || text == '{}' || text == '[]'
-}
-
-function getPixelRatio(): number {
-    const info = uni.getSystemInfoSync()
-    if (info.pixelRatio > 0) {
-        return info.pixelRatio
-    }
-    return 1
 }
 
 defineOptions({
@@ -135,13 +131,13 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['result', 'longpressCallback', 'preview', 'error'])
-const instance = getCurrentInstance()!.proxy!
 const rootId = makeId('rootId-')
 const cells = ref<Array<UTSJSONObject>>([] as Array<UTSJSONObject>)
 const loading = ref(false)
 const result = ref('')
 const error = ref('')
-const canvasId = makeId('up-qrcode-canvas-')
+const canvasId = props.cid
+const qrcodeCanvas = ref<ComponentPublicInstance | null>(null)
 const canvasContext = ref<CanvasContext | null>(null)
 const ctx = ref<CanvasRenderingContext2D | null>(null)
 
@@ -214,36 +210,50 @@ const emitTempFileFail = (options: UTSJSONObject, message: string): void => {
     }
 }
 
-const initCanvas = (): Promise<void> => {
-    return new Promise((resolve, reject) => {
-        if (canvasContext.value != null && ctx.value != null) {
-            resolve()
-            return
-        }
-        uni.createCanvasContextAsync({
-            id: canvasId.toString() as string.IDString,
-            component: instance,
-            success: (context: CanvasContext) => {
-                canvasContext.value = context
-                const context2d = context.getContext('2d')
-                if (context2d == null) {
+const getCanvasInstance = (): ComponentPublicInstance | null => {
+    return qrcodeCanvas.value
+}
+
+const syncCanvasHandles = (canvas: ComponentPublicInstance): boolean => {
+    const rawContext = canvas.$callMethod('getRawContext')
+    if (rawContext == null) {
+        return false
+    }
+    ctx.value = rawContext as CanvasRenderingContext2D
+    const contextHost = canvas.$callMethod('getCanvasContextHost')
+    if (contextHost != null) {
+        canvasContext.value = contextHost as CanvasContext
+    }
+    return true
+}
+
+function initCanvas(force: boolean = false): Promise<void> {
+	return new Promise<void>((resolve, reject) => {
+        nextTick(() => {
+            const canvas = getCanvasInstance()
+            if (canvas == null) {
+                reject(new Error('Canvas component is not ready'))
+                return
+            }
+            const initResult = canvas.$callMethod('initCanvas', force)
+            if (initResult == null) {
+                reject(new Error('Canvas init is not available'))
+                return
+            }
+            ;(initResult as Promise<void>).then(() => {
+                if (!syncCanvasHandles(canvas)) {
                     reject(new Error('Canvas context is not ready'))
                     return
                 }
-                const canvas = context2d.canvas
-                const pixelRatio = getPixelRatio()
-                canvas.width = sizeLocal.value * pixelRatio
-                canvas.height = sizeLocal.value * pixelRatio
-                context2d.scale(pixelRatio, pixelRatio)
-                ctx.value = context2d
                 resolve()
-            },
-            fail: (err: UniError) => {
-                reject(err)
-            }
+            }).catch((initError: any | null) => {
+                reject(initError)
+            })
         })
-    })
+	})
 }
+
+const refresh = (): Promise<void> => initCanvas(true)
 
 const drawQrToCanvas = (): void => {
     const context = ctx.value
@@ -270,7 +280,9 @@ const drawQrToCanvas = (): void => {
         context.fillStyle = color
         context.fillRect(left, top, right - left, bottom - top)
     }
+    // #ifndef H5
     context.draw()
+    // #endif
 }
 
 const renderCanvas = (): Promise<void> => {
@@ -284,13 +296,22 @@ const renderCanvas = (): Promise<void> => {
 
 const exportImage = (options: UTSJSONObject): void => {
     renderCanvas().then(() => {
-        const canvas = canvasContext.value
+        const canvas = getCanvasInstance()
         if (canvas == null) {
             emitTempFileFail(options, 'Canvas is not ready')
             return
         }
-        const path = canvas.toDataURL('image/png', 1)
-        emitTempFileSuccess(options, path)
+        const exportResult = canvas.$callMethod('exportImage', 'png', 1)
+        if (exportResult == null) {
+            emitTempFileFail(options, 'Canvas export is not available')
+            return
+        }
+        ;(exportResult as Promise<string>).then((path: string) => {
+            emitTempFileSuccess(options, path)
+        }).catch((exportError: any | null) => {
+            const message = exportError == null ? 'Canvas export failed' : exportError.toString()
+            emitTempFileFail(options, message)
+        })
     }).catch((err: any | null) => {
         const message = err == null ? 'Canvas init failed' : err.toString()
         emitTempFileFail(options, message)
@@ -319,7 +340,9 @@ const makeCode = (): void => {
         result.value = props.val
         loading.value = false
         nextTick(() => {
-            renderCanvas()
+            renderCanvas().catch((error: any | null) => {
+                console.error('绘制二维码Canvas失败:', error)
+            })
         })
         emit('result', result.value)
 	} catch (err: any) {
@@ -339,6 +362,10 @@ const _makeCode = (): void => {
 const _clearCode = (): void => {
     cells.value = [] as Array<UTSJSONObject>
     result.value = ''
+    const canvas = getCanvasInstance()
+    if (canvas != null) {
+        canvas.$callMethod('clearCanvas')
+    }
 }
 
 const preview = (e: UniPointerEvent): void => {
@@ -381,6 +408,7 @@ defineExpose({
     result,
     error,
     canvasId,
+    qrcodeCanvas,
     canvasContext,
     ctx,
     sizeLocal,
@@ -389,6 +417,8 @@ defineExpose({
     iconStyle,
     cellSize,
     canvasStyle,
+    getCanvasInstance,
+    syncCanvasHandles,
     makeCode,
     _makeCode,
     _clearCode,
@@ -400,6 +430,7 @@ defineExpose({
     exportImage,
     renderCanvas,
     initCanvas,
+    refresh,
     drawQrToCanvas
 })
 </script>

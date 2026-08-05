@@ -7,32 +7,16 @@
           }"
           @longpress="longpress">
         <view class="up-qrcode__content" @click="preview">
-
-            <!-- #ifndef APP-NVUE || APP-PLUS -->
-            <canvas
+            <up-canvas
+                ref="qrcodeCanvas"
                 class="up-qrcode__canvas"
-                :id="cid"
                 :canvas-id="cid"
-                type="2d"
-                :style="{ width: sizeLocal + unit, height: sizeLocal + unit }" />
-            <!-- #endif -->
-
-            <!-- #ifdef APP-VUE -->
-            <canvas
-                class="up-qrcode__canvas"
-                :id="cid"
-                :canvas-id="cid"
-                :style="{ width: sizeLocal + unit, height: sizeLocal + unit }" />
-            <!-- #endif -->
-
-            <!-- #ifdef APP-NVUE -->
-			<web-view v-if="icon != ''" ref="web" src="/static/app-plus/up-canvas/local.html"
-				:style="'width:' + sizeLocal + 'px;height:' + sizeLocal + 'px'"
-				@onPostMessage="_onMessage" />
-            <gcanvas v-else class="up-qrcode__canvas" ref="gcanvess"
-                :style="{ width: sizeLocal + unit, height: sizeLocal + unit }">
-            </gcanvas>
-            <!-- #endif -->
+                :width="sizeLocal"
+                :height="sizeLocal"
+                :unit="unit"
+                bg-color="transparent"
+                :style="{ width: sizeLocal + unit, height: sizeLocal + unit }"
+            ></up-canvas>
             <view v-if="showLoading && loading" class="up-qrcode__loading"
                   :style="{ width: sizeLocal + unit, height: sizeLocal + unit }">
                 <up-loading-icon vertical :text="loadingText" textSize="14px"></up-loading-icon>
@@ -44,15 +28,7 @@
 
 <script setup>
 import QRCode from "./qrcode.js"
-// #ifdef APP-NVUE
-// https://github.com/dcloudio/NvueCanvasDemo/blob/master/README.md
-import {
-	enable,
-	WeexBridge,
-	Image as GImage
-} from '../../libs/util/gcanvas/index.js';
-// #endif
-import { getCurrentInstance, onMounted, ref, watch } from 'vue'
+import { getCurrentInstance, nextTick, onMounted, ref, watch } from 'vue'
 import { commonProps } from '../../libs/composable/useUltraUI.js'
 
 let qrcode
@@ -153,21 +129,11 @@ const proxy = instance?.proxy
 
 const loading = ref(false)
 const result = ref('')
-const popupShow = ref(false)
-const list = ref([
-	{
-		name: '保存二维码',
-	}
-])
 const rootId = ref(`rootId${Number(Math.random() * 100).toFixed(0)}`)
-const ganvas = ref(null)
-const canvasObj = ref({})
 const sizeLocal = ref(props.size)
-const ctx = ref(null) // ctx 在new Qrcode 时js文件内部设置
-const canvas = ref(null) // ctx 在new Qrcode 时js文件内部设置
-const web = ref(null)
-const gcanvess = ref(null)
-let _ready = false
+const qrcodeCanvas = ref(null)
+const canvasHost = ref(null)
+const ctx = ref(null)
 let isNvue = false
 
 function getVueCtx() {
@@ -177,59 +143,42 @@ function getVueCtx() {
 		drawImage,
 		get ctx() { return ctx.value },
 		set ctx(v) { ctx.value = v },
-		get canvas() { return canvas.value },
-		set canvas(v) { canvas.value = v },
 	})
 }
 
-function _onMessage(e) {
-	// console.log('post message', e)
-	const message = e.detail.data[0]
-	switch (message.action) {
-		// web-view 初始化完毕
-		case 'onJSBridgeReady':
-			_ready = true
-			web.value?.evalJs('setContent(' + JSON.stringify(props) + ')')
-			break
-		// qrcodeOk
-		case 'qrcodeOk':
-			_result(message.imageData)
-			// emit('load')
-			break
+async function _makeCode() {
+	if (!await initCanvas()) {
+		return
 	}
-}
-
-function _makeCode() {
 	if (!_empty(props.val)) {
 		// #ifndef APP-NVUE
 		loading.value = true
 		// #endif
-		// nvue下时因为gcanvas的GImage不生效，因此icon模式会采用webview
-		if ((props.icon == '' && isNvue) || !isNvue) {
-			const vuectx = getVueCtx()
-			qrcode = new QRCode({
-				vuectx, // 上下文环境
-				canvasId: props.cid, // canvas-id
-				canvas: canvas.value,
-				ctx: ctx.value,
-				isNvue,
-				usingComponents: props.usingComponents, // 是否是自定义组件
-				showLoading: false, // 是否显示loading
-				loadingText: props.loadingText, // loading文字
-				text: props.val, // 生成内容
-				size: sizeLocal.value, // 二维码大小
-				background: props.background, // 背景色
-				foreground: props.foreground, // 前景色
-				pdground: props.pdground, // 定位角点颜色
-				quietZone: props.quietZone, // 静区宽度
-				correctLevel: props.lv, // 容错级别
-				image: props.icon, // 二维码图标
-				imageSize: props.iconSize,// 二维码图标大小
-				cbResult: function (res) { // 生成二维码的回调
-					_result(res)
-				},
-			});
-		}
+		const vuectx = getVueCtx()
+		qrcode = new QRCode({
+			vuectx,
+			canvasId: props.cid,
+			ctx: ctx.value,
+			canvasHost: canvasHost.value,
+			isNvue,
+			usingComponents: props.usingComponents,
+			showLoading: false,
+			loadingText: props.loadingText,
+			text: props.val,
+			size: sizeLocal.value,
+			width: sizeLocal.value,
+			height: sizeLocal.value,
+			background: props.background,
+			foreground: props.foreground,
+			pdground: props.pdground,
+			quietZone: props.quietZone,
+			correctLevel: props.lv,
+			image: props.icon,
+			imageSize: props.iconSize,
+			cbResult: function (res) {
+				_result(res)
+			},
+		});
 	} else {
 		uni.showToast({
 			title: '二维码内容不能为空',
@@ -244,7 +193,7 @@ function _clearCode() {
 	qrcode && qrcode.clear()
 }
 
-function _saveCode() {
+async function _saveCode() {
 	if (result.value != "") {
 		uni.saveImageToPhotosAlbum({
 			filePath: result.value,
@@ -257,23 +206,26 @@ function _saveCode() {
 			}
 		});
 	} else {
-		toTempFilePath({
-			success: res => {
-				result.value = res.tempFilePath
-				uni.saveImageToPhotosAlbum({
-					filePath: result.value,
-					success: function () {
-						uni.showToast({
-							title: '二维码保存成功',
-							icon: 'success',
-							duration: 2000
-						});
-					}
-				});
-			},
-			fail: err => {
-			}
-		})
+		try {
+			await toTempFilePath({
+				success: res => {
+					result.value = res.tempFilePath
+					uni.saveImageToPhotosAlbum({
+						filePath: result.value,
+						success: function () {
+							uni.showToast({
+								title: '二维码保存成功',
+								icon: 'success',
+								duration: 2000
+							});
+						}
+					});
+				},
+				fail: err => {
+				}
+			})
+		} catch {
+		}
 	}
 }
 
@@ -304,51 +256,32 @@ function preview(e) {
 	}, e)
 }
 
-async function toTempFilePath({ success, fail }) {
-	if (ctx.value && ctx.value.toTempFilePath) {
-		ctx.value.toTempFilePath(
-			0,
-			0,
-			sizeLocal.value,
-			sizeLocal.value,
-			sizeLocal.value,
-			sizeLocal.value,
-			"",
-			1,
-			res => {
-				success(res)
-			}
-		);
+async function toTempFilePath(options = {}) {
+	if (!canvasHost.value && !await initCanvas(true)) {
+		const error = new Error('无法获取二维码画布实例')
+		if (typeof options.fail === 'function') options.fail(error)
+		return Promise.reject(error)
 	}
-	else {
-		// #ifdef H5
-		success({
-			tempFilePath: ctx.value.canvas.toDataURL("image/png", 1)
-		})
-		// #endif
-
-		// #ifndef H5
-		uni.canvasToTempFilePath(
-			{
-				canvasId: props.cid,
-				success: res => {
-					success(res)
-				},
-				fail: fail
-			},
-			proxy)
-		// #endif
-	}
+	return canvasHost.value.toTempFilePath({
+		...options,
+		width: options.width || sizeLocal.value,
+		height: options.height || sizeLocal.value,
+		destWidth: options.destWidth || sizeLocal.value,
+		destHeight: options.destHeight || sizeLocal.value
+	})
 }
 
 async function longpress() {
-	toTempFilePath({
-		success: res => {
-			emit('longpressCallback', res.tempFilePath)
-		},
-		fail: err => {
-		}
-	})
+	try {
+		await toTempFilePath({
+			success: res => {
+				emit('longpressCallback', res.tempFilePath)
+			},
+			fail: err => {
+			}
+		})
+	} catch {
+	}
 }
 
 /**
@@ -356,7 +289,10 @@ async function longpress() {
  * @return {Promise<void>}
  */
 async function setNewSize() {
-	const rootNode = await getCanvasNode(rootId.value, false);
+	const rootNode = await getRootNode();
+	if (!rootNode) {
+		return
+	}
 	const { width, height } = rootNode;
 	// 将最短的设置为二维码 的size
 	if (width > height) {
@@ -367,93 +303,50 @@ async function setNewSize() {
 	}
 }
 
-/**
- * 获取节点
- * @param id 节点id
- * @param isCanvas 是否为Canvas节点
- * @return {Promise<unknown>}
- */
-async function getCanvasNode(id, isCanvas = true) {
-	return new Promise((resolve, reject) => {
+async function initCanvas(force = false) {
+	await nextTick()
+	const host = qrcodeCanvas.value
+	if (!host) return false
+	const initialized = await host.initCanvas(force)
+	if (initialized === false) return false
+	canvasHost.value = host
+	ctx.value = host.getRawContext()
+	return !!ctx.value
+}
+
+function refresh() {
+	return initCanvas(true)
+}
+
+async function getRootNode() {
+	return new Promise((resolve) => {
 		try {
-			// #ifdef APP-NVUE
-			setTimeout(() => {
-				/*获取元素引用*/
-				ganvas.value = gcanvess.value
-				/*通过元素引用获取canvas对象*/
-				let canvasNode = enable(ganvas.value, {
-					bridge: WeexBridge
-				})
-				resolve(canvasNode)
-			}, 200)
-			// #endif
-			// #ifndef APP-NVUE
-			const query = uni.createSelectorQuery().in(proxy);
-			query.select(`#${id}`)
-				.fields({
-					node: true,
-					size: true
-				})
-				.exec((res) => {
-					if (isCanvas) {
-						resolve(res[0].node)
-					} else {
-						resolve(res[0])
-					}
-				})
-			// #endif
+			uni.createSelectorQuery()
+				.in(proxy)
+				.select(`#${rootId.value}`)
+				.fields({ size: true })
+				.exec((res) => resolve(res?.[0] || false))
 		} catch (e) {
-			console.error("获取节点失败", e)
+			console.error('获取二维码根节点失败', e)
+			resolve(false)
 		}
 	})
 }
 
-function getContext() {
-	// #ifdef APP-PLUS
-	return uni.createCanvasContext(props.cid, proxy);
-	// #endif
-	// #ifndef APP-PLUS
-	return canvas.value.getContext('2d');
-	// #endif
+function getUPCanvasContext() {
+	return canvasHost.value ? canvasHost.value.getRawContext() : null
 }
 
-function drawImage(url, x, y, w, h) {
+async function drawImage(url, x, y, w, h) {
 	try {
-		let img = {}
-		// #ifdef APP-NVUE
-		img = new GImage();
-		// #endif
-
-		// #ifdef H5
-		// APP下不支持会一直卡住
-		img = new Image();
-		// #endif
-
-		// #ifdef MP
-		// 小程序2d
-		// https://developers.weixin.qq.com/miniprogram/dev/api/canvas/Canvas.createImage.html
-		img = canvas.value.createImage();
-		// #endif
-		// #ifdef APP-NVUE
-		console.log(img)
-		img.onload = function() {
-			if (process.env.NODE_ENV === 'development') {
-				console.log('drawImage绘制2...')
-			}
-			ctx.value.drawImage(img, x, y, w, h);
+		if (!canvasHost.value) {
+			await initCanvas(true)
 		}
-		// #endif
-		// #ifdef H5 || MP
-		img.onload = () => {
-			ctx.value.drawImage(img, x, y, w, h);
-		};
-		// #endif
-		img.src = url;
-		// #ifdef APP-PLUS
-		ctx.value.drawImage(url, x, y, w, h);
-		// #endif
+		if (!canvasHost.value) return false
+		return await canvasHost.value.drawImage(url, x, y, w, h)
 	} catch (error) {
 		console.log('drawImage绘制出错', error)
+		return false
 	}
 }
 
@@ -515,15 +408,10 @@ onMounted(async () => {
 	if (props.useRootHeightAndWidth) {
 		await setNewSize()
 	}
-	canvas.value = await getCanvasNode(props.cid)
 	// #ifdef APP-NVUE
 	isNvue = true
-	/*获取绘图所需的上下文，目前不支持3d*/
-	ctx.value = canvas.value.getContext('2d')
 	// #endif
-	// #ifndef APP-NVUE
-	ctx.value = getContext()
-	// #endif
+	await initCanvas()
 
 	if (props.loadMake) {
 		if (!_empty(props.val)) {
@@ -538,11 +426,18 @@ onMounted(async () => {
 
 defineExpose({
 	_makeCode,
+	initCanvas,
+	refresh,
+	getUPCanvasContext,
+	drawImage,
 	_clearCode,
 	_saveCode,
 	toTempFilePath,
 	preview,
-	longpress
+	longpress,
+	qrcodeCanvas,
+	canvasHost,
+	ctx
 })
 </script>
 
