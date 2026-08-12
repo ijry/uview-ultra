@@ -1,3 +1,9 @@
+## 4.5.25
+fix: 修复文档构建错误
+
+- 修复 barcode 与 goodsSku 文档中的 Markdown 表格类型参数被解析为 Vue 属性的问题
+- 修复 coupon 文档中的错误链接，确保文档构建死链校验通过
+
 ## 4.5.24
 feat: 新增 up-novel-reader 小说阅读器组件
 
