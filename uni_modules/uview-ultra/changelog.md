@@ -1,3 +1,9 @@
+## 4.5.24
+feat: 新增 up-novel-reader 小说阅读器组件
+
+- 支持 scroll/page 双模式、目录、设置、主题、书签、进度恢复、阅读时长和安全区
+- Vue 与 UVue 保持同一公开 API
+
 ## 4.5.23
 fix: 修复 up-text 无单位行高显示异常
 

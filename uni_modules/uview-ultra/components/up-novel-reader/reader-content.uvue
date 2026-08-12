@@ -1,0 +1,167 @@
+<template>
+	<view
+		class="up-novel-reader__content"
+		:style="contentStyle"
+		@tap="handleTap"
+	>
+		<view v-if="loading" class="up-novel-reader__state">
+			<slot name="loading">
+				<text class="up-novel-reader__state-text">章节加载中</text>
+			</slot>
+		</view>
+		<view v-else-if="error != null" class="up-novel-reader__state">
+			<slot name="error" :error="error" :retry="retry">
+				<text class="up-novel-reader__state-text">{{ errorMessage }}</text>
+				<view class="up-novel-reader__state-action" @tap.stop="retry">重试</view>
+			</slot>
+		</view>
+		<view v-else-if="!hasContent" class="up-novel-reader__state">
+			<slot name="empty">
+				<text class="up-novel-reader__state-text">暂无正文</text>
+			</slot>
+		</view>
+		<scroll-view
+			v-else-if="mode == 'scroll'"
+			class="up-novel-reader__scroll"
+			scroll-y
+			:scroll-top="scrollTop"
+			@scroll="handleScroll"
+		>
+			<view class="up-novel-reader__article" :style="articleStyle">
+				<view
+					v-for="paragraph in paragraphs"
+					:key="paragraph['index']"
+					class="up-novel-reader__paragraph"
+					:style="paragraphStyle"
+				>
+					<text>{{ paragraph['text'] }}</text>
+				</view>
+			</view>
+		</scroll-view>
+		<swiper
+			v-else
+			class="up-novel-reader__swiper"
+			:current="pageIndex"
+			:duration="pageAnimation ? 300 : 0"
+			:disable-touch="false"
+			@change="handlePageChange"
+		>
+			<swiper-item
+				v-for="page in pages"
+				:key="page['index']"
+				class="up-novel-reader__page"
+			>
+				<view class="up-novel-reader__article" :style="articleStyle">
+					<text class="up-novel-reader__page-text">{{ page['text'] }}</text>
+				</view>
+			</swiper-item>
+		</swiper>
+	</view>
+</template>
+
+<script setup lang="uts">
+import { computed } from 'vue'
+
+defineOptions({
+	styleIsolation: 'app-and-page',
+	name: 'up-novel-reader-content'
+})
+
+const props = defineProps({
+	mode: { type: String, default: 'scroll' },
+	paragraphs: { type: Array, default: () => [] },
+	pages: { type: Array, default: () => [] },
+	pageIndex: { type: Number, default: 0 },
+	scrollTop: { type: Number, default: 0 },
+	settings: { type: UTSJSONObject, default: () => ({}) },
+	themeTokens: { type: UTSJSONObject, default: () => ({}) },
+	loading: { type: Boolean, default: false },
+	error: { type: UTSJSONObject, default: null },
+	pageAnimation: { type: Boolean, default: true }
+})
+
+const emit = defineEmits(['content-scroll', 'page-change', 'tap-zone', 'retry'])
+
+const paragraphs = computed((): Array<UTSJSONObject> => props.paragraphs as Array<UTSJSONObject>)
+const pages = computed((): Array<UTSJSONObject> => props.pages as Array<UTSJSONObject>)
+const settings = computed((): UTSJSONObject => props.settings == null ? ({} as UTSJSONObject) : props.settings as UTSJSONObject)
+const themeTokens = computed((): UTSJSONObject => props.themeTokens == null ? ({} as UTSJSONObject) : props.themeTokens as UTSJSONObject)
+const hasContent = computed((): boolean => paragraphs.value.length > 0 || pages.value.length > 0)
+
+const valueString = (value: any | null, fallback: string): string => {
+	if (value == null) return fallback
+	return value.toString()
+}
+
+const addUnit = (value: any | null, unit: string): string => {
+	const text = valueString(value, '0')
+	if (text.endsWith('%') || text.endsWith('px') || text.endsWith('rpx') || text.endsWith('vh')) return text
+	return text + unit
+}
+
+const getLineHeight = (value: any | null): string => {
+	const number = value == null ? 1.8 : parseFloat(value.toString())
+	if (isNaN(number)) return '1.8'
+	return number <= 4 ? number.toString() : addUnit(number, 'px')
+}
+
+const contentStyle = computed((): UTSJSONObject => {
+	return {
+		color: valueString(themeTokens.value['text'], '#303133'),
+		backgroundColor: valueString(themeTokens.value['background'], '#f7f8fa')
+	} as UTSJSONObject
+})
+
+const articleStyle = computed((): UTSJSONObject => {
+	const style = {
+		width: valueString(settings.value['contentWidth'], '92%'),
+		color: valueString(themeTokens.value['text'], '#303133'),
+		fontSize: addUnit(settings.value['fontSize'], 'px'),
+		lineHeight: getLineHeight(settings.value['lineHeight']),
+		fontWeight: settings.value['fontWeight'] == null ? 400 : settings.value['fontWeight']
+	} as UTSJSONObject
+	const family = settings.value['fontFamily']
+	if (family != null && family.toString() != 'system') style['fontFamily'] = family
+	return style
+})
+
+const paragraphStyle = computed((): UTSJSONObject => {
+	return { marginBottom: addUnit(settings.value['paragraphSpacing'], 'px') } as UTSJSONObject
+})
+
+const errorMessage = computed((): string => {
+	return valueString((props.error as UTSJSONObject)['message'], '章节加载失败')
+})
+
+const handleScroll = (event: UniScrollEvent): void => {
+	emit('content-scroll', event)
+}
+
+const handlePageChange = (event: UniSwiperChangeEvent): void => {
+	const current = event.detail.current
+	emit('page-change', { pageIndex: current == null ? 0 : current } as UTSJSONObject)
+}
+
+const handleTap = (event: UniPointerEvent): void => {
+	const x = event.x
+	const width = uni.getWindowInfo().windowWidth
+	const zone = x < width / 3 ? 'left' : x > width * 2 / 3 ? 'right' : 'center'
+	emit('tap-zone', zone)
+}
+
+const retry = (): void => {
+	emit('retry')
+}
+</script>
+
+<style lang="scss" scoped>
+.up-novel-reader__content { width: 100%; height: 100%; overflow: hidden; }
+.up-novel-reader__scroll, .up-novel-reader__swiper { width: 100%; height: 100%; }
+.up-novel-reader__article { box-sizing: border-box; min-height: 100%; margin: 0 auto; padding: 32px 0; }
+.up-novel-reader__paragraph { white-space: pre-wrap; word-break: break-word; }
+.up-novel-reader__page { display: flex; align-items: flex-start; justify-content: center; overflow: hidden; }
+.up-novel-reader__page-text { white-space: pre-wrap; word-break: break-word; }
+.up-novel-reader__state { display: flex; align-items: center; justify-content: center; flex-direction: column; width: 100%; height: 100%; gap: 16px; }
+.up-novel-reader__state-text { color: var(--up-novel-reader-muted, #909399); font-size: 14px; }
+.up-novel-reader__state-action { padding: 8px 18px; color: var(--up-primary, #2979ff); font-size: 14px; }
+</style>

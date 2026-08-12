@@ -1,0 +1,814 @@
+<template>
+    <view class="up-novel-reader" :class="[customClass, themeClass]" :style="readerStyle">
+        <view v-if="controlsVisible" class="up-novel-reader__top">
+            <up-status-bar v-if="safeAreaInsetTop"></up-status-bar>
+            <reader-toolbar
+                position="top"
+                :title="chapterTitle"
+                :show-back="showBack"
+                :back-icon="backIcon"
+                :is-bookmarked="isBookmarked"
+                :progress="progressState"
+                :current-chapter-index="currentChapterIndex"
+                :chapter-count="chapterList.length"
+                :theme-tokens="themeTokens"
+                @back="handleBack"
+                @toggle-catalog="catalogVisible = true"
+                @toggle-settings="settingsVisible = true"
+                @toggle-bookmark="toggleBookmark"
+                @toggle-controls="toggleControls"
+            >
+                <template #top>
+                    <slot name="top"></slot>
+                </template>
+                <template #toolbar-extra>
+                    <slot name="toolbar-extra"></slot>
+                </template>
+            </reader-toolbar>
+        </view>
+
+        <reader-content
+            class="up-novel-reader__body"
+            :mode="resolvedMode"
+            :paragraphs="contentParagraphs"
+            :pages="pages"
+            :page-index="pageIndex"
+            :scroll-top="scrollTop"
+            :settings="settings"
+            :theme-tokens="themeTokens"
+            :loading="loading"
+            :error="error"
+            :page-animation="pageAnimation && settingAnimation"
+            @content-scroll="handleContentScroll"
+            @page-change="handlePageChange"
+            @tap-zone="handleTapZone"
+            @retry="handleRetry"
+        >
+            <template #loading>
+                <slot name="loading">
+                    <text class="up-novel-reader__state-text">章节加载中</text>
+                </slot>
+            </template>
+            <template #error="slotProps">
+                <slot name="error" v-bind="slotProps">
+                    <text class="up-novel-reader__state-text">{{ errorMessage }}</text>
+                    <view class="up-novel-reader__state-action" @tap.stop="handleRetry">重试</view>
+                </slot>
+            </template>
+            <template #empty>
+                <slot name="empty">
+                    <text class="up-novel-reader__state-text">暂无正文</text>
+                </slot>
+            </template>
+        </reader-content>
+
+        <view v-if="controlsVisible" class="up-novel-reader__bottom">
+            <reader-toolbar
+                position="bottom"
+                :progress="progressState"
+                :page-count="pages.length"
+                :current-chapter-index="currentChapterIndex"
+                :chapter-count="chapterList.length"
+                :has-previous="hasPrevious"
+                :has-next="hasNext"
+                :theme-tokens="themeTokens"
+                @previous="requestPrevious"
+                @next="requestNext"
+                @toggle-settings="settingsVisible = true"
+                @toggle-controls="toggleControls"
+            >
+                <template #bottom>
+                    <slot name="bottom"></slot>
+                </template>
+            </reader-toolbar>
+            <up-safe-bottom v-if="safeAreaInsetBottom"></up-safe-bottom>
+        </view>
+
+        <up-popup
+            :show="catalogVisible"
+            mode="left"
+            :safe-area-inset-top="false"
+            :safe-area-inset-bottom="false"
+            @close="catalogVisible = false"
+        >
+            <reader-catalog
+                :chapters="chapterList"
+                :current-chapter="activeChapter"
+                :bookmarks="bookmarks"
+                :progress="progressState"
+                :theme-tokens="themeTokens"
+                @chapter-select="handleChapterSelect"
+                @bookmark-select="handleBookmarkSelect"
+            >
+                <slot name="catalog"></slot>
+            </reader-catalog>
+        </up-popup>
+
+        <up-popup
+            :show="settingsVisible"
+            mode="bottom"
+            :safe-area-inset-top="false"
+            :safe-area-inset-bottom="false"
+            @close="settingsVisible = false"
+        >
+            <reader-settings
+                :settings="settings"
+                :theme-tokens="themeTokens"
+                @update-settings="handleSettingsUpdate"
+                @close="settingsVisible = false"
+            >
+                <slot name="settings"></slot>
+            </reader-settings>
+        </up-popup>
+    </view>
+</template>
+
+<script setup lang="uts">
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import readerDefaults from './novelReader.uts'
+import ReaderContent from './reader-content.uvue'
+import ReaderToolbar from './reader-toolbar.uvue'
+import ReaderCatalog from './reader-catalog.uvue'
+import ReaderSettings from './reader-settings.uvue'
+import {
+    consumeReadingTime,
+    createBookmark,
+    mergeReaderSettings,
+    normalizeMode,
+    pauseReading,
+    startReading
+} from './reader-core.uts'
+import { normalizeContent, normalizeProgress } from './content-normalizer.uts'
+import { measureContainer } from './measure-adapter.uts'
+import { paginateParagraphs, resolveAnchor } from './layout-engine.uts'
+import {
+    createStorageKey,
+    readPersistedState,
+    writePersistedState
+} from './persistence.uts'
+
+defineOptions({
+    styleIsolation: 'app-and-page',
+    name: 'up-novel-reader'
+})
+
+const props = defineProps({
+    chapters: { type: Array, default: (readerDefaults['novelReader'] as UTSJSONObject)['chapters'] },
+    currentChapter: { type: UTSJSONObject, default: null },
+    loading: { type: Boolean, default: (readerDefaults['novelReader'] as UTSJSONObject)['loading'] },
+    error: { type: UTSJSONObject, default: null },
+    bookId: { type: [String, Number], default: (readerDefaults['novelReader'] as UTSJSONObject)['bookId'] },
+    storageKey: { type: String, default: (readerDefaults['novelReader'] as UTSJSONObject)['storageKey'] },
+    persist: { type: Boolean, default: (readerDefaults['novelReader'] as UTSJSONObject)['persist'] },
+    initialProgress: { type: UTSJSONObject, default: null },
+    progress: { type: UTSJSONObject, default: null },
+    initialBookmarks: { type: Array, default: (readerDefaults['novelReader'] as UTSJSONObject)['initialBookmarks'] },
+    bookmarks: { type: Array, default: null },
+    defaultSettings: { type: UTSJSONObject, default: (readerDefaults['novelReader'] as UTSJSONObject)['defaultSettings'] },
+    settings: { type: UTSJSONObject, default: null },
+    mode: { type: String, default: (readerDefaults['novelReader'] as UTSJSONObject)['mode'] },
+    showBack: { type: Boolean, default: (readerDefaults['novelReader'] as UTSJSONObject)['showBack'] },
+    autoBack: { type: Boolean, default: (readerDefaults['novelReader'] as UTSJSONObject)['autoBack'] },
+    backIcon: { type: String, default: (readerDefaults['novelReader'] as UTSJSONObject)['backIcon'] },
+    safeAreaInsetTop: { type: Boolean, default: (readerDefaults['novelReader'] as UTSJSONObject)['safeAreaInsetTop'] },
+    safeAreaInsetBottom: { type: Boolean, default: (readerDefaults['novelReader'] as UTSJSONObject)['safeAreaInsetBottom'] },
+    preloadThreshold: { type: Number, default: (readerDefaults['novelReader'] as UTSJSONObject)['preloadThreshold'] },
+    pageAnimation: { type: Boolean, default: (readerDefaults['novelReader'] as UTSJSONObject)['pageAnimation'] },
+    controlsAutoHide: { type: Number, default: (readerDefaults['novelReader'] as UTSJSONObject)['controlsAutoHide'] },
+    customClass: { type: String, default: '' },
+    customStyle: { type: [UTSJSONObject, String], default: '' }
+})
+
+const emit = defineEmits([
+    'chapter-request',
+    'chapter-prefetch',
+    'progress-change',
+    'settings-change',
+    'bookmark-change',
+    'reading-time-change',
+    'back',
+    'mode-change',
+    'toolbar-change',
+    'layout-ready',
+    'retry'
+])
+
+const currentChapterInner = ref<UTSJSONObject | null>(props.currentChapter as UTSJSONObject | null)
+const settings = ref<UTSJSONObject>(mergeReaderSettings([
+    props.defaultSettings as UTSJSONObject,
+    props.settings as UTSJSONObject | null
+]))
+const progressState = ref<UTSJSONObject>({} as UTSJSONObject)
+const bookmarks = ref<Array<UTSJSONObject>>([] as Array<UTSJSONObject>)
+const content = ref<UTSJSONObject>(normalizeContent(null))
+const pages = ref<Array<UTSJSONObject>>([] as Array<UTSJSONObject>)
+const pageIndex = ref(0)
+const resolvedMode = ref<String>(normalizeMode(props.mode))
+const controlsVisible = ref(true)
+const catalogVisible = ref(false)
+const settingsVisible = ref(false)
+const layout = ref<UTSJSONObject>({ width: 320, height: 500 } as UTSJSONObject)
+const readingState = ref<UTSJSONObject>({
+    active: false,
+    lastActiveAt: 0,
+    readingTime: 0
+} as UTSJSONObject)
+const pendingBookmark = ref<UTSJSONObject | null>(null)
+const prefetchedTarget = ref('')
+
+const chapterList = computed((): Array<UTSJSONObject> => {
+    return props.chapters as Array<UTSJSONObject>
+})
+const activeChapter = computed((): UTSJSONObject | null => {
+    return currentChapterInner.value != null
+        ? currentChapterInner.value
+        : props.currentChapter as UTSJSONObject | null
+})
+const contentParagraphs = computed((): Array<UTSJSONObject> => {
+    const value = content.value['paragraphs']
+    return value == null ? [] as Array<UTSJSONObject> : value as Array<UTSJSONObject>
+})
+const chapterTitle = computed((): String => {
+    const title = activeChapter.value == null ? null : activeChapter.value['title']
+    return title == null ? '小说阅读' : title.toString()
+})
+const currentChapterIndex = computed((): number => {
+    const chapterValue = activeChapter.value == null ? null : activeChapter.value['index']
+    const chapterIndex = chapterValue == null ? -1 : parseInt(chapterValue.toString())
+    if (!isNaN(chapterIndex)) return chapterIndex
+    const progressIndex = progressState.value['chapterIndex']
+    const parsed = progressIndex == null ? -1 : parseInt(progressIndex.toString())
+    return isNaN(parsed) ? -1 : parsed
+})
+const hasPrevious = computed((): boolean => currentChapterIndex.value > 0)
+const hasNext = computed((): boolean => (
+    currentChapterIndex.value >= 0 &&
+    currentChapterIndex.value < chapterList.value.length - 1
+))
+const scrollTop = computed((): number => {
+    const value = progressState.value['scrollTop']
+    const parsed = value == null ? 0 : parseFloat(value.toString())
+    return isNaN(parsed) ? 0 : Math.max(0, parsed)
+})
+const themeName = computed((): String => {
+    const value = settings.value['theme']
+    return value == null ? 'day' : value.toString()
+})
+const themeClass = computed((): String => `theme-${themeName.value}`)
+const settingAnimation = computed((): boolean => settings.value['animation'] != false)
+const errorMessage = computed((): String => {
+    if (props.error == null) return '章节加载失败'
+    const message = (props.error as UTSJSONObject)['message']
+    return message == null ? '章节加载失败' : message.toString()
+})
+const themeTokens = computed((): UTSJSONObject => {
+    if (themeName.value == 'paper') {
+        return {
+            background: '#f3ead7',
+            text: '#51483d',
+            muted: '#8f806d',
+            toolbar: '#f7efdf',
+            border: 'rgba(81, 72, 61, 0.16)',
+            active: '#9b7653',
+            disabled: '#c7b9a3'
+        } as UTSJSONObject
+    }
+    if (themeName.value == 'green') {
+        return {
+            background: '#e7f1e4',
+            text: '#3f5140',
+            muted: '#708371',
+            toolbar: '#eef6eb',
+            border: 'rgba(63, 81, 64, 0.16)',
+            active: '#4d8b55',
+            disabled: '#b6c7b4'
+        } as UTSJSONObject
+    }
+    if (themeName.value == 'night') {
+        return {
+            background: '#202124',
+            text: '#d6d7da',
+            muted: '#9ca0a8',
+            toolbar: '#292b30',
+            border: 'rgba(214, 215, 218, 0.16)',
+            active: '#7da7ff',
+            disabled: '#62656d'
+        } as UTSJSONObject
+    }
+    if (themeName.value == 'dark') {
+        return {
+            background: '#111214',
+            text: '#e5e7eb',
+            muted: '#9ca3af',
+            toolbar: '#1b1d21',
+            border: 'rgba(229, 231, 235, 0.16)',
+            active: '#8ab4ff',
+            disabled: '#5f6368'
+        } as UTSJSONObject
+    }
+    return {
+        background: '#f7f8fa',
+        text: '#303133',
+        muted: '#909399',
+        toolbar: '#ffffff',
+        border: 'rgba(48, 49, 51, 0.12)',
+        active: '#2979ff',
+        disabled: '#c8c9cc'
+    } as UTSJSONObject
+})
+const readerStyle = computed((): UTSJSONObject => {
+    const style = {} as UTSJSONObject
+    style['backgroundColor'] = themeTokens.value['background']
+    style['color'] = themeTokens.value['text']
+    if (props.customStyle != null && typeof props.customStyle == 'object') {
+        return UTSJSONObject.assign(style, props.customStyle as UTSJSONObject)
+    }
+    return style
+})
+const isBookmarked = computed((): boolean => {
+    if (activeChapter.value == null) return false
+    const fields: UTSJSONObject = {
+        chapterId: activeChapter.value['id'],
+        chapterIndex: currentChapterIndex.value,
+        charOffset: progressState.value['charOffset']
+    } as UTSJSONObject
+    const id = createBookmark(fields)['id']
+    return bookmarks.value.some((item: UTSJSONObject): boolean => item['id'] == id)
+})
+
+const storageKey = createStorageKey(props.storageKey, props.bookId)
+let persistTimer: number | null = null
+let controlsTimer: number | null = null
+let readingTimer: number | null = null
+const resizeHandler = (): void => {
+    nextTick(refreshLayout)
+}
+
+function numberValue(value: any, fallback: number = 0): number {
+    if (value == null) return fallback
+    const parsed = parseFloat(value.toString())
+    return isNaN(parsed) ? fallback : parsed
+}
+
+function articleWidth(width: number): number {
+    const value = settings.value['contentWidth']
+    if (typeof value == 'number') return Math.max(1, width * Math.min(100, Math.max(1, value)) / 100)
+    const source = value == null ? '92%' : value.toString()
+    if (source.endsWith('%')) {
+        const percent = parseFloat(source)
+        return isNaN(percent) ? width * 0.92 : width * Math.min(100, Math.max(1, percent)) / 100
+    }
+    const pixels = parseFloat(source)
+    return isNaN(pixels) ? width * 0.92 : Math.min(width, Math.max(1, pixels))
+}
+
+function emitProgress(): void {
+    const next = UTSJSONObject.assign({}, progressState.value)
+    next['pageIndex'] = pageIndex.value
+    next['pageCount'] = pages.value.length
+    progressState.value = normalizeProgress(next, activeChapter.value)
+    emit('progress-change', progressState.value)
+    queuePersist()
+}
+
+function refreshContent(): void {
+    const chapterContent = activeChapter.value == null ? null : activeChapter.value['content']
+    content.value = normalizeContent(chapterContent)
+    prefetchedTarget.value = ''
+    progressState.value = normalizeProgress(progressState.value, activeChapter.value)
+    pageIndex.value = 0
+    const bookmark = pendingBookmark.value
+    const chapter = activeChapter.value
+    if (
+        bookmark != null &&
+        chapter != null &&
+        bookmark['chapterId'] == chapter['id']
+    ) {
+        const restored = UTSJSONObject.assign({}, progressState.value)
+        restored['charOffset'] = bookmark['charOffset']
+        restored['pageIndex'] = bookmark['pageIndex']
+        restored['scrollTop'] = bookmark['scrollTop']
+        progressState.value = normalizeProgress(restored, activeChapter.value)
+        pendingBookmark.value = null
+    }
+    nextTick(refreshLayout)
+}
+
+async function refreshLayout(): Promise<void> {
+    let width = 375
+    let height = 667
+    try {
+        const info = uni.getWindowInfo()
+        width = Math.max(1, info.windowWidth)
+        height = Math.max(1, info.windowHeight)
+    } catch (error) {
+        // fallback dimensions keep pagination deterministic
+    }
+    try {
+        const rect = await measureContainer('.up-novel-reader__content', null)
+        if (rect != null) {
+            width = Math.max(1, rect.width)
+            height = Math.max(1, rect.height)
+        }
+    } catch (error) {
+        // selector measurement is unavailable on some preview targets
+    }
+    const layoutWidth = articleWidth(width)
+    layout.value = {
+        width: layoutWidth,
+        height
+    } as UTSJSONObject
+    const result = paginateParagraphs(contentParagraphs.value, {
+        width: layoutWidth,
+        height,
+        fontSize: settings.value['fontSize'],
+        lineHeight: settings.value['lineHeight'],
+        paragraphSpacing: settings.value['paragraphSpacing']
+    } as UTSJSONObject)
+    pages.value = result['pages'] as Array<UTSJSONObject>
+    const anchor = resolveAnchor(pages.value, numberValue(progressState.value['charOffset']))
+    pageIndex.value = numberValue(anchor['pageIndex'])
+    emitProgress()
+    emit('layout-ready', {
+        width,
+        height,
+        pageCount: pages.value.length,
+        mode: resolvedMode.value
+    } as UTSJSONObject)
+}
+
+function updateProgress(patch: UTSJSONObject): void {
+    const next = UTSJSONObject.assign({}, progressState.value)
+    patch.forEach((value: any, key: String) => {
+        next[key] = value
+    })
+    next['pageIndex'] = patch['pageIndex'] == null ? pageIndex.value : patch['pageIndex']
+    next['pageCount'] = pages.value.length
+    progressState.value = normalizeProgress(next, activeChapter.value)
+    emit('progress-change', progressState.value)
+    queuePersist()
+}
+
+function requestPrefetch(): void {
+    if (!hasNext.value) return
+    const target = chapterList.value[currentChapterIndex.value + 1]
+    if (target == null) return
+    const targetKey = target['id'] == null ? target['index'].toString() : target['id'].toString()
+    if (prefetchedTarget.value == targetKey) return
+    prefetchedTarget.value = targetKey
+    emit('chapter-prefetch', {
+        direction: 'next',
+        targetIndex: target['index'],
+        targetId: target['id'],
+        chapter: target,
+        currentChapter: activeChapter.value
+    } as UTSJSONObject)
+}
+
+function handleContentScroll(event: UniScrollEvent): void {
+    const detail = event.detail
+    const currentTop = Math.max(0, detail.scrollTop)
+    const scrollHeight = numberValue(detail['scrollHeight'])
+    const viewportHeight = scrollHeight > 0 ? Math.max(1, numberValue(detail['height'], layout.value['height'] as number)) : numberValue(layout.value['height'], 667)
+    const maxTop = Math.max(0, scrollHeight - viewportHeight)
+    const ratio = maxTop > 0 ? Math.min(1, currentTop / maxTop) : 0
+    updateProgress({
+        scrollTop: currentTop,
+        charOffset: numberValue(content.value['length']) * ratio,
+        chapterProgress: ratio
+    } as UTSJSONObject)
+    if (scrollHeight > 0 && currentTop + viewportHeight >= scrollHeight - Math.max(80, props.preloadThreshold * 160)) {
+        requestPrefetch()
+    }
+    scheduleControlsAutoHide()
+}
+
+function handlePageChange(payload: UTSJSONObject): void {
+    const maxPage = pages.value.length > 0 ? pages.value.length - 1 : 0
+    pageIndex.value = Math.max(0, Math.min(maxPage, numberValue(payload['pageIndex'])))
+    const page = pages.value.length > pageIndex.value ? pages.value[pageIndex.value] : null
+    updateProgress({
+        pageIndex: pageIndex.value,
+        charOffset: page == null ? 0 : page['startOffset'],
+        chapterProgress: page == null || numberValue(content.value['length']) <= 0
+            ? 0
+            : numberValue(page['startOffset']) / numberValue(content.value['length'])
+    } as UTSJSONObject)
+    if (pages.value.length - pageIndex.value <= Math.max(1, props.preloadThreshold)) {
+        requestPrefetch()
+    }
+    scheduleControlsAutoHide()
+}
+
+function handleTapZone(zone: String): void {
+    if (zone == 'center') {
+        toggleControls()
+    } else if (resolvedMode.value == 'page') {
+        if (zone == 'left') requestPrevious()
+        if (zone == 'right') requestNext()
+    } else {
+        toggleControls()
+    }
+}
+
+function toggleControls(): void {
+    controlsVisible.value = !controlsVisible.value
+    if (controlsVisible.value) scheduleControlsAutoHide()
+}
+
+function scheduleControlsAutoHide(): void {
+    if (controlsTimer != null) {
+        clearTimeout(controlsTimer as number)
+        controlsTimer = null
+    }
+    if (props.controlsAutoHide > 0 && controlsVisible.value) {
+        controlsTimer = setTimeout(() => {
+            controlsVisible.value = false
+        }, props.controlsAutoHide)
+    }
+}
+
+function requestChapter(direction: String, targetIndex: any, targetId: any | null = null): void {
+    var target: UTSJSONObject | null = null
+    chapterList.value.forEach((chapter: UTSJSONObject) => {
+        if (target == null && (
+            (targetId != null && chapter['id'] == targetId) ||
+            (targetId == null && numberValue(chapter['index']) == numberValue(targetIndex))
+        )) {
+            target = chapter
+        }
+    })
+    if (target == null) return
+    const selected = target as UTSJSONObject
+    if (selected['isLocked'] == true) return
+    emit('chapter-request', {
+        direction,
+        targetIndex: selected['index'],
+        targetId: selected['id'],
+        chapter: selected,
+        currentChapter: activeChapter.value
+    } as UTSJSONObject)
+}
+
+function requestPrevious(): void {
+    if (hasPrevious.value) requestChapter('previous', currentChapterIndex.value - 1)
+}
+
+function requestNext(): void {
+    if (hasNext.value) requestChapter('next', currentChapterIndex.value + 1)
+}
+
+function handleChapterSelect(chapter: UTSJSONObject): void {
+    catalogVisible.value = false
+    const current = activeChapter.value
+    if (current != null && chapter['id'] == current['id']) return
+    requestChapter('select', chapter['index'], chapter['id'])
+}
+
+function handleBookmarkSelect(bookmark: UTSJSONObject): void {
+    catalogVisible.value = false
+    const current = activeChapter.value
+    if (bookmark['chapterId'] != (current == null ? null : current['id'])) {
+        pendingBookmark.value = bookmark
+        requestChapter('bookmark', bookmark['chapterIndex'], bookmark['chapterId'])
+        return
+    }
+    updateProgress({
+        charOffset: bookmark['charOffset'],
+        pageIndex: bookmark['pageIndex'],
+        scrollTop: bookmark['scrollTop']
+    } as UTSJSONObject)
+    nextTick(refreshLayout)
+}
+
+function toggleBookmark(): void {
+    const chapter = activeChapter.value
+    if (chapter == null) return
+    const excerptStart = Math.max(0, numberValue(progressState.value['charOffset']))
+    const text = content.value['text'] == null ? '' : content.value['text'].toString()
+    const bookmark = createBookmark({
+        chapterId: chapter['id'],
+        chapterIndex: currentChapterIndex.value,
+        charOffset: excerptStart,
+        pageIndex: pageIndex.value,
+        scrollTop: scrollTop.value,
+        excerpt: text.substring(excerptStart, Math.min(text.length, excerptStart + 56))
+    } as UTSJSONObject)
+    const nextBookmarks: Array<UTSJSONObject> = bookmarks.value.toMutableArray()
+    const existingIndex = nextBookmarks.findIndex((item: UTSJSONObject): boolean => item['id'] == bookmark['id'])
+    if (existingIndex == -1) {
+        nextBookmarks.push(bookmark)
+    } else {
+        nextBookmarks.removeAt(existingIndex)
+    }
+    bookmarks.value = nextBookmarks
+    emit('bookmark-change', {
+        bookmarks: nextBookmarks,
+        bookmark,
+        active: existingIndex == -1
+    } as UTSJSONObject)
+    queuePersist()
+}
+
+function handleSettingsUpdate(nextSettings: UTSJSONObject): void {
+    settings.value = mergeReaderSettings([settings.value, nextSettings])
+    emit('settings-change', settings.value)
+    queuePersist()
+    nextTick(refreshLayout)
+}
+
+function handleBack(): void {
+    emit('back')
+    if (props.autoBack) uni.navigateBack({})
+}
+
+function handleRetry(): void {
+    const chapter = activeChapter.value
+    emit('retry', {
+        chapter,
+        chapterId: chapter == null ? null : chapter['id']
+    } as UTSJSONObject)
+}
+
+function queuePersist(): void {
+    if (!props.persist || storageKey.length == 0) return
+    if (persistTimer != null) {
+        clearTimeout(persistTimer as number)
+        persistTimer = null
+    }
+    persistTimer = setTimeout(flushPersistence, 300)
+}
+
+function flushPersistence(): void {
+    if (!props.persist || storageKey.length == 0) return
+    if (persistTimer != null) {
+        clearTimeout(persistTimer as number)
+        persistTimer = null
+    }
+    readingState.value = consumeReadingTime(readingState.value, Date.now())
+    writePersistedState(storageKey, {
+        progress: progressState.value,
+        settings: settings.value,
+        bookmarks: bookmarks.value,
+        readingTime: readingState.value['readingTime']
+    } as UTSJSONObject)
+}
+
+function initializeReaderState(): void {
+    var persisted: UTSJSONObject | null = null
+    if (props.persist) persisted = readPersistedState(storageKey)
+    const persistedState = persisted
+    settings.value = mergeReaderSettings([
+        props.defaultSettings as UTSJSONObject,
+        persistedState == null ? null : persistedState['settings'] as UTSJSONObject,
+        props.settings as UTSJSONObject | null
+    ])
+    if (Array.isArray(props.bookmarks)) {
+        bookmarks.value = props.bookmarks as Array<UTSJSONObject>
+    } else if (persistedState != null && Array.isArray(persistedState['bookmarks'])) {
+        bookmarks.value = persistedState['bookmarks'] as Array<UTSJSONObject>
+    } else {
+        bookmarks.value = props.initialBookmarks as Array<UTSJSONObject>
+    }
+    const restoredProgress = props.progress != null
+        ? props.progress as UTSJSONObject
+        : props.initialProgress != null
+            ? props.initialProgress as UTSJSONObject
+            : persistedState == null ? null : persistedState['progress'] as UTSJSONObject
+    progressState.value = normalizeProgress(restoredProgress, activeChapter.value)
+    readingState.value = startReading({
+        active: false,
+        lastActiveAt: 0,
+        readingTime: persistedState == null ? 0 : numberValue(persistedState['readingTime'])
+    } as UTSJSONObject)
+    refreshContent()
+    emit('reading-time-change', {
+        readingTime: readingState.value['readingTime'],
+        active: true
+    } as UTSJSONObject)
+    scheduleControlsAutoHide()
+}
+
+watch((): String => JSON.stringify(props.currentChapter), (): void => {
+    currentChapterInner.value = props.currentChapter as UTSJSONObject | null
+    refreshContent()
+})
+
+watch((): String => props.mode, (value: String): void => {
+    const nextMode = normalizeMode(value)
+    if (nextMode == resolvedMode.value) return
+    resolvedMode.value = nextMode
+    emit('mode-change', nextMode)
+    nextTick(refreshLayout)
+})
+
+watch((): String => JSON.stringify(props.settings), (): void => {
+    if (props.settings != null) {
+        settings.value = mergeReaderSettings([
+            settings.value,
+            props.settings as UTSJSONObject
+        ])
+        nextTick(refreshLayout)
+    }
+})
+
+watch((): String => JSON.stringify(props.progress), (): void => {
+    if (props.progress != null) {
+        progressState.value = normalizeProgress(props.progress as UTSJSONObject, activeChapter.value)
+        nextTick(refreshLayout)
+    }
+})
+
+watch((): String => JSON.stringify(props.bookmarks), (): void => {
+    if (Array.isArray(props.bookmarks)) {
+        bookmarks.value = props.bookmarks as Array<UTSJSONObject>
+    }
+})
+
+watch(controlsVisible, (value: boolean): void => {
+    emit('toolbar-change', { visible: value } as UTSJSONObject)
+})
+
+onMounted(() => {
+    initializeReaderState()
+    // #ifdef H5
+    uni.onWindowResize(resizeHandler)
+    // #endif
+    readingTimer = setInterval(() => {
+        if (readingState.value['active'] != true) return
+        readingState.value = consumeReadingTime(readingState.value, Date.now())
+        emit('reading-time-change', {
+            readingTime: readingState.value['readingTime'],
+            active: true
+        } as UTSJSONObject)
+    }, 10000)
+})
+
+onBeforeUnmount(() => {
+    if (controlsTimer != null) clearTimeout(controlsTimer as number)
+    if (readingTimer != null) clearInterval(readingTimer as number)
+    // #ifdef H5
+    uni.offWindowResize(resizeHandler)
+    // #endif
+    readingState.value = pauseReading(readingState.value, Date.now())
+    emit('reading-time-change', {
+        readingTime: readingState.value['readingTime'],
+        active: false
+    } as UTSJSONObject)
+    flushPersistence()
+})
+
+defineExpose({
+    settings,
+    progressState,
+    bookmarks,
+    pages,
+    pageIndex,
+    resolvedMode,
+    controlsVisible,
+    layout,
+    refreshContent,
+    refreshLayout,
+    requestChapter,
+    toggleBookmark,
+    flushPersistence,
+    pauseReading
+})
+</script>
+
+<style lang="scss" scoped>
+@import './theme-vars.scss';
+
+.up-novel-reader {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    min-height: 100vh;
+    overflow: hidden;
+    background-color: var(--up-novel-reader-background, #f7f8fa);
+    color: var(--up-novel-reader-text, #303133);
+}
+
+.up-novel-reader__top,
+.up-novel-reader__bottom {
+    flex-shrink: 0;
+    background-color: var(--up-novel-reader-toolbar, #ffffff);
+}
+
+.up-novel-reader__body {
+    flex: 1;
+    min-height: 0;
+}
+
+.up-novel-reader__state-text {
+    color: var(--up-novel-reader-muted, #909399);
+    font-size: 14px;
+}
+
+.up-novel-reader__state-action {
+    padding: 8px 18px;
+    color: var(--up-novel-reader-active, #2979ff);
+    font-size: 14px;
+}
+</style>

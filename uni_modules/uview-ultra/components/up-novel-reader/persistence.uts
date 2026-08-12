@@ -1,0 +1,133 @@
+export const STORAGE_VERSION: number = 1
+export const DEFAULT_STORAGE_PREFIX: String = 'uview-ultra:novel-reader:'
+
+function isObject(value: any): Boolean {
+    return value != null && typeof value == 'object' && !Array.isArray(value)
+}
+
+function numberValue(value: any, fallback: number = 0): number {
+    if (value == null) return fallback
+    const parsed = parseFloat(value.toString())
+    return isNaN(parsed) ? fallback : parsed
+}
+
+function normalizeProgress(value: UTSJSONObject | null): UTSJSONObject | null {
+    if (value == null || !isObject(value)) return null
+    const numericFields = ['chapterIndex', 'pageIndex', 'pageCount', 'charOffset', 'scrollTop']
+    for (const field of numericFields) {
+        if (value[field] != null) {
+            const numericValue = numberValue(value[field], -1)
+            if (numericValue < 0 || isNaN(numericValue)) return null
+        }
+    }
+    for (const field of ['chapterProgress', 'totalProgress']) {
+        if (value[field] != null) {
+            const numericValue = numberValue(value[field], -1)
+            if (numericValue < 0 || numericValue > 1 || isNaN(numericValue)) return null
+        }
+    }
+    const result: UTSJSONObject = UTSJSONObject.assign({}, value)
+    result['pageIndex'] = Math.max(0, numberValue(value['pageIndex']))
+    result['pageCount'] = Math.max(0, numberValue(value['pageCount']))
+    result['charOffset'] = Math.max(0, numberValue(value['charOffset']))
+    result['scrollTop'] = Math.max(0, numberValue(value['scrollTop']))
+    return result
+}
+
+function normalizeSettings(value: any): UTSJSONObject {
+    if (!isObject(value)) return {} as UTSJSONObject
+    return UTSJSONObject.assign({}, value as UTSJSONObject)
+}
+
+function normalizeBookmarks(value: any): Array<UTSJSONObject> {
+    if (!Array.isArray(value)) return [] as Array<UTSJSONObject>
+    const result: Array<UTSJSONObject> = []
+    const values = value as Array<any>
+    values.forEach((bookmark: any) => {
+        if (!isObject(bookmark)) return
+        const item = bookmark as UTSJSONObject
+        if (
+            item['id'] == null ||
+            item['chapterId'] == null ||
+            numberValue(item['charOffset'], -1) < 0
+        ) return
+        result.push(item)
+    })
+    return result
+}
+
+export function createStorageKey(storageKey: String = '', bookId: any = ''): String {
+    if (storageKey.length > 0) return storageKey
+    if (bookId == null || bookId.toString().length == 0) return ''
+    return `${DEFAULT_STORAGE_PREFIX}${bookId}`
+}
+
+export function normalizePersistedState(value: UTSJSONObject | null): UTSJSONObject | null {
+    if (value == null || value['version'] != STORAGE_VERSION) return null
+    const progress = normalizeProgress(value['progress'] == null ? null : value['progress'] as UTSJSONObject)
+    const readingTime = numberValue(value['readingTime'], -1)
+    const updatedAt = numberValue(value['updatedAt'], -1)
+    if (readingTime < 0 || updatedAt < 0) return null
+    return {
+        version: STORAGE_VERSION,
+        progress,
+        settings: normalizeSettings(value['settings']),
+        bookmarks: normalizeBookmarks(value['bookmarks']),
+        readingTime,
+        updatedAt
+    } as UTSJSONObject
+}
+
+export function readPersistedState(key: String): UTSJSONObject | null {
+    if (key.length == 0) return null
+    try {
+        const rawValue = uni.getStorageSync(key)
+        let parsed: UTSJSONObject | null = null
+        if (rawValue != null && typeof rawValue == 'string') {
+            parsed = JSON.parseObject<UTSJSONObject>(rawValue as String)
+        } else if (rawValue != null) {
+            parsed = rawValue as UTSJSONObject
+        }
+        const normalized = normalizePersistedState(parsed)
+        if (parsed != null && normalized == null) {
+            uni.removeStorageSync(key)
+        }
+        return normalized
+    } catch (error) {
+        try {
+            uni.removeStorageSync(key)
+        } catch (removeError) {
+            return null
+        }
+        return null
+    }
+}
+
+export function writePersistedState(key: String, state: UTSJSONObject): Boolean {
+    if (key.length == 0) return false
+    const payload: UTSJSONObject = {
+        version: STORAGE_VERSION,
+        progress: isObject(state['progress']) ? state['progress'] : null,
+        settings: isObject(state['settings']) ? state['settings'] : ({} as UTSJSONObject),
+        bookmarks: Array.isArray(state['bookmarks'])
+            ? state['bookmarks']
+            : ([] as Array<UTSJSONObject>),
+        readingTime: Math.max(0, numberValue(state['readingTime'])),
+        updatedAt: Date.now()
+    } as UTSJSONObject
+    try {
+        uni.setStorageSync(key, payload)
+        return true
+    } catch (error) {
+        return false
+    }
+}
+
+export default {
+    STORAGE_VERSION,
+    DEFAULT_STORAGE_PREFIX,
+    createStorageKey,
+    normalizePersistedState,
+    readPersistedState,
+    writePersistedState
+}

@@ -1,3 +1,6 @@
-let obj: UTSJSONObject = UTSJSONObject.assign({},
-);
+import novelReader from '../../components/up-novel-reader/novelReader.uts'
+
+let obj: UTSJSONObject = UTSJSONObject.assign({
+    novelReader: novelReader['novelReader']
+});
 export default obj;

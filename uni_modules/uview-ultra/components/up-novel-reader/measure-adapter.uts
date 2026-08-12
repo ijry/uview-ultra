@@ -1,0 +1,56 @@
+function numberValue(value: any, fallback: number = 0): number {
+    if (value == null) return fallback
+    const parsed = parseFloat(value.toString())
+    return isNaN(parsed) ? fallback : parsed
+}
+
+function fontSizeValue(style: UTSJSONObject): number {
+    return numberValue(style['fontSize'], 18)
+}
+
+function characterWidth(character: String, fontSize: number): number {
+    if (/[\u3400-\u9fff\u3040-\u30ff\uff00-\uffef]/.test(character)) {
+        return fontSize
+    }
+    if (/\s/.test(character)) {
+        return fontSize * 0.28
+    }
+    return fontSize * 0.56
+}
+
+export function normalizeMeasureResult(value: any): number {
+    if (typeof value == 'number') return value
+    if (value != null && value['width'] != null) return numberValue(value['width'], 0)
+    return 0
+}
+
+export function measureTextWidth(text: String, style: UTSJSONObject = {}): number {
+    const fontSize = fontSizeValue(style)
+    let width = 0
+    for (let index = 0; index < text.length; index++) {
+        width += characterWidth(text.charAt(index), fontSize)
+    }
+    return width
+}
+
+export function createMeasureText(style: UTSJSONObject = {}): (text: String) => number {
+    return (text: String): number => measureTextWidth(text, style)
+}
+
+export function measureContainer(selector: String, instance: any): Promise<NodeInfo | null> {
+    return new Promise((resolve: (value: NodeInfo | null) => void) => {
+        const query = instance == null
+            ? uni.createSelectorQuery()
+            : uni.createSelectorQuery().in(instance)
+        query.select(selector).boundingClientRect((rect: NodeInfo | null) => {
+            resolve(rect)
+        }).exec()
+    })
+}
+
+export default {
+    normalizeMeasureResult,
+    measureTextWidth,
+    createMeasureText,
+    measureContainer
+}

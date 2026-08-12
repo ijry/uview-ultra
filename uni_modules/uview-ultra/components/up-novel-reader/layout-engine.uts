@@ -1,0 +1,256 @@
+import { measureTextWidth } from './measure-adapter'
+
+function numberValue(value: any, fallback: number = 0): number {
+    if (value == null) return fallback
+    const parsed = parseFloat(value.toString())
+    return isNaN(parsed) ? fallback : parsed
+}
+
+function createUnit(text: String, startOffset: number, endOffset: number): UTSJSONObject {
+    return {
+        text,
+        startOffset,
+        endOffset
+    } as UTSJSONObject
+}
+
+function isCjk(character: String): Boolean {
+    return /[\u3400-\u9fff\u3040-\u30ff\uff00-\uffef]/.test(character)
+}
+
+function tokenizeText(text: String): Array<UTSJSONObject> {
+    const units: Array<UTSJSONObject> = []
+    let token = ''
+    let tokenStart = 0
+    let offset = 0
+
+    const flushToken = () => {
+        if (token.length > 0) {
+            units.push(createUnit(token, tokenStart, offset))
+            token = ''
+        }
+    }
+
+    for (let index = 0; index < text.length; index++) {
+        const character = text.charAt(index)
+        const startOffset = offset
+        offset += character.length
+        if (isCjk(character) || /\s/.test(character)) {
+            flushToken()
+            units.push(createUnit(character, startOffset, offset))
+            tokenStart = offset
+        } else {
+            if (token.length == 0) tokenStart = startOffset
+            token += character
+        }
+    }
+    flushToken()
+    return units
+}
+
+function splitUnit(unit: UTSJSONObject): Array<UTSJSONObject> {
+    const text = unit['text'] == null ? '' : unit['text'].toString()
+    if (text.length <= 1) return [unit]
+    const result: Array<UTSJSONObject> = []
+    let offset = numberValue(unit['startOffset'], 0)
+    for (let index = 0; index < text.length; index++) {
+        const character = text.charAt(index)
+        const nextOffset = offset + character.length
+        result.push(createUnit(character, offset, nextOffset))
+        offset = nextOffset
+    }
+    return result
+}
+
+function lineFromUnits(units: Array<UTSJSONObject>): UTSJSONObject {
+    const text = units.map((unit: UTSJSONObject) => {
+        return unit['text'] == null ? '' : unit['text'].toString()
+    }).join('')
+    return {
+        text,
+        startOffset: units[0]['startOffset'],
+        endOffset: units[units.length - 1]['endOffset']
+    } as UTSJSONObject
+}
+
+export function createLayoutKey(
+    chapterId: any = '',
+    settings: UTSJSONObject = {},
+    width: number = 0,
+    height: number = 0
+): String {
+    return JSON.stringify({
+        chapterId,
+        width,
+        height,
+        fontSize: settings['fontSize'],
+        lineHeight: settings['lineHeight'],
+        paragraphSpacing: settings['paragraphSpacing'],
+        contentWidth: settings['contentWidth'],
+        fontFamily: settings['fontFamily'],
+        fontWeight: settings['fontWeight']
+    })
+}
+
+export function wrapText(
+    text: String,
+    width: number,
+    measureText: ((text: String) => number) | null = null
+): Array<UTSJSONObject> {
+    const source = text
+    if (source.length == 0) {
+        return [{
+            text: '',
+            startOffset: 0,
+            endOffset: 0
+        } as UTSJSONObject]
+    }
+
+    const units: Array<UTSJSONObject> = []
+    tokenizeText(source).forEach((unit: UTSJSONObject) => {
+        const unitText = unit['text'] == null ? '' : unit['text'].toString()
+        const unitWidth = measureText == null
+            ? measureTextWidth(unitText)
+            : measureText(unitText)
+        if (unitWidth > width && unitText.length > 1) {
+            units.push(...splitUnit(unit))
+        } else {
+            units.push(unit)
+        }
+    })
+
+    const lines: Array<UTSJSONObject> = []
+    let currentUnits: Array<UTSJSONObject> = []
+    units.forEach((unit: UTSJSONObject) => {
+        const candidateUnits = currentUnits.concat([unit])
+        const candidateText = candidateUnits.map((item: UTSJSONObject) => {
+            return item['text'] == null ? '' : item['text'].toString()
+        }).join('')
+        const candidateWidth = measureText == null
+            ? measureTextWidth(candidateText)
+            : measureText(candidateText)
+        if (currentUnits.length > 0 && candidateWidth > width) {
+            lines.push(lineFromUnits(currentUnits))
+            currentUnits = [unit]
+        } else {
+            currentUnits = candidateUnits
+        }
+    })
+    if (currentUnits.length > 0) {
+        lines.push(lineFromUnits(currentUnits))
+    }
+    return lines
+}
+
+function lineHeightValue(layout: UTSJSONObject): number {
+    const fontSize = numberValue(layout['fontSize'], 18)
+    const lineHeight = numberValue(layout['lineHeight'], fontSize * 1.8)
+    return lineHeight <= 4 ? fontSize * lineHeight : lineHeight
+}
+
+function createPage(lines: Array<UTSJSONObject>, index: number): UTSJSONObject | null {
+    if (lines.length == 0) return null
+    return {
+        index,
+        text: lines.map((line: UTSJSONObject) => {
+            return line['text'] == null ? '' : line['text'].toString()
+        }).join('\n'),
+        lines,
+        startOffset: lines[0]['startOffset'],
+        endOffset: lines[lines.length - 1]['endOffset']
+    } as UTSJSONObject
+}
+
+export function paginateParagraphs(
+    paragraphs: Array<UTSJSONObject>,
+    layout: UTSJSONObject = {}
+): UTSJSONObject {
+    const width = Math.max(1, numberValue(layout['width'], 320))
+    const height = Math.max(1, numberValue(layout['height'], 500))
+    const lineHeight = Math.max(1, lineHeightValue(layout))
+    const paragraphSpacing = Math.max(0, numberValue(layout['paragraphSpacing'], 0))
+    const pages: Array<UTSJSONObject> = []
+    let lines: Array<UTSJSONObject> = []
+    let usedHeight = 0
+
+    const flushPage = () => {
+        const page = createPage(lines, pages.length)
+        if (page != null) pages.push(page)
+        lines = []
+        usedHeight = 0
+    }
+
+    paragraphs.forEach((paragraph: UTSJSONObject, paragraphIndex: number) => {
+        const paragraphText = paragraph['text'] == null ? '' : paragraph['text'].toString()
+        const paragraphStart = numberValue(paragraph['startOffset'], 0)
+        const paragraphLines = wrapText(paragraphText, width).map((line: UTSJSONObject) => {
+            return {
+                text: line['text'],
+                startOffset: numberValue(line['startOffset']) + paragraphStart,
+                endOffset: numberValue(line['endOffset']) + paragraphStart,
+                paragraphIndex
+            } as UTSJSONObject
+        })
+
+        if (
+            paragraphIndex > 0 &&
+            lines.length > 0 &&
+            usedHeight + paragraphSpacing + lineHeight > height
+        ) {
+            flushPage()
+        } else if (paragraphIndex > 0 && lines.length > 0) {
+            usedHeight += paragraphSpacing
+        }
+
+        paragraphLines.forEach((line: UTSJSONObject) => {
+            if (lines.length > 0 && usedHeight + lineHeight > height) {
+                flushPage()
+            }
+            lines.push(line)
+            usedHeight += lineHeight
+        })
+    })
+    flushPage()
+
+    const charOffsetToPage: Array<UTSJSONObject> = pages.map((page: UTSJSONObject) => {
+        return {
+            pageIndex: page['index'],
+            startOffset: page['startOffset'],
+            endOffset: page['endOffset']
+        } as UTSJSONObject
+    })
+    return {
+        pages,
+        pageCount: pages.length,
+        charOffsetToPage
+    } as UTSJSONObject
+}
+
+export function resolveAnchor(pages: Array<UTSJSONObject>, charOffset: number): UTSJSONObject {
+    if (pages.length == 0) {
+        return {
+            pageIndex: 0,
+            localOffset: 0
+        } as UTSJSONObject
+    }
+    const offset = Math.max(0, charOffset)
+    let page = pages[pages.length - 1]
+    pages.forEach((candidate: UTSJSONObject) => {
+        if (offset <= numberValue(candidate['endOffset'])) {
+            page = candidate
+        }
+    })
+    const startOffset = numberValue(page['startOffset'])
+    const pageText = page['text'] == null ? '' : page['text'].toString()
+    return {
+        pageIndex: page['index'],
+        localOffset: Math.max(0, Math.min(pageText.length, offset - startOffset))
+    } as UTSJSONObject
+}
+
+export default {
+    createLayoutKey,
+    wrapText,
+    paginateParagraphs,
+    resolveAnchor
+}

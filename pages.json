@@ -618,6 +618,12 @@
 				}
 			},
 			{
+				"path": "novelReader/novelReader",
+				"style": {
+					"navigationBarTitleText": "NovelReader小说阅读器"
+				}
+			},
+			{
 				"path": "markdown/markdown",
 				"style": {
 					"navigationBarTitleText": "Markdown解析器"
