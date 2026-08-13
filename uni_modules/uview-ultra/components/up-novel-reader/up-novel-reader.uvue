@@ -784,6 +784,7 @@ defineExpose({
 .up-novel-reader {
     display: flex;
     flex-direction: column;
+    position: relative;
     width: 100%;
     height: 100%;
     overflow: hidden;
@@ -791,10 +792,23 @@ defineExpose({
     color: var(--up-novel-reader-text, #303133);
 }
 
+/* 工具栏悬浮在正文之上，不占据布局空间，显隐不影响正文高度 */
 .up-novel-reader__top,
 .up-novel-reader__bottom {
+    position: absolute;
+    left: 0;
+    right: 0;
+    z-index: 10;
     flex-shrink: 0;
     background-color: var(--up-novel-reader-toolbar, #ffffff);
+}
+
+.up-novel-reader__top {
+    top: 0;
+}
+
+.up-novel-reader__bottom {
+    bottom: 0;
 }
 
 .up-novel-reader__body {

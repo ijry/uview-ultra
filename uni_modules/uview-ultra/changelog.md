@@ -1,3 +1,8 @@
+## 待发布
+optimize: up-novel-reader（UVue）顶/底工具栏改为悬浮
+
+- 工具栏改用 `position: absolute` 悬浮在正文之上，正文区域始终占满全高，工具栏显隐不再挤压/改变正文布局
+
 ## 4.5.26
 fix: 修复 DatetimePicker 动态边界，及 up-novel-reader 在 App(uni-app x)端的编译与样式问题
 
