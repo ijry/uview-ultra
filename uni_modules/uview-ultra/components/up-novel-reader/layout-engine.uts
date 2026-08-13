@@ -1,6 +1,6 @@
 import { measureTextWidth } from './measure-adapter'
 
-function numberValue(value: any, fallback: number = 0): number {
+function numberValue(value: any | null, fallback: number = 0): number {
     if (value == null) return fallback
     const parsed = parseFloat(value.toString())
     return isNaN(parsed) ? fallback : parsed
@@ -74,7 +74,7 @@ function lineFromUnits(units: Array<UTSJSONObject>): UTSJSONObject {
 }
 
 export function createLayoutKey(
-    chapterId: any = '',
+    chapterId: any | null = '',
     settings: UTSJSONObject = {},
     width: number = 0,
     height: number = 0

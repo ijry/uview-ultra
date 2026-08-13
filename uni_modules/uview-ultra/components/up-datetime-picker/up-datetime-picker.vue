@@ -90,11 +90,13 @@ const innerDefaultIndex = ref([])
 const innerFormatter = ref((type, value) => value)
 const innerValue = ref(null)
 const pickerRef = ref(null)
+// 记录最近一次通过change上抛给外部的值，用于去重，
+// 避免边界(min/max)变化导致程序化重建列时再次触发change
+const lastEmitValue = ref(null)
 
-// 如果以下这些变量发生了变化，意味着需要重新初始化各列的值
+// 如果以下这些变量发生了变化，意味着需要重新计算各列范围，但应保留当前已选值
 const propsChange = computed(() => {
 	return [
-		props.mode,
 		props.maxDate,
 		props.minDate,
 		props.minHour,
@@ -113,6 +115,8 @@ watch(() => props.show, (newValue) => {
 	}
 	if (newValue) {
 		updateColumnValue(innerValue.value)
+		// 打开时以当前值为基准，重置去重基准
+		lastEmitValue.value = innerValue.value
 		// 弹窗打开时，原生picker-view需要一定时间完成渲染，在Android/HarmonyOS端
 		// 仅靠updateColumnValue中的$nextTick不足以保证索引设置成功，需额外兜底
 		setTimeout(() => {
@@ -134,8 +138,15 @@ watch(() => props.value, () => {
 })
 // #endif
 
-watch(propsChange, () => {
+// mode变化会改变已选值的语义(时间串<->时间戳)，需要完整重新初始化
+watch(() => props.mode, () => {
 	init()
+})
+
+watch(propsChange, () => {
+	// 边界(min/max、filter)变化时，保留当前已选值，仅重新校正并重建各列，
+	// 不回退到外部 modelValue，避免未确认前丢失用户已滚动的值
+	reInitColumns()
 })
 
 onMounted(() => {
@@ -229,6 +240,39 @@ function init() {
 
 	// 初始化hasInput展示
 	getInputValue(innerValue.value)
+	// 以外部值为基准，重置去重基准
+	lastEmitValue.value = innerValue.value
+}
+
+// 边界(minMinute等)变化时调用：以当前已选值(innerValue)为基准，
+// 按新的边界重新校正并重建各列，而不是回退到外部modelValue。
+// 这样在未点击确认前也不会丢失/重置用户已经滚动选择的值。
+function reInitColumns() {
+	let base = innerValue.value
+	if (base === undefined || base === null || base === '') {
+		// #ifdef VUE3
+		base = props.modelValue
+		// #endif
+		// #ifdef VUE2
+		base = props.value
+		// #endif
+	}
+	// correctValue会把小于新minMinute(或大于maxMinute)的值夹取到合法范围内，
+	// 例如原选中15:30、minMinute变为51时会被夹取为15:51
+	const corrected = correctValue(base)
+	const changed = corrected !== innerValue.value
+	innerValue.value = corrected
+	updateColumnValue(corrected)
+	getInputValue(corrected)
+	// 仅当已选值确实因边界收紧而被夹取变化时，才补发一次change通知外部；
+	// 值未变化则不上抛，避免边界变化引起的重复change
+	if (changed && lastEmitValue.value !== corrected) {
+		lastEmitValue.value = corrected
+		emit('change', {
+			value: corrected,
+			mode: props.mode
+		})
+	}
 }
 
 // 在微信小程序中，不支持将函数当做props参数，故只能通过ref形式调用
@@ -361,8 +405,14 @@ function change(e) {
 	}
 	// 取出准确的合法值，防止超越边界的情况
 	selectValue = correctValue(selectValue)
+	// 边界变化会程序化重建各列并回填索引，picker-view在部分原生端会再次派发change，
+	// 若此时算出的值与上一次已上抛的值一致，说明并非用户真实操作，直接忽略，避免重复触发change
+	if (selectValue === lastEmitValue.value && selectValue === innerValue.value) {
+		return
+	}
 	innerValue.value = selectValue
 	syncColumnsAfterChange(selectValue)
+	lastEmitValue.value = selectValue
 	// 发出change时间，value为当前选中的时间戳
 	emit('change', {
 		value: selectValue,

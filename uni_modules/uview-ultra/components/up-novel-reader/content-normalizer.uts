@@ -1,16 +1,16 @@
 const lineBreakPattern = Regex("\r\n|\r|\n")
 
-function textValue(value: any): String {
+function textValue(value: any | null): String {
     return value == null ? '' : value.toString()
 }
 
-function numberValue(value: any, fallback: number = 0): number {
+function numberValue(value: any | null, fallback: number = 0): number {
     if (value == null) return fallback
     const parsed = parseFloat(value.toString())
     return isNaN(parsed) ? fallback : parsed
 }
 
-function normalizeParagraphs(content: any): Array<String> {
+function normalizeParagraphs(content: any | null): Array<String> {
     let values: Array<any> = []
     if (Array.isArray(content)) {
         values = content as Array<any>
@@ -27,7 +27,7 @@ function normalizeParagraphs(content: any): Array<String> {
     return paragraphs
 }
 
-export function normalizeContent(content: any): UTSJSONObject {
+export function normalizeContent(content: any | null): UTSJSONObject {
     const sourceParagraphs = normalizeParagraphs(content)
     let hasContent = false
     sourceParagraphs.forEach((text: String) => {

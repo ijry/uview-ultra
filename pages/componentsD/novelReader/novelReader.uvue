@@ -21,12 +21,6 @@
 				</view>
 			</template>
 		</up-novel-reader>
-		<view class="novel-reader-demo__status">
-			<text>{{ statusText }}</text>
-			<text>{{ settingSummary }}</text>
-			<text>{{ prefetchText }}</text>
-			<view class="novel-reader-demo__reset" @tap="resetReader">重置阅读记录</view>
-		</view>
 	</view>
 </template>
 
@@ -201,40 +195,16 @@ const resetReader = (): void => {
 <style lang="scss" scoped>
 .novel-reader-demo {
 	width: 100%;
-	height: 100vh;
+	height: 100%;
 	overflow: hidden;
 }
 
 .novel-reader-demo__mode {
 	display: flex;
+	flex-direction: row;
 	align-items: center;
 	justify-content: center;
 	width: 36px;
 	height: 36px;
-}
-
-.novel-reader-demo__status {
-	position: fixed;
-	right: 12px;
-	bottom: 12px;
-	left: 12px;
-	z-index: 2;
-	display: flex;
-	flex-direction: column;
-	gap: 3px;
-	padding: 8px 10px;
-	border-radius: 8px;
-	background-color: rgba(0, 0, 0, 0.56);
-	color: #ffffff;
-	font-size: 11px;
-	pointer-events: none;
-}
-
-.novel-reader-demo__reset {
-	align-self: flex-start;
-	margin-top: 3px;
-	padding: 3px 0;
-	color: #9ec1ff;
-	pointer-events: auto;
 }
 </style>

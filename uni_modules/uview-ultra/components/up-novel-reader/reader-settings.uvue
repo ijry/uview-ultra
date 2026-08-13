@@ -16,7 +16,7 @@
 						class="up-novel-reader__theme-option"
 						:class="draft['theme'] == theme['name'] ? 'is-active' : ''"
 						:style="{ backgroundColor: theme['background'], color: theme['text'] }"
-						@tap="update({ theme: theme['name'] })"
+						@tap="selectTheme(theme['name'])"
 					>
 						<text>{{ theme['label'] }}</text>
 					</view>
@@ -105,6 +105,9 @@ const update = (patch: UTSJSONObject): void => {
 	draft.value = UTSJSONObject.assign({} as UTSJSONObject, draft.value, patch)
 	emit('update-settings', UTSJSONObject.assign({} as UTSJSONObject, draft.value))
 }
+// 抽出方法：模板事件里直接写对象字面量(update({...}))会触发 uts 编译错误(error18 _uM)，
+// 故用具名方法包装
+const selectTheme = (name: any | null): void => update({ theme: name } as UTSJSONObject)
 const updateFontSize = (value: number): void => update({ fontSize: value } as UTSJSONObject)
 const updateLineHeight = (value: number): void => update({ lineHeight: value / 10 } as UTSJSONObject)
 const updateParagraphSpacing = (value: number): void => update({ paragraphSpacing: value } as UTSJSONObject)
@@ -118,16 +121,16 @@ watch((): string => JSON.stringify(props.settings), () => {
 </script>
 
 <style lang="scss" scoped>
-.up-novel-reader__settings { width: 100%; max-height: 78vh; }
-.up-novel-reader__settings-header { display: flex; align-items: center; justify-content: space-between; padding: 18px 20px 12px; }
+.up-novel-reader__settings { width: 100%; max-height: 560px; }
+.up-novel-reader__settings-header { display: flex; flex-direction: row; align-items: center; justify-content: space-between; padding: 18px 20px 12px; }
 .up-novel-reader__settings-title { font-size: 18px; font-weight: 600; }
-.up-novel-reader__settings-close { display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; }
-.up-novel-reader__settings-scroll { max-height: calc(78vh - 64px); padding: 0 20px 24px; box-sizing: border-box; }
+.up-novel-reader__settings-close { display: flex; flex-direction: row; align-items: center; justify-content: center; width: 34px; height: 34px; }
+.up-novel-reader__settings-scroll { max-height: 496px; padding: 0 20px 24px; box-sizing: border-box; }
 .up-novel-reader__settings-section { padding: 14px 0; }
 .up-novel-reader__settings-label { font-size: 14px; }
-.up-novel-reader__settings-row { display: flex; align-items: center; justify-content: space-between; min-height: 34px; }
+.up-novel-reader__settings-row { display: flex; flex-direction: row; align-items: center; justify-content: space-between; min-height: 34px; }
 .up-novel-reader__settings-value { color: var(--up-novel-reader-muted, #909399); font-size: 13px; }
-.up-novel-reader__theme-list { display: flex; gap: 8px; margin-top: 10px; }
-.up-novel-reader__theme-option { display: flex; align-items: center; justify-content: center; flex: 1; height: 42px; border: 1px solid transparent; border-radius: 8px; font-size: 12px; }
+.up-novel-reader__theme-list { display: flex; flex-direction: row; gap: 8px; margin-top: 10px; }
+.up-novel-reader__theme-option { display: flex; flex-direction: row; align-items: center; justify-content: center; flex: 1; height: 42px; border: 1px solid transparent; border-radius: 8px; font-size: 12px; }
 .up-novel-reader__theme-option.is-active { border-color: var(--up-novel-reader-active, #2979ff); box-shadow: 0 0 0 2px rgba(41, 121, 255, 0.18); }
 </style>

@@ -98,6 +98,18 @@
 			@change="change"
 			@close="close"
 		></up-datetime-picker>
+		<up-datetime-picker
+			:show="show8"
+			v-model="value8"
+			mode="time"
+			:minHour="minHour8"
+			:minMinute="minMinute8"
+			closeOnClickOverlay
+			@confirm="confirm"
+			@cancel="cancel"
+			@change="changeTime8"
+			@close="close"
+		></up-datetime-picker>
 	</view>
 </template>
 <script setup lang="uts">
@@ -106,7 +118,7 @@
 	})
 
 	import { ref } from 'vue'
-	import { timeFormat, toast } from '@/uni_modules/uview-ultra/libs/function/index.uts'
+	import { timeFormat, toast, padZero } from '@/uni_modules/uview-ultra/libs/function/index.uts'
 
 	const current = ref(0)
 	const value1 = ref(new Date().getTime())
@@ -116,6 +128,12 @@
 	const value5 = ref(new Date().getTime())
 	const value6 = ref(new Date().getTime())
 	const value7 = ref(new Date().getTime())
+	// 「只能选当前时间之后」示例：初始值为当前时间，minHour固定为当前小时，
+	// minMinute随所选小时动态变化（选中当前小时时不早于当前分钟，选中之后的小时则从0开始）
+	const now8 = new Date()
+	const value8 = ref(`${padZero(now8.getHours())}:${padZero(now8.getMinutes())}`)
+	const minHour8 = ref(now8.getHours())
+	const minMinute8 = ref(now8.getMinutes())
 	const show1 = ref(false)
 	const show2 = ref(false)
 	const show3 = ref(false)
@@ -123,6 +141,7 @@
 	const show5 = ref(false)
 	const show6 = ref(false)
 	const show7 = ref(false)
+	const show8 = ref(false)
 	const list = [
 		{ title: '完整日期时间', iconUrl: 'https://cdn.uviewui.com/uview/demo/datetime-picker/6.png' },
 		{ title: '年月日', iconUrl: 'https://cdn.uviewui.com/uview/demo/datetime-picker/4.png' },
@@ -130,7 +149,8 @@
 		{ title: '时间', iconUrl: 'https://cdn.uviewui.com/uview/demo/datetime-picker/5.png' },
 		{ title: '过滤器(保留偶数年)', iconUrl: 'https://cdn.uviewui.com/uview/demo/datetime-picker/2.png' },
 		{ title: '格式化', iconUrl: 'https://cdn.uviewui.com/uview/demo/datetime-picker/1.png' },
-		{ title: '限制最大最小值', iconUrl: 'https://cdn.uviewui.com/uview/demo/datetime-picker/7.png' }
+		{ title: '限制最大最小值', iconUrl: 'https://cdn.uviewui.com/uview/demo/datetime-picker/7.png' },
+		{ title: '只能选当前时间之后(动态minMinute)', iconUrl: 'https://cdn.uviewui.com/uview/demo/datetime-picker/5.png' }
 	]
 
 	function setShow(index: number, value: boolean): void {
@@ -141,6 +161,7 @@
 		if (index == 5) show5.value = value
 		if (index == 6) show6.value = value
 		if (index == 7) show7.value = value
+		if (index == 8) show8.value = value
 	}
 
 	function close() {
@@ -172,6 +193,14 @@
 
 	function change(e: UTSJSONObject) {
 		// console.log('change', e)
+	}
+
+	// 「只能选当前时间之后」示例的change：根据所选小时动态调整minMinute。
+	// 修复前：改变minMinute会把已选时间重置为初始值，并再次触发change；
+	// 修复后：已选值保留（若低于新minMinute则被夹取上移），且不会重复触发change。
+	function changeTime8(e: UTSJSONObject) {
+		const hour = parseInt(e['value']!.toString().split(':')[0])
+		minMinute8.value = hour <= now8.getHours() ? now8.getMinutes() : 0
 	}
 
 	function navigateBack() {

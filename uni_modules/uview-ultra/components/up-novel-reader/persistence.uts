@@ -1,11 +1,11 @@
 export const STORAGE_VERSION: number = 1
 export const DEFAULT_STORAGE_PREFIX: String = 'uview-ultra:novel-reader:'
 
-function isObject(value: any): Boolean {
+function isObject(value: any | null): Boolean {
     return value != null && typeof value == 'object' && !Array.isArray(value)
 }
 
-function numberValue(value: any, fallback: number = 0): number {
+function numberValue(value: any | null, fallback: number = 0): number {
     if (value == null) return fallback
     const parsed = parseFloat(value.toString())
     return isNaN(parsed) ? fallback : parsed
@@ -34,12 +34,12 @@ function normalizeProgress(value: UTSJSONObject | null): UTSJSONObject | null {
     return result
 }
 
-function normalizeSettings(value: any): UTSJSONObject {
+function normalizeSettings(value: any | null): UTSJSONObject {
     if (!isObject(value)) return {} as UTSJSONObject
     return UTSJSONObject.assign({}, value as UTSJSONObject)
 }
 
-function normalizeBookmarks(value: any): Array<UTSJSONObject> {
+function normalizeBookmarks(value: any | null): Array<UTSJSONObject> {
     if (!Array.isArray(value)) return [] as Array<UTSJSONObject>
     const result: Array<UTSJSONObject> = []
     const values = value as Array<any>

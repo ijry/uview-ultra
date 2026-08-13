@@ -34,7 +34,7 @@
             :pages="pages"
             :page-index="pageIndex"
             :scroll-top="scrollTop"
-            :settings="settings"
+            :settings="settingsState"
             :theme-tokens="themeTokens"
             :loading="loading"
             :error="error"
@@ -94,7 +94,7 @@
             <reader-catalog
                 :chapters="chapterList"
                 :current-chapter="activeChapter"
-                :bookmarks="bookmarks"
+                :bookmarks="bookmarkList"
                 :progress="progressState"
                 :theme-tokens="themeTokens"
                 @chapter-select="handleChapterSelect"
@@ -112,7 +112,7 @@
             @close="settingsVisible = false"
         >
             <reader-settings
-                :settings="settings"
+                :settings="settingsState"
                 :theme-tokens="themeTokens"
                 @update-settings="handleSettingsUpdate"
                 @close="settingsVisible = false"
@@ -194,12 +194,12 @@ const emit = defineEmits([
 ])
 
 const currentChapterInner = ref<UTSJSONObject | null>(props.currentChapter as UTSJSONObject | null)
-const settings = ref<UTSJSONObject>(mergeReaderSettings([
+const settingsState = ref<UTSJSONObject>(mergeReaderSettings([
     props.defaultSettings as UTSJSONObject,
     props.settings as UTSJSONObject | null
 ]))
 const progressState = ref<UTSJSONObject>({} as UTSJSONObject)
-const bookmarks = ref<Array<UTSJSONObject>>([] as Array<UTSJSONObject>)
+const bookmarkList = ref<Array<UTSJSONObject>>([] as Array<UTSJSONObject>)
 const content = ref<UTSJSONObject>(normalizeContent(null))
 const pages = ref<Array<UTSJSONObject>>([] as Array<UTSJSONObject>)
 const pageIndex = ref(0)
@@ -251,11 +251,11 @@ const scrollTop = computed((): number => {
     return isNaN(parsed) ? 0 : Math.max(0, parsed)
 })
 const themeName = computed((): String => {
-    const value = settings.value['theme']
+    const value = settingsState.value['theme']
     return value == null ? 'day' : value.toString()
 })
 const themeClass = computed((): String => `theme-${themeName.value}`)
-const settingAnimation = computed((): boolean => settings.value['animation'] != false)
+const settingAnimation = computed((): boolean => settingsState.value['animation'] != false)
 const errorMessage = computed((): String => {
     if (props.error == null) return '章节加载失败'
     const message = (props.error as UTSJSONObject)['message']
@@ -333,25 +333,21 @@ const isBookmarked = computed((): boolean => {
         charOffset: progressState.value['charOffset']
     } as UTSJSONObject
     const id = createBookmark(fields)['id']
-    return bookmarks.value.some((item: UTSJSONObject): boolean => item['id'] == id)
+    return bookmarkList.value.some((item: UTSJSONObject): boolean => item['id'] == id)
 })
 
 const storageKey = createStorageKey(props.storageKey, props.bookId)
 let persistTimer: number | null = null
 let controlsTimer: number | null = null
 let readingTimer: number | null = null
-const resizeHandler = (): void => {
-    nextTick(refreshLayout)
-}
-
-function numberValue(value: any, fallback: number = 0): number {
+function numberValue(value: any | null, fallback: number = 0): number {
     if (value == null) return fallback
     const parsed = parseFloat(value.toString())
     return isNaN(parsed) ? fallback : parsed
 }
 
 function articleWidth(width: number): number {
-    const value = settings.value['contentWidth']
+    const value = settingsState.value['contentWidth']
     if (typeof value == 'number') return Math.max(1, width * Math.min(100, Math.max(1, value)) / 100)
     const source = value == null ? '92%' : value.toString()
     if (source.endsWith('%')) {
@@ -362,6 +358,30 @@ function articleWidth(width: number): number {
     return isNaN(pixels) ? width * 0.92 : Math.min(width, Math.max(1, pixels))
 }
 
+function flushPersistence(): void {
+    if (!props.persist || storageKey.length == 0) return
+    if (persistTimer != null) {
+        clearTimeout(persistTimer as number)
+        persistTimer = null
+    }
+    readingState.value = consumeReadingTime(readingState.value, Date.now())
+    writePersistedState(storageKey, {
+        progress: progressState.value,
+        settings: settingsState.value,
+        bookmarks: bookmarkList.value,
+        readingTime: readingState.value['readingTime']
+    } as UTSJSONObject)
+}
+
+function queuePersist(): void {
+    if (!props.persist || storageKey.length == 0) return
+    if (persistTimer != null) {
+        clearTimeout(persistTimer as number)
+        persistTimer = null
+    }
+    persistTimer = setTimeout(flushPersistence, 300)
+}
+
 function emitProgress(): void {
     const next = UTSJSONObject.assign({}, progressState.value)
     next['pageIndex'] = pageIndex.value
@@ -369,6 +389,49 @@ function emitProgress(): void {
     progressState.value = normalizeProgress(next, activeChapter.value)
     emit('progress-change', progressState.value)
     queuePersist()
+}
+
+async function refreshLayout(): Promise<void> {
+    let width = 375
+    let height = 667
+    try {
+        const info = uni.getWindowInfo()
+        width = Math.max(1, info.windowWidth)
+        height = Math.max(1, info.windowHeight)
+    } catch (error) {
+        // fallback dimensions keep pagination deterministic
+    }
+    try {
+        const rect = await measureContainer('.up-novel-reader__content', null)
+        if (rect != null) {
+            width = Math.max(1, numberValue(rect.width, width))
+            height = Math.max(1, numberValue(rect.height, height))
+        }
+    } catch (error) {
+        // selector measurement is unavailable on some preview targets
+    }
+    const layoutWidth = articleWidth(width)
+    layout.value = {
+        width: layoutWidth,
+        height
+    } as UTSJSONObject
+    const result = paginateParagraphs(contentParagraphs.value, {
+        width: layoutWidth,
+        height,
+        fontSize: settingsState.value['fontSize'],
+        lineHeight: settingsState.value['lineHeight'],
+        paragraphSpacing: settingsState.value['paragraphSpacing']
+    } as UTSJSONObject)
+    pages.value = result['pages'] as Array<UTSJSONObject>
+    const anchor = resolveAnchor(pages.value, numberValue(progressState.value['charOffset']))
+    pageIndex.value = numberValue(anchor['pageIndex'])
+    emitProgress()
+    emit('layout-ready', {
+        width,
+        height,
+        pageCount: pages.value.length,
+        mode: resolvedMode.value
+    } as UTSJSONObject)
 }
 
 function refreshContent(): void {
@@ -391,62 +454,23 @@ function refreshContent(): void {
         progressState.value = normalizeProgress(restored, activeChapter.value)
         pendingBookmark.value = null
     }
-    nextTick(refreshLayout)
+    nextTick((): void => { refreshLayout() })
 }
 
-async function refreshLayout(): Promise<void> {
-    let width = 375
-    let height = 667
-    try {
-        const info = uni.getWindowInfo()
-        width = Math.max(1, info.windowWidth)
-        height = Math.max(1, info.windowHeight)
-    } catch (error) {
-        // fallback dimensions keep pagination deterministic
-    }
-    try {
-        const rect = await measureContainer('.up-novel-reader__content', null)
-        if (rect != null) {
-            width = Math.max(1, rect.width)
-            height = Math.max(1, rect.height)
-        }
-    } catch (error) {
-        // selector measurement is unavailable on some preview targets
-    }
-    const layoutWidth = articleWidth(width)
-    layout.value = {
-        width: layoutWidth,
-        height
-    } as UTSJSONObject
-    const result = paginateParagraphs(contentParagraphs.value, {
-        width: layoutWidth,
-        height,
-        fontSize: settings.value['fontSize'],
-        lineHeight: settings.value['lineHeight'],
-        paragraphSpacing: settings.value['paragraphSpacing']
-    } as UTSJSONObject)
-    pages.value = result['pages'] as Array<UTSJSONObject>
-    const anchor = resolveAnchor(pages.value, numberValue(progressState.value['charOffset']))
-    pageIndex.value = numberValue(anchor['pageIndex'])
-    emitProgress()
-    emit('layout-ready', {
-        width,
-        height,
-        pageCount: pages.value.length,
-        mode: resolvedMode.value
-    } as UTSJSONObject)
+const resizeHandler = (): void => {
+    nextTick((): void => { refreshLayout() })
 }
 
-function updateProgress(patch: UTSJSONObject): void {
-    const next = UTSJSONObject.assign({}, progressState.value)
-    patch.forEach((value: any, key: String) => {
-        next[key] = value
-    })
-    next['pageIndex'] = patch['pageIndex'] == null ? pageIndex.value : patch['pageIndex']
-    next['pageCount'] = pages.value.length
-    progressState.value = normalizeProgress(next, activeChapter.value)
-    emit('progress-change', progressState.value)
-    queuePersist()
+function scheduleControlsAutoHide(): void {
+    if (controlsTimer != null) {
+        clearTimeout(controlsTimer as number)
+        controlsTimer = null
+    }
+    if (props.controlsAutoHide > 0 && controlsVisible.value) {
+        controlsTimer = setTimeout(() => {
+            controlsVisible.value = false
+        }, props.controlsAutoHide)
+    }
 }
 
 function requestPrefetch(): void {
@@ -463,6 +487,53 @@ function requestPrefetch(): void {
         chapter: target,
         currentChapter: activeChapter.value
     } as UTSJSONObject)
+}
+
+function requestChapter(direction: String, targetIndex: any | null, targetId: any | null = null): void {
+    var target: UTSJSONObject | null = null
+    chapterList.value.forEach((chapter: UTSJSONObject) => {
+        if (target == null && (
+            (targetId != null && chapter['id'] == targetId) ||
+            (targetId == null && numberValue(chapter['index']) == numberValue(targetIndex))
+        )) {
+            target = chapter
+        }
+    })
+    if (target == null) return
+    const selected = target as UTSJSONObject
+    if (selected['isLocked'] == true) return
+    emit('chapter-request', {
+        direction,
+        targetIndex: selected['index'],
+        targetId: selected['id'],
+        chapter: selected,
+        currentChapter: activeChapter.value
+    } as UTSJSONObject)
+}
+
+function requestPrevious(): void {
+    if (hasPrevious.value) requestChapter('previous', currentChapterIndex.value - 1)
+}
+
+function requestNext(): void {
+    if (hasNext.value) requestChapter('next', currentChapterIndex.value + 1)
+}
+
+function toggleControls(): void {
+    controlsVisible.value = !controlsVisible.value
+    if (controlsVisible.value) scheduleControlsAutoHide()
+}
+
+function updateProgress(patch: UTSJSONObject): void {
+    const next = UTSJSONObject.assign({}, progressState.value)
+    UTSJSONObject.keys(patch).forEach((key: string) => {
+        next[key] = patch[key]
+    })
+    next['pageIndex'] = patch['pageIndex'] == null ? pageIndex.value : patch['pageIndex']
+    next['pageCount'] = pages.value.length
+    progressState.value = normalizeProgress(next, activeChapter.value)
+    emit('progress-change', progressState.value)
+    queuePersist()
 }
 
 function handleContentScroll(event: UniScrollEvent): void {
@@ -511,53 +582,6 @@ function handleTapZone(zone: String): void {
     }
 }
 
-function toggleControls(): void {
-    controlsVisible.value = !controlsVisible.value
-    if (controlsVisible.value) scheduleControlsAutoHide()
-}
-
-function scheduleControlsAutoHide(): void {
-    if (controlsTimer != null) {
-        clearTimeout(controlsTimer as number)
-        controlsTimer = null
-    }
-    if (props.controlsAutoHide > 0 && controlsVisible.value) {
-        controlsTimer = setTimeout(() => {
-            controlsVisible.value = false
-        }, props.controlsAutoHide)
-    }
-}
-
-function requestChapter(direction: String, targetIndex: any, targetId: any | null = null): void {
-    var target: UTSJSONObject | null = null
-    chapterList.value.forEach((chapter: UTSJSONObject) => {
-        if (target == null && (
-            (targetId != null && chapter['id'] == targetId) ||
-            (targetId == null && numberValue(chapter['index']) == numberValue(targetIndex))
-        )) {
-            target = chapter
-        }
-    })
-    if (target == null) return
-    const selected = target as UTSJSONObject
-    if (selected['isLocked'] == true) return
-    emit('chapter-request', {
-        direction,
-        targetIndex: selected['index'],
-        targetId: selected['id'],
-        chapter: selected,
-        currentChapter: activeChapter.value
-    } as UTSJSONObject)
-}
-
-function requestPrevious(): void {
-    if (hasPrevious.value) requestChapter('previous', currentChapterIndex.value - 1)
-}
-
-function requestNext(): void {
-    if (hasNext.value) requestChapter('next', currentChapterIndex.value + 1)
-}
-
 function handleChapterSelect(chapter: UTSJSONObject): void {
     catalogVisible.value = false
     const current = activeChapter.value
@@ -578,7 +602,7 @@ function handleBookmarkSelect(bookmark: UTSJSONObject): void {
         pageIndex: bookmark['pageIndex'],
         scrollTop: bookmark['scrollTop']
     } as UTSJSONObject)
-    nextTick(refreshLayout)
+    nextTick((): void => { refreshLayout() })
 }
 
 function toggleBookmark(): void {
@@ -594,14 +618,17 @@ function toggleBookmark(): void {
         scrollTop: scrollTop.value,
         excerpt: text.substring(excerptStart, Math.min(text.length, excerptStart + 56))
     } as UTSJSONObject)
-    const nextBookmarks: Array<UTSJSONObject> = bookmarks.value.toMutableArray()
+    const nextBookmarks: Array<UTSJSONObject> = []
+    bookmarkList.value.forEach((item: UTSJSONObject) => {
+        nextBookmarks.push(item)
+    })
     const existingIndex = nextBookmarks.findIndex((item: UTSJSONObject): boolean => item['id'] == bookmark['id'])
     if (existingIndex == -1) {
         nextBookmarks.push(bookmark)
     } else {
-        nextBookmarks.removeAt(existingIndex)
+        nextBookmarks.splice(existingIndex, 1)
     }
-    bookmarks.value = nextBookmarks
+    bookmarkList.value = nextBookmarks
     emit('bookmark-change', {
         bookmarks: nextBookmarks,
         bookmark,
@@ -611,10 +638,10 @@ function toggleBookmark(): void {
 }
 
 function handleSettingsUpdate(nextSettings: UTSJSONObject): void {
-    settings.value = mergeReaderSettings([settings.value, nextSettings])
-    emit('settings-change', settings.value)
+    settingsState.value = mergeReaderSettings([settingsState.value, nextSettings])
+    emit('settings-change', settingsState.value)
     queuePersist()
-    nextTick(refreshLayout)
+    nextTick((): void => { refreshLayout() })
 }
 
 function handleBack(): void {
@@ -630,45 +657,21 @@ function handleRetry(): void {
     } as UTSJSONObject)
 }
 
-function queuePersist(): void {
-    if (!props.persist || storageKey.length == 0) return
-    if (persistTimer != null) {
-        clearTimeout(persistTimer as number)
-        persistTimer = null
-    }
-    persistTimer = setTimeout(flushPersistence, 300)
-}
-
-function flushPersistence(): void {
-    if (!props.persist || storageKey.length == 0) return
-    if (persistTimer != null) {
-        clearTimeout(persistTimer as number)
-        persistTimer = null
-    }
-    readingState.value = consumeReadingTime(readingState.value, Date.now())
-    writePersistedState(storageKey, {
-        progress: progressState.value,
-        settings: settings.value,
-        bookmarks: bookmarks.value,
-        readingTime: readingState.value['readingTime']
-    } as UTSJSONObject)
-}
-
 function initializeReaderState(): void {
     var persisted: UTSJSONObject | null = null
     if (props.persist) persisted = readPersistedState(storageKey)
     const persistedState = persisted
-    settings.value = mergeReaderSettings([
+    settingsState.value = mergeReaderSettings([
         props.defaultSettings as UTSJSONObject,
         persistedState == null ? null : persistedState['settings'] as UTSJSONObject,
         props.settings as UTSJSONObject | null
     ])
     if (Array.isArray(props.bookmarks)) {
-        bookmarks.value = props.bookmarks as Array<UTSJSONObject>
+        bookmarkList.value = props.bookmarks as Array<UTSJSONObject>
     } else if (persistedState != null && Array.isArray(persistedState['bookmarks'])) {
-        bookmarks.value = persistedState['bookmarks'] as Array<UTSJSONObject>
+        bookmarkList.value = persistedState['bookmarks'] as Array<UTSJSONObject>
     } else {
-        bookmarks.value = props.initialBookmarks as Array<UTSJSONObject>
+        bookmarkList.value = props.initialBookmarks as Array<UTSJSONObject>
     }
     const restoredProgress = props.progress != null
         ? props.progress as UTSJSONObject
@@ -699,29 +702,29 @@ watch((): String => props.mode, (value: String): void => {
     if (nextMode == resolvedMode.value) return
     resolvedMode.value = nextMode
     emit('mode-change', nextMode)
-    nextTick(refreshLayout)
+    nextTick((): void => { refreshLayout() })
 })
 
 watch((): String => JSON.stringify(props.settings), (): void => {
     if (props.settings != null) {
-        settings.value = mergeReaderSettings([
-            settings.value,
+        settingsState.value = mergeReaderSettings([
+            settingsState.value,
             props.settings as UTSJSONObject
         ])
-        nextTick(refreshLayout)
+        nextTick((): void => { refreshLayout() })
     }
 })
 
 watch((): String => JSON.stringify(props.progress), (): void => {
     if (props.progress != null) {
         progressState.value = normalizeProgress(props.progress as UTSJSONObject, activeChapter.value)
-        nextTick(refreshLayout)
+        nextTick((): void => { refreshLayout() })
     }
 })
 
 watch((): String => JSON.stringify(props.bookmarks), (): void => {
     if (Array.isArray(props.bookmarks)) {
-        bookmarks.value = props.bookmarks as Array<UTSJSONObject>
+        bookmarkList.value = props.bookmarks as Array<UTSJSONObject>
     }
 })
 
@@ -759,9 +762,9 @@ onBeforeUnmount(() => {
 })
 
 defineExpose({
-    settings,
+    settingsState,
     progressState,
-    bookmarks,
+    bookmarkList,
     pages,
     pageIndex,
     resolvedMode,
@@ -771,8 +774,7 @@ defineExpose({
     refreshLayout,
     requestChapter,
     toggleBookmark,
-    flushPersistence,
-    pauseReading
+    flushPersistence
 })
 </script>
 
@@ -784,7 +786,6 @@ defineExpose({
     flex-direction: column;
     width: 100%;
     height: 100%;
-    min-height: 100vh;
     overflow: hidden;
     background-color: var(--up-novel-reader-background, #f7f8fa);
     color: var(--up-novel-reader-text, #303133);

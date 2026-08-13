@@ -157,9 +157,9 @@ const retry = (): void => {
 <style lang="scss" scoped>
 .up-novel-reader__content { width: 100%; height: 100%; overflow: hidden; }
 .up-novel-reader__scroll, .up-novel-reader__swiper { width: 100%; height: 100%; }
-.up-novel-reader__article { box-sizing: border-box; min-height: 100%; margin: 0 auto; padding: 32px 0; }
+.up-novel-reader__article { box-sizing: border-box; margin: 0 auto; padding: 32px 0; }
 .up-novel-reader__paragraph { white-space: pre-wrap; word-break: break-word; }
-.up-novel-reader__page { display: flex; align-items: flex-start; justify-content: center; overflow: hidden; }
+.up-novel-reader__page { display: flex; flex-direction: row; align-items: flex-start; justify-content: center; overflow: hidden; }
 .up-novel-reader__page-text { white-space: pre-wrap; word-break: break-word; }
 .up-novel-reader__state { display: flex; align-items: center; justify-content: center; flex-direction: column; width: 100%; height: 100%; gap: 16px; }
 .up-novel-reader__state-text { color: var(--up-novel-reader-muted, #909399); font-size: 14px; }

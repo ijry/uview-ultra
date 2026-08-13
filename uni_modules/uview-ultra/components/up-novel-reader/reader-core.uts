@@ -9,13 +9,13 @@ export const DEFAULT_READER_SETTINGS: UTSJSONObject = {
     animation: true
 }
 
-function numberValue(value: any, fallback: number = 0): number {
+function numberValue(value: any | null, fallback: number = 0): number {
     if (value == null) return fallback
     const parsed = parseFloat(value.toString())
     return isNaN(parsed) ? fallback : parsed
 }
 
-function clamp(value: any, min: number, max: number, fallback: number): number {
+function clamp(value: any | null, min: number, max: number, fallback: number): number {
     return Math.min(max, Math.max(min, numberValue(value, fallback)))
 }
 
@@ -23,14 +23,14 @@ function settingValue(source: UTSJSONObject | null, key: String): any {
     return source == null ? null : source[key]
 }
 
-function normalizeContentWidth(value: any): any {
+function normalizeContentWidth(value: any | null): any {
     if (typeof value == 'number') {
         return clamp(value, 40, 100, 92)
     }
     if (value != null && value.toString().trim().length > 0) {
         return value.toString().trim()
     }
-    return DEFAULT_READER_SETTINGS['contentWidth']
+    return DEFAULT_READER_SETTINGS['contentWidth']!
 }
 
 export function mergeReaderSettings(sources: Array<UTSJSONObject | null>): UTSJSONObject {
@@ -92,8 +92,9 @@ export function setProgress(state: UTSJSONObject, progress: UTSJSONObject | null
         stateProgress
     )
     if (progress != null) {
-        progress.forEach((value: any, key: String) => {
-            nextProgress[key] = value
+        const src = progress
+        UTSJSONObject.keys(src).forEach((key: String) => {
+            nextProgress[key] = src[key]
         })
     }
     nextProgress['pageIndex'] = Math.max(0, numberValue(nextProgress['pageIndex']))

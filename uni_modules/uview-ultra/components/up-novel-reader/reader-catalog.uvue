@@ -73,19 +73,19 @@ const selectBookmark = (bookmark: UTSJSONObject): void => emit('bookmark-select'
 </script>
 
 <style lang="scss" scoped>
-.up-novel-reader__catalog { display: flex; flex-direction: column; width: 82vw; max-width: 360px; height: 100%; }
-.up-novel-reader__catalog-header { display: flex; align-items: baseline; justify-content: space-between; padding: 20px 18px 14px; border-bottom: 1px solid var(--up-novel-reader-border, rgba(48, 49, 51, 0.12)); }
+.up-novel-reader__catalog { display: flex; flex-direction: column; width: 82%; max-width: 360px; height: 100%; }
+.up-novel-reader__catalog-header { display: flex; flex-direction: row; align-items: flex-end; justify-content: space-between; padding: 20px 18px 14px; border-bottom: 1px solid var(--up-novel-reader-border, rgba(48, 49, 51, 0.12)); }
 .up-novel-reader__catalog-title { font-size: 20px; font-weight: 600; }
 .up-novel-reader__catalog-count, .up-novel-reader__catalog-index, .up-novel-reader__bookmark-progress { color: var(--up-novel-reader-muted, #909399); font-size: 12px; }
 .up-novel-reader__catalog-scroll { flex: 1; min-height: 0; }
-.up-novel-reader__catalog-item { display: flex; align-items: center; min-height: 48px; padding: 0 18px; gap: 10px; }
+.up-novel-reader__catalog-item { display: flex; flex-direction: row; align-items: center; min-height: 48px; padding: 0 18px; gap: 10px; }
 .up-novel-reader__catalog-item.is-current { color: var(--up-novel-reader-active, #2979ff); background-color: rgba(41, 121, 255, 0.08); }
 .up-novel-reader__catalog-item.is-locked { opacity: 0.45; }
 .up-novel-reader__catalog-index { width: 24px; }
 .up-novel-reader__catalog-item-title { flex: 1; overflow: hidden; font-size: 14px; text-overflow: ellipsis; white-space: nowrap; }
 .up-novel-reader__catalog-empty { padding: 36px 18px; color: var(--up-novel-reader-muted, #909399); text-align: center; }
 .up-novel-reader__bookmark-section { margin-top: 10px; padding: 16px 18px 24px; border-top: 1px solid var(--up-novel-reader-border, rgba(48, 49, 51, 0.12)); }
-.up-novel-reader__bookmark-heading, .up-novel-reader__bookmark-item { display: flex; justify-content: space-between; gap: 10px; }
+.up-novel-reader__bookmark-heading, .up-novel-reader__bookmark-item { display: flex; flex-direction: row; justify-content: space-between; gap: 10px; }
 .up-novel-reader__bookmark-heading { margin-bottom: 10px; color: var(--up-novel-reader-muted, #909399); font-size: 13px; }
 .up-novel-reader__bookmark-item { padding: 8px 0; }
 .up-novel-reader__bookmark-excerpt { flex: 1; overflow: hidden; font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }

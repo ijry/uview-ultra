@@ -1,4 +1,4 @@
-function numberValue(value: any, fallback: number = 0): number {
+function numberValue(value: any | null, fallback: number = 0): number {
     if (value == null) return fallback
     const parsed = parseFloat(value.toString())
     return isNaN(parsed) ? fallback : parsed
@@ -18,7 +18,7 @@ function characterWidth(character: String, fontSize: number): number {
     return fontSize * 0.56
 }
 
-export function normalizeMeasureResult(value: any): number {
+export function normalizeMeasureResult(value: any | null): number {
     if (typeof value == 'number') return value
     if (value != null && value['width'] != null) return numberValue(value['width'], 0)
     return 0
@@ -37,13 +37,13 @@ export function createMeasureText(style: UTSJSONObject = {}): (text: String) => 
     return (text: String): number => measureTextWidth(text, style)
 }
 
-export function measureContainer(selector: String, instance: any): Promise<NodeInfo | null> {
+export function measureContainer(selector: String, instance: any | null): Promise<NodeInfo | null> {
     return new Promise((resolve: (value: NodeInfo | null) => void) => {
         const query = instance == null
             ? uni.createSelectorQuery()
             : uni.createSelectorQuery().in(instance)
-        query.select(selector).boundingClientRect((rect: NodeInfo | null) => {
-            resolve(rect)
+        query.select(selector).boundingClientRect((rect: any): void => {
+            resolve(rect as NodeInfo | null)
         }).exec()
     })
 }

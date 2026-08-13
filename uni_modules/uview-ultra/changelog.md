@@ -1,3 +1,10 @@
+## 4.5.26
+fix: 修复 DatetimePicker 动态边界，及 up-novel-reader 在 App(uni-app x)端的编译与样式问题
+
+- up-datetime-picker（Vue/UVue）：动态修改 minMinute/minHour 等边界值时保留当前已选值，仅按新边界重新校正并重建各列，不再回退到 modelValue；新增 change 去重，边界变化程序化重建列不再重复上抛 change；已选值超出新边界时自动夹取到合法范围并补发一次 change；UVue 端补全此前被注释、未接通的 modelValue/mode/边界值响应式
+- up-novel-reader（UVue）：修复此前无法通过 uni-app x（Android）编译的一系列问题——不支持的 CSS 值（vh/vw、color/border-radius:inherit、display:block、min-height:100% 等）改用 px/百分比/样式绑定；UTSJSONObject Any? 类型不匹配、setup 函数前向引用（Kotlin 局部函数不提升需按依赖排序）、props 与局部 ref/defineExpose 命名冲突、nextTick(async)、数组 API（toMutableArray/removeAt）等
+- up-novel-reader（UVue）：修复 App 端因 display:flex 默认竖向导致工具栏/设置/目录横排错乱的问题（补 flex-direction:row）
+
 ## 4.5.25
 fix: 修复文档构建错误
 
