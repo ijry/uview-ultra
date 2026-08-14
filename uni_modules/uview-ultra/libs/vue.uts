@@ -1,7 +1,7 @@
 // #ifdef APP
-export * from 'vue'
+//export * from 'vue' 	//UTS下不存在vue库，无需显式导出，导致HarmonyOS运行即报错
 // #endif
-// #ifdef WEB
+// #ifdef WEB || MP
 export const defineMixin = (options: any) => {
 	return options
 }

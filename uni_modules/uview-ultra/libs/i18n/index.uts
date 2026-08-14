@@ -10,16 +10,21 @@ let settings = {
 // App-UTS 不支持 getLocale/onLocaleChange，App 端通过 setLocale 显式切换语言。
 // #ifndef APP
 try {
+    // #ifdef WEB || MP
+    // @ts-ignore
     if (typeof uni !== 'undefined' && typeof uni.getLocale === 'function') {
         const current = uni.getLocale()
         if (current != null && current != '') {
             settings['lang'] = current
         }
     }
+    // #endif
 } catch (e) {
 }
 
 try {
+    // #ifdef WEB || MP
+    // @ts-ignore
     if (typeof uni !== 'undefined' && typeof uni.onLocaleChange === 'function') {
         uni.onLocaleChange((locale: any | null) => {
             if (locale == null) return
@@ -33,6 +38,7 @@ try {
             }
         })
     }
+    // #endif
 } catch (e) {
 }
 // #endif
@@ -56,9 +62,12 @@ export function setLocale(locale: string): string {
     settings['lang'] = locale
     // #ifndef APP
     try {
+        // #ifdef WEB || MP
+        // @ts-ignore
         if (typeof uni !== 'undefined' && typeof uni.setLocale === 'function') {
             uni.setLocale(locale)
         }
+        // #endif
     } catch (e) {
     }
     // #endif
@@ -98,7 +107,8 @@ export function t(value: string, params: UTSJSONObject = {} as UTSJSONObject): s
     if (value == '') {
         return value
     }
-    let key = value.replaceAll('.', '_')
+    //let key = value.replaceAll('.', '_')
+    let key = value.replace(/\./g, '_')
     let lang = settings['lang'] as string
     let locales = settings['locales'] as UTSJSONObject
     if (locales[lang] == null) {
@@ -118,7 +128,9 @@ export function t(value: string, params: UTSJSONObject = {} as UTSJSONObject): s
         const paramKey = paramKeys[i]
         const paramValue = params[paramKey]
         if (paramValue != null) {
-            resultStr = resultStr.replaceAll('{' + paramKey + '}', paramValue.toString())
+            const targetKey = new RegExp('{' + paramKey + '}','g') //'{' + paramKey + '}'
+            resultStr = resultStr.replace(targetKey, paramValue.toString())
+            //resultStr = resultStr.replaceAll('{' + paramKey + '}', paramValue.toString())
         }
     }
     return resultStr

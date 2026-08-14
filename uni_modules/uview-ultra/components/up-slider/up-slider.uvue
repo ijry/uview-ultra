@@ -327,13 +327,13 @@
 						value,
 						min,
 						// @ts-ignore
-						normalizeSliderValue(rangeValueNumber(1, max) - step)
+						normalizeSliderValue(toSliderNumber(props.rangeValue[1]!, max) - step)
 					)
 				case 1:
 					return formatByStep(
 						value,
 						// @ts-ignore
-						normalizeSliderValue(rangeValueNumber(0, min) + step),
+						normalizeSliderValue(toSliderNumber(props.rangeValue[0]!, min) + step),
 						max
 					)
 				default:

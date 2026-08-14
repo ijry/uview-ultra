@@ -88,9 +88,9 @@
 	const clickHandler = () => {
 		let name = props.name;
 		// 如果没有设置name属性，历遍父组件的children数组，判断当前的元素是否和本实例this相等，找出当前组件的索引
-		// @ts-ignore
-		const children: ComponentPublicInstance[] = parent.value?.$data['children'] as ComponentPublicInstance[];
 		if(props.name === null) {
+			// @ts-ignore
+			const children: ComponentPublicInstance[] = parent.value?.$data['children'] as ComponentPublicInstance[];
 			// @ts-ignore
 			name = children.findIndex((child: ComponentPublicInstance) => child === instance);
 		}
