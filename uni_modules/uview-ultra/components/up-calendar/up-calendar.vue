@@ -347,7 +347,8 @@ const buttonDisabled = computed(() => {
 })
 
 const calendarCloseable = computed(() => {
-	return props.closeable === null ? !props.pageInline : props.closeable
+	if (props.closeable === null || props.closeable === '') return !props.pageInline
+	return props.closeable === true || props.closeable === 'true'
 })
 
 watch(scrollIntoView, (n) => {

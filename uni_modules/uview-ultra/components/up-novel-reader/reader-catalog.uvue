@@ -1,0 +1,92 @@
+<template>
+	<view class="up-novel-reader__catalog" :style="catalogStyle">
+		<view class="up-novel-reader__catalog-header">
+			<text class="up-novel-reader__catalog-title">目录</text>
+			<text class="up-novel-reader__catalog-count">{{ chapters.length }} 章</text>
+		</view>
+		<scroll-view v-if="chapters.length > 0" class="up-novel-reader__catalog-scroll" scroll-y>
+			<view
+				v-for="chapter in chapters"
+				:key="chapterKey(chapter)"
+				class="up-novel-reader__catalog-item"
+				:class="isCurrent(chapter) ? 'is-current' : chapter['isLocked'] == true ? 'is-locked' : ''"
+				@tap="selectChapter(chapter)"
+			>
+				<view class="up-novel-reader__catalog-index">{{ displayIndex(chapter) }}</view>
+				<text class="up-novel-reader__catalog-item-title">{{ chapterTitle(chapter) }}</text>
+				<up-icon v-if="chapter['isLocked'] == true" name="lock" size="15" :color="mutedColor"></up-icon>
+			</view>
+			<view v-if="bookmarks.length > 0" class="up-novel-reader__bookmark-section">
+				<view class="up-novel-reader__bookmark-heading">
+					<text>书签</text>
+					<text>{{ bookmarks.length }}</text>
+				</view>
+				<view v-for="bookmark in bookmarks" :key="bookmarkKey(bookmark)" class="up-novel-reader__bookmark-item" @tap="selectBookmark(bookmark)">
+					<text class="up-novel-reader__bookmark-excerpt">{{ bookmarkExcerpt(bookmark) }}</text>
+					<text class="up-novel-reader__bookmark-progress">{{ bookmarkChapter(bookmark) }} 章</text>
+				</view>
+			</view>
+			<slot></slot>
+		</scroll-view>
+		<view v-else class="up-novel-reader__catalog-empty">暂无目录</view>
+	</view>
+</template>
+
+<script setup lang="uts">
+import { computed } from 'vue'
+
+defineOptions({ styleIsolation: 'app-and-page', name: 'up-novel-reader-catalog' })
+
+const props = defineProps({
+	chapters: { type: Array, default: () => [] },
+	currentChapter: { type: UTSJSONObject, default: null },
+	bookmarks: { type: Array, default: () => [] },
+	progress: { type: UTSJSONObject, default: () => ({}) },
+	themeTokens: { type: UTSJSONObject, default: () => ({}) }
+})
+const emit = defineEmits(['chapter-select', 'bookmark-select'])
+const chapters = computed((): Array<UTSJSONObject> => props.chapters as Array<UTSJSONObject>)
+const bookmarks = computed((): Array<UTSJSONObject> => props.bookmarks as Array<UTSJSONObject>)
+const theme = computed((): UTSJSONObject => props.themeTokens == null ? ({} as UTSJSONObject) : props.themeTokens as UTSJSONObject)
+const mutedColor = computed((): string => (theme.value['muted'] == null ? '#909399' : theme.value['muted']).toString())
+const catalogStyle = computed((): UTSJSONObject => {
+	return {
+		backgroundColor: (theme.value['background'] == null ? '#f7f8fa' : theme.value['background']).toString(),
+		color: (theme.value['text'] == null ? '#303133' : theme.value['text']).toString()
+	} as UTSJSONObject
+})
+const textValue = (value: any | null, fallback: string): string => value == null ? fallback : value.toString()
+const chapterKey = (chapter: UTSJSONObject): string => textValue(chapter['id'], chapter['index'] == null ? '0' : chapter['index'].toString())
+const bookmarkKey = (bookmark: UTSJSONObject): string => textValue(bookmark['id'], bookmark['charOffset'] == null ? '0' : bookmark['charOffset'].toString())
+const displayIndex = (chapter: UTSJSONObject): string => (parseInt(textValue(chapter['index'], '0')) + 1).toString()
+const chapterTitle = (chapter: UTSJSONObject): string => textValue(chapter['title'], '第' + displayIndex(chapter) + '章')
+const bookmarkExcerpt = (bookmark: UTSJSONObject): string => textValue(bookmark['excerpt'], '书签位置')
+const bookmarkChapter = (bookmark: UTSJSONObject): string => (parseInt(textValue(bookmark['chapterIndex'], '0')) + 1).toString()
+const isCurrent = (chapter: UTSJSONObject): boolean => {
+	return props.currentChapter != null && chapter['id'] == (props.currentChapter as UTSJSONObject)['id']
+}
+const selectChapter = (chapter: UTSJSONObject): void => {
+	if (chapter['isLocked'] == true) return
+	emit('chapter-select', chapter)
+}
+const selectBookmark = (bookmark: UTSJSONObject): void => emit('bookmark-select', bookmark)
+</script>
+
+<style lang="scss" scoped>
+.up-novel-reader__catalog { display: flex; flex-direction: column; width: 82%; max-width: 360px; height: 100%; }
+.up-novel-reader__catalog-header { display: flex; flex-direction: row; align-items: flex-end; justify-content: space-between; padding: 20px 18px 14px; border-bottom: 1px solid var(--up-novel-reader-border, rgba(48, 49, 51, 0.12)); }
+.up-novel-reader__catalog-title { font-size: 20px; font-weight: 600; }
+.up-novel-reader__catalog-count, .up-novel-reader__catalog-index, .up-novel-reader__bookmark-progress { color: var(--up-novel-reader-muted, #909399); font-size: 12px; }
+.up-novel-reader__catalog-scroll { flex: 1; min-height: 0; }
+.up-novel-reader__catalog-item { display: flex; flex-direction: row; align-items: center; min-height: 48px; padding: 0 18px; gap: 10px; }
+.up-novel-reader__catalog-item.is-current { color: var(--up-novel-reader-active, #2979ff); background-color: rgba(41, 121, 255, 0.08); }
+.up-novel-reader__catalog-item.is-locked { opacity: 0.45; }
+.up-novel-reader__catalog-index { width: 24px; }
+.up-novel-reader__catalog-item-title { flex: 1; overflow: hidden; font-size: 14px; text-overflow: ellipsis; white-space: nowrap; }
+.up-novel-reader__catalog-empty { padding: 36px 18px; color: var(--up-novel-reader-muted, #909399); text-align: center; }
+.up-novel-reader__bookmark-section { margin-top: 10px; padding: 16px 18px 24px; border-top: 1px solid var(--up-novel-reader-border, rgba(48, 49, 51, 0.12)); }
+.up-novel-reader__bookmark-heading, .up-novel-reader__bookmark-item { display: flex; flex-direction: row; justify-content: space-between; gap: 10px; }
+.up-novel-reader__bookmark-heading { margin-bottom: 10px; color: var(--up-novel-reader-muted, #909399); font-size: 13px; }
+.up-novel-reader__bookmark-item { padding: 8px 0; }
+.up-novel-reader__bookmark-excerpt { flex: 1; overflow: hidden; font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
+</style>

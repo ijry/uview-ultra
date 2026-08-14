@@ -1,0 +1,210 @@
+<template>
+	<view class="novel-reader-demo">
+		<up-novel-reader
+			:chapters="chapters"
+			:current-chapter="currentChapter"
+			book-id="demo-novel"
+			:mode="mode"
+			:initial-bookmarks="bookmarks"
+			@chapter-request="handleChapterRequest"
+			@chapter-prefetch="handleChapterPrefetch"
+			@progress-change="handleProgressChange"
+			@settings-change="handleSettingsChange"
+			@bookmark-change="handleBookmarkChange"
+			@reading-time-change="handleReadingTimeChange"
+			@mode-change="handleModeChange"
+			@back="handleBack"
+		>
+			<template #toolbar-extra>
+				<view class="novel-reader-demo__mode" @tap.stop="toggleMode">
+					<up-icon name="order" size="18" color="#2979ff"></up-icon>
+				</view>
+			</template>
+		</up-novel-reader>
+	</view>
+</template>
+
+<script setup lang="uts">
+import { computed, ref } from 'vue'
+
+defineOptions({
+	styleIsolation: 'app-and-page',
+	name: 'novel-reader-demo'
+})
+
+const chapters = ref<Array<UTSJSONObject>>([
+	{
+		id: 'demo-1',
+		index: 0,
+		title: '第一章 初见',
+		isLocked: false,
+		content: [
+			'城门刚刚开启，清晨的雾气还停在青石路上。',
+			'沈砚在旧书摊前停下脚步，听见有人叫出了他的名字。',
+			'那声音很轻，却像从很远的地方穿过人群而来。'
+		]
+	} as UTSJSONObject,
+	{
+		id: 'demo-2',
+		index: 1,
+		title: '第二章 夜行',
+		isLocked: false,
+		content: [
+			'入夜之后，城外的灯火一盏接一盏熄灭。',
+			'沈砚沿着河岸前行，手中的信封始终没有拆开。',
+			'风从芦苇深处吹来，带着陌生而清冷的气息。'
+		]
+	} as UTSJSONObject,
+	{
+		id: 'demo-3',
+		index: 2,
+		title: '第三章 回声',
+		isLocked: false,
+		content: [
+			'山谷将每一句话都还回来，只是顺序已经改变。',
+			'他们在石壁上发现了相同的刻痕，像有人提前留下了答案。',
+			'回声停下时，远处传来一声并不存在的钟响。'
+		]
+	} as UTSJSONObject,
+	{
+		id: 'demo-4',
+		index: 3,
+		title: '第四章 雨幕',
+		isLocked: false,
+		content: [
+			'大雨落了一整夜，屋檐下的水线连成了透明的帘子。',
+			'沈砚把地图摊在桌面上，终于找到了被墨迹遮住的路。',
+			'明天一早，他们要向北走。'
+		]
+	} as UTSJSONObject,
+	{
+		id: 'demo-5',
+		index: 4,
+		title: '第五章 远方',
+		isLocked: false,
+		content: [
+			'离开熟悉的街巷之后，天地忽然变得开阔。',
+			'远方没有答案，只有一条需要亲自走完的路。',
+			'同行的人没有说话，但脚步始终保持着相同的节奏。'
+		]
+	} as UTSJSONObject,
+	{
+		id: 'demo-6',
+		index: 5,
+		title: '第六章 新程',
+		isLocked: false,
+		content: [
+			'山口的风吹散了最后一层云，新的城镇出现在视线尽头。',
+			'沈砚收起旧信，向身边的人点了点头。',
+			'故事没有结束，只是从今天开始换了一种写法。'
+		]
+	} as UTSJSONObject
+])
+
+const currentChapter = ref<UTSJSONObject | null>(chapters.value[0])
+const mode = ref<String>('scroll')
+const progress = ref<UTSJSONObject>({} as UTSJSONObject)
+const bookmarks = ref<Array<UTSJSONObject>>([] as Array<UTSJSONObject>)
+const settingSummary = ref('主题：日间 · 字号：18')
+const prefetchText = ref('预加载：未触发')
+const readingTime = ref(0)
+
+const currentTitle = computed((): String => {
+	const chapter = currentChapter.value
+	if (chapter == null) return '未选择章节'
+	const title = chapter['title']
+	return title == null ? '未选择章节' : title.toString()
+})
+const statusText = computed((): String => {
+	const chapterProgress = progress.value['chapterProgress']
+	const percent = chapterProgress == null ? 0 : Math.round(parseFloat(chapterProgress.toString()) * 100)
+	return `${currentTitle.value} · ${percent}% · 书签 ${bookmarks.value.length} · 阅读 ${Math.round(readingTime.value / 1000)} 秒`
+})
+
+const handleChapterRequest = (payload: UTSJSONObject): void => {
+	const targetId = payload['targetId']
+	const targetIndex = payload['targetIndex']
+	let target: UTSJSONObject | null = null
+	chapters.value.forEach((chapter: UTSJSONObject) => {
+		if (
+			target == null &&
+			((targetId != null && chapter['id'] == targetId) ||
+				(targetId == null && chapter['index'] == targetIndex))
+		) {
+			target = chapter
+		}
+	})
+	if (target != null) currentChapter.value = target
+}
+
+const handleChapterPrefetch = (payload: UTSJSONObject): void => {
+	const target = payload['targetIndex']
+	const targetIndex = target == null ? 0 : parseInt(target.toString())
+	prefetchText.value = `预加载：第${targetIndex + 1}章已通知业务层`
+}
+
+const handleProgressChange = (value: UTSJSONObject): void => {
+	progress.value = value
+}
+
+const handleSettingsChange = (value: UTSJSONObject): void => {
+	const themeNames: UTSJSONObject = {
+		day: '日间',
+		paper: '羊皮纸',
+		green: '护眼绿',
+		night: '夜间',
+		dark: '深色'
+	} as UTSJSONObject
+	const theme = value['theme'] == null ? 'day' : value['theme'].toString()
+	const themeLabel = themeNames[theme] == null ? theme : themeNames[theme].toString()
+	const fontSize = value['fontSize'] == null ? '18' : value['fontSize'].toString()
+	settingSummary.value = `主题：${themeLabel} · 字号：${fontSize}`
+}
+
+const handleBookmarkChange = (value: UTSJSONObject): void => {
+	const next = value['bookmarks']
+	if (Array.isArray(next)) bookmarks.value = next as Array<UTSJSONObject>
+}
+
+const handleReadingTimeChange = (value: UTSJSONObject): void => {
+	readingTime.value = value['readingTime'] == null ? 0 : parseFloat(value['readingTime'].toString())
+}
+
+const handleModeChange = (value: String): void => {
+	mode.value = value
+}
+
+const toggleMode = (): void => {
+	mode.value = mode.value == 'scroll' ? 'page' : 'scroll'
+}
+
+const handleBack = (): void => {
+	const pages = getCurrentPages()
+	if (pages.length > 1) uni.navigateBack({})
+}
+
+const resetReader = (): void => {
+	uni.removeStorageSync('uview-ultra:novel-reader:demo-novel')
+	currentChapter.value = chapters.value[0]
+	progress.value = {} as UTSJSONObject
+	bookmarks.value = [] as Array<UTSJSONObject>
+	prefetchText.value = '预加载：未触发'
+}
+</script>
+
+<style lang="scss" scoped>
+.novel-reader-demo {
+	width: 100%;
+	height: 100%;
+	overflow: hidden;
+}
+
+.novel-reader-demo__mode {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	justify-content: center;
+	width: 36px;
+	height: 36px;
+}
+</style>

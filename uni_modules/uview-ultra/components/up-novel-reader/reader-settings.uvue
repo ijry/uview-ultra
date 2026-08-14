@@ -1,0 +1,136 @@
+<template>
+	<view class="up-novel-reader__settings" :style="settingsStyle">
+		<view class="up-novel-reader__settings-header">
+			<text class="up-novel-reader__settings-title">阅读设置</text>
+			<view class="up-novel-reader__settings-close" @tap="close">
+				<up-icon name="close" size="20" :color="textColor"></up-icon>
+			</view>
+		</view>
+		<scroll-view scroll-y class="up-novel-reader__settings-scroll">
+			<view class="up-novel-reader__settings-section">
+				<text class="up-novel-reader__settings-label">主题</text>
+				<view class="up-novel-reader__theme-list">
+					<view
+						v-for="theme in themes"
+						:key="theme['name']"
+						class="up-novel-reader__theme-option"
+						:class="draft['theme'] == theme['name'] ? 'is-active' : ''"
+						:style="{ backgroundColor: theme['background'], color: theme['text'] }"
+						@tap="selectTheme(theme['name'])"
+					>
+						<text>{{ theme['label'] }}</text>
+					</view>
+				</view>
+			</view>
+			<view class="up-novel-reader__settings-section">
+				<view class="up-novel-reader__settings-row">
+					<text class="up-novel-reader__settings-label">字号</text>
+					<text class="up-novel-reader__settings-value">{{ fontSizeText }}</text>
+				</view>
+				<up-slider :model-value="fontSize" :min="12" :max="30" :step="1" active-color="#2979ff" @update:model-value="updateFontSize"></up-slider>
+			</view>
+			<view class="up-novel-reader__settings-section">
+				<view class="up-novel-reader__settings-row">
+					<text class="up-novel-reader__settings-label">行距</text>
+					<text class="up-novel-reader__settings-value">{{ lineHeightText }}</text>
+				</view>
+				<up-slider :model-value="lineHeightSlider" :min="10" :max="30" :step="1" active-color="#2979ff" @update:model-value="updateLineHeight"></up-slider>
+			</view>
+			<view class="up-novel-reader__settings-section">
+				<view class="up-novel-reader__settings-row">
+					<text class="up-novel-reader__settings-label">段距</text>
+					<text class="up-novel-reader__settings-value">{{ paragraphSpacingText }}</text>
+				</view>
+				<up-slider :model-value="paragraphSpacing" :min="0" :max="40" :step="2" active-color="#2979ff" @update:model-value="updateParagraphSpacing"></up-slider>
+			</view>
+			<view class="up-novel-reader__settings-section">
+				<view class="up-novel-reader__settings-row">
+					<text class="up-novel-reader__settings-label">粗体正文</text>
+					<up-switch :model-value="fontWeight >= 600" :active-value="true" :inactive-value="false" @change="updateFontWeight"></up-switch>
+				</view>
+				<view class="up-novel-reader__settings-row">
+					<text class="up-novel-reader__settings-label">翻页动画</text>
+					<up-switch :model-value="animation" @change="updateAnimation"></up-switch>
+				</view>
+			</view>
+			<slot></slot>
+		</scroll-view>
+	</view>
+</template>
+
+<script setup lang="uts">
+import { computed, ref, watch } from 'vue'
+
+defineOptions({ styleIsolation: 'app-and-page', name: 'up-novel-reader-settings' })
+
+const props = defineProps({
+	settings: { type: UTSJSONObject, default: () => ({}) },
+	themeTokens: { type: UTSJSONObject, default: () => ({}) }
+})
+const emit = defineEmits(['update-settings', 'close'])
+const draft = ref<UTSJSONObject>({} as UTSJSONObject)
+const themes = ref<Array<UTSJSONObject>>([
+	{ name: 'day', label: '日间', background: '#f7f8fa', text: '#303133' },
+	{ name: 'paper', label: '羊皮纸', background: '#f3ead7', text: '#51483d' },
+	{ name: 'green', label: '护眼绿', background: '#e7f1e4', text: '#3f5140' },
+	{ name: 'night', label: '夜间', background: '#202124', text: '#d6d7da' },
+	{ name: 'dark', label: '深色', background: '#111214', text: '#e5e7eb' }
+])
+
+const numberValue = (key: string, fallback: number): number => {
+	const value = draft.value[key]
+	if (value == null) return fallback
+	const number = parseFloat(value.toString())
+	return isNaN(number) ? fallback : number
+}
+const fontSize = computed((): number => numberValue('fontSize', 18))
+const lineHeight = computed((): number => numberValue('lineHeight', 1.8))
+const lineHeightSlider = computed((): number => lineHeight.value * 10)
+const paragraphSpacing = computed((): number => numberValue('paragraphSpacing', 0))
+const fontWeight = computed((): number => numberValue('fontWeight', 400))
+const animation = computed((): boolean => draft.value['animation'] !== false)
+const fontSizeText = computed((): string => fontSize.value.toString())
+const lineHeightText = computed((): string => lineHeight.value.toFixed(1))
+const paragraphSpacingText = computed((): string => paragraphSpacing.value.toString())
+const theme = computed((): UTSJSONObject => props.themeTokens == null ? ({} as UTSJSONObject) : props.themeTokens as UTSJSONObject)
+const textColor = computed((): string => (theme.value['text'] == null ? '#303133' : theme.value['text']).toString())
+const settingsStyle = computed((): UTSJSONObject => {
+	return {
+		backgroundColor: (theme.value['background'] == null ? '#f7f8fa' : theme.value['background']).toString(),
+		color: textColor.value
+	} as UTSJSONObject
+})
+
+const update = (patch: UTSJSONObject): void => {
+	draft.value = UTSJSONObject.assign({} as UTSJSONObject, draft.value, patch)
+	emit('update-settings', UTSJSONObject.assign({} as UTSJSONObject, draft.value))
+}
+// 抽出方法：模板事件里直接写对象字面量(update({...}))会触发 uts 编译错误(error18 _uM)，
+// 故用具名方法包装
+const selectTheme = (name: any | null): void => update({ theme: name } as UTSJSONObject)
+const updateFontSize = (value: number): void => update({ fontSize: value } as UTSJSONObject)
+const updateLineHeight = (value: number): void => update({ lineHeight: value / 10 } as UTSJSONObject)
+const updateParagraphSpacing = (value: number): void => update({ paragraphSpacing: value } as UTSJSONObject)
+const updateFontWeight = (value: any): void => update({ fontWeight: value == true || value.toString() == 'true' ? 600 : 400 } as UTSJSONObject)
+const updateAnimation = (value: any): void => update({ animation: value == true || value.toString() == 'true' } as UTSJSONObject)
+const close = (): void => emit('close')
+
+watch((): string => JSON.stringify(props.settings), () => {
+	draft.value = UTSJSONObject.assign({} as UTSJSONObject, props.settings == null ? ({} as UTSJSONObject) : props.settings as UTSJSONObject)
+}, { immediate: true })
+</script>
+
+<style lang="scss" scoped>
+.up-novel-reader__settings { width: 100%; max-height: 560px; }
+.up-novel-reader__settings-header { display: flex; flex-direction: row; align-items: center; justify-content: space-between; padding: 18px 20px 12px; }
+.up-novel-reader__settings-title { font-size: 18px; font-weight: 600; }
+.up-novel-reader__settings-close { display: flex; flex-direction: row; align-items: center; justify-content: center; width: 34px; height: 34px; }
+.up-novel-reader__settings-scroll { max-height: 496px; padding: 0 20px 24px; box-sizing: border-box; }
+.up-novel-reader__settings-section { padding: 14px 0; }
+.up-novel-reader__settings-label { font-size: 14px; }
+.up-novel-reader__settings-row { display: flex; flex-direction: row; align-items: center; justify-content: space-between; min-height: 34px; }
+.up-novel-reader__settings-value { color: var(--up-novel-reader-muted, #909399); font-size: 13px; }
+.up-novel-reader__theme-list { display: flex; flex-direction: row; gap: 8px; margin-top: 10px; }
+.up-novel-reader__theme-option { display: flex; flex-direction: row; align-items: center; justify-content: center; flex: 1; height: 42px; border: 1px solid transparent; border-radius: 8px; font-size: 12px; }
+.up-novel-reader__theme-option.is-active { border-color: var(--up-novel-reader-active, #2979ff); box-shadow: 0 0 0 2px rgba(41, 121, 255, 0.18); }
+</style>

@@ -5,7 +5,7 @@ export const props = defineMixin({
     props: {
         // 当前匹配项的name
         value: {
-            type: [String, Number, null],
+            type: [String, Number],
             default: () => defProps.tabbar.value
         },
         // 是否为iPhoneX留出底部安全距离

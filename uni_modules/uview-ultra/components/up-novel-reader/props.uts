@@ -1,0 +1,97 @@
+import { defineMixin } from '../../libs/vue'
+import defProps from './novelReader'
+
+const currentProps = defProps['novelReader'] as UTSJSONObject
+
+export const propsNovelReader = defineMixin({
+    props: {
+        chapters: {
+            type: Array,
+            default: currentProps['chapters']
+        },
+        currentChapter: {
+            type: UTSJSONObject,
+            default: currentProps['currentChapter']
+        },
+        loading: {
+            type: Boolean,
+            default: currentProps['loading']
+        },
+        error: {
+            type: UTSJSONObject,
+            default: currentProps['error']
+        },
+        bookId: {
+            type: [String, Number],
+            default: currentProps['bookId']
+        },
+        storageKey: {
+            type: String,
+            default: currentProps['storageKey']
+        },
+        persist: {
+            type: Boolean,
+            default: currentProps['persist']
+        },
+        initialProgress: {
+            type: UTSJSONObject,
+            default: currentProps['initialProgress']
+        },
+        progress: {
+            type: UTSJSONObject,
+            default: currentProps['progress']
+        },
+        initialBookmarks: {
+            type: Array,
+            default: currentProps['initialBookmarks']
+        },
+        bookmarks: {
+            type: Array,
+            default: currentProps['bookmarks']
+        },
+        defaultSettings: {
+            type: UTSJSONObject,
+            default: currentProps['defaultSettings']
+        },
+        settings: {
+            type: UTSJSONObject,
+            default: currentProps['settings']
+        },
+        mode: {
+            type: String,
+            default: currentProps['mode']
+        },
+        showBack: {
+            type: Boolean,
+            default: currentProps['showBack']
+        },
+        autoBack: {
+            type: Boolean,
+            default: currentProps['autoBack']
+        },
+        backIcon: {
+            type: String,
+            default: currentProps['backIcon']
+        },
+        safeAreaInsetTop: {
+            type: Boolean,
+            default: currentProps['safeAreaInsetTop']
+        },
+        safeAreaInsetBottom: {
+            type: Boolean,
+            default: currentProps['safeAreaInsetBottom']
+        },
+        preloadThreshold: {
+            type: Number,
+            default: currentProps['preloadThreshold']
+        },
+        pageAnimation: {
+            type: Boolean,
+            default: currentProps['pageAnimation']
+        },
+        controlsAutoHide: {
+            type: Number,
+            default: currentProps['controlsAutoHide']
+        }
+    }
+})

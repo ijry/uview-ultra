@@ -130,13 +130,15 @@
 	const rowsArray = computed((): Array<UTSJSONObject> => {
 		const rows = [] as Array<UTSJSONObject>
 		const rowCount = parseInt(props.rows.toString())
+		const rowsWidth = props.rowsWidth != null ? props.rowsWidth : '100%'
+		const rowsHeight = props.rowsHeight != null ? props.rowsHeight : 18
 		for (let i = 0; i < rowCount; i++) {
 			const item = {} as UTSJSONObject
 			// 需要预防超出数组边界的情况
 			let rowWidth: string | number = ''
-			if (props.rowsWidth instanceof Array) {
+			if (rowsWidth instanceof Array) {
 				// 数组形式
-				const widthList = props.rowsWidth as Array<any>
+				const widthList = rowsWidth as Array<any>
 				if (i === rowCount - 1) {
 					rowWidth = '70%'
 				} else {
@@ -147,16 +149,16 @@
 				if (i === rowCount - 1) {
 					rowWidth = '70%'
 				} else {
-					rowWidth = props.rowsWidth.toString()
+					rowWidth = rowsWidth.toString()
 				}
 			}
 
 			let rowHeight: string | number = ''
-			if (props.rowsHeight instanceof Array) {
-				const heightList = props.rowsHeight as Array<any>
+			if (rowsHeight instanceof Array) {
+				const heightList = rowsHeight as Array<any>
 				rowHeight = heightList[i] != null ? heightList[i] ?? '0px' : '18px'
 			} else {
-				rowHeight = props.rowsHeight.toString()
+				rowHeight = rowsHeight.toString()
 			}
 
 			// 如果有title占位图，第一个段落占位图的外边距需要大一些，如果没有title占位图，第一个段落占位图则无需外边距

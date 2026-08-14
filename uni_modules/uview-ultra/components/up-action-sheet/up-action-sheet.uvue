@@ -33,7 +33,14 @@
 			>
 				<text class="up-action-sheet__description__text">{{description}}</text>
 			</view>
-			<slot>
+			<view
+			    class="up-action-sheet__slot"
+			    v-if="$slots['default'] != null"
+			    @tap="slotClickHandler"
+			>
+				<slot></slot>
+			</view>
+			<template v-else>
 				<up-line v-if="description"></up-line>
 				<scroll-view scroll-y class="up-action-sheet__item-wrap" :style="{maxHeight: wrapMaxHeight}">
 					<view :key="index" v-for="(item, index) in actions">
@@ -87,7 +94,7 @@
 						<up-line v-if="index !== actions.length - 1"></up-line>
 					</view>
 				</scroll-view>
-			</slot>
+			</template>
 			<up-gap
 			    bgColor="#eaeaec"
 			    height="6"
@@ -261,6 +268,13 @@ const closeHandler = () => {
 const cancel = () => {
     emit('update:show')
     emit('close')
+}
+
+const slotClickHandler = () => {
+    if (props.closeOnClickAction) {
+        emit('update:show')
+        emit('close')
+    }
 }
 
 const selectHandler = (index: number) => {

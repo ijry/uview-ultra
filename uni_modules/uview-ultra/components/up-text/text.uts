@@ -34,6 +34,7 @@ export default {
         align: 'left',
         wordWrap: 'normal',
         lang: 'en',
+        flex1: false,
         sessionFrom: '',
         sendMessageTitle: '',
         sendMessagePath: '',

@@ -11,30 +11,30 @@
         <view class="up-dragsort-area" :style="movableAreaStyle">
             <view
                 v-for="(item, index) in typedList"
-                :key="getItemKey(item, index)"
-                :id="`up-dragsort-item-${index}`"
+                :key="getItemId(item, index)"
+                :id="`up-dragsort-item-${instanceId}-${getItemId(item, index)}`"
                 class="up-dragsort-item"
-                :class="{ 'up-dragsort-item--dragging': dragIndex == index, 'up-dragsort-item--disabled': !draggable || isItemDisabled(item) }"
+                :class="{ 'up-dragsort-item--dragging': dragItemId == getItemId(item, index), 'up-dragsort-item--disabled': !draggable || isItemDisabled(item) }"
                 :style="getItemStyle(item, index)"
-                @touchstart="onItemTouchStart(index, $event)"
+                @touchstart="onItemTouchStart(getItemId(item, index), $event)"
                 @touchend="onTouchEnd"
                 @touchcancel="onTouchEnd"
                 @touchmove="onTouchMove"
             >
                 <view class="up-dragsort-item-content">
-                    <slot :item="item" :index="index">
+                    <slot :item="item" :index="getItemIndex(getItemId(item, index))">
                         {{ getItemLabel(item) }}
                     </slot>
                     <view
                         class="up-dragsort-item__handler"
                         v-if="hasHandlerSlot()"
                         data-action="handler"
-                        @touchstart.stop="onHandlerTouchStart(index, $event)"
+                        @touchstart.stop="onHandlerTouchStart(getItemId(item, index), $event)"
                         @touchmove.stop="onTouchMove"
                         @touchend.stop="onTouchEnd"
                         @touchcancel.stop="onTouchEnd"
                     >
-                        <slot name="handler" :item="item" :index="index"></slot>
+                        <slot name="handler" :item="item" :index="getItemIndex(getItemId(item, index))"></slot>
                     </view>
                 </view>
             </view>
@@ -44,10 +44,14 @@
 
 <script setup lang="uts">
 import { computed, getCurrentInstance, nextTick, onBeforeUnmount, onMounted, ref, useSlots, watch } from 'vue'
-import { sleep } from '../../libs/function/index.uts'
+import { guid, sleep } from '../../libs/function/index.uts'
 
 function createDragList(): Array<UTSJSONObject> {
     return [] as Array<UTSJSONObject>
+}
+
+function createIdList(): Array<string> {
+    return [] as Array<string>
 }
 
 function createPosition(): UTSJSONObject {
@@ -138,7 +142,9 @@ const instance = getCurrentInstance()!.proxy!
 const slots = useSlots()
 
 const list = ref<Array<UTSJSONObject>>(createDragList())
-const dragIndex = ref(-1)
+const orderIds = ref<Array<string>>(createIdList())
+const instanceId = guid(8)
+const dragItemId = ref('')
 const originDragIndex = ref(-1)
 const targetDragIndex = ref(-1)
 const sortChanged = ref(false)
@@ -211,11 +217,45 @@ const movableAreaStyle = computed((): UTSJSONObject => {
     return style
 })
 
-const getItemKey = (item: UTSJSONObject, index: number): string | number => {
-    if (item['id'] != null) {
-        return item['id'] as string | number
+const getItemId = (item: UTSJSONObject, index: number): string => {
+    const itemId = item['id']
+    return itemId != null ? itemId.toString() : `index-${index}`
+}
+
+const getItemIndex = (itemId: string): number => {
+    return orderIds.value.indexOf(itemId)
+}
+
+function getRenderItemIndex(itemId: string): number {
+    const currentList = typedList.value
+    for (let i = 0; i < currentList.length; i++) {
+        if (getItemId(currentList[i], i) == itemId) {
+            return i
+        }
     }
-    return index
+    return -1
+}
+
+function findSourceIndexById(source: Array<UTSJSONObject>, itemId: string): number {
+    for (let i = 0; i < source.length; i++) {
+        if (getItemId(source[i], i) == itemId) {
+            return i
+        }
+    }
+    return -1
+}
+
+function getOrderedList(): Array<UTSJSONObject> {
+    const orderedList = [] as Array<UTSJSONObject>
+    const currentList = typedList.value
+    const currentOrderIds = orderIds.value
+    for (let i = 0; i < currentOrderIds.length; i++) {
+        const renderIndex = getRenderItemIndex(currentOrderIds[i])
+        if (renderIndex >= 0 && renderIndex < currentList.length) {
+            orderedList.push(copyObject(currentList[renderIndex]))
+        }
+    }
+    return orderedList
 }
 
 const getItemLabel = (item: UTSJSONObject): string => {
@@ -273,10 +313,34 @@ const buildItemPosition = (item: UTSJSONObject, index: number): UTSJSONObject =>
 }
 
 const initList = (): void => {
-    const nextList = [] as Array<UTSJSONObject>
     const source = props.initialList as Array<UTSJSONObject>
+    const nextOrderIds = [] as Array<string>
     for (let i = 0; i < source.length; i++) {
-        nextList.push(buildItemPosition(source[i], i))
+        nextOrderIds.push(getItemId(source[i], i))
+    }
+
+    const renderIds = [] as Array<string>
+    const currentList = typedList.value
+    for (let i = 0; i < currentList.length; i++) {
+        const itemId = getItemId(currentList[i], i)
+        if (findSourceIndexById(source, itemId) >= 0) {
+            renderIds.push(itemId)
+        }
+    }
+    for (let i = 0; i < nextOrderIds.length; i++) {
+        if (renderIds.indexOf(nextOrderIds[i]) == -1) {
+            renderIds.push(nextOrderIds[i])
+        }
+    }
+
+    orderIds.value = nextOrderIds
+    const nextList = [] as Array<UTSJSONObject>
+    for (let i = 0; i < renderIds.length; i++) {
+        const sourceIndex = findSourceIndexById(source, renderIds[i])
+        const visualIndex = getItemIndex(renderIds[i])
+        if (sourceIndex >= 0 && visualIndex >= 0) {
+            nextList.push(buildItemPosition(source[sourceIndex], visualIndex))
+        }
     }
     list.value = nextList
 }
@@ -286,19 +350,20 @@ function updatePositions(isDragging: boolean = false): void {
     const currentList = typedList.value
     for (let i = 0; i < currentList.length; i++) {
         const currentItem = currentList[i]
-        if (isDragging && dragIndex.value === i) {
+        const itemId = getItemId(currentItem, i)
+        const visualIndex = getItemIndex(itemId)
+        if (isDragging && dragItemId.value == itemId) {
             nextList.push(copyObject(currentItem))
-        } else {
-            nextList.push(buildItemPosition(currentItem, i))
+        } else if (visualIndex >= 0) {
+            nextList.push(buildItemPosition(currentItem, visualIndex))
         }
     }
     list.value = nextList
 }
 
 function getTargetIndexByPosition(): number {
-    const currentList = typedList.value
-    const originIndex = originDragIndex.value >= 0 ? originDragIndex.value : dragIndex.value
-    if (originIndex < 0 || originIndex >= currentList.length) {
+    const originIndex = originDragIndex.value
+    if (originIndex < 0 || originIndex >= orderIds.value.length) {
         return -1
     }
     if (props.direction === 'all') {
@@ -310,20 +375,20 @@ function getTargetIndexByPosition(): number {
         const columns = getSafeColumns()
         const col = Math.max(0, Math.min(Math.round(currentX.value / layoutItemWidth), columns - 1))
         const row = Math.max(0, Math.round(currentY.value / layoutItemHeight))
-        return Math.max(0, Math.min(row * columns + col, currentList.length - 1))
+        return Math.max(0, Math.min(row * columns + col, orderIds.value.length - 1))
     }
     if (props.direction === 'horizontal') {
         const layoutItemWidth = getLayoutItemWidth()
         if (layoutItemWidth <= 0) {
             return originIndex
         }
-        return Math.max(0, Math.min(Math.round(currentX.value / layoutItemWidth), currentList.length - 1))
+        return Math.max(0, Math.min(Math.round(currentX.value / layoutItemWidth), orderIds.value.length - 1))
     }
     const layoutItemHeight = getLayoutItemHeight()
     if (layoutItemHeight <= 0) {
         return originIndex
     }
-    return Math.max(0, Math.min(Math.round(currentY.value / layoutItemHeight), currentList.length - 1))
+    return Math.max(0, Math.min(Math.round(currentY.value / layoutItemHeight), orderIds.value.length - 1))
 }
 
 function getPreviewIndex(index: number, fromIndex: number, toIndex: number): number {
@@ -344,11 +409,13 @@ function updatePreviewPositions(): void {
         return
     }
     for (let i = 0; i < currentList.length; i++) {
-        if (i == fromIndex) {
+        const itemId = getItemId(currentList[i], i)
+        const visualIndex = getItemIndex(itemId)
+        if (itemId == dragItemId.value) {
             currentList[i]['x'] = currentX.value
             currentList[i]['y'] = currentY.value
-        } else {
-            const positionedItem = buildItemPosition(currentList[i], getPreviewIndex(i, fromIndex, toIndex))
+        } else if (visualIndex >= 0) {
+            const positionedItem = buildItemPosition(currentList[i], getPreviewIndex(visualIndex, fromIndex, toIndex))
             currentList[i]['x'] = positionedItem['x']
             currentList[i]['y'] = positionedItem['y']
         }
@@ -396,7 +463,7 @@ const calculateAreaSize = async (): Promise<NodeInfo | null> => {
 }
 
 const hasHandlerSlot = (): boolean => {
-    return slots['handler'] != null
+    return slots['handler'] != null || slots['$handler'] != null
 }
 
 const getTouch = (event: UniTouchEvent): UniTouch | null => {
@@ -409,26 +476,29 @@ const getTouch = (event: UniTouchEvent): UniTouch | null => {
     return null
 }
 
-function isTouchInHandler(index: number, event: UniTouchEvent): boolean {
+function isTouchInHandler(itemId: string, event: UniTouchEvent): boolean {
     const currentList = typedList.value
-    if (index < 0 || index >= currentList.length) {
+    const renderIndex = getRenderItemIndex(itemId)
+    if (renderIndex < 0 || renderIndex >= currentList.length) {
         return false
     }
     const touch = getTouch(event)
     if (touch == null) {
         return false
     }
-    const item = currentList[index]
+    const item = currentList[renderIndex]
     const localX = touch.pageX - areaLeft.value - getItemX(item)
     return localX >= 0 && localX <= Math.min(HANDLER_TOUCH_WIDTH, getLayoutItemWidth())
 }
 
-function onTouchStart(index: number, e: any): void {
+function onTouchStart(itemId: string, e: any): void {
     if (!props.draggable) {
         return
     }
     const currentList = typedList.value
-    if (index < 0 || index >= currentList.length || isItemDisabled(currentList[index])) {
+    const renderIndex = getRenderItemIndex(itemId)
+    const visualIndex = getItemIndex(itemId)
+    if (renderIndex < 0 || renderIndex >= currentList.length || visualIndex < 0 || isItemDisabled(currentList[renderIndex])) {
         return
     }
     const event = e as UniTouchEvent
@@ -441,45 +511,48 @@ function onTouchStart(index: number, e: any): void {
         timer.value = 0
     }
     sortChanged.value = false
-    dragIndex.value = index
-    originDragIndex.value = index
-    targetDragIndex.value = index
+    dragItemId.value = itemId
+    originDragIndex.value = visualIndex
+    targetDragIndex.value = visualIndex
     touchStartX.value = touch.pageX
     touchStartY.value = touch.pageY
-    dragStartX.value = getItemX(currentList[index])
-    dragStartY.value = getItemY(currentList[index])
+    dragStartX.value = getItemX(currentList[renderIndex])
+    dragStartY.value = getItemY(currentList[renderIndex])
     currentX.value = dragStartX.value
     currentY.value = dragStartY.value
     event.stopPropagation()
 }
 
-function onHandlerTouchStart(index: number, event: any): void {
-    onTouchStart(index, event)
+function onHandlerTouchStart(itemId: string, event: any): void {
+    onTouchStart(itemId, event)
 }
 
-function onItemTouchStart(index: number, event: any): void {
+function onItemTouchStart(itemId: string, event: any): void {
     if (hasHandlerSlot()) {
         const touchEvent = event as UniTouchEvent
-        if (isTouchInHandler(index, touchEvent)) {
-            onTouchStart(index, event)
+        if (isTouchInHandler(itemId, touchEvent)) {
+            onTouchStart(itemId, event)
         }
         return
     }
-    onTouchStart(index, event)
+    onTouchStart(itemId, event)
 }
 
 function reorderItems(fromIndex: number, toIndex: number): void {
-    const currentList = copyList(typedList.value)
-    if (fromIndex < 0 || toIndex < 0 || fromIndex >= currentList.length || toIndex >= currentList.length || fromIndex == toIndex) {
+    const currentOrderIds = [] as Array<string>
+    const sourceOrderIds = orderIds.value
+    for (let i = 0; i < sourceOrderIds.length; i++) {
+        currentOrderIds.push(sourceOrderIds[i])
+    }
+    if (fromIndex < 0 || toIndex < 0 || fromIndex >= currentOrderIds.length || toIndex >= currentOrderIds.length || fromIndex == toIndex) {
         return
     }
-    const movedItems = currentList.splice(fromIndex, 1) as Array<UTSJSONObject>
-    if (movedItems.length == 0) {
+    const movedItemIds = currentOrderIds.splice(fromIndex, 1) as Array<string>
+    if (movedItemIds.length == 0) {
         return
     }
-    currentList.splice(toIndex, 0, movedItems[0])
-    list.value = currentList
-    dragIndex.value = toIndex
+    currentOrderIds.splice(toIndex, 0, movedItemIds[0])
+    orderIds.value = currentOrderIds
     sortChanged.value = true
     updatePositions(true)
 }
@@ -509,7 +582,7 @@ function updateSortByPosition(index: number): void {
 }
 
 function onTouchMove(e: any): void {
-    if (dragIndex.value == -1 || originDragIndex.value == -1) {
+    if (dragItemId.value == '' || originDragIndex.value == -1) {
         return
     }
     const event = e as UniTouchEvent
@@ -534,14 +607,17 @@ function onTouchMove(e: any): void {
     updateSortByPosition(originDragIndex.value)
 }
 
-function onChange(index: number, event: any): void {
+function onChange(itemId: string, event: any): void {
     const customEvent = event as UniCustomEvent<UTSJSONObject>
     if (customEvent.detail == null || stringValue(customEvent.detail['source']) != 'touch') {
         return
     }
     currentX.value = getDetailNumber(customEvent.detail, 'x')
     currentY.value = getDetailNumber(customEvent.detail, 'y')
-    updateSortByPosition(index)
+    const index = getItemIndex(itemId)
+    if (index >= 0) {
+        updateSortByPosition(index)
+    }
 }
 
 function resetDragTracking(): void {
@@ -550,7 +626,7 @@ function resetDragTracking(): void {
 }
 
 function onTouchEnd(e: any): void {
-    if (dragIndex.value == -1 || originDragIndex.value == -1) {
+    if (dragItemId.value == '' || originDragIndex.value == -1) {
         return
     }
     const event = e as UniTouchEvent
@@ -559,12 +635,13 @@ function onTouchEnd(e: any): void {
     const currentList = copyList(typedList.value)
     const fromIndex = originDragIndex.value
     const toIndex = targetDragIndex.value >= 0 ? targetDragIndex.value : fromIndex
-    if (fromIndex < 0 || toIndex < 0 || fromIndex >= currentList.length || toIndex >= currentList.length) {
-        dragIndex.value = -1
+    const renderIndex = getRenderItemIndex(dragItemId.value)
+    if (fromIndex < 0 || toIndex < 0 || fromIndex >= orderIds.value.length || toIndex >= orderIds.value.length || renderIndex < 0 || renderIndex >= currentList.length) {
+        dragItemId.value = ''
         resetDragTracking()
         return
     }
-    const dragItem = currentList[fromIndex]
+    const dragItem = currentList[renderIndex]
     if (props.direction === 'horizontal') {
         dragItem['x'] = currentX.value + 0.001
     } else {
@@ -581,11 +658,11 @@ function onTouchEnd(e: any): void {
     sleep(50).then(() => {
         updatePositions()
         if (sortChanged.value) {
-            emit('drag-end', copyList(typedList.value))
+            emit('drag-end', getOrderedList())
             sortChanged.value = false
         }
         timer.value = setTimeout(() => {
-            dragIndex.value = -1
+            dragItemId.value = ''
             timer.value = 0
         }, 600)
     })
@@ -639,7 +716,9 @@ watch((): number => props.columns, () => {
 
 defineExpose({
     list,
-    dragIndex,
+    orderIds,
+    instanceId,
+    dragItemId,
     originDragIndex,
     targetDragIndex,
     sortChanged,
@@ -658,7 +737,11 @@ defineExpose({
     timer,
     movableAreaStyle,
     typedList,
-    getItemKey,
+    getItemId,
+    getItemIndex,
+    getRenderItemIndex,
+    findSourceIndexById,
+    getOrderedList,
     getItemLabel,
     getItemX,
     getItemY,

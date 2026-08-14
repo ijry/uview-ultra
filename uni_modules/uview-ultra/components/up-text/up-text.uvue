@@ -76,6 +76,19 @@ import {
 	date as testDate,
 	url as testUrl,
 } from '../../libs/function/test.uts';
+
+function normalizeLineHeight(value: any): string {
+    const valueString = value.toString().trim()
+    const numericValue = parseFloat(valueString)
+    const isUnitless =
+        /^[+-]?(?:\d+\.?\d*|\.\d+)$/.test(valueString) &&
+        !isNaN(numericValue) &&
+        numericValue > 0 &&
+        numericValue < 10
+
+    return isUnitless ? valueString : addUnit(value)
+}
+
 /**
  * Text 文本
  * @description 此组件集成了文本类在项目中的常用功能，包括状态，拨打电话，格式化日期，*替换，超链接...等功能。 您大可不必在使用特殊文本时自己定义，text组件几乎涵盖您能使用的大部分场景。
@@ -98,7 +111,7 @@ import {
  * @property {Object | String} 			iconStyle	图标的样式 （默认 {fontSize: '15px'} ）
  * @property {String} 					decoration	文字装饰，下划线，中划线等，可选值 none|underline|line-through（默认 'none' ）
  * @property {Object | String | Number}	margin		外边距，对象、字符串，数值形式均可（默认 0px ）
- * @property {String | Number} 			lineHeight	文本行高
+ * @property {String | Number} 			lineHeight	文本行高，支持带单位值或无单位倍数（如 1.2）
  * @property {String} 					align		文本对齐方式，可选值left|center|right（默认 'left' ）
  * @property {String} 					wordWrap	文字换行，可选值break-word|normal|anywhere（默认 'normal' ）
  * @event {Function} click  点击触发事件
@@ -216,6 +229,11 @@ const props = defineProps({
         type: String,
         default: defProps.getString('text.wordWrap')
     },
+    // 占满剩余空间
+    flex1: {
+        type: Boolean,
+        default: defProps.getBoolean('text.flex1')
+    },
     // 指定返回用户信息的语言，zh_CN 简体中文，zh_TW 繁体中文，en 英文。只微信小程序有效
     lang: {
         type: String,
@@ -273,10 +291,15 @@ const props = defineProps({
 const emit = defineEmits(['click'])
 
 const rootStyle = computed((): UTSJSONObject => {
-    return {
+    const style = {
         margin: props.margin,
         justifyContent: props.align === 'left' ? 'flex-start' : props.align === 'center' ? 'center' : 'flex-end'
     } as UTSJSONObject
+    if (props.flex1) {
+        style['flex'] = 1
+        style['width'] = '100%'
+    }
+    return style
 })
 
 const iconCustomStyle = computed((): UTSJSONObject => {
@@ -314,7 +337,7 @@ const valueStyle = computed((): UTSJSONObject => {
 		style['lines'] = props.lines
 	}
 	if (props.lineHeight != '') {
-		style['lineHeight'] = addUnit(props.lineHeight)
+		style['lineHeight'] = normalizeLineHeight(props.lineHeight)
 	}
 	if (props.block) {
 		style['display'] = 'block'
@@ -332,7 +355,10 @@ const linkStyle = computed((): UTSJSONObject => {
 
 // 经处理后需要显示的值
 const value = computed((): string => {
-    let textStr = props.text.toString()
+	const textValue = props.text
+	const textStr = textValue != null ? textValue.toString() : ''
+	const formatValue = props.format
+	const formatStr = formatValue != null ? formatValue.toString() : ''
 
     // 价格类型
     if (props.mode === 'price') {
@@ -359,9 +385,9 @@ const value = computed((): string => {
         //     // 如果用户传入的是函数，使用函数格式化
         //     return format(textStr)
         // }
-		if (props.format != '') {
+		if (formatStr != '') {
             // 如果format非正则，非函数，则使用默认的时间格式化方法进行操作
-            return timeFormat(textStr, props.format.toString())
+            return timeFormat(textStr, formatStr)
         }
         // 如果没有设置format，则设置为默认的时间格式化形式
         return timeFormat(textStr, 'yyyy-mm-dd')
@@ -373,7 +399,7 @@ const value = computed((): string => {
         //     // 如果用户传入的是函数，使用函数格式化
         //     return format(text)
         // }
-		if (props.format === 'encrypt') {
+		if (formatStr === 'encrypt') {
             // 如果format为encrypt，则将手机号进行星号加密处理
             return `${textStr.substring(0, 3)}****${textStr.substring(7)}`
         }
@@ -387,7 +413,7 @@ const value = computed((): string => {
         //     // 如果用户传入的是函数，使用函数格式化
         //     return format(textStr)
         // }
-		if (props.format === 'encrypt') {
+		if (formatStr === 'encrypt') {
             // 如果format为encrypt，则将姓名进行星号加密处理
             return formatName(textStr)
         }
@@ -459,8 +485,6 @@ defineExpose({
     @include flex(row);
     align-items: center;
     flex-wrap: nowrap;
-    flex: 1;
-	width: 100%;
 
     &__price {
         font-size: 14px;

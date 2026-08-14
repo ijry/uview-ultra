@@ -57,6 +57,7 @@ import NoticeBar from '../../components/up-notice-bar/noticeBar.js'
 import Notify from '../../components/up-notify/notify.js'
 import NumberBox from '../../components/up-number-box/numberBox.js'
 import NumberKeyboard from '../../components/up-number-keyboard/numberKeyboard.js'
+import NovelReader from '../../components/up-novel-reader/novelReader.js'
 import Overlay from '../../components/up-overlay/overlay.js'
 import Parse from '../../components/up-parse/parse.js'
 import Picker from '../../components/up-picker/picker.js'
@@ -151,6 +152,7 @@ export default {
     ...Notify,
     ...NumberBox,
     ...NumberKeyboard,
+    ...NovelReader,
     ...Overlay,
     ...Parse,
     ...Picker,

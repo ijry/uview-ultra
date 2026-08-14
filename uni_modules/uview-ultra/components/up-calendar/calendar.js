@@ -51,7 +51,7 @@ export default {
 		safeAreaInsetBottom: true,
 		safeAreaInsetTop: false,
 		bgColor: '',
-		closeable: null,
+		closeable: '',
 		closeIconPos: 'top-right',
 		zoom: true,
 		monthNum: 3,

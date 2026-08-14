@@ -18,7 +18,7 @@
 </template>
 
 <script setup lang="uts">
-import { computed, getCurrentInstance, onMounted, ref } from 'vue'
+import { computed, getCurrentInstance, onMounted, ref, watch } from 'vue'
 
 function normalizeSize(value: any | null, fallback: number): number {
     if (typeof value === 'number') {
@@ -34,6 +34,18 @@ function normalizeSize(value: any | null, fallback: number): number {
 function makeId(prefix: string): string {
     return prefix + Date.now().toString()
 }
+
+function getCanvasPixelRatio(): number {
+    let ratio = 1
+    const info = uni.getSystemInfoSync()
+    if (info.pixelRatio > 0) {
+        ratio = info.pixelRatio
+    }
+    return ratio
+}
+
+type UPLineCap = 'butt' | 'round' | 'square'
+type UPLineJoin = 'bevel' | 'round' | 'miter'
 
 defineOptions({
     styleIsolation: 'app-and-page',
@@ -77,6 +89,8 @@ const heightLocal = ref(normalizeSize(props.height, 300))
 const canvasContext = ref<CanvasContext | null>(null)
 const ctx = ref<CanvasRenderingContext2D | null>(null)
 const isReady = ref(false)
+const dpr = ref(1)
+let initPromise: Promise<void> | null = null
 
 const actualWidth = computed((): number => {
     return props.useRootHeightAndWidth ? normalizeSize(widthLocal.value, 300) : normalizeSize(props.width, 300)
@@ -116,6 +130,14 @@ const getCanvasContext = (): CanvasRenderingContext2D | null => {
     return ctx.value
 }
 
+const getRawContext = (): CanvasRenderingContext2D | null => {
+    return ctx.value
+}
+
+const getCanvasContextHost = (): CanvasContext | null => {
+    return canvasContext.value
+}
+
 const clearRect = (x: number, y: number, width: number, height: number): void => {
     const context = ctx.value
     if (context != null) {
@@ -136,33 +158,70 @@ function fillCanvasBackground(): void {
     const context = ctx.value
     if (context != null) {
         context.fillRect(0, 0, actualWidth.value, actualHeight.value)
+        // #ifndef H5
         context.draw()
+        // #endif
     }
 }
 
-const initCanvas = (): void => {
-    uni.createCanvasContextAsync({
-        id: props.canvasId.toString() as string.IDString,
-        component: instance,
-        success: (context: CanvasContext) => {
-            canvasContext.value = context
-            ctx.value = context.getContext('2d')
-            isReady.value = ctx.value != null
-            fillCanvasBackground()
-        },
-        fail: (error: UniError) => {
-            isReady.value = false
-            console.error('初始化Canvas失败:', error)
-        }
-    })
+function initCanvas(force: boolean = false): Promise<void> {
+	if (initPromise != null) {
+		return initPromise as Promise<void>
+	}
+	if (!force && canvasContext.value != null && ctx.value != null) {
+		return Promise.resolve()
+	}
+
+	const currentPromise = new Promise<void>((resolve, reject) => {
+		uni.createCanvasContextAsync({
+			id: props.canvasId.toString() as string.IDString,
+			component: instance,
+			success: (context: CanvasContext) => {
+				const context2d = context.getContext('2d')
+				if (context2d == null) {
+					isReady.value = false
+					reject(new Error('Canvas context is not ready'))
+					return
+				}
+				canvasContext.value = context
+				dpr.value = getCanvasPixelRatio()
+				const canvas = context2d.canvas
+				canvas.width = Math.ceil(actualWidth.value * dpr.value)
+				canvas.height = Math.ceil(actualHeight.value * dpr.value)
+				context2d.scale(dpr.value, dpr.value)
+				ctx.value = context2d
+				isReady.value = true
+				fillCanvasBackground()
+				resolve()
+			},
+			fail: (error: UniError) => {
+				isReady.value = false
+				reject(error)
+			}
+		})
+	})
+
+	initPromise = currentPromise
+	currentPromise.then(() => {
+		if (initPromise === currentPromise) {
+			initPromise = null
+		}
+	}, (_error: any) => {
+		if (initPromise === currentPromise) {
+			initPromise = null
+		}
+	})
+	return currentPromise
 }
+
+const refresh = (): Promise<void> => initCanvas(true)
 
 const ensureContext = (): boolean => {
     if (ctx.value != null) {
         return true
     }
     if (!isReady.value) {
-        initCanvas()
+        initCanvas().catch(() => {})
     }
     return ctx.value != null
 }
@@ -188,14 +247,14 @@ const fill = (): void => {
     }
 }
 
-function setLineCap(lineCap: string = 'round'): void {
+function setLineCap(lineCap: UPLineCap = 'round'): void {
     const context = ctx.value
     if (context != null) {
         context.lineCap = lineCap
     }
 }
 
-function setLineJoin(lineJoin: string = 'round'): void {
+function setLineJoin(lineJoin: UPLineJoin = 'round'): void {
     const context = ctx.value
     if (context != null) {
         context.lineJoin = lineJoin
@@ -261,7 +320,9 @@ const closePath = (): void => {
 function draw(_isLastDraw: boolean = false): void {
     const context = ctx.value
     if (context != null) {
+        // #ifndef H5
         context.draw()
+        // #endif
     }
 }
 
@@ -277,16 +338,62 @@ function exportImage(fileType: string = 'png', quality: number = 1): Promise<str
     })
 }
 
+function toTempFilePath(options: UTSJSONObject): Promise<UTSJSONObject> {
+    const fileTypeValue = options['fileType']
+    const fileType = fileTypeValue == null ? 'png' : fileTypeValue.toString()
+    const qualityValue = options['quality']
+    const quality = typeof qualityValue === 'number' ? qualityValue : 1
+    return new Promise<UTSJSONObject>((resolve, reject) => {
+        exportImage(fileType, quality).then((path: string) => {
+            const response = { tempFilePath: path } as UTSJSONObject
+            const success = options['success']
+            if (success != null) {
+                ;(success as (res: UTSJSONObject) => void)(response)
+            }
+            const complete = options['complete']
+            if (complete != null) {
+                ;(complete as (res: UTSJSONObject) => void)(response)
+            }
+            resolve(response)
+        }).catch((error: any | null) => {
+            const response = {
+                errMsg: error == null ? 'Canvas export failed' : error.toString()
+            } as UTSJSONObject
+            const fail = options['fail']
+            if (fail != null) {
+                ;(fail as (res: UTSJSONObject) => void)(response)
+            }
+            const complete = options['complete']
+            if (complete != null) {
+                ;(complete as (res: UTSJSONObject) => void)(response)
+            }
+            reject(error)
+        })
+    })
+}
+
 const setNewSize = (): void => {
     widthLocal.value = normalizeSize(props.width, 300)
     heightLocal.value = normalizeSize(props.height, 300)
 }
 
+watch((): any => props.width, () => {
+	refresh().catch(() => {})
+})
+
+watch((): any => props.height, () => {
+	refresh().catch(() => {})
+})
+
+watch((): string => props.bgColor, () => {
+	clearCanvas()
+})
+
 onMounted(() => {
-    if (props.useRootHeightAndWidth) {
-        setNewSize()
-    }
-    initCanvas()
+	if (props.useRootHeightAndWidth) {
+		setNewSize()
+	}
+	initCanvas().catch(() => {})
 })
 
 defineExpose({
@@ -296,6 +403,7 @@ defineExpose({
     canvasContext,
     ctx,
     isReady,
+    dpr,
     actualWidth,
     actualHeight,
     rootStyle,
@@ -304,7 +412,10 @@ defineExpose({
     onTouchMove,
     onTouchEnd,
     getCanvasContext,
+    getRawContext,
+    getCanvasContextHost,
     initCanvas,
+    refresh,
     ensureContext,
     clearCanvas,
     rect,
@@ -322,6 +433,7 @@ defineExpose({
     stroke,
     closePath,
     draw,
+    toTempFilePath,
     exportImage,
     setNewSize
 })

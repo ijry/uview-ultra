@@ -32,14 +32,14 @@
 		</view>
 		<!-- #ifdef APP-VUE || MP-WEIXIN || MP-QQ || H5  -->
 		<view class="u-swipe-action-item__content" @touchstart="wxs.touchstart" @touchmove="wxs.touchmove"
-			@touchend="wxs.touchend" :status="status" :change:status="wxs.statusChange" :size="size"
+			@touchend="wxs.touchend" @touchcancel="wxs.touchcancel" :status="status" :change:status="wxs.statusChange" :size="size"
 			:change:size="wxs.sizeChange">
 			<slot></slot>
 		</view>
 		<!-- #endif -->
 		<!-- #ifdef MP-ALIPAY || MP-BAIDU || MP-TOUTIAO-->
 		<view class="u-swipe-action-item__content" @click="clickHandler" @touchstart="touchstart" @touchmove="touchmove"
-			@touchend="touchend" :style="sliderStyle">
+			@touchend="touchend" @touchcancel="touchcancel" :style="sliderStyle">
 			<slot></slot>
 		</view>
 		<!-- <view class="u-swipe-action-item__content" @touchstart="mysjs.touchstart" @touchmove="mysjs.touchmove"
@@ -89,7 +89,7 @@ const props = defineProps({
 	...commonProps,
 	...swipeActionItemProps.props
 })
-const emit = defineEmits(['click', 'update:show'])
+const emit = defineEmits(['click', 'update:show', 'update:scrolling', 'scrolling'])
 
 const parentData = reactive({
 	autoClose: true
@@ -103,6 +103,8 @@ const size = ref({})
 // 当前状态，open-打开，close-关闭
 const status = ref('')
 const sliderStyle = ref({})
+// 内部缓存横向滑动状态，避免一次手势重复触发相同事件
+const innerScrolling = ref(props.scrolling)
 
 // #ifdef APP-NVUE
 // 所有按钮的总宽度
@@ -173,6 +175,16 @@ watch(() => props.show, (newValue) => {
 	}
 })
 
+watch(() => props.scrolling, (newValue) => {
+	innerScrolling.value = !!newValue
+})
+
+watch(() => props.disabled, (newValue) => {
+	if (newValue) {
+		setScrolling(false)
+	}
+})
+
 // #ifdef APP-NVUE
 const getDuratin = computed(() => {
 	let duration = String(props.duration)
@@ -218,6 +230,7 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
 	closeHandler()
+	setScrolling(false)
 	// #ifdef APP-NVUE
 	unbindBindingX()
 	// #endif
@@ -231,6 +244,14 @@ function init() {
 		queryRect()
 	})
 	// #endif
+}
+
+function setScrolling(value) {
+	const next = !!value
+	if (innerScrolling.value === next) return
+	innerScrolling.value = next
+	emit('update:scrolling', next)
+	emit('scrolling', next)
 }
 
 function updateParentData() {
@@ -344,6 +365,7 @@ function closeOther() {
 // #ifdef APP-VUE || MP-WEIXIN || MP-QQ || H5
 // 关闭时执行
 function closeHandler() {
+	setScrolling(false)
 	status.value = 'close'
 }
 // #endif
@@ -354,6 +376,7 @@ function clickHandler() {
 }
 
 function closeHandler() {
+	setScrolling(false)
 	closeSwipeAction()
 }
 
@@ -399,6 +422,7 @@ function touchmove(event) {
 	}
 	// 如果移动的X轴距离小于Y轴距离，也即终点位置与起点位置连线，与Y轴夹角小于45度时，认为是页面上下滑动，而不是左右滑动单元格
 	if (Math.abs(moveX) < Math.abs(moveY)) return
+	setScrolling(true)
 
 	// 限制右滑的距离，不允许内容部分往右偏移
 	if (status.value === 'open') {
@@ -419,8 +443,12 @@ function touchmove(event) {
 }
 
 function touchend(event) {
-	if (!state.moving || props.disabled) return
+	if (!state.moving || props.disabled) {
+		setScrolling(false)
+		return
+	}
 	state.moving = false
+	setScrolling(false)
 	var touches = event.changedTouches ? event.changedTouches[0] : {}
 	var pageX = touches.pageX
 	var pageY = touches.pageY
@@ -451,6 +479,11 @@ function touchend(event) {
 	}
 }
 
+function touchcancel(event) {
+	state.moving = false
+	setScrolling(false)
+}
+
 // 一次性展开滑动菜单
 function openSwipeAction() {
 	// 处理duration单位问题
@@ -467,6 +500,7 @@ function openSwipeAction() {
 
 // 一次性收起滑动菜单
 function closeSwipeAction() {
+	setScrolling(false)
 	// 处理duration单位问题
 	var duration = getDurationOther(props.duration)
 	sliderStyle.value = {
@@ -502,6 +536,7 @@ function initialize() {
 
 // 关闭单元格，用于打开一个，自动关闭其他单元格的场景
 function closeHandler() {
+	setScrolling(false)
 	if (status.value === 'open') {
 		// 如果在打开状态下，进行点击的话，直接关闭单元格
 		return moveCellByAnimation('close') && unbindBindingX()
@@ -515,6 +550,7 @@ function clickHandler() {
 	// 尝试关闭其他打开的单元格
 	parent.value && parent.value.closeOther(proxy)
 	if (status.value === 'open') {
+		setScrolling(false)
 		// 如果在打开状态下，进行点击的话，直接关闭单元格
 		return moveCellByAnimation('close') && unbindBindingX()
 	}
@@ -524,9 +560,11 @@ function clickHandler() {
 function onTouchstart(e) {
 	// 如果当前正在移动中，或者disabled状态，则返回
 	if (moving.value || props.disabled) {
+		setScrolling(false)
 		return unbindBindingX()
 	}
 	if (status.value === 'open') {
+		setScrolling(false)
 		// 如果在打开状态下，进行点击的话，直接关闭单元格
 		return moveCellByAnimation('close') && unbindBindingX()
 	}
@@ -534,6 +572,7 @@ function onTouchstart(e) {
 	e?.stopPropagation && e.stopPropagation()
 	e?.preventDefault && e.preventDefault()
 	moving.value = true
+	setScrolling(true)
 	// 获取元素ref
 	const content = getContentRef()
 	let expression = `min(max(${-buttonsWidth.value}, x), 0)`
@@ -553,6 +592,7 @@ function onTouchstart(e) {
 	}, (res) => {
 		moving.value = false
 		if (res.state === 'end' || res.state === 'exit') {
+			setScrolling(false)
 			const delta = res.deltaX
 			if (delta <= -buttonsWidth.value || delta >= 0) {
 				// 如果触摸滑动的过程中，大于单元格的总宽度，或者大于0，意味着已经动过滑动达到了打开或者关闭的状态
@@ -576,6 +616,7 @@ function onTouchstart(e) {
 
 // 释放bindingX
 function unbindBindingX() {
+	setScrolling(false)
 	// 释放上一次的资源
 	if (panEvent?.token != 0) {
 		bindingX.unbind({
@@ -624,6 +665,7 @@ function moveCellByAnimation(nextStatus = 'open') {
 		timingFunction: 'ease-in-out'
 	}, () => {
 		moving.value = false
+		setScrolling(false)
 		status.value = nextStatus
 		unbindBindingX()
 	})
@@ -637,6 +679,7 @@ function getContentRef() {
 
 defineExpose({
 	closeHandler,
+	setScrolling,
 	setState,
 	closeOther,
 	updateParentData,

@@ -1,204 +1,134 @@
 /**
- * @Class Request
- * @description luch-request http请求插件 (UTS版本)
- * @version 3.0.7
- * @Author lu-ch
- * @Date 2021-09-04
- * @Email webwork.s@qq.com
- * 文档: https://www.quanzhan.co/luch-request/
- * github: https://github.com/lei-mu/luch-request
- * DCloud: http://ext.dcloud.net.cn/plugin?id=392
- * HBuilderX: beat-3.0.4 alpha-3.0.4
+ * @Class Request  luch-request http 请求（uts 版，接口兼容 luch-request 3.x）
+ * 说明：config/response 在 uts 端为 UTSJSONObject，取值用 ['key']；方法名/拦截器/配置键与原版一致。
+ * 请求拦截器按同步方式应用（fulfilled 返回新的 config）；响应拦截器走 Promise 链。
  */
 
 import dispatchRequest from './dispatchRequest'
 import InterceptorManager from './InterceptorManager'
+import { InterceptorHandler } from './InterceptorManager'
 import mergeConfig from './mergeConfig'
-import defaults from './defaults'
-import { isPlainObject } from '../utils'
+import getDefaults from './defaults'
 import clone from '../utils/clone'
 
-export default class Request {
-    config: any
-    interceptors: {
-        request: InterceptorManager
-        response: InterceptorManager
-    }
-
-    /**
-   * @param {Object} arg - 全局配置
-   * @param {String} arg.baseURL - 全局根路径
-   * @param {Object} arg.header - 全局header
-   * @param {String} arg.method = [GET|POST|PUT|DELETE|CONNECT|HEAD|OPTIONS|TRACE] - 全局默认请求方式
-   * @param {String} arg.dataType = [json] - 全局默认的dataType
-   * @param {String} arg.responseType = [text|arraybuffer] - 全局默认的responseType。支付宝小程序不支持
-   * @param {Object} arg.custom - 全局默认的自定义参数
-   * @param {Number} arg.timeout - 全局默认的超时时间，单位 ms。默认60000。H5(HBuilderX 2.9.9+)、APP(HBuilderX 2.9.9+)、微信小程序（2.10.0）、支付宝小程序
-   * @param {Boolean} arg.sslVerify - 全局默认的是否验证 ssl 证书。默认true.仅App安卓端支持（HBuilderX 2.3.3+）
-   * @param {Boolean} arg.withCredentials - 全局默认的跨域请求时是否携带凭证（cookies）。默认false。仅H5支持（HBuilderX 2.6.15+）
-   * @param {Boolean} arg.firstIpv4 - 全DNS解析时优先使用ipv4。默认false。仅 App-Android 支持 (HBuilderX 2.8.0+)
-   * @param {Function(statusCode):Boolean} arg.validateStatus - 全局默认的自定义验证器。默认statusCode >= 200 && statusCode < 300
-   */
-    constructor(arg: any = {}) {
-        if (!isPlainObject(arg)) {
-            arg = {}
-            console.warn('设置全局参数必须接收一个Object')
-        }
-        this.config = clone({ ...defaults, ...arg })
-        this.interceptors = {
-            request: new InterceptorManager(),
-            response: new InterceptorManager()
-        }
-    }
-
-    /**
-   * @Function
-   * @param {Request~setConfigCallback} f - 设置全局默认配置
-   */
-    setConfig(f: (config: any) => any): void {
-        this.config = f(this.config)
-    }
-
-    middleware(config: any): Promise<any> {
-        config = mergeConfig(this.config, config)
-        const chain: any[] = [dispatchRequest, undefined]
-        let promise: Promise<any> = Promise.resolve(config)
-
-        this.interceptors.request.forEach((interceptor: any) => {
-            chain.unshift(interceptor.fulfilled, interceptor.rejected)
-        })
-
-        this.interceptors.response.forEach((interceptor: any) => {
-            chain.push(interceptor.fulfilled, interceptor.rejected)
-        })
-
-        while (chain.length) {
-            promise = promise.then(chain.shift(), chain.shift())
-        }
-
-        return promise
-    }
-
-    /**
-   * @Function
-   * @param {Object} config - 请求配置项
-   * @prop {String} options.url - 请求路径
-   * @prop {Object} options.data - 请求参数
-   * @prop {Object} [options.responseType = config.responseType] [text|arraybuffer] - 响应的数据类型
-   * @prop {Object} [options.dataType = config.dataType] - 如果设为 json，会尝试对返回的数据做一次 JSON.parse
-   * @prop {Object} [options.header = config.header] - 请求header
-   * @prop {Object} [options.method = config.method] - 请求方法
-   * @returns {Promise<unknown>}
-   */
-    request(config: any = {}): Promise<any> {
-        return this.middleware(config)
-    }
-
-    get(url: string, options: any = {}): Promise<any> {
-        return this.middleware({
-            url,
-            method: 'GET',
-            ...options
-        })
-    }
-
-    post(url: string, data?: any, options: any = {}): Promise<any> {
-        return this.middleware({
-            url,
-            data,
-            method: 'POST',
-            ...options
-        })
-    }
-
-    // #ifndef MP-ALIPAY
-    put(url: string, data?: any, options: any = {}): Promise<any> {
-        return this.middleware({
-            url,
-            data,
-            method: 'PUT',
-            ...options
-        })
-    }
-
-    // #endif
-
-    // #ifdef APP-PLUS || H5 || MP-WEIXIN || MP-BAIDU
-    delete(url: string, data?: any, options: any = {}): Promise<any> {
-        return this.middleware({
-            url,
-            data,
-            method: 'DELETE',
-            ...options
-        })
-    }
-
-    // #endif
-
-    // #ifdef H5 || MP-WEIXIN
-    connect(url: string, data?: any, options: any = {}): Promise<any> {
-        return this.middleware({
-            url,
-            data,
-            method: 'CONNECT',
-            ...options
-        })
-    }
-
-    // #endif
-
-    // #ifdef  H5 || MP-WEIXIN || MP-BAIDU
-    head(url: string, data?: any, options: any = {}): Promise<any> {
-        return this.middleware({
-            url,
-            data,
-            method: 'HEAD',
-            ...options
-        })
-    }
-
-    // #endif
-
-    // #ifdef APP-PLUS || H5 || MP-WEIXIN || MP-BAIDU
-    options(url: string, data?: any, options: any = {}): Promise<any> {
-        return this.middleware({
-            url,
-            data,
-            method: 'OPTIONS',
-            ...options
-        })
-    }
-
-    // #endif
-
-    // #ifdef H5 || MP-WEIXIN
-    trace(url: string, data?: any, options: any = {}): Promise<any> {
-        return this.middleware({
-            url,
-            data,
-            method: 'TRACE',
-            ...options
-        })
-    }
-
-    // #endif
-
-    upload(url: string, config: any = {}): Promise<any> {
-        config.url = url
-        config.method = 'UPLOAD'
-        return this.middleware(config)
-    }
-
-    download(url: string, config: any = {}): Promise<any> {
-        config.url = url
-        config.method = 'DOWNLOAD'
-        return this.middleware(config)
+class RequestInterceptors {
+    request: InterceptorManager
+    response: InterceptorManager
+    constructor() {
+        this.request = new InterceptorManager()
+        this.response = new InterceptorManager()
     }
 }
 
-/**
- * setConfig回调
- * @return {Object} - 返回操作后的config
- * @callback Request~setConfigCallback
- * @param {Object} config - 全局默认config
- */
+export default class Request {
+    config: UTSJSONObject
+    interceptors: RequestInterceptors
+
+    constructor(arg: UTSJSONObject = {} as UTSJSONObject) {
+        this.config = clone(UTSJSONObject.assign(getDefaults(), arg)) as UTSJSONObject
+        this.interceptors = new RequestInterceptors()
+    }
+
+    setConfig(f: (config: UTSJSONObject) => UTSJSONObject): void {
+        this.config = f(this.config)
+    }
+
+    // PLACEHOLDER_REQUEST
+    middleware(config: UTSJSONObject): Promise<any> {
+        let merged: UTSJSONObject = mergeConfig(this.config, config)
+        // 请求拦截器：同步应用（fulfilled 返回新的 config）
+        this.interceptors.request.forEach((h: InterceptorHandler) => {
+            const ff = h.fulfilled!
+            const out = ff(merged)
+            if (out != null && typeof out === 'object' && !Array.isArray(out)) {
+                merged = out as UTSJSONObject
+            }
+        })
+        let promise: Promise<any> = dispatchRequest(merged)
+        // 响应拦截器：走 Promise 链
+        this.interceptors.response.forEach((h: InterceptorHandler) => {
+            const ff = h.fulfilled!
+            promise = promise.then((res: any | null): any => ff(res))
+        })
+        return promise
+    }
+
+    request(config: UTSJSONObject = {} as UTSJSONObject): Promise<any> {
+        return this.middleware(config)
+    }
+
+    get(url: string, options: UTSJSONObject = {} as UTSJSONObject): Promise<any> {
+        const cfg = UTSJSONObject.assign({} as UTSJSONObject, options)
+        cfg['url'] = url
+        cfg['method'] = 'GET'
+        return this.middleware(cfg)
+    }
+
+    post(url: string, data: any | null = null, options: UTSJSONObject = {} as UTSJSONObject): Promise<any> {
+        const cfg = UTSJSONObject.assign({} as UTSJSONObject, options)
+        cfg['url'] = url
+        cfg['data'] = data
+        cfg['method'] = 'POST'
+        return this.middleware(cfg)
+    }
+
+    put(url: string, data: any | null = null, options: UTSJSONObject = {} as UTSJSONObject): Promise<any> {
+        const cfg = UTSJSONObject.assign({} as UTSJSONObject, options)
+        cfg['url'] = url
+        cfg['data'] = data
+        cfg['method'] = 'PUT'
+        return this.middleware(cfg)
+    }
+
+    delete(url: string, data: any | null = null, options: UTSJSONObject = {} as UTSJSONObject): Promise<any> {
+        const cfg = UTSJSONObject.assign({} as UTSJSONObject, options)
+        cfg['url'] = url
+        cfg['data'] = data
+        cfg['method'] = 'DELETE'
+        return this.middleware(cfg)
+    }
+
+    connect(url: string, data: any | null = null, options: UTSJSONObject = {} as UTSJSONObject): Promise<any> {
+        const cfg = UTSJSONObject.assign({} as UTSJSONObject, options)
+        cfg['url'] = url
+        cfg['data'] = data
+        cfg['method'] = 'CONNECT'
+        return this.middleware(cfg)
+    }
+
+    head(url: string, data: any | null = null, options: UTSJSONObject = {} as UTSJSONObject): Promise<any> {
+        const cfg = UTSJSONObject.assign({} as UTSJSONObject, options)
+        cfg['url'] = url
+        cfg['data'] = data
+        cfg['method'] = 'HEAD'
+        return this.middleware(cfg)
+    }
+
+    options(url: string, data: any | null = null, options: UTSJSONObject = {} as UTSJSONObject): Promise<any> {
+        const cfg = UTSJSONObject.assign({} as UTSJSONObject, options)
+        cfg['url'] = url
+        cfg['data'] = data
+        cfg['method'] = 'OPTIONS'
+        return this.middleware(cfg)
+    }
+
+    trace(url: string, data: any | null = null, options: UTSJSONObject = {} as UTSJSONObject): Promise<any> {
+        const cfg = UTSJSONObject.assign({} as UTSJSONObject, options)
+        cfg['url'] = url
+        cfg['data'] = data
+        cfg['method'] = 'TRACE'
+        return this.middleware(cfg)
+    }
+
+    upload(url: string, config: UTSJSONObject = {} as UTSJSONObject): Promise<any> {
+        config['url'] = url
+        config['method'] = 'UPLOAD'
+        return this.middleware(config)
+    }
+
+    download(url: string, config: UTSJSONObject = {} as UTSJSONObject): Promise<any> {
+        config['url'] = url
+        config['method'] = 'DOWNLOAD'
+        return this.middleware(config)
+    }
+}

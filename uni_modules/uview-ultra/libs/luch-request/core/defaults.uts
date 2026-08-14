@@ -1,29 +1,30 @@
 /**
- * 默认的全局配置
+ * 默认全局配置（uts 版）
+ * 说明：uts 的 UTSJSONObject 不便直接持有具名函数类型，故默认不内置 validateStatus，
+ * settle 在未提供 validateStatus 时按 [200,300) 判定成功；用户仍可在 config 中传入 validateStatus。
  */
-
-export default {
-    baseURL: '',
-    header: {},
-    method: 'GET',
-    dataType: 'json',
+export default function getDefaults(): UTSJSONObject {
+    const conf: UTSJSONObject = {
+        baseURL: '',
+        header: {} as UTSJSONObject,
+        method: 'GET',
+        dataType: 'json',
+        custom: {} as UTSJSONObject
+    } as UTSJSONObject
     // #ifndef MP-ALIPAY
-    responseType: 'text',
+    conf['responseType'] = 'text'
     // #endif
-    custom: {},
     // #ifdef H5 || APP-PLUS || MP-ALIPAY || MP-WEIXIN
-    timeout: 60000,
+    conf['timeout'] = 60000
     // #endif
     // #ifdef APP-PLUS
-    sslVerify: true,
+    conf['sslVerify'] = true
     // #endif
     // #ifdef H5
-    withCredentials: false,
+    conf['withCredentials'] = false
     // #endif
     // #ifdef APP-PLUS
-    firstIpv4: false,
+    conf['firstIpv4'] = false
     // #endif
-    validateStatus: function validateStatus(status: number): boolean {
-        return status >= 200 && status < 300
-    }
+    return conf
 }

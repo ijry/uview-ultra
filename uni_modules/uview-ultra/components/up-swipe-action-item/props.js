@@ -26,6 +26,11 @@ export const props = defineMixin({
             type: Boolean,
             default: () => defProps.swipeActionItem.autoClose
         },
+        // 是否正在横向滑动，可用于 v-model:scrolling 暂停外部滚动
+        scrolling: {
+            type: Boolean,
+            default: () => defProps.swipeActionItem.scrolling
+        },
         // 滑动距离阈值，只有大于此值，才被认为是要打开菜单
         threshold: {
             type: Number,

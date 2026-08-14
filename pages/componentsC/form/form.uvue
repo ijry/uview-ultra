@@ -222,8 +222,7 @@
 		styleIsolation: 'app-and-page'
 	})
 
-	import { ref, reactive } from 'vue';
-	import { onReady } from '@dcloudio/uni-app'
+	import { ref, reactive, onMounted } from 'vue';
 	import { toast, timeFormat } from '@/uni_modules/uview-ultra/libs/function/index.uts'
 	import { UPFormRuleItem, UPCalendarMonthsItemDate } from '@/uni_modules/uview-ultra/types/index.uts'
 	type UserInfoType = {
@@ -372,7 +371,7 @@
 	const upCodeRef = ref<ComponentPublicInstance | null>(null)
 	
 	// 在组件准备就绪时设置规则
-	onReady(() => {
+	onMounted(() => {
 		(formRef1.value as ComponentPublicInstance)?.$callMethod('setRules', rules)
 	});
 	
@@ -460,7 +459,7 @@
 			toast('表单未就绪');
 			return;
 		}
-		const validateRes = formIns.$callMethod('validate') as UTSPromise<any>;
+		const validateRes = formIns.$callMethod('validate') as Promise<any>;
 		validateRes.then((res: any): void => {
 			toast('校验通过');
 		}, (errors: any): void => {

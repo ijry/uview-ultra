@@ -4,21 +4,21 @@
         :style="movableAreaStyle"
         >
         <movable-area class="up-dragsort-area">
-            <movable-view v-for="(item, index) in list" :key="item.id" :id="`up-dragsort-item-${index}`"
-                class="up-dragsort-item" :class="{ 'dragging': dragIndex === index, disabled: !draggable || item.draggable === false }"
+            <movable-view v-for="(item, index) in list" :key="getItemId(item, index)" :id="`up-dragsort-item-${instanceId}-${getItemId(item, index)}`"
+                class="up-dragsort-item" :class="{ 'dragging': dragItemId === getItemId(item, index), disabled: !draggable || item.draggable === false }"
                 :direction="direction === 'all' ? 'all' : direction" :x="item.x" :y="item.y" :inertia="false"
-                :disabled="!draggable || dragIndex === -1 || item.draggable === false" @change="onChange(index, $event)"
-                @touchstart="onTouchStart(index, $event)" @touchend="onTouchEnd" @touchcancel="onTouchEnd" @touchmove="onTouchMove">
+                :disabled="!draggable || dragItemId === null || item.draggable === false" @change="onChange(getItemId(item, index), $event)"
+                @touchstart="onTouchStart(getItemId(item, index), $event)" @touchend="onTouchEnd" @touchcancel="onTouchEnd" @touchmove="onTouchMove">
                 <view class="up-dragsort-item-content">
                     <view
                         class="up-dragsort-item__handler"
-                        v-if="$slots.handler"
+                        v-if="hasHandlerSlot"
                         data-action="handler"
-                        @touchstart="onTouchStart(index, $event)"
+                        @touchstart="onTouchStart(getItemId(item, index), $event)"
                     >
-                        <slot name="handler" :item="item" :index="index"></slot>
+                        <slot name="handler" :item="item" :index="getItemIndex(getItemId(item, index))"></slot>
                     </view>
-                    <slot :item="item" :index="index">
+                    <slot :item="item" :index="getItemIndex(getItemId(item, index))">
                         {{ item.label }}
                     </slot>
                 </view>
@@ -30,7 +30,7 @@
 <script setup>
 import { computed, getCurrentInstance, nextTick, onMounted, ref, useSlots, watch } from 'vue'
 import { commonProps } from '../../libs/composable/useUltraUI'
-import { sleep } from '../../libs/function/index'
+import { guid, sleep } from '../../libs/function/index'
 
 defineOptions({
 	name: 'up-dragsort',
@@ -73,7 +73,9 @@ const proxy = instance?.proxy || null
 const slots = useSlots()
 
 const list = ref([])
-const dragIndex = ref(-1)
+const orderIds = ref([])
+const instanceId = guid(8)
+const dragItemId = ref(null)
 const sortChanged = ref(false)
 const itemHeight = ref(0)
 const itemWidth = ref(0)
@@ -84,6 +86,7 @@ const currentPosition = ref({
 	y: 0
 })
 let timer = null
+const hasHandlerSlot = computed(() => !!(slots['handler'] || slots['$handler']))
 
 const movableAreaStyle = computed(() => {
 	if (props.direction === 'vertical') {
@@ -136,7 +139,16 @@ watch(() => props.columns, () => {
 })
 
 function initList() {
-	list.value = props.initialList.map((item, index) => {
+	orderIds.value = props.initialList.map((item, index) => getItemId(item, index))
+	const currentItems = new Map(list.value.map((item, index) => [getItemId(item, index), item]))
+	const initialItems = new Map(props.initialList.map((item, index) => [getItemId(item, index), item]))
+	const renderIds = [
+		...list.value.map((item, index) => getItemId(item, index)).filter(itemId => initialItems.has(itemId)),
+		...orderIds.value.filter(itemId => !currentItems.has(itemId))
+	]
+	list.value = renderIds.map((itemId) => {
+		const item = initialItems.get(itemId)
+		const index = getItemIndex(itemId)
 		let x
 		let y
 
@@ -159,6 +171,14 @@ function initList() {
 			y
 		}
 	})
+}
+
+function getItemId(item, index) {
+	return item.id ?? index
+}
+
+function getItemIndex(itemId) {
+	return orderIds.value.indexOf(itemId)
 }
 
 async function calculateItemSize() {
@@ -197,10 +217,12 @@ async function calculateAreaSize() {
 }
 
 function updatePositions(isDragging) {
-	list.value = list.value.map((item, index) => {
-		if (isDragging && dragIndex.value === index) {
+	list.value = list.value.map((item, renderIndex) => {
+		const itemId = getItemId(item, renderIndex)
+		if (isDragging && dragItemId.value === itemId) {
 			return item
 		}
+		const index = getItemIndex(itemId)
 
 		if (props.direction === 'vertical') {
 			return {
@@ -229,25 +251,28 @@ function updatePositions(isDragging) {
 	})
 }
 
-function onTouchStart(index, e) {
-	if (slots.handler && e.currentTarget.dataset.action !== 'handler') {
+function onTouchStart(itemId, e) {
+	if (hasHandlerSlot.value && e.currentTarget.dataset.action !== 'handler') {
 		return
 	}
-	if (list.value[index]?.draggable === false) return
+	const index = list.value.findIndex((item, renderIndex) => getItemId(item, renderIndex) === itemId)
+	if (index === -1 || list.value[index]?.draggable === false) return
 	if (timer) clearTimeout(timer)
 	sortChanged.value = false
-	dragIndex.value = index
+	dragItemId.value = itemId
 }
 
 function onTouchMove(e) {
-	if (dragIndex.value !== -1) {
+	if (dragItemId.value !== null) {
 		e.stopPropagation()
 		e.preventDefault()
 	}
 }
 
-function onChange(index, event) {
+function onChange(itemId, event) {
 	if (!event.detail.source || event.detail.source !== 'touch') return
+	const index = getItemIndex(itemId)
+	if (index === -1) return
 
 	currentPosition.value.x = event.detail.x
 	currentPosition.value.y = event.detail.y
@@ -291,10 +316,8 @@ function handleAllModeChange(index) {
 }
 
 function reorderItems(fromIndex, toIndex) {
-	const movedItem = list.value.splice(fromIndex, 1)[0]
-	list.value.splice(toIndex, 0, movedItem)
-
-	dragIndex.value = toIndex
+	const movedItemId = orderIds.value.splice(fromIndex, 1)[0]
+	orderIds.value.splice(toIndex, 0, movedItemId)
 	sortChanged.value = true
 
 	updatePositions(true)
@@ -305,23 +328,25 @@ function reorderItems(fromIndex, toIndex) {
 }
 
 function onTouchEnd() {
-	if (dragIndex.value === -1) return
+	if (dragItemId.value === null) return
+	const dragItem = list.value.find((item, index) => getItemId(item, index) === dragItemId.value)
+	if (!dragItem) return
 
 	if (props.direction === 'horizontal') {
-		list.value[dragIndex.value].x = currentPosition.value.x + 0.001
+		dragItem.x = currentPosition.value.x + 0.001
 	} else if (props.direction === 'vertical' || props.direction === 'all') {
-		list.value[dragIndex.value].y = currentPosition.value.y + 0.001
-		list.value[dragIndex.value].x = currentPosition.value.x + 0.001
+		dragItem.y = currentPosition.value.y + 0.001
+		dragItem.x = currentPosition.value.x + 0.001
 	}
 
 	sleep(50).then(() => {
 		updatePositions()
 		if (sortChanged.value) {
-			emit('drag-end', [...list.value])
+			emit('drag-end', orderIds.value.map(itemId => list.value.find((item, index) => getItemId(item, index) === itemId)).filter(Boolean))
 			sortChanged.value = false
 		}
 		timer = setTimeout(() => {
-			dragIndex.value = -1
+			dragItemId.value = null
 		}, 600)
 	})
 }

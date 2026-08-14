@@ -1,0 +1,101 @@
+<template>
+	<view class="http-test">
+		<up-navbar title="luch-request 移植测试" @leftClick="goBack" safeAreaInsetTop fixed placeholder></up-navbar>
+		<view class="http-test__summary">
+			<text>{{ summary }}</text>
+		</view>
+		<view v-for="(item, index) in results" :key="index" class="http-test__row">
+			<text class="http-test__badge" :style="{ color: item['pass'] == true ? '#19be6b' : '#fa3534' }">{{ item['pass'] == true ? 'PASS' : 'FAIL' }}</text>
+			<view class="http-test__info">
+				<text class="http-test__name">{{ item['name'] }}</text>
+				<text class="http-test__detail">{{ item['detail'] }}</text>
+			</view>
+		</view>
+		<view class="http-test__req">
+			<text class="http-test__name">真实请求(GET)</text>
+			<text class="http-test__detail">{{ requestResult }}</text>
+		</view>
+	</view>
+</template>
+
+<script setup lang="uts">
+	import { ref } from 'vue'
+	import Request from '@/uni_modules/uview-ultra/libs/luch-request/index.uts'
+	import buildURL from '@/uni_modules/uview-ultra/libs/luch-request/helpers/buildURL.uts'
+	import isAbsoluteURL from '@/uni_modules/uview-ultra/libs/luch-request/helpers/isAbsoluteURL.uts'
+	import combineURLs from '@/uni_modules/uview-ultra/libs/luch-request/helpers/combineURLs.uts'
+	import buildFullPath from '@/uni_modules/uview-ultra/libs/luch-request/core/buildFullPath.uts'
+
+	defineOptions({ styleIsolation: 'app-and-page', name: 'http-test' })
+
+	const results = ref<Array<UTSJSONObject>>([] as Array<UTSJSONObject>)
+	const requestResult = ref<string>('请求中...')
+	const summary = ref<string>('运行中...')
+
+	function check(name: string, actual: string, expected: string) {
+		const pass = actual == expected
+		results.value.push({
+			name: name,
+			pass: pass,
+			detail: pass ? `= ${actual}` : `实际:${actual} 期望:${expected}`
+		} as UTSJSONObject)
+	}
+
+	function checkBool(name: string, actual: boolean, expected: boolean) {
+		results.value.push({
+			name: name,
+			pass: actual == expected,
+			detail: `实际:${actual} 期望:${expected}`
+		} as UTSJSONObject)
+	}
+
+	// PLACEHOLDER_RUN
+	function runPureTests() {
+		checkBool('isAbsoluteURL(http://a.com)', isAbsoluteURL('http://a.com/x'), true)
+		checkBool('isAbsoluteURL(/api/x)', isAbsoluteURL('/api/x'), false)
+		check('combineURLs', combineURLs('http://a.com/', '/user/1'), 'http://a.com/user/1')
+		check('buildFullPath(相对)', buildFullPath('http://a.com', '/user/1'), 'http://a.com/user/1')
+		check('buildFullPath(绝对)', buildFullPath('http://a.com', 'https://b.com/x'), 'https://b.com/x')
+		check('buildURL(无参)', buildURL('http://a.com', null), 'http://a.com')
+		check('buildURL(带参)', buildURL('http://a.com', { id: 1 } as UTSJSONObject), 'http://a.com?id=1')
+	}
+
+	function runRequestTest() {
+		const http = new Request()
+		http.get('https://httpbin.org/get', {} as UTSJSONObject).then((res: any | null): void => {
+			const s = JSON.stringify(res)
+			requestResult.value = 'GET 成功: ' + (s != null ? s! : '')
+		}).catch((err: any | null): void => {
+			const s = JSON.stringify(err)
+			requestResult.value = 'GET 失败: ' + (s != null ? s! : '')
+		})
+	}
+
+	function goBack() {
+		uni.navigateBack({})
+	}
+
+	function runAll() {
+		runPureTests()
+		let passed = 0
+		results.value.forEach((r: UTSJSONObject) => {
+			if (r['pass'] == true) passed += 1
+		})
+		summary.value = `纯函数用例：${passed}/${results.value.length} 通过`
+		runRequestTest()
+	}
+
+	runAll()
+
+</script>
+
+<style lang="scss">
+	.http-test { padding: 12px; }
+	.http-test__summary { padding: 10px 0; font-size: 15px; font-weight: 600; }
+	.http-test__row { display: flex; flex-direction: row; align-items: flex-start; padding: 8px 0; border-bottom: 1px solid #eee; }
+	.http-test__badge { width: 48px; font-size: 12px; font-weight: 600; }
+	.http-test__info { flex: 1; }
+	.http-test__name { font-size: 14px; }
+	.http-test__detail { font-size: 12px; color: #909399; }
+	.http-test__req { padding: 12px 0; }
+</style>

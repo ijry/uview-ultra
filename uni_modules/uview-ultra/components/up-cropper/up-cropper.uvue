@@ -212,7 +212,12 @@ const canvasContext = ref<CanvasContext | null>(null)
 const exportCanvasContext = ref<CanvasContext | null>(null)
 const ctx = ref<CanvasRenderingContext2D | null>(null)
 const exportCtx = ref<CanvasRenderingContext2D | null>(null)
+// #ifdef APP-ANDROID
 const imageElement = ref<UniImageElementImpl | null>(null)
+// #endif
+// #ifndef APP-ANDROID
+const imageElement = ref<any | null>(null)
+// #endif
 const imagePath = ref('')
 const imageWidth = ref(0)
 const imageHeight = ref(0)
@@ -520,9 +525,16 @@ const createCanvasImage = (path: string): void => {
 		fitImage()
 		draw()
 	}
+	// #ifdef APP-ANDROID
 	image.onerror = () => {
 		emit('error', new Error('Image load failed'))
 	}
+	// #endif
+	// #ifndef APP-ANDROID
+	;(image as any).onerror = () => {
+		emit('error', new Error('Image load failed'))
+	}
+	// #endif
 	image.src = path
 }
 

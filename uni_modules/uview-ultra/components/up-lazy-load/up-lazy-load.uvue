@@ -281,9 +281,9 @@
             // https://blog.csdn.net/qq_25324335/article/details/83687695
             observer.relativeToViewport({
                 bottom: getThreshold.value,
-            }).observe('.up-lazy-item-' + elIndex, (res: UTSJSONObject) => {
+			}).observe('.up-lazy-item-' + elIndex, (res: any) => {
                 // console.log('relativeToViewport', res)
-                if (res.intersectionRatio > 0) {
+				if (res != null && res.intersectionRatio != null && res.intersectionRatio > 0) {
                     // 懒加载状态改变
                     isShow.value = true;
                     // 如果图片已经加载，去掉监听，减少性能的消耗

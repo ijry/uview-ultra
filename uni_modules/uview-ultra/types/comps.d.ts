@@ -91,6 +91,7 @@ declare module '@vue/runtime-core' {
     ['up-code-input']: typeof import('./comps/codeInput')['CodeInput']
     ['up-loadmore']: typeof import('./comps/loadMore')['LoadMore']
     ['up-read-more']: typeof import('./comps/readMore')['ReadMore']
+    ['up-novel-reader']: typeof import('./comps/novelReader')['NovelReader']
     ['up-gap']: typeof import('./comps/gap')['Gap']
     ['up-avatar']: typeof import('./comps/avatar')['Avatar']
     ['up-avatar-group']: typeof import('./comps/avatarGroup')['AvatarGroup']

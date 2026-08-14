@@ -274,6 +274,26 @@
 	// 定时器
 	const longPressTimer = ref<number | null>(null)
 
+	const getModelValue = (): string | number => {
+		const modelValue = props.modelValue
+		return modelValue != null ? modelValue : 0
+	}
+
+	const getMinValue = (): number => {
+		const min = props.min
+		return min != null ? parseFloat(min.toString()) : 1
+	}
+
+	const getMaxValue = (): number => {
+		const max = props.max
+		return max != null ? parseFloat(max.toString()) : 9999
+	}
+
+	const getDecimalLength = (): number => {
+		const decimalLength = props.decimalLength
+		return decimalLength != null ? parseInt(decimalLength.toString()) : 0
+	}
+
 	const hideMinus = computed((): boolean => {
 		return currentValue.value.toString() == '0' && props.miniMode == true
 	})
@@ -316,11 +336,9 @@
 		// 如果为空字符串，那么设置为0，同时将值转为Number类型
 		let valueNum: number = value == '' ? 0 : parseFloat(value)
 		// 对比最大最小值，取在min和max之间的值
-		// @ts-ignore
-		valueNum = Math.max(Math.min(parseFloat(props.max.toString()), parseFloat(value.toString())), parseFloat(props.min.toString()))
+		valueNum = Math.max(Math.min(getMaxValue(), parseFloat(value.toString())), getMinValue())
 		// 如果设定了最大的小数位数，使用toFixed去进行格式化
-		// @ts-ignore
-		let decimalLength = parseInt(props.decimalLength.toString())
+		let decimalLength = getDecimalLength()
 		if (decimalLength != 0 && valueNum != 0) {
 			valueNum = parseFloat(valueNum.toFixed(decimalLength))
 		}
@@ -328,23 +346,23 @@
 	}
 
 	const init = (): void => {
-		currentValue.value = formatValue(props.modelValue != null ? props.modelValue.toString() : '0')
+		currentValue.value = formatValue(getModelValue().toString())
 	}
 
 	const isDisabled = (type: string): boolean => {
 		if (type === 'plus') {
 			// 在点击增加按钮情况下，判断整体的disabled，是否单独禁用增加按钮，以及当前值是否大于最大的允许值
 			return (
-				props.disabled ||
-				props.disablePlus
+				props.disabled == true ||
+				props.disablePlus == true
 				// || parseFloat(currentValue.value.toString()) >= parseFloat(props.max.toString())
 			)
 		}
 		// 点击减少按钮同理
 		return (
-			props.disabled ||
-			props.disableMinus ||
-			parseFloat(currentValue.value.toString()) <= parseFloat(props.min.toString())
+			props.disabled == true ||
+			props.disableMinus == true ||
+			parseFloat(currentValue.value.toString()) <= getMinValue()
 		)
 	}
 
@@ -501,7 +519,7 @@
 		check()
 	})
 
-	watch((): string | number => props.modelValue, (newV: string | number) => {
+	watch(getModelValue, (newV: string | number) => {
 		if (newV !== currentValue.value) {
 			currentValue.value = formatValue(newV.toString())
 		}

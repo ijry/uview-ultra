@@ -34,11 +34,11 @@
 				</template>
 				<up-badge
 					absolute
-					:offset="[0, dot ? '34rpx' : parseInt(badge.toString()) > 9 ? '14rpx' : '20rpx']"
+					:offset="badgeOffset"
 				    :customStyle="badgeStyle"
 				    :isDot="dot"
 				    :value="badge != null  ? (dot ? 1 : badge) : 0"
-				    :show="dot ? dot : parseInt(badge.toString()) > 0"
+				    :show="badgeVisible"
 				></up-badge>
 			</view>
 
@@ -90,7 +90,7 @@
 	const props = defineProps({
 		// item标签的名称，作为与u-tabbar的value参数匹配的标识符
 		name: {
-			type: [String, Number, null],
+			type: [String, Number],
 			default: (defProps['tabbarItem'] as UTSJSONObject)['name']
 		},
 		// uview-plus内置图标或者绝对路径的图片
@@ -100,7 +100,7 @@
 		},
 		// 右上角的角标提示信息
 		badge: {
-			type: [String, Number, null],
+			type: [String, Number],
 			default: (defProps['tabbarItem'] as UTSJSONObject)['badge']
 		},
 		// 是否显示圆点，将会覆盖badge参数
@@ -165,8 +165,11 @@
 	})
 
 	const hasMidButtonText = computed((): boolean => {
-		return slots['text'] != null || props.text.length > 0
+		return slots['text'] != null || (props.text != null && props.text.length > 0)
 	})
+	const badgeNumber = computed((): number => props.badge != null ? parseInt(props.badge.toString()) : 0)
+	const badgeOffset = computed((): Array<string | number> => [0, props.dot ? '34rpx' : badgeNumber.value > 9 ? '14rpx' : '20rpx'])
+	const badgeVisible = computed((): boolean => props.dot == true || badgeNumber.value > 0)
 
 	const itemClassNames = computed((): Array<string> => {
 		return [
@@ -191,7 +194,7 @@
 	})
 
 	const resolvedMidButtonIconColor = computed((): string => {
-		return props.midButtonIconColor.length > 0 ? props.midButtonIconColor : '#3c9cff'
+		return props.midButtonIconColor != null && props.midButtonIconColor.length > 0 ? props.midButtonIconColor : '#3c9cff'
 	})
 
 	const textStyle = computed((): UTSJSONObject => {
@@ -201,7 +204,7 @@
 	})
 
 	const midButtonOffsetValue = computed((): number => {
-		const offset = parseFloat(props.midButtonOffsetY.toString())
+		const offset = props.midButtonOffsetY != null ? parseFloat(props.midButtonOffsetY.toString()) : -10
 		return isNaN(offset) ? -10 : offset
 	})
 
@@ -237,7 +240,7 @@
 	const midButtonShellStyle = computed((): UTSJSONObject => {
 		const style = {} as UTSJSONObject
 		if (isMidButton.value) {
-			style['boxShadow'] = props.midButtonBoxShadow.length > 0 ? props.midButtonBoxShadow : 'none'
+			style['boxShadow'] = props.midButtonBoxShadow != null && props.midButtonBoxShadow.length > 0 ? props.midButtonBoxShadow : 'none'
 		}
 		return style
 	})
@@ -245,7 +248,7 @@
 	const midButtonInnerStyle = computed((): UTSJSONObject => {
 		const style = {} as UTSJSONObject
 		if (isMidButton.value) {
-			style['background'] = props.midButtonBgColor.length > 0 ? props.midButtonBgColor : '#ffffff'
+			style['background'] = props.midButtonBgColor != null && props.midButtonBgColor.length > 0 ? props.midButtonBgColor : '#ffffff'
 			style['boxShadow'] = props.midButtonInnerBoxShadow
 		}
 		return style

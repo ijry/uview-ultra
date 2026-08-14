@@ -80,7 +80,7 @@ declare interface TextProps {
    */
   margin?: Record<string, any> | string | number
   /**
-   * 文本行高
+   * 文本行高，支持带单位值或无单位倍数（如 1.2）
    */
   lineHeight?: number | string
   /**
@@ -93,6 +93,11 @@ declare interface TextProps {
    * @default "normal"
    */
   wordWrap?: 'normal' | 'break-word' | 'any-where'
+  /**
+   * 是否占满剩余空间
+   * @default false
+   */
+  flex1?: boolean
   /**
    * 点击触发事件
    */

@@ -12,7 +12,7 @@
 		    ></up-loading-icon>
 		    <text
 		        class="up-button__text up-button__loading-text"
-		        :style="[{ fontSize: textSize + 'px' }]"
+		        :style="[{ fontSize: textSize + 'px', color: textColor }]"
 		        >{{ loadingText != '' ? loadingText : text }}</text
 		    >
 		</template>
@@ -27,7 +27,7 @@
 		    <slot>
 		        <text
 		            class="up-button__text"
-		            :style="[{ fontSize: textSize + 'px'}]"
+		            :style="[{ fontSize: textSize + 'px', color: textColor }]"
 		            >
 		            {{ text }}
 		        </text>
@@ -263,21 +263,28 @@ const loadingColor = computed(() => {
     return "rgb(200, 200, 200)";
 });
 
+const textColor = computed((): string => {
+    if (!props.plain) {
+        return props.type == 'info' && props.color == '' ? '#323233' : '#ffffff'
+    }
+    if (props.color != '') return props.color
+    if (props.type == 'info') return '#000000'
+    if (props.type == 'warning') return config.getString('color.up-error') ?? '#fa3534'
+    const color = config.getString(`color.up-${props.type}`) ?? ''
+    return color == '' ? '#ffffff' : color
+})
+
 const iconColorCom = computed(() => {
     // 如果是镂空状态，设置了color就用color值，否则使用主题颜色，
     // up-icon的color能接受一个主题颜色的值
     if (props.iconColor != '') return props.iconColor;
-    if (props.plain) {
-        return props.color != '' ? props.color : props.type;
-    } else {
-        return "";
-    }
+    return textColor.value
 });
 
 const baseColor = computed(() => {
     let style = {
     } as UTSJSONObject;
-    // if (props.color != '') {
+    if (props.color == '') return style
         // 针对自定义了color颜色的情况，镂空状态下，就是用自定义的颜色
         // style['color'] = props.plain ? props.color : "white";
         if (!props.plain) {
@@ -400,7 +407,7 @@ $up-button-square-border-top-left-radius: 3px !default;
 $up-button-square-border-bottom-left-radius: 3px !default;
 $up-button-square-border-bottom-right-radius: 3px !default;
 $up-button-icon-min-width: 4px !default;
-$up-button-plain-background-color: #fff !default;
+$up-button-plain-background-color: transparent !default;
 $up-button-hairline-border-width: 0.5px !default;
 $up-button-active-opacity:0.75 !default;
 $up-button-before-top:50% !default;
@@ -426,11 +433,12 @@ $up-button-plain-up-button-warning-color:$up-error !default;;
 	align-items: center;
 	justify-content: center;
 
+	/* #ifndef APP */
 	color: #fff;
+	/* #endif */
 
 	&__text {
 		font-size: $up-button-text-font-size;
-		color: inherit;
 	}
 	
 	&__loading-text {
@@ -469,7 +477,9 @@ $up-button-plain-up-button-warning-color:$up-error !default;;
 	}
 	
 	&--info {
+		/* #ifndef APP */
 		color: $up-button-info-color;
+		/* #endif */
 		background-color: $up-button-info-background-color !important;
 		border-color: $up-button-info-border-color !important;
 		border-width: $up-button-info-border-width !important;
@@ -477,7 +487,9 @@ $up-button-plain-up-button-warning-color:$up-error !default;;
 	}
 	
 	&--success {
+		/* #ifndef APP */
 		color: $up-button-success-color;
+		/* #endif */
 		background-color: $up-button-success-background-color !important;
 		border-color: $up-button-success-border-color !important;
 		border-width: $up-button-success-border-width !important;
@@ -485,7 +497,9 @@ $up-button-plain-up-button-warning-color:$up-error !default;;
 	}
 	
 	&--primary {
+		/* #ifndef APP */
 		color: $up-button-primary-color;
+		/* #endif */
 		background-color: $up-button-primary-background-color !important;
 		border-color: $up-button-primary-border-color !important;
 		border-width: $up-button-primary-border-width !important;
@@ -493,7 +507,9 @@ $up-button-plain-up-button-warning-color:$up-error !default;;
 	}
 	
 	&--error {
+		/* #ifndef APP */
 		color: $up-button-error-color;
+		/* #endif */
 		background-color: $up-button-error-background-color !important;
 		border-color: $up-button-error-border-color !important;
 		border-width: $up-button-error-border-width !important;
@@ -501,7 +517,9 @@ $up-button-plain-up-button-warning-color:$up-error !default;;
 	}
 	
 	&--warning {
+		/* #ifndef APP */
 		color: $up-button-warning-color;
+		/* #endif */
 		background-color: $up-button-warning-background-color !important;
 		border-color: $up-button-warning-border-color !important;
 		border-width: $up-button-warning-border-width !important;
@@ -535,6 +553,7 @@ $up-button-plain-up-button-warning-color:$up-error !default;;
 	
 	&--plain {
 		background-color: $up-button-plain-background-color !important;
+		/* #ifndef APP */
 		&.up-button--primary {
 			color: $up-primary;
 		}
@@ -550,6 +569,7 @@ $up-button-plain-up-button-warning-color:$up-error !default;;
 		&.up-button--warning {
 			color: $up-button-plain-up-button-warning-color;
 		}
+		/* #endif */
 	}
 	
 	&--hairline {

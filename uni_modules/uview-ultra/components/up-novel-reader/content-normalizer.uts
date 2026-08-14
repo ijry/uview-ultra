@@ -1,0 +1,109 @@
+const lineBreakPattern = Regex("\r\n|\r|\n")
+
+function textValue(value: any | null): String {
+    return value == null ? '' : value.toString()
+}
+
+function numberValue(value: any | null, fallback: number = 0): number {
+    if (value == null) return fallback
+    const parsed = parseFloat(value.toString())
+    return isNaN(parsed) ? fallback : parsed
+}
+
+function normalizeParagraphs(content: any | null): Array<String> {
+    let values: Array<any> = []
+    if (Array.isArray(content)) {
+        values = content as Array<any>
+    } else {
+        values = [content == null ? '' : content]
+    }
+
+    const paragraphs: Array<String> = []
+    values.forEach((value: any) => {
+        textValue(value).split(lineBreakPattern).forEach((text: String) => {
+            paragraphs.push(text)
+        })
+    })
+    return paragraphs
+}
+
+export function normalizeContent(content: any | null): UTSJSONObject {
+    const sourceParagraphs = normalizeParagraphs(content)
+    let hasContent = false
+    sourceParagraphs.forEach((text: String) => {
+        if (text.length > 0) hasContent = true
+    })
+    if (!hasContent) {
+        return {
+            paragraphs: [] as Array<UTSJSONObject>,
+            text: '',
+            length: 0
+        } as UTSJSONObject
+    }
+
+    let offset = 0
+    const paragraphs: Array<UTSJSONObject> = []
+    sourceParagraphs.forEach((text: String, index: number) => {
+        const startOffset = offset
+        const endOffset = startOffset + text.length
+        offset = endOffset + 1
+        paragraphs.push({
+            index,
+            text,
+            startOffset,
+            endOffset
+        } as UTSJSONObject)
+    })
+
+    const text = paragraphs.map((paragraph: UTSJSONObject) => {
+        return textValue(paragraph['text'])
+    }).join('\n')
+    return {
+        paragraphs,
+        text,
+        length: text.length
+    } as UTSJSONObject
+}
+
+export function normalizeProgress(
+    progress: UTSJSONObject | null,
+    chapter: UTSJSONObject | null
+): UTSJSONObject {
+    const content = chapter == null ? null : chapter['content']
+    const normalizedContent = normalizeContent(content)
+    const contentLength = numberValue(normalizedContent['length'])
+    const requestedOffset = numberValue(progress == null ? null : progress['charOffset'])
+    const charOffset = Math.min(contentLength, Math.max(0, requestedOffset))
+    const requestedPageIndex = numberValue(progress == null ? null : progress['pageIndex'])
+    const chapterIndex = numberValue(chapter == null ? null : chapter['index'], -1)
+    const progressChapterId = progress == null ? null : progress['chapterId']
+    const chapterId = progressChapterId != null
+        ? progressChapterId
+        : chapter == null
+            ? ''
+            : chapter['id'] == null ? '' : chapter['id']
+
+    return {
+        chapterId,
+        chapterIndex: chapterIndex >= 0
+            ? chapterIndex
+            : numberValue(progress == null ? null : progress['chapterIndex']),
+        pageIndex: Math.max(0, requestedPageIndex),
+        pageCount: Math.max(0, numberValue(progress == null ? null : progress['pageCount'])),
+        charOffset,
+        chapterProgress: contentLength > 0
+            ? Math.min(1, Math.max(0, charOffset / contentLength))
+            : 0,
+        totalProgress: Math.min(
+            1,
+            Math.max(0, numberValue(progress == null ? null : progress['totalProgress']))
+        ),
+        scrollTop: Math.max(0, numberValue(progress == null ? null : progress['scrollTop'])),
+        updatedAt: Math.max(0, numberValue(progress == null ? null : progress['updatedAt']))
+    } as UTSJSONObject
+}
+
+export default {
+    normalizeContent,
+    normalizeProgress
+}

@@ -254,8 +254,7 @@ const deferSwitch = (index: number): void => {
 
 const rightScroll = (e: UniScrollEvent): void => {
 	if (props.mode != 'follow') return
-	const detail = e.detail as UTSJSONObject
-	const detailScrollTop = detail['scrollTop'] as number
+	const detailScrollTop = e.detail.scrollTop
 	oldScrollTop.value = detailScrollTop
 	if (arr.value.length == 0) {
 		getMenuItemTop()

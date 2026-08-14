@@ -170,14 +170,22 @@
 	})
 
 	const emit = defineEmits(['open', 'close', 'click', 'update:show'])
-	const overlayDuration = ref(parseInt(props.duration.toString()) + 50)
+	const durationValue = computed((): number => {
+		const value = props.duration != null ? parseInt(props.duration.toString()) : 300
+		return isNaN(value) ? 300 : value
+	})
+	const zIndexValue = computed((): number => {
+		const value = props.zIndex != null ? parseInt(props.zIndex.toString()) : 10075
+		return isNaN(value) ? 10075 : value
+	})
+	const overlayDuration = ref(durationValue.value + 50)
 
 	const transitionStyle = computed((): UTSJSONObject => {
 		const style = {
 			display: 'flex',
 		} as UTSJSONObject
 		if (!props.pageInline) {
-			style['zIndex'] = parseInt(props.zIndex.toString()) + 1
+			style['zIndex'] = zIndexValue.value + 1
 			style['position'] = 'fixed'
 		}
 		style[props.mode] = 0

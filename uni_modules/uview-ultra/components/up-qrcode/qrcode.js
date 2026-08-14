@@ -1032,16 +1032,14 @@ let QRCode = {};
             image: '',
             imageSize: 30,
             canvasId: opt.canvasId,
-			canvas: opt.canvas,
 			ctx: opt.ctx,
+            canvasHost: opt.canvasHost,
             isNvue: opt.isNvue,
             vuectx: opt.vuectx,
             usingComponents: opt.usingComponents,
             showLoading: opt.showLoading,
             loadingText: opt.loadingText,
         };
-
-        let canvas = null;
 
         if (typeof opt === 'string') { // 只编码ASCII字符串
             opt = {
@@ -1104,17 +1102,7 @@ let QRCode = {};
                 });
             }
             var ctx = '';
-			canvas = options.canvas;
 			ctx = options.ctx;
-			// 获取canvas node节点
-			// #ifdef MP
-			// 不清楚是小程序的bug还是什么原因，canvas的node节点宽高和设置的宽高不一致 重新设置下
-			canvas.width = options.size;
-			canvas.height = options.size;
-			// #endif
-            // 设置组件中data里面的ctx
-            // options.vuectx.ctx = ctx;
-            // options.vuectx.canvas = canvas;
 
             var count = qrCodeAlg.getModuleCount();
             var quietZone = Math.max(0, Math.floor(options.quietZone || 0));
@@ -1138,11 +1126,7 @@ let QRCode = {};
                         count: count,
                         options: options
                     });
-                    if (options.isNvue) {
-                        ctx.setFillStyle(isDark ? foreground : options.background);
-                    } else {
-                        ctx.fillStyle = isDark ? foreground : options.background;
-                    }
+                    setFillStyle(ctx, isDark ? foreground : options.background);
                     ctx.fillRect(Math.round(col * tileW), Math.round(row * tileH), w, h);
                 }
             }
@@ -1150,19 +1134,12 @@ let QRCode = {};
                 var x = Number(((ratioSize - ratioImgSize) / 2).toFixed(2));
                 var y = Number(((ratioSize - ratioImgSize) / 2).toFixed(2));
                 drawRoundedRect(ctx, x, y, ratioImgSize, ratioImgSize, 2, 6, true, true)
-				options.vuectx.drawImage(options.image, x, y, ratioImgSize, ratioImgSize);
+				await options.vuectx.drawImage(options.image, x, y, ratioImgSize, ratioImgSize);
                 // 画圆角矩形
                 function drawRoundedRect(ctxi, x, y, width, height, r, lineWidth, fill, stroke) {
-                    if (options.isNvue || isApp) {
-                        ctxi.setLineWidth(lineWidth);
-                        ctxi.setFillStyle(options.background);
-                        ctxi.setStrokeStyle(options.background);
-                    }
-                    else {
-                        ctxi.lineWidth = lineWidth;
-                        ctxi.fillStyle = options.background;
-                        ctxi.strokeStyle = options.background;
-                    }
+                    setLineWidth(ctxi, lineWidth);
+                    setFillStyle(ctxi, options.background);
+                    setStrokeStyle(ctxi, options.background);
                     ctxi.beginPath(); // draw top and top right corner
                     ctxi.moveTo(x + r, y);
                     ctxi.lineTo(x + width, y); // move to top-right corner
@@ -1189,37 +1166,18 @@ let QRCode = {};
             setTimeout(() => {
                 // canvas2 绘制是自动的不需要手动绘制
                 if(options.isNvue || isApp){
-                    ctx.draw(true, () => {
+					const exportCode = () => {
                         // 保存到临时区域
                         setTimeout(() => {
-                            if (options.isNvue) {
-                                ctx.toTempFilePath(
-                                    0,
-                                    0,
-                                    options.width,
-                                    options.height,
-                                    options.width,
-                                    options.height,
-                                    "",
-                                    1,
-                                    function(res) {
-                                        if (options.cbResult) {
-                                            options.cbResult(res.tempFilePath)
-                                        }
-                                    }
-                                );
-                            } else {
-                                uni.canvasToTempFilePath({
-                                    width: options.width,
-                                    height: options.height,
-                                    destWidth: options.width,
-                                    destHeight: options.height,
-                                    canvasId: options.canvasId,
+                            if (options.canvasHost && typeof options.canvasHost.toTempFilePath === 'function') {
+                                options.canvasHost.toTempFilePath({
+                                    width: options.width || options.size,
+                                    height: options.height || options.size,
+                                    destWidth: options.width || options.size,
+                                    destHeight: options.height || options.size,
                                     quality: Number(1),
                                     success: function (res) {
-										// console.log('绘制成功', res)
                                         if (options.cbResult) {
-                                            // 由于官方还没有统一此接口的输出字段，所以先判定下  支付宝为 res.apFilePath
                                             if (!empty(res.tempFilePath)) {
                                                 options.cbResult(res.tempFilePath)
                                             } else if (!empty(res.apFilePath)) {
@@ -1230,7 +1188,7 @@ let QRCode = {};
                                         }
                                     },
                                     fail: function (res) {
-										console.log('绘制失败', res)
+                                        console.log('绘制失败', res)
                                         if (options.cbResult) {
                                             options.cbResult(res)
                                         }
@@ -1238,10 +1196,19 @@ let QRCode = {};
                                     complete: function () {
                                         uni.hideLoading();
                                     },
-                                }, options.vuectx);
+								}).catch(function(res) {
+									console.log('绘制失败', res)
+								});
                             }
                         }, options.text.length + 100);
-                    });
+					};
+					if (options.canvasHost && typeof options.canvasHost.draw === 'function') {
+						options.canvasHost.draw(true, exportCode);
+					} else if (ctx && typeof ctx.draw === 'function') {
+						ctx.draw(true, exportCode);
+					} else {
+						exportCode();
+					}
                 }
                 else{
                     options.cbResult("")
@@ -1267,14 +1234,35 @@ let QRCode = {};
             }
             return rt
         }
+        function setFillStyle(ctx, value) {
+            if (ctx && typeof ctx.setFillStyle === 'function') {
+                ctx.setFillStyle(value);
+            } else if (ctx) {
+                ctx.fillStyle = value;
+            }
+        }
+        function setStrokeStyle(ctx, value) {
+            if (ctx && typeof ctx.setStrokeStyle === 'function') {
+                ctx.setStrokeStyle(value);
+            } else if (ctx) {
+                ctx.strokeStyle = value;
+            }
+        }
+        function setLineWidth(ctx, value) {
+            if (ctx && typeof ctx.setLineWidth === 'function') {
+                ctx.setLineWidth(value);
+            } else if (ctx) {
+                ctx.lineWidth = value;
+            }
+        }
     };
     QRCode.prototype.clear = function (fn) {
-        var ctx = '';
-        if (options.isNvue) {
-            ctx = options.ctx;
-        } else {
-            uni.createCanvasContext(this.options.canvasId, this.options.vuectx)
-        }
+		if (this.options.canvasHost && typeof this.options.canvasHost.clearCanvas === 'function') {
+			this.options.canvasHost.clearCanvas()
+			if (fn) fn()
+			return
+		}
+		var ctx = this.options.ctx;
         ctx.clearRect(0, 0, this.options.size, this.options.size)
         ctx.draw(false, () => {
             if (fn) {

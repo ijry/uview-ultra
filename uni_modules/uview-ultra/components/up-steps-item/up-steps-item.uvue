@@ -1,25 +1,25 @@
 <template>
-	<view class="up-steps-item" ref="up-steps-item" :class="[`up-steps-item--${parentData['direction']}`]">
+	<view class="up-steps-item" ref="up-steps-item" :class="[`up-steps-item--${getParentDirection()}`]">
 		<view class="up-steps-item__line"
-			:class="[`up-steps-item__line--${parentData['direction']}`]" :style="[lineStyle]"></view>
+			:class="[`up-steps-item__line--${getParentDirection()}`]" :style="[lineStyle]"></view>
 		<view class="up-steps-item__line"
-			:class="[`up-steps-item__line--${parentData['direction']}`]" :style="[lineStyle2]"></view>
+			:class="[`up-steps-item__line--${getParentDirection()}`]" :style="[lineStyle2]"></view>
 		<view class="up-steps-item__wrapper"
-			:class="[`up-steps-item__wrapper--${parentData['direction']}`,
-				(parentData['dot'] != null && parentData['dot'] as boolean) ? `up-steps-item__wrapper--${parentData['direction']}--dot` : '']"
+			:class="[`up-steps-item__wrapper--${getParentDirection()}`,
+				getParentDot() ? `up-steps-item__wrapper--${getParentDirection()}--dot` : '']"
 			:style="[itemStyleInner]">
 			<slot name="icon">
 				<view class="up-steps-item__wrapper__dot"
-					v-if="(parentData['dot'] != null && parentData['dot'] as boolean)" :style="{
+					v-if="getParentDot()" :style="{
 						backgroundColor: statusColor
 					}">
 
 				</view>
 				<view class="up-steps-item__wrapper__icon"
 					v-else-if="parentData['activeIcon'] != '' || parentData['inactiveIcon'] != ''">
-					<up-icon :name="index <= parseInt(parentData['current'].toString()) ? parentData['activeIcon'] : parentData['inactiveIcon']"
+					<up-icon :name="index <= getParentCurrent() ? parentData['activeIcon'] : parentData['inactiveIcon']"
 						:size="iconSize"
-						:color="index <= parseInt(parentData['current'].toString()) ? parentData['activeColor'] : parentData['inactiveColor']">
+						:color="index <= getParentCurrent() ? parentData['activeColor'] : parentData['inactiveColor']">
 					</up-icon>
 				</view>
 				<view v-else :style="{
@@ -28,15 +28,15 @@
 					}" class="up-steps-item__wrapper__circle">
 					<text v-if="statusClass === 'process' || statusClass === 'wait'"
 						class="up-steps-item__wrapper__circle__text" :style="{
-							color: index == parseInt(parentData['current'].toString()) ? '#ffffff' : parentData['inactiveColor']
+							color: index == getParentCurrent() ? '#ffffff' : parentData['inactiveColor']
 						}">{{ index + 1}}</text>
 					<up-icon v-else :color="statusClass === 'error' ? 'error' : parentData['activeColor']" size="12"
 						:name="statusClass === 'error' ? 'close' : 'checkmark'"></up-icon>
 				</view>
 			</slot>
 		</view>
-		<view class="up-steps-item__content" :class="[`up-steps-item__content--${parentData['direction']}`,
-			parseInt(parentData['current'].toString()) == index ? 'up-steps-item__content--current' : '']"
+		<view class="up-steps-item__content" :class="[`up-steps-item__content--${getParentDirection()}`,
+			getParentCurrent() == index ? 'up-steps-item__content--current' : '']"
 			:style="[contentStyle]">
 			<slot name="content" :index="index">
 			</slot>
@@ -45,8 +45,8 @@
 					<slot name="title">
 					</slot>
 					<up-text v-if="$slots['title'] == null" :text="title" lineHeight="20px"
-						:type="parseInt(parentData['current'].toString()) == index ? 'main' : 'content'"
-						:size="parseInt(parentData['current'].toString()) == index ? 14 : 13"></up-text>
+						:type="getParentCurrent() == index ? 'main' : 'content'"
+						:size="getParentCurrent() == index ? 14 : 13"></up-text>
 				</view>
 				<view class="up-steps-item__content__desc">
 					<slot name="desc">
@@ -140,6 +140,21 @@
 		return height != null ? parseFloat(height.toString()) : 0
 	}
 
+	const getParentDirection = (): string => {
+		const direction = parentData.value['direction']
+		return direction != null ? direction.toString() : 'row'
+	}
+
+	const getParentCurrent = (): number => {
+		const current = parentData.value['current']
+		return current != null ? parseInt(current.toString()) : 0
+	}
+
+	const getParentDot = (): boolean => {
+		const dot = parentData.value['dot']
+		return dot != null ? dot.toString() == 'true' : false
+	}
+
 	const childHasError = (child: ComponentPublicInstance | null): boolean => {
 		if (child != null && child.$props != null && child.$props['error'] != null) {
 			return child.$props['error'] as boolean
@@ -151,7 +166,7 @@
 		const style = {} as UTSJSONObject
 		const children = getChildren()
 		const width = getSizeWidth()
-		if (parentData.value['direction'].toString() === 'row') {
+		if (getParentDirection() === 'row') {
 			if (index.value == 0) {
 				style['width'] = '0px'
 				style['left'] = (width / 2).toString() + 'px'
@@ -168,7 +183,7 @@
 			const nextChild = children[index.value + 1]
 			if (childHasError(nextChild)) {
 				style['backgroundColor'] = color['error']
-			} else if ((index.value - 1) < parseInt(parentData.value['current'].toString())) {
+			} else if ((index.value - 1) < getParentCurrent()) {
 				style['backgroundColor'] = parentData.value['activeColor']
 			} else {
 				style['backgroundColor'] = parentData.value['inactiveColor']
@@ -181,7 +196,7 @@
 		const style = {} as UTSJSONObject
 		const children = getChildren()
 		const width = getSizeWidth()
-		if (parentData.value['direction'].toString() === 'row') {
+		if (getParentDirection() === 'row') {
 			if (index.value == 0) {
 				style['width'] = width.toString() + 'px'
 				style['left'] = (width / 2).toString() + 'px'
@@ -201,7 +216,7 @@
 			const nextChild = children[index.value + 1]
 			if (childHasError(nextChild)) {
 				style['backgroundColor'] = color['error']
-			} else if (index.value < parseInt(parentData.value['current'].toString())) {
+			} else if (index.value < getParentCurrent()) {
 				style['backgroundColor'] = parentData.value['activeColor']
 			} else {
 				style['backgroundColor'] = parentData.value['inactiveColor']
@@ -215,7 +230,7 @@
 	})
 
 	const statusClass = computed((): string => {
-		const current = parseInt(parentData.value['current'].toString())
+		const current = getParentCurrent()
 		if (current == index.value) {
 			return props.error == true ? 'error' : 'process'
 		} else if (props.error) {
@@ -237,7 +252,7 @@
 				colorTmp = color['error'] as string
 				break
 			case 'process':
-				colorTmp = parentData.value['dot'] as boolean ? parentData.value['activeColor'] as string : 'transparent'
+				colorTmp = getParentDot() ? parentData.value['activeColor'] as string : 'transparent'
 				break
 			default:
 				colorTmp = parentData.value['inactiveColor'] as string
@@ -248,8 +263,8 @@
 
 	const contentStyle = computed((): UTSJSONObject => {
 		const style = {} as UTSJSONObject
-		const isDot = parentData.value['dot'].toString() == 'true'
-		if (parentData.value['direction'].toString() === 'column') {
+		const isDot = getParentDot()
+		if (getParentDirection() === 'column') {
 			style['marginLeft'] = isDot ? '2px' : '6px'
 			style['marginTop'] = isDot ? '0px' : '6px'
 		} else {

@@ -23,7 +23,7 @@
 		>
 			<swiper-item
 				class="up-swiper__wrapper__item"
-				v-for="(item, index) in list"
+				v-for="(item, index) in safeList"
 				:key="index"
 			>
 				<slot :item="item" :index="index">
@@ -66,7 +66,7 @@
 					v-if="!loading && indicator && !showTitle"
 					:indicatorActiveColor="indicatorActiveColor"
 					:indicatorInactiveColor="indicatorInactiveColor"
-					:length="list.length"
+					:length="safeList.length"
 					:current="currentIndex"
 					:indicatorMode="indicatorMode"
 				></up-swiper-indicator>
@@ -250,6 +250,7 @@
 	const emit = defineEmits(['click', 'change', 'update:current'])
 	const instance = getCurrentInstance()!.proxy!
 	const currentIndex = ref(0)
+	const safeList = computed((): Array<any> => props.list != null ? props.list : [] as Array<any>)
 
 	const rootStyle = computed((): UTSJSONObject => {
 		return {
@@ -345,7 +346,7 @@
 
 	// 切换轮播时，暂停视频播放
 	const pauseVideo = (index: number): void => {
-		const lastItem = getSource(props.list[index])
+		const lastItem = getSource(safeList.value[index])
 		if (isVideoSource(lastItem)) {
 			// 当视频隐藏时，暂停播放
 			const video = uni.createVideoContext(`video-${index}`, instance)

@@ -801,9 +801,12 @@
 		for (var i = 0; i < lists.value.length; i++) {
 			const item = lists.value[i]
 			if (item.isVideo || (item.type != null && item.type === 'video')) {
-				sources.push(UTSJSONObject.assign(UTSJSONObject.assign({}, item), {
+				const source = {
+					url: item.url,
 					type: 'video'
-				}))
+				} as UTSJSONObject
+				if (item.thumb != null) source['poster'] = item.thumb
+				sources.push(source)
 				if (i === index) {
 					current = videoIndex
 				}
@@ -841,9 +844,15 @@
 					break
 			}
 		}
+		// #ifdef APP
+		const previewItem = item as UTSJSONObject
+		// #endif
+		// #ifndef APP
+		const previewItem = item as any
+		// #endif
 		emit(
 			'clickPreview',
-			UTSJSONObject.assign(UTSJSONObject.assign({}, item as UTSJSONObject), getDetail(index))
+			UTSJSONObject.assign(UTSJSONObject.assign({}, previewItem), getDetail(index))
 		)
 	}
 	watch((): Array<UTSJSONObject> => props.fileList as Array<UTSJSONObject>, () => {

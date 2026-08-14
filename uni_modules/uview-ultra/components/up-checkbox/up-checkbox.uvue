@@ -3,10 +3,7 @@
 	    class="up-checkbox cursor-pointer"
 	    :style="[checkboxStyle]"
 	    @tap.stop="wrapperClickHandler"
-	    :class="[`up-checkbox-label--` + (parentData['iconPlacement'] != null ? parentData['iconPlacement'].toString() : ''),
-			(parentData['borderBottom'] != false && parentData['placement'] != null
-				&& parentData['placement'].toString() == 'column')
-				? 'up-border-bottom' : '']"
+	    :class="checkboxRootClass"
 	>
 		<view
 		    class="up-checkbox__icon-wrap cursor-pointer"
@@ -143,6 +140,15 @@
 	
 	// 定义 emit
 	const emit = defineEmits(['change', 'update:checked'])
+	const checkboxRootClass = computed((): Array<string> => {
+		const data = parentData.value
+		if (data == null) return ['up-checkbox-label--']
+		const iconPlacement = data['iconPlacement'] != null ? data['iconPlacement'].toString() : ''
+		const hasBottomBorder = data['borderBottom'] != false
+			&& data['placement'] != null
+			&& data['placement'].toString() == 'column'
+		return [`up-checkbox-label--${iconPlacement}`, hasBottomBorder ? 'up-border-bottom' : '']
+	})
 	
 	// 定义响应式数据
 	const isChecked = ref(false)

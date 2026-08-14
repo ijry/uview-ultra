@@ -320,7 +320,7 @@ $up-button-square-border-top-left-radius: 3px !default;
 $up-button-square-border-bottom-left-radius: 3px !default;
 $up-button-square-border-bottom-right-radius: 3px !default;
 $up-button-icon-min-width: 1em !default;
-$up-button-plain-background-color: #fff !default;
+$up-button-plain-background-color: transparent !default;
 $up-button-hairline-border-width: 0.5px !default;
 
 .up-button {

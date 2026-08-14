@@ -1,0 +1,175 @@
+export const DEFAULT_READER_SETTINGS: UTSJSONObject = {
+    theme: 'day',
+    fontSize: 18,
+    lineHeight: 1.8,
+    paragraphSpacing: 16,
+    contentWidth: '92%',
+    fontFamily: 'system',
+    fontWeight: 400,
+    animation: true
+}
+
+function numberValue(value: any | null, fallback: number = 0): number {
+    if (value == null) return fallback
+    const parsed = parseFloat(value.toString())
+    return isNaN(parsed) ? fallback : parsed
+}
+
+function clamp(value: any | null, min: number, max: number, fallback: number): number {
+    return Math.min(max, Math.max(min, numberValue(value, fallback)))
+}
+
+function settingValue(source: UTSJSONObject | null, key: String): any {
+    return source == null ? null : source[key]
+}
+
+function normalizeContentWidth(value: any | null): any {
+    if (typeof value == 'number') {
+        return clamp(value, 40, 100, 92)
+    }
+    if (value != null && value.toString().trim().length > 0) {
+        return value.toString().trim()
+    }
+    return DEFAULT_READER_SETTINGS['contentWidth']!
+}
+
+export function mergeReaderSettings(sources: Array<UTSJSONObject | null>): UTSJSONObject {
+    const result: UTSJSONObject = UTSJSONObject.assign({}, DEFAULT_READER_SETTINGS)
+    const keys = [
+        'theme',
+        'fontSize',
+        'lineHeight',
+        'paragraphSpacing',
+        'contentWidth',
+        'fontFamily',
+        'fontWeight',
+        'animation'
+    ]
+    sources.forEach((source: UTSJSONObject | null) => {
+        if (source == null) return
+        keys.forEach((key: String) => {
+            if (source[key] != null) result[key] = source[key]
+        })
+    })
+    result['fontSize'] = clamp(result['fontSize'], 12, 48, 18)
+    result['lineHeight'] = clamp(result['lineHeight'], 1, 3, 1.8)
+    result['paragraphSpacing'] = clamp(result['paragraphSpacing'], 0, 80, 16)
+    result['contentWidth'] = normalizeContentWidth(result['contentWidth'])
+    result['fontWeight'] = numberValue(result['fontWeight'], 400) >= 600 ? 600 : 400
+    result['animation'] = result['animation'] != false
+    return result
+}
+
+export function normalizeMode(mode: String): String {
+    return mode == 'page' ? 'page' : 'scroll'
+}
+
+export function toggleControls(state: UTSJSONObject): UTSJSONObject {
+    const result: UTSJSONObject = UTSJSONObject.assign({}, state)
+    result['controlsVisible'] = result['controlsVisible'] != true
+    return result
+}
+
+export function setMode(state: UTSJSONObject, mode: String): UTSJSONObject {
+    const result: UTSJSONObject = UTSJSONObject.assign({}, state)
+    result['mode'] = normalizeMode(mode)
+    return result
+}
+
+export function setSettings(state: UTSJSONObject, settings: UTSJSONObject | null): UTSJSONObject {
+    const result: UTSJSONObject = UTSJSONObject.assign({}, state)
+    result['settings'] = mergeReaderSettings([
+        state['settings'] as UTSJSONObject,
+        settings
+    ])
+    return result
+}
+
+export function setProgress(state: UTSJSONObject, progress: UTSJSONObject | null): UTSJSONObject {
+    const stateProgress = state['progress'] == null ? ({} as UTSJSONObject) : state['progress'] as UTSJSONObject
+    const nextProgress: UTSJSONObject = UTSJSONObject.assign(
+        {},
+        stateProgress
+    )
+    if (progress != null) {
+        const src = progress
+        UTSJSONObject.keys(src).forEach((key: String) => {
+            nextProgress[key] = src[key]
+        })
+    }
+    nextProgress['pageIndex'] = Math.max(0, numberValue(nextProgress['pageIndex']))
+    nextProgress['charOffset'] = Math.max(0, numberValue(nextProgress['charOffset']))
+    nextProgress['scrollTop'] = Math.max(0, numberValue(nextProgress['scrollTop']))
+    const result: UTSJSONObject = UTSJSONObject.assign({}, state)
+    result['progress'] = nextProgress
+    return result
+}
+
+export function toggleBookmark(
+    bookmarks: Array<UTSJSONObject>,
+    bookmark: UTSJSONObject | null
+): Array<UTSJSONObject> {
+    const list = bookmarks.toMutableArray()
+    if (bookmark == null || bookmark['id'] == null) return list
+    const bookmarkId = bookmark['id']
+    const existingIndex = list.findIndex((item: UTSJSONObject) => item['id'] == bookmarkId)
+    if (existingIndex == -1) {
+        list.push(bookmark)
+    } else {
+        list.removeAt(existingIndex)
+    }
+    return list
+}
+
+export function createBookmark(fields: UTSJSONObject): UTSJSONObject {
+    const chapterId = fields['chapterId']
+    const normalizedChapterId = chapterId == null ? '' : chapterId.toString()
+    const charOffset = Math.max(0, numberValue(fields['charOffset']))
+    return {
+        id: `${normalizedChapterId}:${charOffset}`,
+        chapterId,
+        chapterIndex: numberValue(fields['chapterIndex']),
+        charOffset,
+        pageIndex: Math.max(0, numberValue(fields['pageIndex'])),
+        scrollTop: Math.max(0, numberValue(fields['scrollTop'])),
+        excerpt: fields['excerpt'] == null ? '' : fields['excerpt'],
+        createdAt: numberValue(fields['createdAt'], Date.now())
+    } as UTSJSONObject
+}
+
+export function startReading(state: UTSJSONObject, timestamp: number = Date.now()): UTSJSONObject {
+    const result: UTSJSONObject = UTSJSONObject.assign({}, state)
+    result['active'] = true
+    result['lastActiveAt'] = timestamp
+    return result
+}
+
+export function consumeReadingTime(state: UTSJSONObject, timestamp: number = Date.now()): UTSJSONObject {
+    if (state['active'] != true || numberValue(state['lastActiveAt']) <= 0) return state
+    const elapsed = Math.max(0, timestamp - numberValue(state['lastActiveAt']))
+    const result: UTSJSONObject = UTSJSONObject.assign({}, state)
+    result['readingTime'] = Math.max(0, numberValue(state['readingTime'])) + elapsed
+    result['lastActiveAt'] = timestamp
+    return result
+}
+
+export function pauseReading(state: UTSJSONObject, timestamp: number = Date.now()): UTSJSONObject {
+    const result = consumeReadingTime(state, timestamp)
+    result['active'] = false
+    return result
+}
+
+export default {
+    DEFAULT_READER_SETTINGS,
+    mergeReaderSettings,
+    normalizeMode,
+    toggleControls,
+    setMode,
+    setSettings,
+    setProgress,
+    toggleBookmark,
+    createBookmark,
+    startReading,
+    pauseReading,
+    consumeReadingTime
+}

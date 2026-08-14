@@ -15,7 +15,7 @@
 	import defProps from './row'
 	import { addUnit, addStyle, deepMerge, upGetRect, sleep } from '../../libs/function/index'
 	import { useUltraUI } from '../../libs/composable/useUltraUI'
-	const { children } = useUltraUI()
+	const { children, getChildren, addChild } = useUltraUI()
 	
 	// options
 	defineOptions({
@@ -100,7 +100,7 @@
 				upGetRect('.up-row').then((res: any) => {
 					// console.log(res)
 					let node = res as NodeInfo
-					resolve(node.width != null ? node.width : 0)
+					resolve(node != null && node.width != null ? node.width : 0)
 				})
 			})
 		})
@@ -121,6 +121,8 @@
 	// 导出组件方法
 	defineExpose({
 		getComponentWidth,
+		getChildren,
+		addChild,
 		getProps,
 		getRefs
 	})

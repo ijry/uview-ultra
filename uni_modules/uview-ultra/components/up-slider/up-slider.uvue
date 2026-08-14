@@ -251,17 +251,21 @@
 	}
 
 	const innerStyleCpu = computed((): UTSJSONObject => {
-		let style: UTSJSONObject = props.innerStyle
+		let style: UTSJSONObject = props.innerStyle != null ? props.innerStyle : {} as UTSJSONObject
 		style['height'] = (props.isRange && props.showValue)
 			? (parseFloat(getPx(props.blockSize)) + 24).toString() + 'px'
 			: (getPx(props.blockSize)) + 'px'
 		return style
 	})
 
-	function toSliderNumber(value: any, fallback: number = 0): number {
+	function toSliderNumber(value: any | null, fallback: number = 0): number {
 		if (value == null) return fallback
 		const number = parseFloat(value.toString())
 		return isNaN(number) ? fallback : number
+	}
+
+	function rangeValueNumber(index: number, fallback: number = 0): number {
+		return toSliderNumber(props.rangeValue[index], fallback)
 	}
 
 	function getSliderStep(): number {
@@ -388,14 +392,16 @@
 		return valueFormat
 	}
 
+	const modelValueNumber = (): number => props.modelValue != null ? props.modelValue : 0
+
 	const init = (): void => {
 		if (props.isRange) {
 			// @ts-ignore
-			updateValue(parseFloat(props.rangeValue[0].toString()), false, 0)
+			updateValue(rangeValueNumber(0), false, 0)
 			// @ts-ignore
-			updateValue(parseFloat(props.rangeValue[1].toString()), false, 1)
+			updateValue(rangeValueNumber(1), false, 1)
 		} else {
-			updateValue(props.modelValue, false)
+			updateValue(modelValueNumber(), false)
 		}
 	}
 
@@ -428,11 +434,11 @@
 		// 此处的modelValue虽为props值，但是通过$emit('update:modelValue')进行了修改
 		if (props.isRange) {
 			// @ts-ignore
-			startValue0.value = formatValue(parseFloat(props.rangeValue[0].toString()), 0)
+			startValue0.value = formatValue(rangeValueNumber(0), 0)
 			// @ts-ignore
-			startValue.value = formatValue(parseFloat(props.rangeValue[1].toString()), 1)
+			startValue.value = formatValue(rangeValueNumber(1), 1)
 		} else {
-			startValue.value = formatValue(props.modelValue)
+			startValue.value = formatValue(modelValueNumber())
 		}
 		// 标示当前的状态为开始触摸滑动
 		status.value = 'start'
@@ -523,10 +529,10 @@
 		// #endif
 	}
 
-	watch((): number => props.modelValue, () => {
+	watch((): number => modelValueNumber(), () => {
 		// 只有在非滑动状态时，才可以通过value更新滑块值，这里监听，是为了让用户触发
 		if (status.value == 'end') {
-			const crtFmtValue = updateValue(props.modelValue, false)
+			const crtFmtValue = updateValue(modelValueNumber(), false)
 			emit('change', crtFmtValue)
 		}
 	})

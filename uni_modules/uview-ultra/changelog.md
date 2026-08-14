@@ -1,3 +1,92 @@
+## 4.5.27
+optimize/fix: up-novel-reader 工具栏悬浮 + luch-request UTS 版重写
+
+- up-novel-reader（UVue）：顶/底工具栏改为悬浮（position:absolute），正文区域始终占满全高，工具栏显隐不再挤压/改变正文布局
+- luch-request UTS 版重写：修复其在 UniApp X（Android）端无法编译的问题，公开接口与 JS 版保持一致（config/response 为 UTSJSONObject，取值用 ['key']）；去对象 spread / Object.prototype.toString.call / Object.keys(any) / fn.call，改用 UTSJSONObject 与 Array.isArray/instanceof/typeof；then/catch 回调参数与拦截器 fulfilled/rejected 放宽为 any|null；内联对象类型改具名 class
+- uts 入口 index.uts 导出 Request 类与全局 http 实例（对齐 JS 入口）；真机 7/7 纯函数用例通过、真实 GET 请求链路验证
+
+## 4.5.26
+fix: 修复 DatetimePicker 动态边界，及 up-novel-reader 在 App(uni-app x)端的编译与样式问题
+
+- up-datetime-picker（Vue/UVue）：动态修改 minMinute/minHour 等边界值时保留当前已选值，仅按新边界重新校正并重建各列，不再回退到 modelValue；新增 change 去重，边界变化程序化重建列不再重复上抛 change；已选值超出新边界时自动夹取到合法范围并补发一次 change；UVue 端补全此前被注释、未接通的 modelValue/mode/边界值响应式
+- up-novel-reader（UVue）：修复此前无法通过 uni-app x（Android）编译的一系列问题——不支持的 CSS 值（vh/vw、color/border-radius:inherit、display:block、min-height:100% 等）改用 px/百分比/样式绑定；UTSJSONObject Any? 类型不匹配、setup 函数前向引用（Kotlin 局部函数不提升需按依赖排序）、props 与局部 ref/defineExpose 命名冲突、nextTick(async)、数组 API（toMutableArray/removeAt）等
+- up-novel-reader（UVue）：修复 App 端因 display:flex 默认竖向导致工具栏/设置/目录横排错乱的问题（补 flex-direction:row）
+
+## 4.5.25
+fix: 修复文档构建错误
+
+- 修复 barcode 与 goodsSku 文档中的 Markdown 表格类型参数被解析为 Vue 属性的问题
+- 修复 coupon 文档中的错误链接，确保文档构建死链校验通过
+
+## 4.5.24
+feat: 新增 up-novel-reader 小说阅读器组件
+
+- 支持 scroll/page 双模式、目录、设置、主题、书签、进度恢复、阅读时长和安全区
+- Vue 与 UVue 保持同一公开 API
+
+## 4.5.23
+fix: 修复 up-text 无单位行高显示异常
+
+- Vue 与 UVue 版 up-text 支持 1.1、1.2 等无单位行高倍率，避免被误转为 px 后单行文本裁剪成虚线
+- 继续兼容 20 等像素数值和显式单位行高
+
+## 4.5.22
+fix: 修复 overlay 动态挂载二维码时的 Canvas 初始化竞态
+
+- Vue 与 UVue 版 up-qrcode 统一迁移到 up-canvas，由画布组件集中管理节点、context、DPR、图片加载与导出
+- up-canvas 共享同一实例的 in-flight 初始化 Promise，增加 refresh 强制重新初始化入口，避免重复创建 context、重设尺寸或清空画布导致二维码只绘制局部
+- Vue H5 继续交由 uni-h5 内置 HiDPI 处理；Vue 小程序与 UVue Canvas 在宿主层重设 backing store 并只应用一次 pixelRatio 变换
+- 增加 overlay 内二维码示例和 Vue/UVue 静态回归校验
+
+## 4.5.21
+fix: 修复 up-waterfall 快速更新时并发分配错乱
+
+- Vue 与 UVue 版改用共享队列串行消费多批数据，避免异步分配循环交错
+- clear 或全量重排时取消过期任务，避免旧数据继续写回已清空的列
+- 中间插入、重排或列表缩短等非纯追加变化执行全量重排，避免数据错列、重复或丢失
+- 同步 uview-plus issue #1047，并补充双端结构与 Vue 行为回归校验
+
+## 4.5.20（2026-08-04）
+fix: 修复 uni-app x 跨端编译与 Android 运行时兼容问题
+
+- 修复 up-calendar 未设置 closeable 时 Android Boolean 空值拆箱崩溃，并保留 pageInline 动态默认行为
+- 修复多个组件的 H5 严格类型告警及 Android 平台类型不兼容
+- 修复 Android 布局查询空结果、组件导航重复触发及不支持的 view 文本样式告警
+## 4.5.19
+fix: 修复 H5 严格类型检查告警
+
+- 修复 up-search label prop 使用 null 构造器导致的 TS2769 编译错误
+- 移除 up-tabbar、up-tabbar-item、up-calendar 中会破坏 Vue props 推断的 null 构造器
+- 为 steps、radio、picker、text、number-box、popup、tag、rate、swipe-action、checkbox、subsection、waterfall、skeleton、swiper、tabs 等组件增加安全空值兜底
+- 收窄 calendar、form、async-validator、canvas、图片加载和滚动事件相关类型，消除 H5 UTS/TypeScript 编译告警
+- 恢复 up-row 的子组件注册方法，并处理节点尺寸查询为空，修复 H5 运行时 `getChildren not found` 和读取空节点 `width` 的异常
+
+## 4.5.18
+fix: 修复自定义 action-sheet 插槽点击不关闭
+
+- Vue 与 UVue 版 up-action-sheet 的自定义 slot 点击现在遵守 closeOnClickAction
+- Vue 版兼容 up-cell 默认阻止事件冒泡的场景
+- 同步 uview-plus issue #905，并补充对应验证脚本
+
+## 4.5.17
+feat: swipe-action-item 新增 scrolling / v-model:scrolling，用于横向滑动时联动暂停页面或 scroll-view 容器滚动。
+fix: 补充 touchcancel、关闭、禁用和卸载释放逻辑，避免外部滚动锁状态卡住。
+docs: 更新防止页面或容器滚动示例，说明 page-meta 与 scroll-view 用法。
+
+## 4.5.16
+fix: 同步文本组件 flex1 默认行为
+
+- up-text 默认不再占满剩余空间，未显式开启 flex1 时避免影响父级布局
+- 为 Vue 与 uvue 文本组件补齐 flex1 配置、props 与类型声明
+- 仅在 flex1 为 true 时写入 flex 和宽度样式，与 uview-plus 保持一致
+
+## 4.5.15
+fix: 修复 plain 按钮默认白底
+
+- plain 镂空按钮默认背景改为透明，避免深色背景下出现白色底块
+- 同步 Vue 与 uvue 按钮实现，保持多端 plain 表现一致
+- 补充验证脚本，覆盖 plain 按钮默认背景兜底
+
 ## 4.5.14
 fix: 修复 tabbar 中间按钮圆弧边框颜色
 

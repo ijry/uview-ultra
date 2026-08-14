@@ -491,6 +491,13 @@
 		"root": "pages/componentsD",
 		"pages": [
 			{
+				"path": "httpTest/httpTest",
+				"style": {
+					"navigationBarTitleText": "luch-request 测试",
+					"navigationStyle": "custom"
+				}
+			},
+			{
 				"path": "navbarMini/navbarMini",
 				"style": {
 					"navigationBarTitleText": "迷你导航",
@@ -615,6 +622,12 @@
 				"path": "pdfReader/pdfReader",
 				"style": {
 					"navigationBarTitleText": "PdfReader PDF阅读器"
+				}
+			},
+			{
+				"path": "novelReader/novelReader",
+				"style": {
+					"navigationBarTitleText": "NovelReader小说阅读器"
 				}
 			},
 			{

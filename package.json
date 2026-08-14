@@ -2,9 +2,19 @@
   "name": "uviewultra",
   "version": "4.0.0",
   "scripts": {
+    "verify:waterfall-distribution": "node scripts/verify-waterfall-distribution.mjs",
+    "verify:dragsort-stable-identity": "node scripts/verify-dragsort-stable-identity.mjs",
+    "verify:swipe-action-scrolling": "node scripts/verify-swipe-action-scrolling.mjs",
     "verify:slider-decimal-step": "node scripts/verify-slider-decimal-step.mjs",
     "verify:swiper-vertical": "node scripts/verify-swiper-vertical.mjs",
-    "verify:tabbar-mid-button-top-border": "node scripts/verify-tabbar-mid-button-top-border.mjs"
+    "verify:tabbar-mid-button-top-border": "node scripts/verify-tabbar-mid-button-top-border.mjs",
+    "verify:button-plain-background": "node scripts/verify-button-plain-background.mjs",
+    "verify:action-sheet-slot-close": "node scripts/verify-action-sheet-slot-close.mjs",
+    "verify:overlay-qrcode-canvas-init": "node scripts/verify-overlay-qrcode-canvas-init.mjs",
+    "verify:novel-reader-props": "node scripts/verify-novel-reader-props.mjs",
+    "verify:novel-reader-data": "node scripts/verify-novel-reader-data.mjs",
+    "verify:novel-reader-layout": "node scripts/verify-novel-reader-layout.mjs",
+    "verify:novel-reader-ui": "node scripts/verify-novel-reader-ui.mjs"
   },
   "dependencies": {
   }

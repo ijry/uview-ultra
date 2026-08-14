@@ -183,9 +183,15 @@
 	}
 
 	const getRotateDuration = (): number => {
-		const durationValue = props.duration
+		const durationValue = props.duration != null ? props.duration : 1200
 		const durationNumber = parseInt(durationValue.toString())
 		return durationNumber > 0 ? durationNumber : 1200
+	}
+
+	const getLoadingSize = (): number => {
+		const sizeValue = props.size != null ? props.size : 24
+		const sizeNumber = parseInt(sizeValue.toString())
+		return sizeNumber > 0 ? sizeNumber : 24
 	}
 
 	const getRotateStep = (): number => {
@@ -226,7 +232,7 @@
 		array12.forEach((ele: number, index: number) => {
 			const angle = index * (360 / 12); // 计算角度
 			const angleRad = angle * (Math.PI / 180); // 转换为弧度
-			const banjing = calculateSquareRadius(parseInt(getPx(parseInt(props.size.toString()) * 2)));  // 半径
+			const banjing = calculateSquareRadius(parseInt(getPx(getLoadingSize() * 2)));  // 半径
 			const xOffset = banjing * Math.cos(angleRad);
 			const yOffset = banjing * Math.sin(angleRad);
 			// 假设.loading-container的position是relative，并且宽度和高度都是100%

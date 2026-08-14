@@ -9,3 +9,10 @@ export type UPCalendarMonthsItemDate = {
   month?: number
   bottomInfo?: string
 }
+
+export type UPCalendarMonthsItem = {
+  top: number
+  year: string
+  month: string
+  date: Array<UPCalendarMonthsItemDate>
+}

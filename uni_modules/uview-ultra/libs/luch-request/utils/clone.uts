@@ -1,51 +1,37 @@
 /**
- * Simplified clone function for UTS
- * Clones plain objects and arrays, copies functions by reference
- * No support for Buffer, Map, Set, RegExp as they're not needed for config objects
+ * uts 兼容的简易 clone：克隆普通对象(UTSJSONObject)与数组，函数按引用复制
+ * 不处理 Buffer/Map/Set/RegExp（config 对象用不到）
  */
 
-function clone(obj: any, depth: number = Infinity): any {
-    // Handle null and non-objects
-    if (obj === null || typeof obj !== 'object') {
+function clone(obj: any | null): any | null {
+    if (obj == null || typeof obj !== 'object') {
         return obj
     }
 
-    // Depth limit
-    if (depth === 0) {
-        return obj
-    }
-
-    // Handle Date
     if (obj instanceof Date) {
-        return new Date(obj.getTime())
+        return new Date((obj as Date).getTime())
     }
 
-    // Handle Array
     if (Array.isArray(obj)) {
-        const arr: any[] = []
-        for (let i = 0; i < obj.length; i++) {
-            arr.push(clone(obj[i], depth - 1))
+        const src = obj as Array<any>
+        const arr: Array<any | null> = []
+        for (let i = 0; i < src.length; i++) {
+            arr.push(clone(src[i]))
         }
         return arr
     }
 
-    // Handle plain objects
-    const result: any = {}
-    const keys = Object.keys(obj)
-    for (let i = 0; i < keys.length; i++) {
-        const key = keys[i]
-        const val = obj[key]
-
-        // Copy functions by reference (don't clone them)
-        if (typeof val === 'function') {
-            result[key] = val
-        } else if (val !== null && typeof val === 'object') {
-            result[key] = clone(val, depth - 1)
+    const o = obj as UTSJSONObject
+    const result: UTSJSONObject = {} as UTSJSONObject
+    UTSJSONObject.keys(o).forEach((key: string) => {
+        const val = o[key]
+        if (val != null && typeof val === 'object') {
+            result[key] = clone(val)
         } else {
+            // 基本类型与函数：按引用/值复制
             result[key] = val
         }
-    }
-
+    })
     return result
 }
 
