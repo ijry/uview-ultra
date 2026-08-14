@@ -1,14 +1,8 @@
 import { deepMerge, isUndefined } from '../utils'
 
-/**
- * 合并局部配置优先的配置，如果局部有该配置项则用局部，如果全局有该配置项则用全局
- * @param {Array} keys - 配置项
- * @param {Object} globalsConfig - 当前的全局配置
- * @param {Object} config2 - 局部配置
- * @return {{}}
- */
-const mergeKeys = (keys: string[], globalsConfig: any, config2: any): any => {
-    const config: any = {}
+// 局部优先：局部有则用局部，否则用全局
+function mergeKeys(keys: string[], globalsConfig: UTSJSONObject, config2: UTSJSONObject): UTSJSONObject {
+    const config: UTSJSONObject = {} as UTSJSONObject
     keys.forEach((prop: string) => {
         if (!isUndefined(config2[prop])) {
             config[prop] = config2[prop]
@@ -19,53 +13,53 @@ const mergeKeys = (keys: string[], globalsConfig: any, config2: any): any => {
     return config
 }
 
-/**
- * Remove content-type headers from header object (UTS compatible - no delete operator)
- */
-const removeContentTypeHeaders = (header: any): any => {
-    const newHeader: any = {}
-    const keys = Object.keys(header)
-    for (let i = 0; i < keys.length; i++) {
-        const key = keys[i]
+// 移除 content-type 头（uts 无 delete 运算符）
+function removeContentTypeHeaders(header: UTSJSONObject): UTSJSONObject {
+    const newHeader: UTSJSONObject = {} as UTSJSONObject
+    UTSJSONObject.keys(header).forEach((key: string) => {
         if (key.toLowerCase() !== 'content-type') {
             newHeader[key] = header[key]
         }
-    }
+    })
     return newHeader
 }
 
-/**
- *
- * @param globalsConfig - 当前实例的全局配置
- * @param config2 - 当前的局部配置
- * @return - 合并后的配置
- */
-export default (globalsConfig: any, config2: any = {}): any => {
-    const method = config2.method || globalsConfig.method || 'GET'
-    let config: any = {
-        baseURL: globalsConfig.baseURL || '',
-        method,
-        url: config2.url || '',
-        params: config2.params || {},
-        custom: { ...(globalsConfig.custom || {}), ...(config2.custom || {}) },
-        header: deepMerge(globalsConfig.header || {}, config2.header || {})
+function asObj(v: any | null): UTSJSONObject {
+    if (v != null && typeof v === 'object' && !Array.isArray(v)) {
+        return v as UTSJSONObject
     }
+    return {} as UTSJSONObject
+}
+
+// PLACEHOLDER_MERGE
+export default function mergeConfig(globalsConfig: UTSJSONObject, config2: UTSJSONObject = {} as UTSJSONObject): UTSJSONObject {
+    let method: any | null = config2['method']
+    if (method == null) method = globalsConfig['method']
+    if (method == null) method = 'GET'
+    const ms: string = `${method}`
+
+    const config: UTSJSONObject = {} as UTSJSONObject
+    config['baseURL'] = globalsConfig['baseURL'] != null ? globalsConfig['baseURL'] : ''
+    config['method'] = method
+    config['url'] = config2['url'] != null ? config2['url'] : ''
+    config['params'] = config2['params'] != null ? config2['params'] : ({} as UTSJSONObject)
+    config['custom'] = UTSJSONObject.assign({} as UTSJSONObject, asObj(globalsConfig['custom']), asObj(config2['custom']))
+    config['header'] = deepMerge(asObj(globalsConfig['header']), asObj(config2['header']))
+
     const defaultToConfig2Keys = ['getTask', 'validateStatus']
-    config = { ...config, ...mergeKeys(defaultToConfig2Keys, globalsConfig, config2) }
+    const dc = mergeKeys(defaultToConfig2Keys, globalsConfig, config2)
+    UTSJSONObject.keys(dc).forEach((k: string) => { config[k] = dc[k] })
 
-    // eslint-disable-next-line no-empty
-    if (method === 'DOWNLOAD') {
-    // #ifdef H5 || APP-PLUS
-        if (!isUndefined(config2.timeout)) {
-            config.timeout = config2.timeout
-        } else if (!isUndefined(globalsConfig.timeout)) {
-            config.timeout = globalsConfig.timeout
+    if (ms === 'DOWNLOAD') {
+        // #ifdef H5 || APP-PLUS
+        if (!isUndefined(config2['timeout'])) {
+            config['timeout'] = config2['timeout']
+        } else if (!isUndefined(globalsConfig['timeout'])) {
+            config['timeout'] = globalsConfig['timeout']
         }
-    // #endif
-    } else if (method === 'UPLOAD') {
-        // Remove content-type headers (UTS compatible way)
-        config.header = removeContentTypeHeaders(config.header)
-
+        // #endif
+    } else if (ms === 'UPLOAD') {
+        config['header'] = removeContentTypeHeaders(asObj(config['header']))
         const uploadKeys = [
             // #ifdef APP-PLUS || H5
             'files',
@@ -89,10 +83,10 @@ export default (globalsConfig: any, config2: any = {}): any => {
             }
         })
         // #ifdef H5 || APP-PLUS
-        if (isUndefined(config.timeout) && !isUndefined(globalsConfig.timeout)) {
-            config.timeout = globalsConfig.timeout
+        if (isUndefined(config['timeout']) && !isUndefined(globalsConfig['timeout'])) {
+            config['timeout'] = globalsConfig['timeout']
         }
-    // #endif
+        // #endif
     } else {
         const defaultsKeys = [
             'data',
@@ -113,7 +107,8 @@ export default (globalsConfig: any, config2: any = {}): any => {
             'firstIpv4'
             // #endif
         ]
-        config = { ...config, ...mergeKeys(defaultsKeys, globalsConfig, config2) }
+        const dk = mergeKeys(defaultsKeys, globalsConfig, config2)
+        UTSJSONObject.keys(dk).forEach((k: string) => { config[k] = dk[k] })
     }
 
     return config

@@ -1,121 +1,66 @@
 'use strict'
 
-// utils is a library of generic helper functions non-specific to axios
+// uni-app x (uts) 兼容的通用工具（原 axios/luch-request utils 的 uts 重写）
+// 保持导出函数名与语义不变；内部改用 UTSJSONObject / Array.isArray / instanceof 等 uts 支持的写法
 
-const { toString } = Object.prototype
-
-/**
- * Determine if a value is an Array
- *
- * @param {Object} val The value to test
- * @returns {boolean} True if value is an Array, otherwise false
- */
-export function isArray(val: any): boolean {
-    return toString.call(val) === '[object Array]'
+export function isArray(val: any | null): boolean {
+    return Array.isArray(val)
 }
 
-/**
- * Determine if a value is an Object
- *
- * @param {Object} val The value to test
- * @returns {boolean} True if value is an Object, otherwise false
- */
-export function isObject(val: any): boolean {
-    return val !== null && typeof val === 'object'
+export function isObject(val: any | null): boolean {
+    return val != null && typeof val === 'object'
 }
 
-/**
- * Determine if a value is a Date
- *
- * @param {Object} val The value to test
- * @returns {boolean} True if value is a Date, otherwise false
- */
-export function isDate(val: any): boolean {
-    return toString.call(val) === '[object Date]'
+export function isDate(val: any | null): boolean {
+    return val instanceof Date
 }
 
-/**
- * Iterate over an Array or an Object invoking a function for each item.
- *
- * If `obj` is an Array callback will be called passing
- * the value, index, and complete array for each item.
- *
- * If 'obj' is an Object callback will be called passing
- * the value, key, and complete object for each property.
- *
- * @param {Object|Array} obj The object to iterate
- * @param {Function} fn The callback to invoke for each item
- */
-export function forEach(obj: any, fn: (val: any, key: string | number, obj: any) => void): void {
-    // Don't bother if no value provided
-    if (obj === null || typeof obj === 'undefined') {
-        return
-    }
-
-    // Force an array if not already something iterable
-    if (typeof obj !== 'object') {
-    /* eslint no-param-reassign:0 */
-        obj = [obj]
-    }
-
-    if (isArray(obj)) {
-    // Iterate over array values
-        for (let i = 0, l = obj.length; i < l; i++) {
-            fn.call(null, obj[i], i, obj)
-        }
-    } else {
-    // Iterate over object keys using Object.keys() instead of for...in
-        const keys = Object.keys(obj)
-        for (let i = 0; i < keys.length; i++) {
-            const key = keys[i]
-            fn.call(null, obj[key], key, obj)
-        }
-    }
+export function isUndefined(val: any | null): boolean {
+    return val == null
 }
 
-/**
- * 是否为boolean 值
- * @param val
- * @returns {boolean}
- */
-export function isBoolean(val: any): boolean {
+export function isBoolean(val: any | null): boolean {
     return typeof val === 'boolean'
 }
 
-/**
- * 是否为真正的对象{} new Object
- * @param {any} obj - 检测的对象
- * @returns {boolean}
- */
-export function isPlainObject(obj: any): boolean {
-    return Object.prototype.toString.call(obj) === '[object Object]'
+export function isPlainObject(obj: any | null): boolean {
+    return obj != null && typeof obj === 'object' && !Array.isArray(obj) && !(obj instanceof Date)
 }
 
-/**
- * Function equal to merge with the difference being that no reference
- * to original objects is kept.
- *
- * @see merge
- * @param {...any} args Objects to merge
- * @returns {Object} Result of all merge properties
- */
-export function deepMerge(...args: any[]): any {
-    const result: any = {}
-    function assignValue(val: any, key: string): void {
-        if (typeof result[key] === 'object' && typeof val === 'object') {
-            result[key] = deepMerge(result[key], val)
-        } else if (typeof val === 'object') {
-            result[key] = deepMerge({}, val)
-        } else {
-            result[key] = val
+// PLACEHOLDER_UTILS
+// 遍历数组或 UTSJSONObject，回调签名 (val, key, obj)
+export function forEach(obj: any | null, fn: (val: any | null, key: any, obj: any | null) => void): void {
+    if (obj == null) {
+        return
+    }
+    if (Array.isArray(obj)) {
+        const arr = obj as Array<any>
+        for (let i = 0; i < arr.length; i++) {
+            fn(arr[i], i, obj)
         }
+    } else if (typeof obj === 'object') {
+        const o = obj as UTSJSONObject
+        UTSJSONObject.keys(o).forEach((key: string) => {
+            fn(o[key], key, obj)
+        })
+    } else {
+        fn(obj, 0, obj)
     }
-    for (let i = 0, l = args.length; i < l; i++) {
-        forEach(args[i], assignValue)
-    }
-    return result
 }
 
-export function isUndefined(val: any): boolean {
-    return typeof val === 'undefined'
+// 深合并两个 UTSJSONObject（source 覆盖 target），不保留原引用
+export function deepMerge(target: UTSJSONObject, source: UTSJSONObject): UTSJSONObject {
+    const result: UTSJSONObject = UTSJSONObject.assign({} as UTSJSONObject, target)
+    UTSJSONObject.keys(source).forEach((key: string) => {
+        const sv = source[key]
+        const rv = result[key]
+        const svObj = sv != null && typeof sv === 'object' && !Array.isArray(sv) && !(sv instanceof Date)
+        const rvObj = rv != null && typeof rv === 'object' && !Array.isArray(rv) && !(rv instanceof Date)
+        if (svObj && rvObj) {
+            result[key] = deepMerge(rv as UTSJSONObject, sv as UTSJSONObject)
+        } else {
+            result[key] = sv
+        }
+    })
+    return result
 }

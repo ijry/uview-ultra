@@ -1,9 +1,9 @@
 'use strict'
 
-import * as utils from '../utils'
+import { forEach, isArray, isDate, isObject } from '../utils'
 
 function encode(val: string): string {
-    return encodeURIComponent(val)
+    return encodeURIComponent(val)!
         .replace(/%40/gi, '@')
         .replace(/%3A/gi, ':')
         .replace(/%24/g, '$')
@@ -14,53 +14,51 @@ function encode(val: string): string {
 }
 
 /**
- * Build a URL by appending params to the end
- *
- * @param {string} url The base of the url (e.g., http://www.google.com)
- * @param {object} [params] The params to be appended
- * @returns {string} The formatted url
+ * 将 params 拼接到 url（uts 版）
+ * @param url 基础 url
+ * @param params 查询参数（UTSJSONObject / 数组 / 基本类型）
  */
-export default function buildURL(url: string, params?: any): string {
-    /* eslint no-param-reassign:0 */
-    if (!params) {
+export default function buildURL(url: string, params: any | null = null): string {
+    if (params == null) {
         return url
     }
 
-    let serializedParams: string = ''
     const parts: string[] = []
 
-    utils.forEach(params, (val: any, key: string | number) => {
-        if (val === null || typeof val === 'undefined') {
+    forEach(params, (val: any | null, key: any, obj: any | null) => {
+        if (val == null) {
             return
         }
-
-        let keyStr = key.toString()
-        if (utils.isArray(val)) {
+        let keyStr: string = key.toString()
+        let values: any = val
+        if (isArray(val)) {
             keyStr = `${keyStr}[]`
         } else {
-            val = [val]
+            values = [val]
         }
-
-        utils.forEach(val, (v: any) => {
-            if (utils.isDate(v)) {
-                v = v.toISOString()
-            } else if (utils.isObject(v)) {
-                v = JSON.stringify(v)
+        forEach(values, (v: any | null, k2: any, o2: any | null) => {
+            let vv: any | null = v
+            if (vv == null) {
+                return
             }
-            parts.push(`${encode(keyStr)}=${encode(v)}`)
+            if (isDate(vv)) {
+                vv = (vv as Date).toISOString()
+            } else if (isObject(vv)) {
+                vv = JSON.stringify(vv)
+            }
+            parts.push(`${encode(keyStr)}=${encode(`${vv}`)}`)
         })
     })
 
-    serializedParams = parts.join('&')
-
-    if (serializedParams) {
-        const hashmarkIndex = url.indexOf('#')
+    let out: string = url
+    const serializedParams: string = parts.join('&')
+    if (serializedParams.length > 0) {
+        const hashmarkIndex = out.indexOf('#')
         if (hashmarkIndex !== -1) {
-            url = url.slice(0, hashmarkIndex)
+            out = out.slice(0, hashmarkIndex)
         }
-
-        url += (url.indexOf('?') === -1 ? '?' : '&') + serializedParams
+        out += (out.indexOf('?') === -1 ? '?' : '&') + serializedParams
     }
 
-    return url
+    return out
 }

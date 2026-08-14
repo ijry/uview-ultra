@@ -3,6 +3,11 @@ optimize: up-novel-reader（UVue）顶/底工具栏改为悬浮
 
 - 工具栏改用 `position: absolute` 悬浮在正文之上，正文区域始终占满全高，工具栏显隐不再挤压/改变正文布局
 
+fix: luch-request UTS 版重写，修复其在 UniApp X（Android）端无法编译的问题
+
+- 按 uts 规则重写全套 `.uts`（去对象 spread / `Object.prototype.toString.call` / `Object.keys(any)` / `fn.call`，改用 `UTSJSONObject` 与 `Array.isArray`/`instanceof`/`typeof`；`then/catch` 回调参数改 `any | null`；拦截器与内联对象类型改具名 class），公开接口与 JS 版保持一致
+- uts 入口 `index.uts` 导出 `Request` 与全局 `http` 实例；真机 7/7 纯函数用例通过、真实 GET 请求链路验证
+
 ## 4.5.26
 fix: 修复 DatetimePicker 动态边界，及 up-novel-reader 在 App(uni-app x)端的编译与样式问题
 

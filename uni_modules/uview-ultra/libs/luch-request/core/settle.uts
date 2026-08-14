@@ -1,14 +1,30 @@
 /**
- * Resolve or reject a Promise based on response status.
- *
- * @param {Function} resolve A function that resolves the promise.
- * @param {Function} reject A function that rejects the promise.
- * @param {object} response The response.
+ * 根据响应状态 resolve / reject（uts 版）
+ * response 为 UTSJSONObject，包含 statusCode / config 等字段
+ * config['validateStatus'] 若存在则作为自定义校验器（存储为 any，调用前转型）；
+ * 未提供时默认 statusCode 在 [200,300) 视为成功
  */
-export default function settle(resolve: (value: any) => void, reject: (reason: any) => void, response: any): void {
-    const { validateStatus } = response.config
-    const status = response.statusCode
-    if (status && (!validateStatus || validateStatus(status))) {
+export default function settle(
+    resolve: (value: any) => void,
+    reject: (reason: any) => void,
+    response: UTSJSONObject
+): void {
+    const config = response['config'] as UTSJSONObject
+    const statusRaw = response['statusCode']
+    const status: number = statusRaw != null ? (statusRaw as number) : 0
+    const validateStatus = config['validateStatus']
+
+    let valid = false
+    if (status > 0) {
+        if (validateStatus == null) {
+            valid = status >= 200 && status < 300
+        } else {
+            const fn = validateStatus as ((s: number) => boolean)
+            valid = fn(status)
+        }
+    }
+
+    if (valid) {
         resolve(response)
     } else {
         reject(response)

@@ -5,6 +5,11 @@ import color from './libs/config/color.uts'
 import * as index from './libs/function/index.uts'
 export {config, color}
 
+// http 请求（luch-request uts 版）：与 .js 端一致，导出 Request 类与默认 http 实例
+import Request from './libs/luch-request'
+const http = new Request()
+export { Request, http }
+
 // i18n
 export {
     t,

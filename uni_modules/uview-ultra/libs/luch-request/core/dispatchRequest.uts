@@ -1,114 +1,89 @@
 import buildURL from '../helpers/buildURL'
 import buildFullPath from '../core/buildFullPath'
 import settle from '../core/settle'
-import { isUndefined } from '../utils'
 
-/**
- * 返回可选值存在的配置
- * @param {Array} keys - 可选值数组
- * @param {Object} config2 - 配置
- * @return {{}} - 存在的配置项
- */
-const mergeKeys = (keys: string[], config2: any): any => {
-    const config: any = {}
-    keys.forEach((prop: string) => {
-        if (!isUndefined(config2[prop])) {
-            config[prop] = config2[prop]
+function strOf(v: any | null, dft: string): string {
+    return v != null ? `${v}` : dft
+}
+
+function asObj(v: any | null): UTSJSONObject {
+    if (v != null && typeof v === 'object' && !Array.isArray(v)) {
+        return v as UTSJSONObject
+    }
+    return {} as UTSJSONObject
+}
+
+// PLACEHOLDER_DISPATCH
+export default function dispatchRequest(config: UTSJSONObject): Promise<any> {
+    return new Promise<any>((resolve: (v: any) => void, reject: (e: any) => void) => {
+        const baseURL = strOf(config['baseURL'], '')
+        const url = strOf(config['url'], '')
+        const fullPath = buildURL(buildFullPath(baseURL, url), config['params'])
+        const header = asObj(config['header'])
+        const method = strOf(config['method'], 'GET')
+
+        // 统一收敛结果并按状态码 settle
+        const finish = (statusCode: number, data: any | null, respHeader: any | null, errMsg: string): void => {
+            let d: any | null = data
+            if (typeof d === 'string') {
+                const parsed = JSON.parseObject(d as string)
+                if (parsed != null) {
+                    d = parsed
+                }
+            }
+            const resp: UTSJSONObject = {} as UTSJSONObject
+            resp['statusCode'] = statusCode
+            resp['data'] = d
+            resp['header'] = respHeader
+            resp['errMsg'] = errMsg
+            config['fullPath'] = fullPath
+            resp['config'] = config
+            settle(resolve, reject, resp)
+        }
+
+        if (method === 'UPLOAD') {
+            uni.uploadFile({
+                url: fullPath,
+                filePath: strOf(config['filePath'], ''),
+                name: strOf(config['name'], 'file'),
+                header: header,
+                formData: asObj(config['formData']),
+                success: (r: UploadFileSuccess) => {
+                    finish(r.statusCode, r.data, null, 'uploadFile:ok')
+                },
+                fail: (e: UploadFileFail) => {
+                    finish(0, null, null, e.errMsg)
+                }
+            })
+        } else if (method === 'DOWNLOAD') {
+            uni.downloadFile({
+                url: fullPath,
+                header: header,
+                success: (r: DownloadFileSuccess) => {
+                    const resp: UTSJSONObject = {} as UTSJSONObject
+                    resp['statusCode'] = r.statusCode
+                    resp['tempFilePath'] = r.tempFilePath
+                    config['fullPath'] = fullPath
+                    resp['config'] = config
+                    settle(resolve, reject, resp)
+                },
+                fail: (e: DownloadFileFail) => {
+                    finish(0, null, null, e.errMsg)
+                }
+            })
+        } else {
+            uni.request({
+                url: fullPath,
+                method: method as RequestMethod,
+                data: config['data'],
+                header: header,
+                success: (r: RequestSuccess<any>) => {
+                    finish(r.statusCode, r.data, r.header, 'request:ok')
+                },
+                fail: (e: RequestFail) => {
+                    finish(0, null, null, e.errMsg)
+                }
+            })
         }
     })
-    return config
 }
-
-/**
- * Remove content-type headers from header object (UTS compatible - no delete operator)
- */
-const removeContentTypeHeaders = (header: any): any => {
-    const newHeader: any = {}
-    const keys = Object.keys(header)
-    for (let i = 0; i < keys.length; i++) {
-        const key = keys[i]
-        if (key.toLowerCase() !== 'content-type') {
-            newHeader[key] = header[key]
-        }
-    }
-    return newHeader
-}
-
-export default (config: any): Promise<any> => new Promise((resolve, reject) => {
-    const fullPath = buildURL(buildFullPath(config.baseURL, config.url), config.params)
-    const _config: any = {
-        url: fullPath,
-        header: config.header,
-        complete: (response: any) => {
-            config.fullPath = fullPath
-            response.config = config
-            try {
-                // 对可能字符串不是json 的情况容错
-                if (typeof response.data === 'string') {
-                    response.data = JSON.parse(response.data)
-                }
-                // eslint-disable-next-line no-empty
-            } catch (e) {
-            }
-            settle(resolve, reject, response)
-        }
-    }
-    let requestTask: any
-    if (config.method === 'UPLOAD') {
-        // Remove content-type headers (UTS compatible way)
-        _config.header = removeContentTypeHeaders(_config.header)
-
-        const otherConfig: any = {
-        // #ifdef MP-ALIPAY
-            fileType: config.fileType,
-            // #endif
-            filePath: config.filePath,
-            name: config.name
-        }
-        const optionalKeys = [
-        // #ifdef APP-PLUS || H5
-            'files',
-            // #endif
-            // #ifdef H5
-            'file',
-            // #endif
-            // #ifdef H5 || APP-PLUS
-            'timeout',
-            // #endif
-            'formData'
-        ]
-        requestTask = uni.uploadFile({ ..._config, ...otherConfig, ...mergeKeys(optionalKeys, config) })
-    } else if (config.method === 'DOWNLOAD') {
-        // #ifdef H5 || APP-PLUS
-        if (!isUndefined(config.timeout)) {
-            _config.timeout = config.timeout
-        }
-        // #endif
-        requestTask = uni.downloadFile(_config)
-    } else {
-        const optionalKeys = [
-            'data',
-            'method',
-            // #ifdef H5 || APP-PLUS || MP-ALIPAY || MP-WEIXIN
-            'timeout',
-            // #endif
-            'dataType',
-            // #ifndef MP-ALIPAY
-            'responseType',
-            // #endif
-            // #ifdef APP-PLUS
-            'sslVerify',
-            // #endif
-            // #ifdef H5
-            'withCredentials',
-            // #endif
-            // #ifdef APP-PLUS
-            'firstIpv4'
-        // #endif
-        ]
-        requestTask = uni.request({ ..._config, ...mergeKeys(optionalKeys, config) })
-    }
-    if (config.getTask) {
-        config.getTask(requestTask, config)
-    }
-})
