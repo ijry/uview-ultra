@@ -1,3 +1,10 @@
+## Unreleased
+
+feat/fix: up-tabs 属性、事件与 up-tabs-pro
+
+- up-tabs click 在保留 item、index 的同时追加原始点击事件；新增 capsule、card、pill-arrow、tag 形态模式
+- 新增 Vue 与 UniApp X 双端 up-tabs-pro，支持受控 current、作用域内容插槽和事件透传
+
 ## 4.5.27
 optimize/fix: up-novel-reader 工具栏悬浮 + luch-request UTS 版重写
 
