@@ -1,0 +1,239 @@
+<template>
+	<view class="up-tabs-pro" :class="customClass" :style="customStyle">
+		<up-tabs
+			:list="safeList"
+			:keyName="keyName"
+			:current="innerCurrent"
+			:lineColor="resolvedLineColor"
+			:activeStyle="activeStyle"
+			:inactiveStyle="inactiveStyle"
+			:lineWidth="lineWidth"
+			:lineHeight="lineHeight"
+			:lineBgSize="lineBgSize"
+			:itemStyle="itemStyle"
+			:scrollable="scrollable"
+			:duration="durationValue"
+			:iconStyle="iconStyle"
+			:shapeMode="shapeMode"
+			@update:current="updateCurrent"
+			@click="handleClick"
+			@longPress="handleLongPress"
+			@change="handleChange"
+		>
+			<template v-if="$slots['left'] != null" #left>
+				<slot name="left" />
+			</template>
+			<template v-if="$slots['icon'] != null" #icon="scope">
+				<slot name="icon" :item="scope.item" :keyName="scope.keyName" :index="scope.index" />
+			</template>
+			<template v-if="$slots['tab'] != null || $slots['content'] != null" #content="scope">
+				<slot name="tab" :item="scope.item" :keyName="scope.keyName" :index="scope.index">
+					<slot name="content" :item="scope.item" :keyName="scope.keyName" :index="scope.index" />
+				</slot>
+			</template>
+			<template v-if="$slots['right'] != null" #right>
+				<slot name="right" />
+			</template>
+		</up-tabs>
+		<view
+			v-if="showContent"
+			class="up-tabs-pro__content"
+			:class="contentClass"
+			:style="contentStyle"
+		>
+			<slot
+				:current="innerCurrent"
+				:index="innerCurrent"
+				:item="currentItem"
+				:value="currentValue"
+				:list="safeList"
+			/>
+		</view>
+	</view>
+</template>
+
+<script setup lang="uts">
+	import type { PropType } from 'vue'
+	import { computed, ref, watch } from 'vue'
+	import tabsDefaults from '../up-tabs/tabs.uts'
+
+	defineOptions({
+		styleIsolation: 'app-and-page',
+		name: 'up-tabs-pro'
+	})
+
+	const props = defineProps({
+		list: {
+			type: Array as PropType<Array<UTSJSONObject>>,
+			default(): Array<UTSJSONObject> {
+				return [] as Array<UTSJSONObject>
+			}
+		},
+		keyName: {
+			type: String,
+			default: 'name'
+		},
+		current: {
+			type: [Number, String],
+			default: 0
+		},
+		contentMode: {
+			type: String,
+			default: 'static'
+		},
+		lineColor: {
+			type: String,
+			default: ''
+		},
+		activeStyle: {
+			type: [String, Object],
+			default: () => ({})
+		},
+		inactiveStyle: {
+			type: [String, Object],
+			default: () => ({})
+		},
+		lineWidth: {
+			type: [String, Number],
+			default: 20
+		},
+		lineHeight: {
+			type: [String, Number],
+			default: 3
+		},
+		lineBgSize: {
+			type: String,
+			default: 'cover'
+		},
+		itemStyle: {
+			type: [String, Object],
+			default: () => ({})
+		},
+		scrollable: {
+			type: Boolean,
+			default: true
+		},
+		duration: {
+			type: [Number, String],
+			default: 300
+		},
+		iconStyle: {
+			type: [String, Object],
+			default: () => ({})
+		},
+		shapeMode: {
+			type: String,
+			default: ''
+		},
+		showContent: {
+			type: Boolean,
+			default: true
+		},
+		contentClass: {
+			type: String,
+			default: ''
+		},
+		contentStyle: {
+			type: [String, Object, Array],
+			default: ''
+		},
+		bindIndexRef: {
+			type: String,
+			default: ''
+		},
+		customStyle: {
+			type: [String, Object, Array],
+			default: () => ({})
+		},
+		customClass: {
+			type: String,
+			default: ''
+		}
+	})
+
+	const emit = defineEmits(['update:current', 'change', 'click', 'longPress'])
+	const innerCurrent = ref(0)
+
+	const safeList = computed((): Array<UTSJSONObject> => {
+		return props.list != null && Array.isArray(props.list)
+			? props.list as Array<UTSJSONObject>
+			: [] as Array<UTSJSONObject>
+	})
+	const currentItem = computed((): UTSJSONObject | null => {
+		const item = safeList.value[innerCurrent.value]
+		return item != null ? item : null
+	})
+	const currentValue = computed((): any | null => {
+		return currentItem.value != null ? currentItem.value[props.keyName] : null
+	})
+	const resolvedLineColor = computed((): string => {
+		if (props.lineColor != null && props.lineColor != '') {
+			return props.lineColor
+		}
+		return (tabsDefaults['tabs'] as UTSJSONObject)['lineColor'] as string
+	})
+	const durationValue = computed((): number => Number(props.duration))
+
+	const normalizeCurrent = (value: any): number => {
+		const parsed = Number(value)
+		const nextValue = isNaN(parsed) ? 0 : parsed
+		const maxIndex = Math.max(safeList.value.length - 1, 0)
+		return Math.min(Math.max(nextValue, 0), maxIndex)
+	}
+
+	const updateCurrent = (value: number | string): void => {
+		const nextCurrent = normalizeCurrent(value)
+		innerCurrent.value = nextCurrent
+		emit('update:current', nextCurrent)
+	}
+
+	const handleClick = (item: UTSJSONObject, index: number, event: any): void => {
+		emit('click', item, index, event)
+	}
+
+	const handleLongPress = (item: UTSJSONObject, index: number): void => {
+		emit('longPress', item, index)
+	}
+
+	const handleChange = (item: UTSJSONObject, index: number): void => {
+		updateCurrent(index)
+		emit('change', item, index)
+	}
+
+	watch((): string | number => props.current != null ? props.current : 0, (value: string | number) => {
+		innerCurrent.value = normalizeCurrent(value)
+	}, { immediate: true })
+
+	watch((): Array<UTSJSONObject> => safeList.value, () => {
+		const nextCurrent = normalizeCurrent(innerCurrent.value)
+		if (nextCurrent != innerCurrent.value) {
+			innerCurrent.value = nextCurrent
+			emit('update:current', nextCurrent)
+		}
+	}, { deep: true })
+
+	defineExpose({
+		innerCurrent,
+		safeList,
+		currentItem,
+		currentValue,
+		resolvedLineColor,
+		normalizeCurrent,
+		updateCurrent,
+		handleClick,
+		handleLongPress,
+		handleChange
+	})
+</script>
+
+<style lang="scss" scoped>
+	.up-tabs-pro {
+		width: 100%;
+		box-sizing: border-box;
+
+		&__content {
+			width: 100%;
+			box-sizing: border-box;
+		}
+	}
+</style>
