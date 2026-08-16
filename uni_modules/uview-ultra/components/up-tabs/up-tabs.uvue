@@ -1,5 +1,5 @@
 <template>
-	<view class="up-tabs" :class="[customClass]">
+	<view class="up-tabs" :class="[customClass, shapeModeClass]" :style="customStyle">
 		<view class="up-tabs__wrapper">
 			<slot name="left" />
 			<view class="up-tabs__wrapper__scroll-view-wrapper">
@@ -19,11 +19,12 @@
 							class="up-tabs__wrapper__nav__item"
 							v-for="(item, index) in safeList"
 							:key="index"
-							@tap="clickHandler(item, index)"
+							@tap="clickHandler(item, index, $event)"
 							@longpress="longPressHandler(item,index)"
 							:ref="`up-tabs__wrapper__nav__item-${index}`"
 							:style="navItemStyle"
 							:class="[`up-tabs__wrapper__nav__item-${index}`,
+								shapeMode != '' ? 'up-tabs__wrapper__nav__item--' + shapeMode : '',
 								(item['disabled'] != null && (item['disabled'] as boolean)) ? 'up-tabs__wrapper__nav__item--disabled' : '',
 								innerCurrent == index ? 'up-tabs__wrapper__nav__item-active' : '']"
 						>
@@ -60,6 +61,14 @@
 								:inverted="getBadgePropValue(item, 'inverted')"
 								customStyle="margin-left: 4px;"
 							></up-badge>
+							<view
+								v-if="shapeMode == 'card' && innerCurrent == index && index < tabList.length - 1"
+								class="up-tabs__wrapper__nav__item__card-corner"
+							></view>
+							<view
+								v-if="shapeMode == 'pill-arrow' && innerCurrent == index"
+								class="up-tabs__wrapper__nav__item__active-arrow"
+							></view>
 						</view>
 						<view
 							class="up-tabs__wrapper__nav__line"
@@ -80,7 +89,7 @@
 	import { computed, getCurrentInstance, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 	import defProps from './tabs.uts';
 	import badgeProps from '../../components/up-badge/badge.uts'
-	import { addUnit as _addUnit, addStyle as _addStyle, deepMerge, getPx, sleep, getWindowInfo, upGetRect } from '../../libs/function/index.uts';
+	import { addUnit as _addUnit, addStyle as _addStyle, deepClone, deepMerge, getPx, sleep, getWindowInfo, upGetRect } from '../../libs/function/index.uts';
 
 	defineOptions({
 		styleIsolation: 'app-and-page',
@@ -131,7 +140,7 @@
 		// 菜单item的样式
 		itemStyle: {
 			type: [String, Object],
-			default: (defProps['tabs'] as UTSJSONObject)['itemStyle']
+			default: () => ({})
 		},
 		// 菜单是否可滚动
 		scrollable: {
@@ -152,6 +161,11 @@
 		iconStyle: {
 			type: [String, Object],
 			default: (defProps['tabs'] as UTSJSONObject)['iconStyle']
+		},
+		// 形态模式，可选：capsule/card/pill-arrow/tag
+		shapeMode: {
+			type: String,
+			default: (defProps['tabs'] as UTSJSONObject)['shapeMode']
 		},
 		customStyle: {
 			type: [Object, String],
@@ -175,6 +189,7 @@
 	const instance = getCurrentInstance()!.proxy!
 
 	const firstTime = ref(true)
+	const lineShow = ref(false)
 	const scrollLeft = ref(0)
 	const scrollViewWidth = ref(0)
 	const lineOffsetLeft = ref(0)
@@ -185,7 +200,15 @@
 	const innerCurrent = ref(0)
 	const moving = ref(false)
 	const safeList = computed((): Array<UTSJSONObject> => props.list != null ? props.list : [] as Array<UTSJSONObject>)
+	const tabList = ref<Array<UTSJSONObject>>([])
 	const keyNameValue = computed((): string => props.keyName != null ? props.keyName : 'name')
+	const shapeModeClass = computed((): string => props.shapeMode != null && props.shapeMode != '' ? 'up-tabs--shape-' + props.shapeMode : '')
+	const showLine = computed((): boolean => lineShow.value && props.shapeMode != 'capsule' && props.shapeMode != 'pill-arrow' && props.shapeMode != 'tag')
+
+	const syncTabList = (): void => {
+		const cloned = deepClone(safeList.value) as Array<UTSJSONObject>
+		tabList.value = cloned != null ? cloned : [] as Array<UTSJSONObject>
+	}
 	const getItemText = (item: UTSJSONObject): string => {
 		const value = item[keyNameValue.value]
 		return value == null ? '' : value.toString()
@@ -197,6 +220,19 @@
 
 	const navItemStyle = computed((): UTSJSONObject => {
 		const style = _addStyle(props.itemStyle) as UTSJSONObject
+		if (style['height'] == null || style['height'].toString() == '') {
+			if (props.shapeMode == 'capsule') {
+				style['height'] = '30px'
+			} else if (props.shapeMode == 'card') {
+				style['height'] = '34px'
+			} else if (props.shapeMode == 'pill-arrow') {
+				style['height'] = '32px'
+			} else if (props.shapeMode == 'tag') {
+				style['height'] = '28px'
+			} else {
+				style['height'] = '44px'
+			}
+		}
 		style['flex'] = props.scrollable ? '' : 1
 		return style
 	})
@@ -212,7 +248,8 @@
 			transitionDuration: (firstTime.value ? 0 : (props.duration != null ? props.duration : 300)).toString() + 'ms',
 			height: _addUnit(props.lineHeight),
 			backgroundColor: props.lineColor,
-			backgroundSize: props.lineBgSize
+			backgroundSize: props.lineBgSize,
+			display: showLine.value ? 'block' : 'none'
 		} as UTSJSONObject
 	})
 
@@ -250,8 +287,18 @@
 		const customeStyle = (index == innerCurrent.value)
 			? _addStyle(props.activeStyle)
 			: _addStyle(props.inactiveStyle)
+		const isActive = index == innerCurrent.value
+		const customColor = customeStyle['color']
+		const hasCustomColor = customColor != null && customColor.toString().trim() != ''
+		const defaultColor = isActive ? '#303133' : '#606266'
+		if (hasCustomColor && customColor.toString() == defaultColor
+			&& isActive && (props.shapeMode == 'pill-arrow' || props.shapeMode == 'tag')) {
+			style['color'] = '#ffffff'
+		} else if (!isActive && (props.shapeMode == 'pill-arrow' || props.shapeMode == 'tag') && !hasCustomColor) {
+			style['color'] = '#606266'
+		}
 		// 如果当前菜单被禁用，则加上对应颜色，需要在此做处理，是因为nvue下，无法在style样式中通过!import覆盖标签的内联样式
-		const item = (props.list as Array<UTSJSONObject>)[index]
+		const item = tabList.value[index]
 		if (item != null && item['disabled'] != null && item['disabled'] as boolean) {
 			style['color'] = '#c8c9cc'
 		}
@@ -259,7 +306,7 @@
 	}
 
 	const setLineLeft = (): void => {
-		const list = props.list as Array<UTSJSONObject>
+		const list = tabList.value
 		const tabItem = list[innerCurrent.value];
 		if (tabItem == null) {
 			return;
@@ -273,6 +320,7 @@
 		// 获取下划线的数值px表示法
 		const lineWidth = parseFloat(getPx(props.lineWidth));
 		lineOffsetLeft.value = lineOffsetLeftLocal + (((tabItem['rect'] as NodeInfo).width ?? 0) - lineWidth) / 2
+		lineShow.value = true
 
 		// 如果是第一次执行此方法，让滑块在初始化时，瞬间滑动到第一个tab item的中间
 		// 这里需要一个定时器，因为在非nvue下，是直接通过style绑定过渡时间，需要等其过渡完成后，再设置为false(非第一次移动滑块)
@@ -296,7 +344,7 @@
 		if (innerCurrent.value < 0) {
 			innerCurrent.value = 0;
 		}
-		const list = props.list as Array<UTSJSONObject>
+		const list = tabList.value
 		const tabRect = list[innerCurrent.value]
 		if (tabRect == null) {
 			return
@@ -339,7 +387,7 @@
 	// 获取所有标签的尺寸
 	const getAllItemRect = (): Promise<Array<NodeInfo>> => {
 		return new Promise(resolve => {
-			const promiseAllArr = safeList.value.map((_item: UTSJSONObject, index: number) => {
+			const promiseAllArr = tabList.value.map((_item: UTSJSONObject, index: number) => {
 				return queryRect(`up-tabs__wrapper__nav__item-${index}`)
 			})
 			Promise.all(promiseAllArr).then((sizes: NodeInfo[]) => resolve(sizes))
@@ -349,7 +397,7 @@
 	// 获取所有标签的尺寸
 	const resize = (): void => {
 		// 如果不存在list，则不处理
-		if (safeList.value.length == 0) {
+		if (tabList.value.length == 0) {
 			return
 		}
 		getTabsRect().then((tabsRes: Array<NodeInfo>) => {
@@ -367,7 +415,9 @@
 					if (item != null) {
 						scrollViewWidth.value = scrollViewWidth.value + (item.width ?? 0)
 						// 另外计算每一个item的中心点X轴坐标
-						;(props.list as Array<UTSJSONObject>)[index]['rect'] = item
+					if (tabList.value[index] != null) {
+						tabList.value[index]['rect'] = item
+					}
 					}
 				})
 				// 获取了tabs的尺寸之后，设置滑块的位置
@@ -378,12 +428,12 @@
 	}
 
 	// 点击某一个标签
-	const clickHandler = (item: any, index: number): void => {
+	const clickHandler = (item: any, index: number, event: any): void => {
 		// 因为标签可能为disabled状态，所以click是一定会发出的，但是change事件是需要可用的状态才发出
 		emit('click', {
 			...item as UTSJSONObject,
 			index
-		}, index)
+		}, index, event)
 		// 如果disabled状态，返回
 		if (item['disabled'] != null && item['disabled'] as boolean) return
 		// 如果点击当前不触发change
@@ -421,10 +471,11 @@
 
 	// list变化时，重新渲染list各项信息
 	watch((): Array<UTSJSONObject> => safeList.value, () => {
+		syncTabList()
 		nextTick(() => {
 			resize()
 		})
-	})
+	}, { immediate: true, deep: true })
 
 	onMounted(() => {
 		init()
@@ -442,6 +493,8 @@
 
 	defineExpose({
 		firstTime,
+		lineShow,
+		tabList,
 		scrollLeft,
 		scrollViewWidth,
 		lineOffsetLeft,
@@ -450,6 +503,8 @@
 		moving,
 		propsBadge,
 		navItemStyle,
+		shapeModeClass,
+		showLine,
 		iconCustomStyle,
 		lineStyle,
 		hasItemIcon,
@@ -495,6 +550,7 @@
 				&__item {
 					padding: 0 11px;
 					@include flex;
+					position: relative;
 					align-items: center;
 					justify-content: center;
 					/* #ifdef H5 */
@@ -505,6 +561,30 @@
 						/* #ifdef H5 */
 						cursor: not-allowed;
 						/* #endif */
+					}
+
+					&__card-corner {
+						position: absolute;
+						top: 0;
+						right: -10px;
+						width: 20px;
+						height: 100%;
+						background-color: inherit;
+						transform: skewX(25deg);
+						border-top-right-radius: 10px;
+						z-index: 1;
+					}
+
+					&__active-arrow {
+						position: absolute;
+						left: 50%;
+						bottom: -6px;
+						width: 0;
+						height: 0;
+						border-left: 6px solid transparent;
+						border-right: 6px solid transparent;
+						border-top: 6px solid #ff3b30;
+						transform: translateX(-50%);
 					}
 
 					&__text {
@@ -528,6 +608,83 @@
 					transition-property: transform;
 					transition-duration: 300ms;
 				}
+			}
+		}
+
+		&--shape-capsule {
+			.up-tabs__wrapper__scroll-view-wrapper {
+				padding: 3px;
+				border-radius: 999px;
+				background-color: #edf0f5;
+			}
+
+			.up-tabs__wrapper__nav__item {
+				min-height: 30px;
+				padding: 0 14px;
+				border-radius: 999px;
+				transition: background-color 0.2s;
+			}
+
+			.up-tabs__wrapper__nav__item-active {
+				background-color: #ffffff;
+			}
+		}
+
+		&--shape-card {
+			.up-tabs__wrapper__scroll-view-wrapper {
+				padding: 0;
+				border-radius: 10px;
+				background-color: #9ccde5;
+				box-shadow: inset 0 0 0 1px rgba(96, 98, 102, 0.06);
+			}
+
+			.up-tabs__wrapper__nav__item {
+				min-height: 34px;
+				padding: 0;
+				border-radius: 10px 10px 0 0;
+				transition: background-color 0.2s;
+			}
+
+			.up-tabs__wrapper__nav__item-active {
+				background-color: #f6f8fb;
+				box-shadow: inset 0 0 0 1px rgba(96, 98, 102, 0.06);
+				z-index: 2;
+			}
+		}
+
+		&--shape-pill-arrow {
+			.up-tabs__wrapper__nav {
+				padding-bottom: 6px;
+			}
+
+			.up-tabs__wrapper__nav__item {
+				min-height: 32px;
+				padding: 0 12px;
+				border-radius: 8px;
+				background-color: #e8e8e8;
+				margin-right: 8px;
+			}
+
+			.up-tabs__wrapper__nav__item-active {
+				background: linear-gradient(90deg, #ff6c57 0%, #ff3b30 100%);
+			}
+		}
+
+		&--shape-tag {
+			.up-tabs__wrapper__nav {
+				padding: 2px 0;
+			}
+
+			.up-tabs__wrapper__nav__item {
+				min-height: 28px;
+				padding: 0 14px;
+				border-radius: 999px;
+				background-color: #f3f4f6;
+				margin-right: 8px;
+			}
+
+			.up-tabs__wrapper__nav__item-active {
+				background-color: #2a6bf6;
 			}
 		}
 	}
