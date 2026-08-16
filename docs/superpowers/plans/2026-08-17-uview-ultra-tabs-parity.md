@@ -26,7 +26,7 @@
 
 - Create scripts/verify-tabs-parity.mjs: deterministic source and contract checks for both runtimes, types, demo, and registration.
 - Modify package.json: expose verify:tabs-parity.
-- Modify uni_modules/uview-ultra/components/up-tabs/props.js: add the Vue shapeMode prop and preserve item-style presence semantics.
+- Modify uni_modules/uview-ultra/components/up-tabs/props.js and tabs.js: add the Vue shapeMode prop/default and preserve item-style presence semantics.
 - Modify uni_modules/uview-ultra/components/up-tabs/tabs.uts: add the UTS shapeMode default.
 - Modify uni_modules/uview-ultra/components/up-tabs/up-tabs.vue and up-tabs.uvue: implement event forwarding, shape rendering, and internal measurement state.
 - Create uni_modules/uview-ultra/components/up-tabs-pro/up-tabs-pro.vue and up-tabs-pro.uvue: upstream-compatible Vue and UTS composition wrappers.
@@ -61,6 +61,7 @@ const uvueTabs = read('uni_modules/uview-ultra/components/up-tabs/up-tabs.uvue')
 const vuePro = read('uni_modules/uview-ultra/components/up-tabs-pro/up-tabs-pro.vue')
 const uvuePro = read('uni_modules/uview-ultra/components/up-tabs-pro/up-tabs-pro.uvue')
 const tabsProps = read('uni_modules/uview-ultra/components/up-tabs/props.js')
+const tabsJsDefaults = read('uni_modules/uview-ultra/components/up-tabs/tabs.js')
 const tabsDefaults = read('uni_modules/uview-ultra/components/up-tabs/tabs.uts')
 const tabsTypes = read('uni_modules/uview-ultra/types/comps/tabs.d.ts')
 const proTypes = read('uni_modules/uview-ultra/types/comps/tabsPro.d.ts')
@@ -75,6 +76,7 @@ for (const [name, source] of [['up-tabs.vue', vueTabs], ['up-tabs.uvue', uvueTab
   assert.match(source, /(?:emit|\$emit)\(['"]click['"][\s\S]*event/, name + ': click must emit the event')
 }
 assert.match(tabsProps, /shapeMode/)
+assert.match(tabsJsDefaults, /shapeMode:/)
 assert.match(tabsDefaults, /shapeMode:/)
 assert.match(tabsTypes, /shapeMode\?/)
 assert.match(tabsTypes, /index: number, event: any/)
@@ -121,6 +123,7 @@ git commit -m "test: add tabs parity verifier"
 
 **Files:**
 - Modify: uni_modules/uview-ultra/components/up-tabs/props.js
+- Modify: uni_modules/uview-ultra/components/up-tabs/tabs.js
 - Modify: uni_modules/uview-ultra/components/up-tabs/up-tabs.vue
 
 **Interfaces:**
@@ -129,7 +132,7 @@ git commit -m "test: add tabs parity verifier"
 
 - [ ] **Step 1: Extend the Vue prop definition**
 
-Add shapeMode to props.js with a string type and default from defProps.tabs.shapeMode. Make item-style computation distinguish an omitted style from an explicitly supplied style so shape defaults do not override caller styles; preserve the documented 44px default when no shape is selected.
+Add shapeMode to props.js with a string type and default from defProps.tabs.shapeMode. Add shapeMode: '' to the tabs object in tabs.js so the default exists for Vue and JS consumers. Make item-style computation distinguish an omitted style from an explicitly supplied style so shape defaults do not override caller styles; preserve the documented 44px default when no shape is selected.
 
 - [ ] **Step 2: Run the failing assertion**
 
@@ -174,7 +177,7 @@ Expected: Vue up-tabs assertions pass; UTS/wrapper assertions remain.
 - [ ] **Step 7: Commit the Vue base component**
 
 ~~~powershell
-git add uni_modules/uview-ultra/components/up-tabs/props.js uni_modules/uview-ultra/components/up-tabs/up-tabs.vue
+git add uni_modules/uview-ultra/components/up-tabs/props.js uni_modules/uview-ultra/components/up-tabs/tabs.js uni_modules/uview-ultra/components/up-tabs/up-tabs.vue
 git commit -m "fix: align Vue tabs props and click event"
 ~~~
 
@@ -265,14 +268,23 @@ Render an up-tabs child with the forwarded props and this root/content structure
     :scrollable="scrollable"
     :duration="Number(duration)"
     :iconStyle="iconStyle"
-    :shapeMode="shapeMode"
-    @update:current="updateCurrent"
-    @click="clickHandler"
-    @longPress="longPressHandler"
-    @change="changeHandler"
-  >
-    <!-- forward left, icon, tab/content, and right slots -->
-  </up-tabs>
+      :shapeMode="shapeMode"
+      @update:current="updateCurrent"
+      @click="clickHandler"
+      @longPress="longPressHandler"
+      @change="changeHandler"
+    >
+      <template v-if="$slots.left" #left><slot name="left" /></template>
+      <template v-if="$slots.icon" #icon="scope">
+        <slot name="icon" :item="scope.item" :keyName="scope.keyName" :index="scope.index" />
+      </template>
+      <template v-if="$slots.tab || $slots.content" #content="scope">
+        <slot name="tab" :item="scope.item" :keyName="scope.keyName" :index="scope.index">
+          <slot name="content" :item="scope.item" :keyName="scope.keyName" :index="scope.index" />
+        </slot>
+      </template>
+      <template v-if="$slots.right" #right><slot name="right" /></template>
+    </up-tabs>
   <view v-if="showContent" class="up-tabs-pro__content" :class="contentClass" :style="contentStyle">
     <slot :current="innerCurrent" :index="innerCurrent" :item="currentItem" :value="currentValue" :list="safeList" />
   </view>
@@ -389,11 +401,44 @@ git commit -m "feat: add UTS tabs-pro wrapper"
 
 - [ ] **Step 1: Add a focused demo block**
 
-Add an up-tabs-pro example with three items, a ref-backed current index, shapeMode="capsule", and a default slot rendering the selected item/value. Keep it inside the existing tabs page and use existing up-text/up-button primitives only.
+Add this block inside the existing tabs page without removing the current examples:
+
+~~~vue
+<view class="u-demo-block">
+  <view class="u-demo-block__title"><text class="text">tabs-pro 内容插槽</text></view>
+  <view class="u-demo-block__content">
+    <up-tabs-pro :list="proList" v-model:current="proCurrent" shapeMode="capsule" showContent>
+      <template #default="{ item, index, value }">
+        <view style="padding: 12px 0;">
+          <up-text :text="'第 ' + (index + 1) + ' 项：' + value" />
+        </view>
+      </template>
+    </up-tabs-pro>
+  </view>
+</view>
+~~~
+
+Add the matching UTS setup values next to the existing tab lists:
+
+~~~ts
+const proList = [{ name: '概览' }, { name: '详情' }, { name: '设置' }]
+const proCurrent = ref(0)
+~~~
 
 - [ ] **Step 2: Add the unreleased changelog entry**
 
-Insert an ## Unreleased section at the top of changelog.md documenting:
+Insert this section at the top of changelog.md:
+
+~~~markdown
+## Unreleased
+
+feat/fix: up-tabs 属性、事件与 up-tabs-pro
+
+- up-tabs click 在保留 item、index 的同时追加原始点击事件；新增 capsule、card、pill-arrow、tag 形态模式
+- 新增 Vue 与 UniApp X 双端 up-tabs-pro，支持受控 current、作用域内容插槽和事件透传
+~~~
+
+The entry documents:
 - up-tabs click appends the original event as argument three while preserving the first two arguments;
 - up-tabs supports upstream shape modes;
 - up-tabs-pro is available in Vue and UniApp X with scoped content and transparent event forwarding.
