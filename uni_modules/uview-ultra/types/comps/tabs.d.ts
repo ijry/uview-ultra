@@ -61,11 +61,17 @@ declare interface TabsProps {
    */
   keyName?: string
   /**
+   * 标签形态模式，可选值：`capsule`/`card`/`pill-arrow`/`tag`
+   * @default ""
+   */
+  shapeMode?: '' | 'capsule' | 'card' | 'pill-arrow' | 'tag'
+  /**
    * 点击标签时触发
    * @param item 传入的其他值
    * @param index 标签索引值
+   * @param event 原始点击事件，H5 下为 DOM Event
    */
-  onClick?: (item: any, index: number) => any
+  onClick?: (item: any, index: number, event: any) => any
   /**
    * 标签索引改变时触发(`disalbed`时不会触发)
    * @param item 传入的其他值

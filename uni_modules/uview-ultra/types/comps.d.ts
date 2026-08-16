@@ -78,6 +78,7 @@ declare module '@vue/runtime-core' {
     ['up-back-top']: typeof import('./comps/backTop')['BackTop']
     ['up-navbar']: typeof import('./comps/navbar')['Navbar']
     ['up-tabs']: typeof import('./comps/tabs')['Tabs']
+    ['up-tabs-pro']: typeof import('./comps/tabsPro')['TabsPro']
     ['up-subsection']: typeof import('./comps/subsection')['Subsection']
     ['up-index-list']: typeof import('./comps/indexList')['IndexList']
     ['up-index-item']: typeof import('./comps/indexItem')['IndexItem']
