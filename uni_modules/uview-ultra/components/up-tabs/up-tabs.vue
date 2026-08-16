@@ -1,5 +1,5 @@
 <template>
-	<view class="up-tabs" :class="[customClass]">
+	<view class="up-tabs" :class="[customClass, shapeModeClass]" :style="addStyle(customStyle)">
 		<view class="up-tabs__wrapper">
 			<slot name="left" />
 			<view class="up-tabs__wrapper__scroll-view-wrapper">
@@ -17,13 +17,14 @@
 					>
 						<view
 							class="up-tabs__wrapper__nav__item"
-							v-for="(item, index) in list"
+							v-for="(item, index) in tabList"
 							:key="index"
-							@tap="clickHandler(item, index)"
+							@tap="clickHandler(item, index, $event)"
 							@longpress="longPressHandler(item,index)"
 							:ref="(el) => setItemRef(el, index)"
-							:style="[addStyle(itemStyle), {flex: scrollable ? '' : 1}]"
+							:style="[itemComputedStyle, {flex: scrollable ? '' : 1}]"
 							:class="[`up-tabs__wrapper__nav__item-${index}`,
+								shapeMode && `up-tabs__wrapper__nav__item--${shapeMode}`,
 								item.disabled && 'up-tabs__wrapper__nav__item--disabled',
 								innerCurrent == index ? 'up-tabs__wrapper__nav__item-active' : '']"
 						>
@@ -58,6 +59,14 @@
 								:inverted="item.badge && item.badge.inverted || propsBadge.inverted"
 								customStyle="margin-left: 4px;"
 							></up-badge>
+							<view
+								v-if="shapeMode === 'card' && innerCurrent == index && index < tabList.length - 1"
+								class="up-tabs__wrapper__nav__item__card-corner"
+							></view>
+							<view
+								v-if="shapeMode === 'pill-arrow' && innerCurrent == index"
+								class="up-tabs__wrapper__nav__item__active-arrow"
+							></view>
 						</view>
 						<!-- #ifdef APP-NVUE -->
 						<view
@@ -68,6 +77,7 @@
 								height: addUnit(lineHeight),
 								background: lineColor,
 								backgroundSize: lineBgSize,
+								display: showLine ? 'block' : 'none',
 							}]"
 						>
 						</view>
@@ -83,6 +93,7 @@
 								height: addUnit(lineHeight),
 								background: lineColor,
 								backgroundSize: lineBgSize,
+								display: showLine ? 'block' : 'none',
 							}]"
 						>
 						</view>
@@ -100,11 +111,11 @@
 const animation = uni.requireNativePlugin('animation')
 const dom = uni.requireNativePlugin('dom')
 // #endif
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, getCurrentInstance, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { props as tabsProps } from './props'
 import { commonProps, useUltraUI } from '../../libs/composable/useUltraUI'
 import defProps from '../../libs/config/props.js'
-import { addUnit, addStyle, deepMerge, getPx, sleep, getWindowInfo } from '../../libs/function/index'
+import { addUnit, addStyle, deepClone, deepMerge, getPx, sleep, getWindowInfo } from '../../libs/function/index'
 /**
  * Tabs 标签
  * @description tabs标签组件，在标签多的时候，可以配置为左右滑动，标签少的时候，可以禁止滑动。 该组件的一个特点是配置为滚动模式时，激活的tab会自动移动到组件的中间位置。
@@ -126,8 +137,11 @@ const props = defineProps({
 })
 const emit = defineEmits(['click', 'longPress', 'change', 'update:current'])
 const { $uGetRect } = useUltraUI(props)
+const instance = getCurrentInstance()
 
 const firstTime = ref(true)
+	const lineShow = ref(false)
+	const tabList = ref([])
 const scrollLeft = ref(0)
 const scrollViewWidth = ref(0)
 const lineOffsetLeft = ref(0)
@@ -142,10 +156,39 @@ const navLineRef = ref(null)
 const itemRefs = ref([])
 let windowResizeCallback = null
 
+const shapeModeClass = computed(() => props.shapeMode ? `up-tabs--shape-${props.shapeMode}` : '')
+const showLine = computed(() => lineShow.value && !['capsule', 'pill-arrow', 'tag'].includes(props.shapeMode))
+
+function hasExplicitProp(name) {
+	const rawProps = instance?.vnode?.props || {}
+	return Object.prototype.hasOwnProperty.call(rawProps, name)
+		|| Object.prototype.hasOwnProperty.call(rawProps, name.replace(/[A-Z]/g, match => `-${match.toLowerCase()}`))
+}
+
+const itemComputedStyle = computed(() => {
+	const style = addStyle(props.itemStyle)
+	if (!hasExplicitProp('itemStyle')) {
+		const defaultModeHeights = {
+			capsule: '30px',
+			card: '34px',
+			'pill-arrow': '32px',
+			tag: '28px'
+		}
+		style.height = defaultModeHeights[props.shapeMode] || '44px'
+	}
+	return style
+})
+
 function setItemRef(el, index) {
 	if (el) {
 		itemRefs.value[index] = el
 	}
+}
+
+function syncTabList() {
+	const source = Array.isArray(props.list) ? props.list : []
+	const cloned = deepClone(source)
+	tabList.value = Array.isArray(cloned) ? cloned : []
 }
 
 const textStyle = computed(() => {
@@ -154,7 +197,18 @@ const textStyle = computed(() => {
 		const customeStyle = (index == innerCurrent.value)
 			? addStyle(props.activeStyle)
 			: addStyle(props.inactiveStyle)
-		if (props.list[index] && props.list[index]['disabled']) {
+		const isActive = index == innerCurrent.value
+		const customColor = customeStyle && customeStyle.color
+		const hasCustomColor = customColor != null && String(customColor).trim() !== ''
+		const defaultColor = isActive ? '#303133' : '#606266'
+		const isStyleOverridden = hasCustomColor && (hasExplicitProp(isActive ? 'activeStyle' : 'inactiveStyle')
+			|| customColor !== defaultColor)
+		if (isActive && ['pill-arrow', 'tag'].includes(props.shapeMode) && !isStyleOverridden) {
+			style.color = '#ffffff'
+		} else if (!isActive && ['pill-arrow', 'tag'].includes(props.shapeMode) && !isStyleOverridden) {
+			style.color = '#606266'
+		}
+		if (tabList.value[index] && tabList.value[index]['disabled']) {
 			style.color = '#c8c9cc'
 		}
 		return deepMerge(customeStyle, style)
@@ -177,10 +231,11 @@ watch(() => props.current, (newValue) => {
 }, { immediate: true })
 
 watch(() => props.list, () => {
+	syncTabList()
 	nextTick(() => {
 		resize()
 	})
-})
+}, { immediate: true, deep: true })
 
 onMounted(() => {
 	init()
@@ -197,15 +252,16 @@ onBeforeUnmount(() => {
 })
 
 function setLineLeft() {
-	const tabItem = props.list[innerCurrent.value]
+	const tabItem = tabList.value[innerCurrent.value]
 	if (!tabItem) {
 		return
 	}
-	let offset = props.list
+	let offset = tabList.value
 		.slice(0, innerCurrent.value)
 		.reduce((total, curr) => total + curr.rect.width, 0)
 	const lineWidthPx = getPx(props.lineWidth)
 	lineOffsetLeft.value = offset + (tabItem.rect.width - lineWidthPx) / 2
+	lineShow.value = true
 	// #ifdef APP-NVUE
 	animationLine(lineOffsetLeft.value, firstTime.value ? 0 : parseInt(props.duration))
 	// #endif
@@ -229,11 +285,11 @@ function animationLine(x, duration = 0) {
 	// #endif
 }
 
-function clickHandler(item, index) {
+function clickHandler(item, index, event) {
 	emit('click', {
 		...item,
 		index
-	}, index)
+	}, index, event)
 	if (item.disabled) return
 	if (innerCurrent.value == index) return
 	innerCurrent.value = index
@@ -264,8 +320,11 @@ function setScrollLeft() {
 	if (innerCurrent.value < 0) {
 		innerCurrent.value = 0
 	}
-	const tabRect = props.list[innerCurrent.value]
-	const offsetLeft = props.list
+	const tabRect = tabList.value[innerCurrent.value]
+	if (!tabRect || !tabRect.rect) {
+		return
+	}
+	const offsetLeft = tabList.value
 		.slice(0, innerCurrent.value)
 		.reduce((total, curr) => {
 			return total + curr.rect.width
@@ -278,7 +337,7 @@ function setScrollLeft() {
 }
 
 function resize() {
-	if (props.list.length === 0) {
+	if (tabList.value.length === 0) {
 		return
 	}
 	Promise.all([getTabsRect(), getAllItemRect()]).then(([nextTabsRect, itemRect = []]) => {
@@ -290,7 +349,9 @@ function resize() {
 		scrollViewWidth.value = 0
 		itemRect.map((item, index) => {
 			scrollViewWidth.value += item.width
-			props.list[index].rect = item
+			if (tabList.value[index]) {
+				tabList.value[index].rect = item
+			}
 		})
 		setLineLeft()
 		setScrollLeft()
@@ -305,7 +366,7 @@ function getTabsRect() {
 
 function getAllItemRect() {
 	return new Promise((resolve) => {
-		const promiseAllArr = props.list.map((item, index) => queryRect(
+		const promiseAllArr = tabList.value.map((item, index) => queryRect(
 			`up-tabs__wrapper__nav__item-${index}`, true, index))
 		Promise.all(promiseAllArr).then((sizes) => resolve(sizes))
 	})
@@ -359,6 +420,7 @@ function queryRect(el, item = false, index = 0) {
 				&__item {
 					padding: 0 11px;
 					@include flex;
+					position: relative;
 					align-items: center;
 					justify-content: center;
 					/* #ifdef H5 */
@@ -380,6 +442,30 @@ function queryRect(el, item = false, index = 0) {
 							color: $up-disabled-color !important;
 						}
 					}
+
+					&__card-corner {
+						position: absolute;
+						top: 0;
+						right: -10px;
+						width: 20px;
+						height: 100%;
+						background-color: inherit;
+						transform: skewX(25deg);
+						border-top-right-radius: 10px;
+						z-index: 1;
+					}
+
+					&__active-arrow {
+						position: absolute;
+						left: 50%;
+						bottom: -6px;
+						width: 0;
+						height: 0;
+						border-left: 6px solid transparent;
+						border-right: 6px solid transparent;
+						border-top: 6px solid #ff3b30;
+						transform: translateX(-50%);
+					}
 				}
 
 				&__line {
@@ -392,6 +478,83 @@ function queryRect(el, item = false, index = 0) {
 					transition-property: transform;
 					transition-duration: 300ms;
 				}
+			}
+		}
+
+		&--shape-capsule {
+			.up-tabs__wrapper__scroll-view-wrapper {
+				padding: 3px;
+				border-radius: 999px;
+				background-color: #edf0f5;
+			}
+
+			.up-tabs__wrapper__nav__item {
+				min-height: 30px;
+				padding: 0 14px;
+				border-radius: 999px;
+				transition: background-color 0.2s;
+			}
+
+			.up-tabs__wrapper__nav__item-active {
+				background-color: #ffffff;
+			}
+		}
+
+		&--shape-card {
+			.up-tabs__wrapper__scroll-view-wrapper {
+				padding: 0;
+				border-radius: 10px;
+				background-color: #9ccde5;
+				box-shadow: inset 0 0 0 1px rgba(96, 98, 102, 0.06);
+			}
+
+			.up-tabs__wrapper__nav__item {
+				min-height: 34px;
+				padding: 0;
+				border-radius: 10px 10px 0 0;
+				transition: background-color 0.2s;
+			}
+
+			.up-tabs__wrapper__nav__item-active {
+				background-color: #f6f8fb;
+				box-shadow: inset 0 0 0 1px rgba(96, 98, 102, 0.06);
+				z-index: 2;
+			}
+		}
+
+		&--shape-pill-arrow {
+			.up-tabs__wrapper__nav {
+				padding-bottom: 6px;
+			}
+
+			.up-tabs__wrapper__nav__item {
+				min-height: 32px;
+				padding: 0 12px;
+				border-radius: 8px;
+				background-color: #e8e8e8;
+				margin-right: 8px;
+			}
+
+			.up-tabs__wrapper__nav__item-active {
+				background: linear-gradient(90deg, #ff6c57 0%, #ff3b30 100%);
+			}
+		}
+
+		&--shape-tag {
+			.up-tabs__wrapper__nav {
+				padding: 2px 0;
+			}
+
+			.up-tabs__wrapper__nav__item {
+				min-height: 28px;
+				padding: 0 14px;
+				border-radius: 999px;
+				background-color: #f3f4f6;
+				margin-right: 8px;
+			}
+
+			.up-tabs__wrapper__nav__item-active {
+				background-color: #2a6bf6;
 			}
 		}
 	}
