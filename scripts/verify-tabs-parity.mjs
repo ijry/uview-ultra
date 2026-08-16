@@ -37,6 +37,9 @@ for (const [name, source] of [['up-tabs-pro.vue', vuePro], ['up-tabs-pro.uvue', 
   assert.match(source, /longPress|long-press/)
   assert.match(source, /content|tab/)
 }
+assert.doesNotMatch(uvueTabs, /display:\s*showLine\.value\s*\?\s*['"]block['"]/, 'up-tabs.uvue: display only supports flex/none')
+assert.doesNotMatch(uvueTabs, /background-color:\s*inherit/, 'up-tabs.uvue: UniApp X does not support inherit')
+assert.doesNotMatch(uvueTabs, /transform:\s*skew/, 'up-tabs.uvue: UniApp X does not support skew transforms')
 assert.match(proTypes, /TabsProProps/)
 assert.match(componentsTypes, /\['up-tabs-pro'\]/)
 assert.match(demo, /<up-tabs-pro[\s\S]*showContent/)

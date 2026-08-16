@@ -249,7 +249,7 @@
 			height: _addUnit(props.lineHeight),
 			backgroundColor: props.lineColor,
 			backgroundSize: props.lineBgSize,
-			display: showLine.value ? 'block' : 'none'
+			display: showLine.value ? 'flex' : 'none'
 		} as UTSJSONObject
 	})
 
@@ -569,8 +569,8 @@
 						right: -10px;
 						width: 20px;
 						height: 100%;
-						background-color: inherit;
-						transform: skewX(25deg);
+						background-color: #f6f8fb;
+						transform: rotate(12deg);
 						border-top-right-radius: 10px;
 						z-index: 1;
 					}
