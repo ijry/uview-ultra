@@ -284,9 +284,9 @@
 	const textStyle = (index: number): UTSJSONObject => {
 		const style = {} as UTSJSONObject
 		// 取当期是否激活的样式
-		const customeStyle = (index == innerCurrent.value)
+		const customeStyle = ((index == innerCurrent.value)
 			? _addStyle(props.activeStyle)
-			: _addStyle(props.inactiveStyle)
+			: _addStyle(props.inactiveStyle)) as UTSJSONObject
 		const isActive = index == innerCurrent.value
 		const customColor = customeStyle['color']
 		const hasCustomColor = customColor != null && customColor.toString().trim() != ''

@@ -1,9 +1,9 @@
-## Unreleased
-
+## 4.5.28
 feat/fix: up-tabs 属性、事件与 up-tabs-pro
 
-- up-tabs click 在保留 item、index 的同时追加原始点击事件；新增 capsule、card、pill-arrow、tag 形态模式
-- 新增 Vue 与 UniApp X 双端 up-tabs-pro，支持受控 current、作用域内容插槽和事件透传
+- up-tabs 的 click 事件在保留 item、index 参数的同时追加原始点击事件；新增 capsule、card、pill-arrow、tag 四种形态模式
+- 新增 Vue 与 UniApp X 双端 up-tabs-pro，支持受控 current、作用域内容插槽以及 click、longPress、change 事件透传
+- 修复 up-tabs 与 up-tabs-pro 在 UniApp X Android 端的 Number 转换、作用域插槽类型推断和样式对象类型兼容问题
 
 ## 4.5.27
 optimize/fix: up-novel-reader 工具栏悬浮 + luch-request UTS 版重写

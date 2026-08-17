@@ -24,11 +24,11 @@
 				<slot name="left" />
 			</template>
 			<template v-if="$slots['icon'] != null" #icon="scope">
-				<slot name="icon" :item="scope.item" :keyName="scope.keyName" :index="scope.index" />
+				<slot name="icon" :item="scope['item'] as UTSJSONObject" :keyName="scope['keyName'] as string" :index="scope['index'] as number" />
 			</template>
 			<template v-if="$slots['tab'] != null || $slots['content'] != null" #content="scope">
-				<slot name="tab" :item="scope.item" :keyName="scope.keyName" :index="scope.index">
-					<slot name="content" :item="scope.item" :keyName="scope.keyName" :index="scope.index" />
+				<slot name="tab" :item="scope['item'] as UTSJSONObject" :keyName="scope['keyName'] as string" :index="scope['index'] as number">
+					<slot name="content" :item="scope['item'] as UTSJSONObject" :keyName="scope['keyName'] as string" :index="scope['index'] as number" />
 				</slot>
 			</template>
 			<template v-if="$slots['right'] != null" #right>
@@ -172,10 +172,13 @@
 		}
 		return (tabsDefaults['tabs'] as UTSJSONObject)['lineColor'] as string
 	})
-	const durationValue = computed((): number => Number(props.duration))
+	const durationValue = computed((): number => {
+		const value = props.duration != null ? parseInt(props.duration.toString()) : 300
+		return isNaN(value) ? 300 : value
+	})
 
 	const normalizeCurrent = (value: any): number => {
-		const parsed = Number(value)
+		const parsed = parseInt(value.toString())
 		const nextValue = isNaN(parsed) ? 0 : parsed
 		const maxIndex = Math.max(safeList.value.length - 1, 0)
 		return Math.min(Math.max(nextValue, 0), maxIndex)

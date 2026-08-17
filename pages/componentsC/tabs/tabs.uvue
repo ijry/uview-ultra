@@ -188,7 +188,7 @@
 				<up-tabs-pro :list="proList" v-model:current="proCurrent" shapeMode="capsule" showContent>
 					<template #default="{ item, index, value }">
 						<view style="padding: 12px 0;">
-							<up-text :text="'第 ' + (index + 1) + ' 项：' + value" />
+							<up-text :text="'第 ' + (parseInt(index.toString()) + 1).toString() + ' 项：' + value" />
 						</view>
 					</template>
 				</up-tabs-pro>
