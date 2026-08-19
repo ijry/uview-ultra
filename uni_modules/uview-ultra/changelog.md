@@ -1,3 +1,11 @@
+## 4.5.31
+feat: up-cropper 支持裁剪业务侧已有的图片路径
+
+- up-cropper（UVue/Vue）`chooseImage(index, params, data)` 新增 `params.imageSrc`：传入非空路径时直接裁剪该图片，不再打开系统选图；空值或非字符串仍保持原有选图行为
+- up-cropper（Vue）抽取共享 `loadImage(path)`，系统选图与外部路径复用同一套图片信息读取、裁剪框初始化与绘制流程
+- up-cropper（UVue）“重选”按钮固定回到系统选图，不会重复加载传入的 `imageSrc`
+- 新增 up-cropper `imageSrc` 回归校验与「裁剪已有图片」示例
+
 ## 4.5.30
 fix/feat: up-popup 关闭事件补齐，新增 closed 事件
 

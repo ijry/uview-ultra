@@ -251,6 +251,55 @@ function windowResize() {
 				}
 				hideImg();
 			}
+			function loadImage(path) {
+				uni.showLoading({ mask: true });
+				state.imgPath = path;
+				uni.getImageInfo({
+					src: path,
+					success: r => {
+						state.imgWidth = r.width;
+						state.imgHeight = r.height;
+						state.path = path;
+						if (!state.hasSel) {
+							let style = state.selStyle || {};
+							if (state.arWidth && state.arHeight) {
+								let areaWidth = state.arWidth.indexOf('rpx') >= 0 ? parseInt(state.arWidth) * state.pxRatio : parseInt(state.arWidth),
+									areaHeight = state.arHeight.indexOf('rpx') >= 0 ? parseInt(state.arHeight) * state.pxRatio : parseInt(state.arHeight);
+								style.width = areaWidth + 'px';
+								style.height = areaHeight + 'px';
+								style.top = (state.windowHeight - areaHeight - tabHeight) / 2 + 'px';
+								style.left = (state.windowWidth - areaWidth) / 2 + 'px';
+							} else {
+								uni.showModal({
+									title: t("up.cropper.emptyWidhtOrHeight"),
+									showCancel: false
+								})
+								return;
+							}
+							state.selStyle = style;
+						}
+
+						if (state.noBar) {
+							drawInit(true);
+						} else {
+							uni.hideTabBar({
+								complete: () => {
+									drawInit(true);
+								}
+							});
+						}
+					},
+					fail: () => {
+						uni.showToast({
+							title: "error3",
+							duration: 2000,
+						})
+					},
+					complete() {
+						uni.hideLoading();
+					}
+				});
+			}
 			function select() {
 				if (state.fSelecting) return;
 				state.fSelecting = true;
@@ -260,53 +309,7 @@ function windowResize() {
 					sizeType: ['original', 'compressed'],
 					sourceType: ['album', 'camera'],
 					success: (r) => {
-						uni.showLoading({ mask: true });
-						let path = state.imgPath = r.tempFilePaths[0];
-						uni.getImageInfo({
-							src: path,
-							success: r => {
-								state.imgWidth = r.width;
-								state.imgHeight = r.height;
-								state.path = path;
-								if (!state.hasSel) {
-									let style = state.selStyle || {};
-									if (state.arWidth && state.arHeight) {
-										let areaWidth = state.arWidth.indexOf('rpx') >= 0 ? parseInt(state.arWidth) * state.pxRatio : parseInt(state.arWidth),
-											areaHeight = state.arHeight.indexOf('rpx') >= 0 ? parseInt(state.arHeight) * state.pxRatio : parseInt(state.arHeight);
-										style.width = areaWidth + 'px';
-										style.height = areaHeight + 'px';
-										style.top = (state.windowHeight - areaHeight - tabHeight) / 2 + 'px';
-										style.left = (state.windowWidth - areaWidth) / 2 + 'px';
-									} else {
-										uni.showModal({
-											title: t("up.cropper.emptyWidhtOrHeight"),
-											showCancel: false
-										})
-										return;
-									}
-									state.selStyle = style;
-								}
-
-								if (state.noBar) {
-									drawInit(true);
-								} else {
-									uni.hideTabBar({
-										complete: () => {
-											drawInit(true);
-										}
-									});
-								}
-							},
-							fail: () => {
-								uni.showToast({
-									title: "error3",
-									duration: 2000,
-								})
-							},
-							complete() {
-								uni.hideLoading();
-							}
-						});
+						loadImage(r.tempFilePaths[0]);
 					}, fail(err) {
 						emit('cancel')
 					}
@@ -754,6 +757,7 @@ function windowResize() {
 				}, proxy);
 			}
 			function chooseImage(index = undefined, params = undefined, data = undefined) {
+				const imageSrc = typeof params?.imageSrc === 'string' ? params.imageSrc.trim() : '';
 				if (params) {
 					console.log(params)
 					let areaWidth = params.areaWidth || props.areaWidth,
@@ -804,6 +808,11 @@ function windowResize() {
 				}
 				state.rtn = data;
 				state.indx = index;
+				// 业务方已自行拍照/选图时，直接裁剪传入的路径，不再打开系统选图
+				if (imageSrc) {
+					loadImage(imageSrc);
+					return;
+				}
 				select();
 			}
 			function rotate() {
@@ -1266,6 +1275,7 @@ watch(() => props.imageSrc, (val) => {
 defineExpose({
 	chooseImage,
 	select,
+	loadImage,
 	confirm,
 	preview,
 	close,

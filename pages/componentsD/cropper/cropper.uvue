@@ -40,6 +40,17 @@
 				<up-cropper ref="innerRef" @confirm="cutImage"></up-cropper>
 			</view>
 		</view>
+		<view class="u-page__item">
+			<text class="u-page__item__title">裁剪已有图片</text>
+			<view class="u-page__item__content">
+				<text class="tips-text">业务侧先自行拍照/选图，再把临时路径交给裁剪器</text>
+				<view class="image-wrapper" @click="cropExistingImage">
+					<image v-if="existingUrl.length > 0" :src="existingUrl" class="preview-image" mode="widthFix"></image>
+					<text v-else class="empty-text">自行选图后裁剪</text>
+				</view>
+				<up-cropper ref="existingRef" @confirm="cutImage"></up-cropper>
+			</view>
+		</view>
 		<!-- #ifdef APP -->
 		</scroll-view>
 		<!-- #endif -->
@@ -56,8 +67,10 @@ import { ref } from 'vue'
 const avatarUrl = ref('')
 const wideUrl = ref('')
 const innerUrl = ref('')
+const existingUrl = ref('')
 const wideRef = ref<ComponentPublicInstance | null>(null)
 const innerRef = ref<ComponentPublicInstance | null>(null)
+const existingRef = ref<ComponentPublicInstance | null>(null)
 
 function chooseWideImage(): void {
 	const cropper = wideRef.value
@@ -88,6 +101,31 @@ function chooseInnerImage(): void {
 	} as UTSJSONObject)
 }
 
+// 业务侧自行选图（也可以是拍照、下载等任意来源），拿到路径后直接交给裁剪器
+function cropExistingImage(): void {
+	const cropper = existingRef.value
+	if (cropper == null) {
+		return
+	}
+	uni.chooseImage({
+		count: 1,
+		sizeType: ['original', 'compressed'],
+		sourceType: ['album', 'camera'],
+		success: (res: ChooseImageSuccess) => {
+			if (res.tempFilePaths.length == 0) {
+				return
+			}
+			cropper.$callMethod('chooseImage', 3, {
+				imageSrc: res.tempFilePaths[0],
+				areaWidth: '300rpx',
+				areaHeight: '300rpx',
+				exportWidth: '260rpx',
+				exportHeight: '260rpx'
+			} as UTSJSONObject)
+		}
+	})
+}
+
 function cutImage(result: UTSJSONObject): void {
 	const path = result['path'] == null ? '' : result['path'].toString()
 	const index = result['index'] == null ? 0 : parseInt(result['index'].toString())
@@ -95,6 +133,8 @@ function cutImage(result: UTSJSONObject): void {
 		wideUrl.value = path
 	} else if (index == 2) {
 		innerUrl.value = path
+	} else if (index == 3) {
+		existingUrl.value = path
 	} else {
 		avatarUrl.value = path
 	}
@@ -127,5 +167,11 @@ function cutImage(result: UTSJSONObject): void {
 	.empty-text {
 		font-size: 14px;
 		color: #666666;
+	}
+
+	.tips-text {
+		font-size: 13px;
+		color: #909399;
+		margin-bottom: 8px;
 	}
 </style>

@@ -599,10 +599,7 @@ const drawPreview = (): void => {
 	context.draw()
 }
 
-function chooseImage(index: any | null = 0, params: UTSJSONObject = {} as UTSJSONObject, data: any | null = null): void {
-	const options = toObject(params)
-	lastOptions.value = options
-	currentIndex.value = typeof index === 'number' ? index : 0
+const applyOptions = (options: UTSJSONObject): void => {
 	cropWidth.value = rpxToPx(options['areaWidth'], rpxToPx(props.areaWidth, 300))
 	cropHeight.value = rpxToPx(options['areaHeight'], rpxToPx(props.areaHeight, 300))
 	outputWidth.value = rpxToPx(options['exportWidth'], rpxToPx(props.exportWidth, 260))
@@ -615,8 +612,10 @@ function chooseImage(index: any | null = 0, params: UTSJSONObject = {} as UTSJSO
 	innerMode.value = options['inner'] == null ? props.inner : (options['inner'] as boolean)
 	lockMode.value = normalizeString(options['lock'], normalizeString(props.lock))
 	stretchMode.value = normalizeString(options['stretch'], normalizeString(props.stretch))
-	returnData.value = data
 	previewing.value = false
+}
+
+const openPicker = (): void => {
 	uni.chooseImage({
 		count: 1,
 		sizeType: ['original', 'compressed'],
@@ -633,12 +632,29 @@ function chooseImage(index: any | null = 0, params: UTSJSONObject = {} as UTSJSO
 	})
 }
 
+function chooseImage(index: any | null = 0, params: UTSJSONObject = {} as UTSJSONObject, data: any | null = null): void {
+	const options = toObject(params)
+	lastOptions.value = options
+	currentIndex.value = typeof index === 'number' ? index : 0
+	applyOptions(options)
+	returnData.value = data
+	// 业务方已自行拍照/选图时，直接裁剪传入的路径，不再打开系统选图
+	const imageSrc = normalizeString(options['imageSrc']).trim()
+	if (imageSrc.length > 0) {
+		loadImage(imageSrc)
+		return
+	}
+	openPicker()
+}
+
 const openDefault = (): void => {
 	chooseImage(0, {} as UTSJSONObject)
 }
 
+// 重选：按上次配置重新初始化裁剪参数，但始终回到系统选图，不重复加载传入的 imageSrc
 const select = (): void => {
-	chooseImage(currentIndex.value, lastOptions.value, returnData.value)
+	applyOptions(lastOptions.value)
+	openPicker()
 }
 
 const touchStart = (e: UniTouchEvent): void => {
@@ -814,6 +830,7 @@ defineExpose({
 	initCanvas,
 	chooseImage,
 	select,
+	openPicker,
 	loadImage,
 	createCanvasImage,
 	fitImage,
