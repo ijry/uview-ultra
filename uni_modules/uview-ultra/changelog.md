@@ -1,3 +1,13 @@
+## 4.5.30
+fix/feat: up-popup 关闭事件补齐，新增 closed 事件
+
+- up-popup（Vue/UVue）由外部直接将 show 置为 false 关闭时补发 close，此前仅点击遮罩或关闭图标才触发，v-model:show 控制弹窗的业务收不到关闭通知
+- up-popup 新增 closed 事件，在离场动画结束、弹窗真正消失后触发；close 表示关闭动作发生（动画开始前），closed 表示已关闭完毕，需等弹窗消失后再跳转或重置数据的场景请监听 closed
+- pageInline 模式不执行离场动画，closed 由 show 变化补发，保证内联渲染下同样可收到
+- 内部关闭动作与外部改 show 之间做去重，任意关闭方式下 close 只发出一次
+- closed 透传至 up-picker、up-action-sheet、up-keyboard、up-calendar、up-color-picker、up-goods-sku、up-datetime-picker、up-picker-data，Vue 与 uni-app x 双端一致；up-calendar 仅主体弹窗触发，关闭内部时间选择器不会误报
+- 补充 onClosed 类型声明（popup / picker / datetimePicker / actionSheet / keyboard / calendar），新增 verify:popup-close-events 回归校验
+
 ## 4.5.29
 fix: 修复 HarmonyOS Canvas 绘制与跨端运行问题
 
