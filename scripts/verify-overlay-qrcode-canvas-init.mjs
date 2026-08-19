@@ -52,8 +52,8 @@ assert.match(canvasUvue, /function toTempFilePath\(options: UTSJSONObject\)/)
 assert.match(canvasUvue, /canvas\.width = Math\.ceil\(actualWidth\.value \* dpr\.value\)[\s\S]*canvas\.height = Math\.ceil\(actualHeight\.value \* dpr\.value\)[\s\S]*context2d\.scale\(dpr\.value, dpr\.value\)/)
 assert.match(
     canvasUvue,
-    /context\.fillRect\(0, 0, actualWidth\.value, actualHeight\.value\)\s+\/\/ #ifndef H5\s+context\.draw\(\)\s+\/\/ #endif/,
-    'UVue H5 should use immediate CanvasRenderingContext2D drawing without context.draw()'
+    /context\.fillRect\(0, 0, scaleCanvasValue\(actualWidth\.value\), scaleCanvasValue\(actualHeight\.value\)\)\s+\/\/ #ifndef H5\s+context\.draw\(\)\s+\/\/ #endif/,
+    'UVue should compensate Harmony DPR while H5 keeps immediate drawing without context.draw()'
 )
 
 assert.match(qrcodeVue, /<up-canvas[\s\S]*ref="qrcodeCanvas"/)

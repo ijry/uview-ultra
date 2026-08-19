@@ -21,6 +21,12 @@ type PosterItem = {
 	css: UTSJSONObject
 }
 
+type PosterImageAsset = {
+	src: string,
+	image: Image | null,
+	failed: boolean
+}
+
 type GradientStop = {
 	color: string,
 	offset: number
@@ -55,6 +61,27 @@ function numberValue(value: any | null, fallback: number = 0): number {
 	}
 	const parsed = parseFloat(text)
 	return isNaN(parsed) ? fallback : parsed
+}
+
+function characterWidth(character: string, fontSize: number): number {
+	// 全角字符（CJK 汉字、日文假名、韩文、CJK 标点、全角符号）约占一个字号宽。
+	// 注意必须包含 ︰-﹯ 与 ⺀-〾 两段：全角句号「。」、顿号「、」、书名号等
+	// 落在 CJK 标点区，漏掉会把中文标点按半角短算，行宽被低估。
+	if (/[⺀-〾㐀-鿿぀-ヿ가-힣豈-﫿︰-﹯＀-￯]/.test(character)) {
+		return fontSize
+	}
+	if (/\s/.test(character)) {
+		return fontSize * 0.28
+	}
+	return fontSize * 0.56
+}
+
+function estimateTextWidth(text: string, fontSize: number): number {
+	let width = 0
+	for (let index = 0; index < text.length; index++) {
+		width += characterWidth(text.charAt(index), fontSize)
+	}
+	return width
 }
 
 function colorValue(value: any | null, fallback: string): string {
@@ -191,6 +218,44 @@ const canvasWidth = ref(375)
 const canvasHeight = ref(557)
 const canvasContext = ref<CanvasContext | null>(null)
 const ctx = ref<CanvasRenderingContext2D | null>(null)
+const dpr = ref(1)
+let posterImageAssets = [] as Array<PosterImageAsset>
+
+function getDrawScale(): number {
+	// #ifdef APP-HARMONY
+	return dpr.value
+	// #endif
+	// #ifndef APP-HARMONY
+	return 1
+	// #endif
+}
+
+function scaleCanvasValue(value: number): number {
+	// 鸿蒙 uni-canvas 会在每个数值参数上执行 px2vp，需在调用层抵消一次。
+	// 其它平台不改变原有 Canvas 坐标。
+	return value * getDrawScale()
+}
+
+function measuredTextWidth(context: CanvasRenderingContext2D, text: string, fontSize: number): number {
+	// 鸿蒙 CanvasContext.measureText 的同步返回值通常为 0；若运行时返回了物理
+	// 像素宽度，也要除以绘制倍率后再与逻辑宽度比较。
+	const measured = context.measureText(text).width / getDrawScale()
+	return measured > 0 ? measured : estimateTextWidth(text, fontSize)
+}
+
+function normalizeCanvasColor(color: string): string {
+	return color == 'transparent' ? 'rgba(0, 0, 0, 0)' : color
+}
+
+function canvasPixelRatio(): number {
+	// #ifdef APP-HARMONY
+	const ratio = uni.getWindowInfo().pixelRatio
+	return ratio > 0 ? ratio : 1
+	// #endif
+	// #ifndef APP-HARMONY
+	return 1
+	// #endif
+}
 
 const canvasStyle = computed((): UTSJSONObject => {
 	return {
@@ -227,9 +292,31 @@ function initCanvas(): Promise<void> {
 			id: canvasId.value.toString() as string.IDString,
 			component: instance,
 			success: (context: CanvasContext) => {
+				const context2d = context.getContext('2d')
+				if (context2d == null) {
+					reject(new Error('无法获取海报画布上下文'))
+					return
+				}
 				canvasContext.value = context
-				ctx.value = context.getContext('2d')
+				// 画布后备存储是「布局尺寸(vp) × dpr」个物理像素，而鸿蒙运行时会对
+				// 每个绘制坐标做一次 px2vp（即 ÷dpr）。所有绘制参数统一乘 dpr
+				// 抵消这次转换，避免使用会触发异常超大 Surface 的矩阵缩放。
+				dpr.value = canvasPixelRatio()
+				const canvas = context2d.canvas
+				canvas.width = Math.ceil(canvasWidth.value * dpr.value)
+				canvas.height = Math.ceil(canvasHeight.value * dpr.value)
+				ctx.value = context2d
+				// #ifdef APP-HARMONY
+				// Wait until the native Canvas has produced its first frame; otherwise
+				// synchronous background/text drawing is discarded while later image
+				// callbacks happen to render correctly.
+				context.requestAnimationFrame((_time: number) => {
+					resolve()
+				})
+				// #endif
+				// #ifndef APP-HARMONY
 				resolve()
+				// #endif
 			},
 			fail: (error: UniError) => {
 				reject(error)
@@ -274,9 +361,21 @@ let drawItem = (_item: PosterItem): Promise<void> => {
 	})
 }
 
+let preloadPosterImage = (_item: PosterItem): Promise<void> => {
+	return new Promise((resolve, reject) => {
+		reject(new Error('preloadPosterImage is not ready'))
+	})
+}
+
+let preloadPosterImages = (_views: Array<any>, _index: number): Promise<void> => {
+	return new Promise((resolve, reject) => {
+		reject(new Error('preloadPosterImages is not ready'))
+	})
+}
+
 let drawView = (_item: PosterItem): void => {}
 let drawText = (_item: PosterItem): void => {}
-let wrapText = (_text: string, _maxWidth: number, _maxLines: number): Array<string> => [] as Array<string>
+let wrapText = (_text: string, _maxWidth: number, _maxLines: number, _fontSize: number): Array<string> => [] as Array<string>
 
 let drawImageBox = (_item: PosterItem): Promise<void> => {
 	return new Promise((resolve, reject) => {
@@ -312,21 +411,102 @@ exportImage = (): Promise<UTSJSONObject> => {
 	})
 }
 
+function getPosterImageAsset(src: string): PosterImageAsset | null {
+	for (let i = 0; i < posterImageAssets.length; i++) {
+		if (posterImageAssets[i].src == src) {
+			return posterImageAssets[i]
+		}
+	}
+	return null
+}
+
+preloadPosterImage = (item: PosterItem): Promise<void> => {
+	return new Promise((resolve) => {
+		if (item.src.length == 0 || getPosterImageAsset(item.src) != null) {
+			resolve()
+			return
+		}
+		const asset = {
+			src: item.src,
+			image: null,
+			failed: false
+		} as PosterImageAsset
+		posterImageAssets.push(asset)
+		const canvas = canvasContext.value
+		if (canvas == null) {
+			asset.failed = true
+			resolve()
+			return
+		}
+		uni.getImageInfo({
+			src: item.src,
+			success: (res: GetImageInfoSuccess) => {
+				const image = canvas.createImage()
+				image.onload = () => {
+					asset.image = image
+					resolve()
+				}
+				// #ifdef APP
+				image.onerror = () => {
+					asset.failed = true
+					resolve()
+				}
+				// #endif
+				// #ifndef APP
+				;(image as any).onerror = () => {
+					asset.failed = true
+					resolve()
+				}
+				// #endif
+				image.src = res.path
+			},
+			fail: () => {
+				asset.failed = true
+				resolve()
+			}
+		})
+	})
+}
+
+preloadPosterImages = (views: Array<any>, index: number): Promise<void> => {
+	return new Promise((resolve) => {
+		if (index >= views.length) {
+			resolve()
+			return
+		}
+		const item = createItem(views[index])
+		if (item.type == 'image') {
+			preloadPosterImage(item).then(() => {
+				preloadPosterImages(views, index + 1).then(() => {
+					resolve()
+				})
+			})
+			return
+		}
+		preloadPosterImages(views, index + 1).then(() => {
+			resolve()
+		})
+	})
+}
+
 generatePoster = (): Promise<string> => {
 	return new Promise((resolve, reject) => {
 		prepareSize()
 		showCanvas.value = true
 		nextTick(() => {
 			initCanvas().then(() => {
-				drawPoster().then(() => {
-					const canvas = canvasContext.value
-					if (canvas == null) {
-						reject(new Error('Canvas is not ready'))
-						return
-					}
-					const dataUrl = canvas.toDataURL('image/png', 1)
-					showCanvas.value = false
-					resolve(dataUrl)
+				posterImageAssets = [] as Array<PosterImageAsset>
+				preloadPosterImages(getViews(), 0).then(() => {
+					drawPoster().then(() => {
+						const canvas = canvasContext.value
+						if (canvas == null) {
+							reject(new Error('Canvas is not ready'))
+							return
+						}
+						const dataUrl = canvas.toDataURL('image/png', 1)
+						showCanvas.value = false
+						resolve(dataUrl)
+					})
 				})
 			}).catch((error: any | null) => {
 				showCanvas.value = false
@@ -356,7 +536,7 @@ drawPosterSync = (): Promise<void> => {
 			return
 		}
 		const css = getPosterCss()
-		context.clearRect(0, 0, canvasWidth.value, canvasHeight.value)
+		context.clearRect(0, 0, scaleCanvasValue(canvasWidth.value), scaleCanvasValue(canvasHeight.value))
 		fillBackground(css['background'], 0, 0, canvasWidth.value, canvasHeight.value, 0, '#ffffff')
 		const views = getViews()
 		drawItems(views, 0).then(() => {
@@ -425,15 +605,15 @@ drawText = (item: PosterItem): void => {
 	const fontSize = numberValue(css['fontSize'], 14)
 	const lineHeight = numberValue(css['lineHeight'], fontSize + 6)
 	const lineClamp = numberValue(css['lineClamp'], 1)
-	context.fillStyle = colorValue(css['color'], '#333333')
-	context.font = stringValue(css['fontWeight']) == 'bold' ? 'bold ' + fontSize.toString() + 'px sans-serif' : fontSize.toString() + 'px sans-serif'
-	const lines = wrapText(item.text, width, lineClamp)
+	context.fillStyle = normalizeCanvasColor(colorValue(css['color'], '#333333'))
+	context.font = stringValue(css['fontWeight']) == 'bold' ? 'bold ' + scaleCanvasValue(fontSize).toString() + 'px sans-serif' : scaleCanvasValue(fontSize).toString() + 'px sans-serif'
+	const lines = wrapText(item.text, width, lineClamp, fontSize)
 	for (let i = 0; i < lines.length; i++) {
-		context.fillText(lines[i], x, y + fontSize + i * lineHeight)
+		context.fillText(lines[i], scaleCanvasValue(x), scaleCanvasValue(y + fontSize + i * lineHeight))
 	}
 }
 
-wrapText = (text: string, maxWidth: number, maxLines: number): Array<string> => {
+wrapText = (text: string, maxWidth: number, maxLines: number, fontSize: number): Array<string> => {
 	const context = ctx.value
 	const lines = [] as Array<string>
 	if (context == null || text.length == 0) {
@@ -442,7 +622,7 @@ wrapText = (text: string, maxWidth: number, maxLines: number): Array<string> => 
 	let current = ''
 	for (let i = 0; i < text.length; i++) {
 		const next = current + text.substring(i, i + 1)
-		if (context.measureText(next).width > maxWidth && current.length > 0) {
+		if (measuredTextWidth(context, next, fontSize) > maxWidth && current.length > 0) {
 			lines.push(current)
 			current = text.substring(i, i + 1)
 			if (lines.length >= maxLines) {
@@ -457,7 +637,7 @@ wrapText = (text: string, maxWidth: number, maxLines: number): Array<string> => 
 	}
 	if (lines.length == maxLines && text.length > lines.join('').length) {
 		let last = lines[maxLines - 1]
-		while (last.length > 0 && context.measureText(last + '...').width > maxWidth) {
+		while (last.length > 0 && measuredTextWidth(context, last + '...', fontSize) > maxWidth) {
 			last = last.substring(0, last.length - 1)
 		}
 		lines[maxLines - 1] = last + '...'
@@ -477,39 +657,14 @@ drawImageBox = (item: PosterItem): Promise<void> => {
 		const y = numberValue(css['top'], 0)
 		const width = numberValue(css['width'], 0)
 		const height = numberValue(css['height'], 0)
-		uni.getImageInfo({
-			src: item.src,
-			success: (res: GetImageInfoSuccess) => {
-				const canvas = canvasContext.value
-				if (canvas == null) {
-					drawImageFallback(x, y, width, height, numberValue(css['radius'], 0))
-					resolve()
-					return
-				}
-				const image = canvas.createImage()
-				image.onload = () => {
-					context.drawImage(image, x, y, width, height)
-					resolve()
-				}
-				// #ifdef APP
-				image.onerror = () => {
-					drawImageFallback(x, y, width, height, numberValue(css['radius'], 0))
-					resolve()
-				}
-				// #endif
-				// #ifndef APP
-				;(image as any).onerror = () => {
-					drawImageFallback(x, y, width, height, numberValue(css['radius'], 0))
-					resolve()
-				}
-				// #endif
-				image.src = res.path
-			},
-			fail: () => {
-				drawImageFallback(x, y, width, height, numberValue(css['radius'], 0))
-				resolve()
-			}
-		})
+		const asset = getPosterImageAsset(item.src)
+		if (asset == null || asset.failed || asset.image == null) {
+			drawImageFallback(x, y, width, height, numberValue(css['radius'], 0))
+			resolve()
+			return
+		}
+		context.drawImage(asset.image, scaleCanvasValue(x), scaleCanvasValue(y), scaleCanvasValue(width), scaleCanvasValue(height))
+		resolve()
 	})
 }
 
@@ -518,7 +673,7 @@ drawImageFallback = (x: number, y: number, width: number, height: number, radius
 	if (context == null) {
 		return
 	}
-	context.fillStyle = '#eef2f7'
+	context.fillStyle = normalizeCanvasColor('#eef2f7')
 	fillRoundRect(x, y, width, height, radius)
 }
 
@@ -544,16 +699,16 @@ drawQrCode = (item: PosterItem): void => {
 	const count = getQrRenderCount(value, level)
 	const cells = createQrCells(value, foreground, background, pdground, level)
 	const cellSize = Math.min(width, height) / count
-	context.fillStyle = background
-	context.fillRect(x, y, width, height)
+	context.fillStyle = normalizeCanvasColor(background)
+	context.fillRect(scaleCanvasValue(x), scaleCanvasValue(y), scaleCanvasValue(width), scaleCanvasValue(height))
 	for (let row = 0; row < count; row++) {
 		for (let col = 0; col < count; col++) {
 			const index = row * count + col
 			if (index >= cells.length) continue
 			const cell = cells[index]
 			if ((cell['dark'] as boolean) != true) continue
-			context.fillStyle = colorValue(cell['color'], foreground)
-			context.fillRect(x + col * cellSize, y + row * cellSize, cellSize + 0.5, cellSize + 0.5)
+			context.fillStyle = normalizeCanvasColor(colorValue(cell['color'], foreground))
+			context.fillRect(scaleCanvasValue(x + col * cellSize), scaleCanvasValue(y + row * cellSize), scaleCanvasValue(cellSize + 0.5), scaleCanvasValue(cellSize + 0.5))
 		}
 	}
 }
@@ -568,7 +723,7 @@ fillBackground = (value: any | null, x: number, y: number, width: number, height
 		fillGradient(background, x, y, width, height, radius, fallback)
 		return
 	}
-	context.fillStyle = background
+	context.fillStyle = normalizeCanvasColor(background)
 	fillRoundRect(x, y, width, height, radius)
 }
 
@@ -593,9 +748,9 @@ fillCanvasGradient = (background: string, x: number, y: number, width: number, h
 		const centerX = x + width / 2
 		const centerY = y + height / 2
 		const maxRadius = Math.max(width, height) / 2
-		const gradient = context.createRadialGradient(centerX, centerY, 0, centerX, centerY, maxRadius)
+		const gradient = context.createRadialGradient(scaleCanvasValue(centerX), scaleCanvasValue(centerY), 0, scaleCanvasValue(centerX), scaleCanvasValue(centerY), scaleCanvasValue(maxRadius))
 		for (let i = 0; i < stops.length; i++) {
-			gradient.addColorStop(stops[i].offset, stops[i].color)
+			gradient.addColorStop(stops[i].offset, normalizeCanvasColor(stops[i].color))
 		}
 		context.fillStyle = gradient
 		fillRoundRect(x, y, width, height, radius)
@@ -627,9 +782,9 @@ fillCanvasGradient = (background: string, x: number, y: number, width: number, h
 		endX = x
 		endY = y
 	}
-	const gradient = context.createLinearGradient(startX, startY, endX, endY)
+	const gradient = context.createLinearGradient(scaleCanvasValue(startX), scaleCanvasValue(startY), scaleCanvasValue(endX), scaleCanvasValue(endY))
 	for (let i = 0; i < stops.length; i++) {
-		gradient.addColorStop(stops[i].offset, stops[i].color)
+		gradient.addColorStop(stops[i].offset, normalizeCanvasColor(stops[i].color))
 	}
 	context.fillStyle = gradient
 	fillRoundRect(x, y, width, height, radius)
@@ -648,11 +803,11 @@ fillSteppedLinearGradient = (background: string, x: number, y: number, width: nu
 	for (let i = 0; i < steps; i++) {
 		const rawProgress = steps <= 1 ? 0 : i / (steps - 1)
 		const progress = angle == 270 || angle == 0 ? 1 - rawProgress : rawProgress
-		context.fillStyle = gradientColorAt(stops, progress, fallback)
+		context.fillStyle = normalizeCanvasColor(gradientColorAt(stops, progress, fallback))
 		if (horizontal) {
-			context.fillRect(x + i, y, 1.5, height)
+			context.fillRect(scaleCanvasValue(x + i), scaleCanvasValue(y), scaleCanvasValue(1.5), scaleCanvasValue(height))
 		} else {
-			context.fillRect(x, y + i, width, 1.5)
+			context.fillRect(scaleCanvasValue(x), scaleCanvasValue(y + i), scaleCanvasValue(width), scaleCanvasValue(1.5))
 		}
 	}
 	if (radius > 0) {
@@ -672,9 +827,9 @@ fillSteppedRadialGradient = (background: string, x: number, y: number, width: nu
 	const steps = Math.max(1, Math.floor(maxRadius))
 	for (let i = steps; i >= 0; i--) {
 		const progress = steps <= 0 ? 0 : i / steps
-		context.fillStyle = gradientColorAt(stops, progress, fallback)
+		context.fillStyle = normalizeCanvasColor(gradientColorAt(stops, progress, fallback))
 		context.beginPath()
-		context.arc(centerX, centerY, i, 0, Math.PI * 2)
+		context.arc(scaleCanvasValue(centerX), scaleCanvasValue(centerY), scaleCanvasValue(i), 0, Math.PI * 2)
 		context.closePath()
 		context.fill()
 	}
@@ -707,7 +862,7 @@ clipRadiusMask = (x: number, y: number, width: number, height: number, radius: n
 	}
 	context.save()
 	context.globalCompositeOperation = 'destination-in'
-	context.fillStyle = '#000000'
+	context.fillStyle = normalizeCanvasColor('#000000')
 	fillRoundRect(x, y, width, height, radius)
 	context.restore()
 	context.globalCompositeOperation = 'source-over'
@@ -719,20 +874,20 @@ fillRoundRect = (x: number, y: number, width: number, height: number, radius: nu
 		return
 	}
 	if (radius <= 0) {
-		context.fillRect(x, y, width, height)
+		context.fillRect(scaleCanvasValue(x), scaleCanvasValue(y), scaleCanvasValue(width), scaleCanvasValue(height))
 		return
 	}
 	const r = Math.min(radius, Math.min(width, height) / 2)
 	context.beginPath()
-	context.moveTo(x + r, y)
-	context.lineTo(x + width - r, y)
-	context.quadraticCurveTo(x + width, y, x + width, y + r)
-	context.lineTo(x + width, y + height - r)
-	context.quadraticCurveTo(x + width, y + height, x + width - r, y + height)
-	context.lineTo(x + r, y + height)
-	context.quadraticCurveTo(x, y + height, x, y + height - r)
-	context.lineTo(x, y + r)
-	context.quadraticCurveTo(x, y, x + r, y)
+	context.moveTo(scaleCanvasValue(x + r), scaleCanvasValue(y))
+	context.lineTo(scaleCanvasValue(x + width - r), scaleCanvasValue(y))
+	context.quadraticCurveTo(scaleCanvasValue(x + width), scaleCanvasValue(y), scaleCanvasValue(x + width), scaleCanvasValue(y + r))
+	context.lineTo(scaleCanvasValue(x + width), scaleCanvasValue(y + height - r))
+	context.quadraticCurveTo(scaleCanvasValue(x + width), scaleCanvasValue(y + height), scaleCanvasValue(x + width - r), scaleCanvasValue(y + height))
+	context.lineTo(scaleCanvasValue(x + r), scaleCanvasValue(y + height))
+	context.quadraticCurveTo(scaleCanvasValue(x), scaleCanvasValue(y + height), scaleCanvasValue(x), scaleCanvasValue(y + height - r))
+	context.lineTo(scaleCanvasValue(x), scaleCanvasValue(y + r))
+	context.quadraticCurveTo(scaleCanvasValue(x), scaleCanvasValue(y), scaleCanvasValue(x + r), scaleCanvasValue(y))
 	context.closePath()
 	context.fill()
 }

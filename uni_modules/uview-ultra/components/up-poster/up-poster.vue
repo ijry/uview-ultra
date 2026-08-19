@@ -110,6 +110,13 @@ async function exportImage() {
 
 			// 创建canvas上下文
 			const ctx = uni.createCanvasContext(canvasId.value, proxy);
+			// 画布实例拿不到时必须立刻失败：否则后续绘制全部抛在 try 之外，
+			// 只能等 10s 超时才报错，问题现场也丢了。
+			if (!ctx) {
+				showCanvas.value = false;
+				reject(new Error('无法初始化海报画布'));
+				return;
+			}
 
 			// 绘制背景
 			if (posterSize.background) {
@@ -330,17 +337,49 @@ function clipRoundRect(ctx, x, y, width, height, radius) {
 }
 
 /**
+ * 估算文本宽度（测量不可用时的兜底）
+ * 鸿蒙 CanvasContext.measureText 的同步返回值恒为 0，真实宽度只通过 callback
+ * 经 evalJSAsync 异步回传；其他平台上下文未就绪时也可能返回 0。
+ */
+function estimateTextWidth(text, fontSize) {
+	const size = Number(fontSize) || 12;
+	// 全角字符（CJK、日文假名、全角标点）约占一个字号宽。
+	// 注意不能用常见的 length * fontSize * 0.6：汉字会被短算约 40%，中文依旧不换行。
+	const FULL_WIDTH = /[ᄀ-ᅟ⺀-〾぀-㏿㐀-䶿一-鿿ꀀ-꓏가-힣豈-﫿︰-﹯＀-｠￠-￦]/;
+	return Array.from(String(text)).reduce((width, char) => {
+		if (FULL_WIDTH.test(char)) return width + size;
+		if (/\s/.test(char)) return width + size * 0.28;
+		return width + size * 0.56;
+	}, 0);
+}
+
+/**
+ * 测量文本宽度，测量失效时改用估算
+ * 绝不能把 0 当作真实宽度：换行判断会认为"这一行还放得下"，
+ * 于是整段文本挤成一行，横穿并压到其他元素上。
+ */
+function measureTextWidth(ctx, text, fontSize) {
+	if (ctx && typeof ctx.measureText === 'function') {
+		const metrics = ctx.measureText(String(text));
+		const width = Number(metrics && metrics.width);
+		if (width > 0) return width;
+	}
+	return estimateTextWidth(text, fontSize);
+}
+
+/**
  * 绘制带行数限制的文本
  */
 function drawTextWithLineClamp(ctx, text, x, y, maxWidth, css) {
 	const lineClamp = parseInt(css.lineClamp) || 1;
 	const lineHeight = css.lineHeight ? convertRpxToPx(css.lineHeight) : 20;
+	const fontSize = css.fontSize ? convertRpxToPx(css.fontSize) : 20;
 	const lines = [];
 	let currentLine = '';
 	const ellipsis = '...';
 	const appendEllipsis = (line) => {
 		let fitLine = line;
-		while (ctx.measureText(fitLine + ellipsis).width > maxWidth && fitLine.length > 0) {
+		while (measureTextWidth(ctx, fitLine + ellipsis, fontSize) > maxWidth && fitLine.length > 0) {
 			fitLine = fitLine.substring(0, fitLine.length - 1);
 		}
 		return fitLine + ellipsis;
@@ -349,9 +388,9 @@ function drawTextWithLineClamp(ctx, text, x, y, maxWidth, css) {
 	for (let i = 0; i < text.length; i++) {
 		const char = text[i];
 		const testLine = currentLine + char;
-		const metrics = ctx.measureText(testLine);
+		const measuredWidth = measureTextWidth(ctx, testLine, fontSize);
 
-		if (metrics.width > maxWidth && currentLine !== '') {
+		if (measuredWidth > maxWidth && currentLine !== '') {
 			lines.push(currentLine);
 
 			// 如果已达最大行数，添加省略号并结束

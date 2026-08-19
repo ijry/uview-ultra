@@ -17,7 +17,7 @@
             @touchend="onTouchEnd"/>
         <!-- #endif -->
 
-        <!-- #ifdef APP-PLUS -->
+        <!-- #ifdef APP-PLUS || APP-HARMONY -->
         <canvas
             class="up-canvas__canvas"
             :id="canvasId"
@@ -165,12 +165,16 @@ async function getCanvasNode(id, isCanvas = true) {
 
 /**
  * 获取Canvas上下文
+ * 注意：鸿蒙(app-harmony)下 APP_PLUS 并未定义（见 uni-cli-shared 的
+ * preprocess/context.js：平台为 app-harmony 时只置 APP_HARMONY），
+ * 所以这里必须显式覆盖 APP-HARMONY，且末尾保留无条件兜底 return，
+ * 否则新平台会把整个函数体裁空、静默返回 undefined。
  */
 function getCanvasContext() {
-	// #ifdef APP-PLUS
+	// #ifdef APP-PLUS || APP-HARMONY
 	return uni.createCanvasContext(props.canvasId, proxy);
 	// #endif
-	// #ifdef APP-PLUS-NVUE || MP || H5
+	// #ifndef APP-PLUS || APP-HARMONY
 	return canvasElement && typeof canvasElement.getContext === 'function'
 		? canvasElement.getContext('2d')
 		: null;

@@ -1,3 +1,12 @@
+## 4.5.29
+fix: 修复 HarmonyOS Canvas 绘制与跨端运行问题
+
+- up-canvas（UVue/Vue）修复 HarmonyOS Canvas 上下文条件编译、首帧时序、DPR 坐标换算和 transparent 颜色解析，二维码恢复完整清晰绘制
+- up-poster 预加载图片后按配置顺序统一绘制，恢复渐变背景、卡片、文字、商品图与二维码；补充中文换行兜底和画布初始化错误处理
+- up-calendar 修复 H5 运行时 monthsItem 类型别名擦除导致的 ReferenceError
+- up-novel-reader 修复 HarmonyOS 编译时 Regex 未定义
+- up-barcode 补充画布上下文判空；新增 Harmony Canvas、Poster 和 Calendar 回归校验
+
 ## 4.5.28
 feat/fix: up-tabs 属性、事件与 up-tabs-pro
 

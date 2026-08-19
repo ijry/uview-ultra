@@ -36,7 +36,7 @@ function createPosterConfig(): UTSJSONObject {
 		css: {
 			width: '750rpx',
 			height: '1114rpx',
-			background: '#f6d365'
+			background: 'linear-gradient(135deg,#fce38a,#f38181)'
 		},
 		views: [
 			{
@@ -98,6 +98,17 @@ function createPosterConfig(): UTSJSONObject {
 					top: '930rpx',
 					fontSize: '36rpx',
 					lineHeight: '50rpx'
+				}
+			},
+			{
+				type: 'qrcode',
+				text: 'https://example.com/product/123',
+				css: {
+					position: 'absolute',
+					left: '500rpx',
+					top: '864rpx',
+					width: '178rpx',
+					height: '178rpx'
 				}
 			}
 		] as Array<UTSJSONObject>

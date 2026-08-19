@@ -15,7 +15,11 @@
     "verify:novel-reader-data": "node scripts/verify-novel-reader-data.mjs",
     "verify:novel-reader-layout": "node scripts/verify-novel-reader-layout.mjs",
     "verify:novel-reader-ui": "node scripts/verify-novel-reader-ui.mjs",
-    "verify:tabs-parity": "node scripts/verify-tabs-parity.mjs"
+    "verify:tabs-parity": "node scripts/verify-tabs-parity.mjs",
+    "verify:harmony-canvas-fallback": "node scripts/verify-harmony-canvas-fallback.mjs",
+    "verify:harmony-canvas-draw-state": "node scripts/verify-harmony-canvas-draw-state.mjs",
+    "verify:harmony-poster-image-preload": "node scripts/verify-harmony-poster-image-preload.mjs",
+    "verify:calendar-months-item-runtime-type": "node scripts/verify-calendar-months-item-runtime-type.mjs"
   },
   "dependencies": {
   }

@@ -1,4 +1,7 @@
-const lineBreakPattern = Regex("\r\n|\r|\n")
+// 不能用 Regex("...")：那是 UTS 编译到 Kotlin 时才有的全局，
+// 鸿蒙（ArkTS）下不存在，会直接报 "Regex is not defined" 编译失败。
+// 正则字面量在各平台都能编译，split 也接受它。
+const lineBreakPattern = /\r\n|\r|\n/
 
 function textValue(value: any | null): String {
     return value == null ? '' : value.toString()

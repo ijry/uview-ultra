@@ -218,6 +218,9 @@ async function renderToCanvas(options) {
 
         // 获取canvas上下文
         const ctx = uni.createCanvasContext(canvasId.value, proxy)
+        if (!ctx) {
+          throw new Error('无法获取条码画布实例')
+        }
 
         // 清空画布
         ctx.setFillStyle(options.background)
@@ -251,6 +254,9 @@ function renderToImage(options) {
         // 创建临时canvas用于生成图片
         const tempCanvasId = 'temp-' + canvasId.value
         const ctx = uni.createCanvasContext(tempCanvasId, proxy)
+        if (!ctx) {
+          throw new Error('无法获取条码画布实例')
+        }
 
         // 清空画布
         ctx.setFillStyle(options.background)

@@ -39,7 +39,6 @@
 	import defProps from './calendar.uts';
 	import {dayuts} from '@/uni_modules/lime-dayuts';
 	import { UPCalendarMonthsItemDate, UPCalendarMonthsItem } from './types.uts'
-	type monthsItem = UPCalendarMonthsItem
 	defineOptions({
 		styleIsolation: 'app-and-page',
 		name: 'up-calendar-month'
@@ -55,9 +54,9 @@ const props = defineProps({
 		default: '#3c9cff'
 	},
 	months: {
-		type: Array as PropType<Array<monthsItem>>,
-		default(): Array<monthsItem> {
-			return [] as Array<monthsItem>
+		type: Array as PropType<Array<UPCalendarMonthsItem>>,
+		default(): Array<UPCalendarMonthsItem> {
+			return [] as Array<UPCalendarMonthsItem>
 		}
 	},
 	mode: {
@@ -131,7 +130,7 @@ const instance = getCurrentInstance()!.proxy!
 
 const width = ref(0)
 const item = ref<UPCalendarMonthsItemDate | null>(null)
-const monthsInner = ref([] as Array<monthsItem>)
+const monthsInner = ref([] as Array<UPCalendarMonthsItem>)
 const selected = ref([] as Array<string>)
 
 const selectedChange = computed((): any => {
@@ -276,8 +275,8 @@ const getMonthRectByPromise = (el: any): Promise<NodeInfo> => {
 }
 
 const getMonthRect = (): void => {
-	const months = props.months == null ? [] as Array<monthsItem> : props.months as Array<monthsItem>
-	const promiseAllArr: Array<Promise<NodeInfo>> = months.map((item: monthsItem, index): Promise<NodeInfo> => {
+	const months = props.months == null ? [] as Array<UPCalendarMonthsItem> : props.months as Array<UPCalendarMonthsItem>
+	const promiseAllArr: Array<Promise<NodeInfo>> = months.map((item: UPCalendarMonthsItem, index): Promise<NodeInfo> => {
 		return getMonthRectByPromise(`up-calendar-month-${index}`)
 	})
 	Promise.all(promiseAllArr).then((res: NodeInfo[]) => {
@@ -399,7 +398,7 @@ watch(selectedChange, () => {
 	setDefaultDate()
 }, { immediate: true })
 
-watch((): Array<monthsItem> => props.months == null ? [] as Array<monthsItem> : props.months as Array<monthsItem>, (value: Array<monthsItem>) => {
+watch((): Array<UPCalendarMonthsItem> => props.months == null ? [] as Array<UPCalendarMonthsItem> : props.months as Array<UPCalendarMonthsItem>, (value: Array<UPCalendarMonthsItem>) => {
 	monthsInner.value = value
 }, { immediate: true })
 

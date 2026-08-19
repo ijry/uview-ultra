@@ -44,6 +44,15 @@ function getCanvasPixelRatio(): number {
     return ratio
 }
 
+// 鸿蒙把 CSS 颜色关键字交给运行时的 EXTENDED_COLOR_KEYWORDS 查表
+// （uni-canvas/utssdk/app-harmony/index.ets 的 _fixColor：不以 # 或 rgb 开头
+// 就查表），而那张表只有 147 个关键字、**不含 transparent**，查不到返回
+// undefined，赋给 fillStyle 会让整段绘制中断——画布上什么都不剩。
+// 'rgb('/'#' 开头的值不查表，所以统一换成等价的 rgba 全透明写法。
+function normalizeCanvasColor(color: string): string {
+    return color == 'transparent' ? 'rgba(0, 0, 0, 0)' : color
+}
+
 type UPLineCap = 'butt' | 'round' | 'square'
 type UPLineJoin = 'bevel' | 'round' | 'miter'
 
@@ -91,6 +100,21 @@ const ctx = ref<CanvasRenderingContext2D | null>(null)
 const isReady = ref(false)
 const dpr = ref(1)
 let initPromise: Promise<void> | null = null
+
+function getDrawScale(): number {
+    // #ifdef APP-HARMONY
+    return dpr.value
+    // #endif
+    // #ifndef APP-HARMONY
+    return 1
+    // #endif
+}
+
+function scaleCanvasValue(value: number): number {
+    // 鸿蒙 uni-canvas 会在每个数值参数上执行 px2vp，需在调用层抵消一次。
+    // 其它平台保留原有 Canvas 变换流程，避免重复放大。
+    return value * getDrawScale()
+}
 
 const actualWidth = computed((): number => {
     return props.useRootHeightAndWidth ? normalizeSize(widthLocal.value, 300) : normalizeSize(props.width, 300)
@@ -141,14 +165,14 @@ const getCanvasContextHost = (): CanvasContext | null => {
 const clearRect = (x: number, y: number, width: number, height: number): void => {
     const context = ctx.value
     if (context != null) {
-        context.clearRect(x, y, width, height)
+        context.clearRect(scaleCanvasValue(x), scaleCanvasValue(y), scaleCanvasValue(width), scaleCanvasValue(height))
     }
 }
 
 const setFillStyle = (color: string): void => {
     const context = ctx.value
     if (context != null) {
-        context.fillStyle = color
+        context.fillStyle = normalizeCanvasColor(color)
     }
 }
 
@@ -157,7 +181,7 @@ function fillCanvasBackground(): void {
     setFillStyle(props.bgColor)
     const context = ctx.value
     if (context != null) {
-        context.fillRect(0, 0, actualWidth.value, actualHeight.value)
+        context.fillRect(0, 0, scaleCanvasValue(actualWidth.value), scaleCanvasValue(actualHeight.value))
         // #ifndef H5
         context.draw()
         // #endif
@@ -188,11 +212,26 @@ function initCanvas(force: boolean = false): Promise<void> {
 				const canvas = context2d.canvas
 				canvas.width = Math.ceil(actualWidth.value * dpr.value)
 				canvas.height = Math.ceil(actualHeight.value * dpr.value)
+				// 鸿蒙通过绘制参数补偿 DPR，不能调用 setTransform/scale：
+				// RenderService 会把 Canvas 表面高度放大到 16777216。
+				// #ifndef APP-HARMONY
 				context2d.scale(dpr.value, dpr.value)
+				// #endif
 				ctx.value = context2d
+				// #ifdef APP-HARMONY
+				// createCanvasContextAsync can complete before the native Canvas has
+				// produced its first frame. Drawing in this callback is then discarded.
+				context.requestAnimationFrame((_time: number) => {
+					isReady.value = true
+					fillCanvasBackground()
+					resolve()
+				})
+				// #endif
+				// #ifndef APP-HARMONY
 				isReady.value = true
 				fillCanvasBackground()
 				resolve()
+				// #endif
 			},
 			fail: (error: UniError) => {
 				isReady.value = false
@@ -236,7 +275,7 @@ function clearCanvas(): void {
 const rect = (x: number, y: number, width: number, height: number): void => {
     const context = ctx.value
     if (context != null) {
-        context.rect(x, y, width, height)
+        context.rect(scaleCanvasValue(x), scaleCanvasValue(y), scaleCanvasValue(width), scaleCanvasValue(height))
     }
 }
 
@@ -264,14 +303,14 @@ function setLineJoin(lineJoin: UPLineJoin = 'round'): void {
 const setStrokeStyle = (color: string): void => {
     const context = ctx.value
     if (context != null) {
-        context.strokeStyle = color
+        context.strokeStyle = normalizeCanvasColor(color)
     }
 }
 
 const setLineWidth = (width: number): void => {
     const context = ctx.value
     if (context != null) {
-        context.lineWidth = width
+        context.lineWidth = scaleCanvasValue(width)
     }
 }
 
@@ -292,14 +331,14 @@ const beginPath = (): void => {
 const moveTo = (x: number, y: number): void => {
     const context = ctx.value
     if (context != null) {
-        context.moveTo(x, y)
+        context.moveTo(scaleCanvasValue(x), scaleCanvasValue(y))
     }
 }
 
 const lineTo = (x: number, y: number): void => {
     const context = ctx.value
     if (context != null) {
-        context.lineTo(x, y)
+        context.lineTo(scaleCanvasValue(x), scaleCanvasValue(y))
     }
 }
 
@@ -414,6 +453,7 @@ defineExpose({
     getCanvasContext,
     getRawContext,
     getCanvasContextHost,
+    getDrawScale,
     initCanvas,
     refresh,
     ensureContext,

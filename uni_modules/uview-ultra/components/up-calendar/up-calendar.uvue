@@ -171,7 +171,6 @@ import type { ComponentPublicInstance } from 'vue'
 import uHeader from './header.uvue'
 import { UPCalendarMonthsItemDate, UPCalendarMonthsItem } from './types.uts'
 import uMonth from './month.uvue'
-type monthsItem = UPCalendarMonthsItem
 import { dayuts } from '@/uni_modules/lime-dayuts'
 import { t } from '../../libs/i18n/index.uts'
 import { addUnit as addUnitFn, range, error, padZero } from '../../libs/function/index.uts'
@@ -244,7 +243,7 @@ const emit = defineEmits(['confirm', 'close'])
 const month = ref<ComponentPublicInstance | null>(null)
 const start = ref(0)
 const inited = ref(false)
-const months = ref([] as monthsItem[])
+const months = ref([] as UPCalendarMonthsItem[])
 const monthIndex = ref(0)
 const listHeight = ref(0)
 const selected = ref([] as Array<string>)
@@ -281,9 +280,9 @@ const subtitle = computed((): string => {
 	}
 	return ''
 })
-const currentMonths = computed((): Array<monthsItem> => {
-	if (props.monthSwitch && months.value.length > 0) return [months.value[monthIndex.value] as monthsItem]
-	return months.value as Array<monthsItem>
+const currentMonths = computed((): Array<UPCalendarMonthsItem> => {
+	if (props.monthSwitch && months.value.length > 0) return [months.value[monthIndex.value] as UPCalendarMonthsItem]
+	return months.value as Array<UPCalendarMonthsItem>
 })
 const switchPrevDisabled = computed((): boolean => monthIndex.value <= 0)
 const switchNextDisabled = computed((): boolean => monthIndex.value >= months.value.length - 1)
@@ -461,7 +460,7 @@ function setMonth(): void {
 	const minDate: any = (innerMinDate.value != '' && innerMinDate.value != '0') ? innerMinDate.value : dayuts().valueOf()
 	const maxDate: any = (innerMaxDate.value != '' && innerMaxDate.value != '0') ? innerMaxDate.value : dayuts(minDate as any).add((props.monthNum as number) - 1, 'month').valueOf()
 	const monthCount = range(1, props.monthNum as number, getMonths(minDate, maxDate))
-	months.value = [] as monthsItem[]
+	months.value = [] as UPCalendarMonthsItem[]
 	const minDateStr = dayuts(minDate as any).format('YYYY-MM-DD')
 	const maxDateStr = dayuts(maxDate as any).format('YYYY-MM-DD')
 	for (let i = 0; i < monthCount; i++) {
@@ -489,7 +488,7 @@ function setMonth(): void {
 			date: cdate,
 			month: monthValue.toString(),
 			year: yearValue.toString()
-		} as monthsItem)
+		} as UPCalendarMonthsItem)
 	}
 	if (props.monthSwitch) {
 		monthIndex.value = getDefaultMonthIndex()
@@ -608,7 +607,7 @@ watch((): string => props.defaultTime != null ? props.defaultTime : '', () => {
 watch((): boolean => props.show == true, (nval: boolean) => {
 	if (nval) {
 		if (!inited.value) init()
-		else if ((months.value as Array<monthsItem>).length == 0) setMonth()
+		else if ((months.value as Array<UPCalendarMonthsItem>).length == 0) setMonth()
 	} else {
 		scrollIntoView.value = ''
 	}
