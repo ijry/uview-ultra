@@ -4,6 +4,7 @@
 	    :show="show"
 	    mode="bottom"
 	    @close="closeHandler"
+	    @closed="closedHandler"
 	    :safeAreaInsetBottom="safeAreaInsetBottom"
 	    :round="round"
 	>
@@ -179,6 +180,7 @@ const props = defineProps({
 })
 const emit = defineEmits([
 	'close',
+	'closed',
 	'select',
 	'update:show',
 	'getuserinfo',
@@ -202,6 +204,11 @@ function closeHandler() {
 		emit('update:show')
 		emit('close')
 	}
+}
+
+// 弹窗离场动画结束，透传给使用者
+function closedHandler() {
+	emit('closed')
 }
 
 function cancel() {

@@ -28,6 +28,7 @@
             :confirmColor="confirmColor"
             :toolbarRightSlot="toolbarRightSlot"
             @close="close"
+            @closed="closedHandler"
             @cancel="cancel"
             @confirm="confirm"
             @change="change"
@@ -80,7 +81,7 @@ const props = defineProps({
 	...commonProps,
 	...datetimeProps.props
 })
-const emit = defineEmits(['close', 'cancel', 'confirm', 'change', 'update:modelValue', 'input'])
+const emit = defineEmits(['close', 'closed', 'cancel', 'confirm', 'change', 'update:modelValue', 'input'])
 
 // 原来的日期选择器不方便，这里增加一个hasInput选项支持类似element的自带输入框的功能。
 const inputValue = ref('') // 表单显示值
@@ -288,6 +289,11 @@ function close() {
 		}
 		emit('close')
 	}
+}
+
+// 弹窗离场动画结束，透传给使用者
+function closedHandler() {
+	emit('closed')
 }
 
 // 点击工具栏的取消按钮

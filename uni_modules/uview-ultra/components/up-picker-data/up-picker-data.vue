@@ -20,6 +20,7 @@
 			@confirm="confirm"
 			@cancel="cancel"
 			@close="close"
+			@closed="closedHandler"
 		></up-picker>
 	</view>
 </template>
@@ -64,7 +65,7 @@ const props = defineProps({
 		default: 'name'
 	}
 })
-const emit = defineEmits(['update:modelValue', 'cancel', 'close', 'confirm'])
+const emit = defineEmits(['update:modelValue', 'cancel', 'close', 'closed', 'confirm'])
 
 const show = ref(false)
 const current = ref('')
@@ -101,6 +102,11 @@ function cancel() {
 function close() {
 	show.value = false
 	emit('close')
+}
+
+// 弹窗离场动画结束，透传给使用者
+function closedHandler() {
+	emit('closed')
 }
 function confirm(e) {
 	const value = e.value || []

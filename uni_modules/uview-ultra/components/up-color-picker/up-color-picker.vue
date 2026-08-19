@@ -4,7 +4,7 @@
             :style="{backgroundColor: value}" >
             <slot></slot>
         </view>
-		<up-popup :show="show" mode="bottom" round="10" @close="close" :closeOnClickOverlay="true">
+		<up-popup :show="show" mode="bottom" round="10" @close="close" @closed="closedHandler" :closeOnClickOverlay="true">
 			<view class="up-color-picker__content">
 				<view class="up-color-picker__header">
 					<text class="up-color-picker__title">选择颜色</text>
@@ -193,7 +193,7 @@ const props = defineProps({
 		}
 })
 
-const emit = defineEmits(['update:modelValue', 'confirm', 'close'])
+const emit = defineEmits(['update:modelValue', 'confirm', 'close', 'closed'])
 const instance = getCurrentInstance()
 const proxy = instance?.proxy
 
@@ -724,6 +724,11 @@ function confirm() {
 function close() {
             show.value = false;
 			emit('close')
+		}
+
+// 弹窗离场动画结束，透传给使用者
+function closedHandler() {
+			emit('closed')
 		}
 
 function hslToRgb(h, s, l, a = 1) {

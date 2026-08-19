@@ -14,6 +14,7 @@
 			:mode="popupMode"
 			:pageInline="pageInline"
 			@close="closeHandler"
+			@closed="closedHandler"
 		>
 			<view class="up-picker">
 				<up-toolbar
@@ -216,7 +217,7 @@ const props = defineProps({
 	}
 })
 
-const emit = defineEmits(['close', 'cancel', 'confirm', 'change', 'update:modelValue'])
+const emit = defineEmits(['close', 'closed', 'cancel', 'confirm', 'change', 'update:modelValue'])
 
 // 上一次选择的列索引
 const lastIndex = ref<number[]>([] as number[])
@@ -312,6 +313,11 @@ const closeHandler = (): void => {
 		}
 		emit('close')
 	}
+}
+
+// 弹窗离场动画结束，透传给使用者
+const closedHandler = (): void => {
+	emit('closed')
 }
 
 // 点击工具栏的取消按钮
@@ -480,6 +486,7 @@ defineExpose({
 	testArray,
 	getItemText,
 	closeHandler,
+	closedHandler,
 	cancel,
 	confirm,
 	changeHandler,

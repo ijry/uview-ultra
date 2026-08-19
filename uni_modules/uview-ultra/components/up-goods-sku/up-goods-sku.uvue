@@ -10,6 +10,7 @@
             :pageInline="pageInline"
             :border-radius="20"
             @close="close"
+            @closed="closedHandler"
         >
             <view class="up-goods-sku-container" :style="{padding: pageInline ? '0px' : ''}">
                 <view class="up-goods-sku__header">
@@ -169,7 +170,7 @@ const props = defineProps({
 		}
 })
 
-const emit = defineEmits(['open', 'confirm', 'close'])
+const emit = defineEmits(['open', 'confirm', 'close', 'closed'])
 const show = ref(props.pageInline)
 const selectedSku = ref(emptyObject())
 const buyNum = ref(1)
@@ -393,6 +394,11 @@ const close = (): void => {
 	emit('close')
 }
 
+// 弹窗离场动画结束，透传给使用者
+const closedHandler = (): void => {
+	emit('closed')
+}
+
 const onConfirm = (): void => {
 	if (canBuy.value == false) {
 		return
@@ -434,6 +440,7 @@ defineExpose({
 	reset,
 	open,
 	close,
+	closedHandler,
 	onConfirm
 })
 </script>

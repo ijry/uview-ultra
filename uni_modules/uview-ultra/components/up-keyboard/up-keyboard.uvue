@@ -7,6 +7,7 @@
 		:show="show"
 		:safeAreaInsetBottom="safeAreaInsetBottom"
 		@close="popupClose"
+		@closed="popupClosed"
 		:zIndex="zIndex"
 		:customStyle="{
 			backgroundColor: 'rgb(214, 218, 220)'
@@ -184,7 +185,7 @@ defineProps({
 	}
 })
 
-const emit = defineEmits(['change', 'close', 'confirm', 'cancel', 'backspace'])
+const emit = defineEmits(['change', 'close', 'closed', 'confirm', 'cancel', 'backspace'])
 
 const change = (e: any): void => {
 	emit('change', e)
@@ -193,6 +194,11 @@ const change = (e: any): void => {
 // 键盘关闭
 const popupClose = (): void => {
 	emit('close')
+}
+
+// 弹窗离场动画结束，透传给使用者
+const popupClosed = (): void => {
+	emit('closed')
 }
 
 // 输入完成

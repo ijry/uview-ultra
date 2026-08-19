@@ -14,6 +14,7 @@
 		:closeIconPos="closeIconPos"
 		:pageInline="pageInline"
 		@close="close"
+		@closed="closedHandler"
 		:round="round"
 		:closeOnClickOverlay="closeOnClickOverlay"
 		:zoom="zoom"
@@ -207,7 +208,7 @@ const props = defineProps({
 	...commonProps,
 	...calendarProps.props
 })
-const emit = defineEmits(['confirm', 'close'])
+const emit = defineEmits(['confirm', 'close', 'closed'])
 
 // 需要显示的月份的数组
 const months = ref([])
@@ -579,6 +580,12 @@ function close() {
 	emit('close')
 }
 
+// 主体弹窗离场动画结束，透传给使用者。
+// 只接主体popup，关闭内部时间选择器不会误报日历已关闭
+function closedHandler() {
+	emit('closed')
+}
+
 // 点击确定按钮
 function confirm() {
 	if (!buttonDisabled.value) {
@@ -802,7 +809,8 @@ defineExpose({
 	setFormatter,
 	init,
 	confirm,
-	close
+	close,
+	closedHandler
 })
 </script>
 

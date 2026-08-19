@@ -3,6 +3,7 @@
 	    :show="show"
 	    mode="bottom"
 	    @close="closeHandler"
+	    @closed="closedHandler"
 	    :safeAreaInsetBottom="safeAreaInsetBottom"
 	    :round="round"
 	>
@@ -230,7 +231,7 @@ onBeforeUnmount(() => {
 
 // emit定义
 const emit = defineEmits([
-	'close', 'select', 'update:show',
+	'close', 'closed', 'select', 'update:show',
 	'getuserinfo', 'contact', 'getphonenumber', 'error', 'launchapp', 'opensetting'
 ])
 const onOpenType = (name: string, event: UniCustomEvent<UTSJSONObject>) => {
@@ -262,6 +263,11 @@ const closeHandler = () => {
         emit('update:show')
         emit('close')
     }
+}
+
+// 弹窗离场动画结束，透传给使用者
+const closedHandler = () => {
+    emit('closed')
 }
 
 // 点击取消按钮

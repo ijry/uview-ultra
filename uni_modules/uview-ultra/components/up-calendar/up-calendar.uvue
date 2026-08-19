@@ -14,6 +14,7 @@
 		:closeIconPos="closeIconPos"
 		:pageInline="pageInline"
 		@close="close"
+		@closed="closedHandler"
 		:round="round"
 		:closeOnClickOverlay="closeOnClickOverlay"
 		:zoom="zoom"
@@ -239,7 +240,7 @@ const props = defineProps({
 	pageInline: { type: Boolean, default: (defProps['calendar'] as UTSJSONObject)['pageInline'] }
 })
 
-const emit = defineEmits(['confirm', 'close'])
+const emit = defineEmits(['confirm', 'close', 'closed'])
 const month = ref<ComponentPublicInstance | null>(null)
 const start = ref(0)
 const inited = ref(false)
@@ -425,6 +426,12 @@ const monthSelectedM = (e: Array<string>, scene: string): void => {
 }
 const close = (): void => {
 	emit('close')
+}
+
+// 主体弹窗离场动画结束，透传给使用者。
+// 只接主体popup，关闭内部时间选择器不会误报日历已关闭
+const closedHandler = (): void => {
+	emit('closed')
 }
 const confirm = (): void => {
 	if (!buttonDisabled.value) {
@@ -677,6 +684,7 @@ defineExpose({
 	monthSelectedM,
 	init,
 	close,
+	closedHandler,
 	confirm,
 	getMonths,
 	setMonth,

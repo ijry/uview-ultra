@@ -14,6 +14,7 @@
 			:mode="popupMode"
 			:pageInline="pageInline"
 			@close="closeHandler"
+			@closed="closedHandler"
 		>
 			<view class="up-picker">
 				<up-toolbar
@@ -96,7 +97,7 @@ const props = defineProps({
 	...commonProps,
 	...pickerProps.props
 })
-const emit = defineEmits(['close', 'cancel', 'confirm', 'change', 'update:modelValue'])
+const emit = defineEmits(['close', 'closed', 'cancel', 'confirm', 'change', 'update:modelValue'])
 
 const lastIndex = ref([])
 const innerIndex = ref([])
@@ -154,6 +155,11 @@ function closeHandler() {
 		}
 		emit('close')
 	}
+}
+
+// 弹窗离场动画结束，透传给使用者
+function closedHandler() {
+	emit('closed')
 }
 
 function cancel() {

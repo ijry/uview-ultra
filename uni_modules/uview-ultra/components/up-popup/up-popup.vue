@@ -15,6 +15,7 @@
 			:mode="pageInline ? 'none' : position"
 			:duration="duration"
 			@afterEnter="afterEnter"
+			@afterLeave="afterLeave"
 			@click="clickHandler"
 		>
 			<view
@@ -46,7 +47,7 @@
 </template>
 
 <script setup>
-	import { computed, getCurrentInstance, ref, watch } from 'vue'
+	import { computed, getCurrentInstance, nextTick, ref, watch } from 'vue'
 	import { props as popupProps } from './props.js'
 	import { commonProps, useUltraUI } from '../../libs/composable/useUltraUI.js'
 	import { addUnit, addStyle, deepMerge, sleep, sys } from '../../libs/function/index.js'
@@ -70,8 +71,9 @@
 	 * @property {String | Number}	round				圆角值（默认 0）
 	 * @property {Boolean}			zoom				当mode=center时 是否开启缩放（默认 true ）
 	 * @property {Object}			customStyle			组件的样式，对象形式
-	 * @event {Function} open 弹出层打开
-	 * @event {Function} close 弹出层收起
+	 * @event {Function} open 弹出层打开（进场动画结束后）
+	 * @event {Function} close 弹出层收起（关闭动作发生时，离场动画开始前；外部直接将show置为false时也会触发）
+	 * @event {Function} closed 弹出层已关闭（离场动画结束、弹窗真正消失后）
 	 * @example <up-popup v-model="show"><text>出淤泥而不染，濯清涟而不妖</text></up-popup>
 	 */
 	defineOptions({
@@ -87,17 +89,34 @@
 		...commonProps,
 		...popupProps.props
 	})
-	const emit = defineEmits(['open', 'close', 'click', 'update:show'])
+	const emit = defineEmits(['open', 'close', 'closed', 'click', 'update:show'])
 	const instance = getCurrentInstance()
 	const { noop } = useUltraUI(props)
 	const overlayDuration = ref(props.duration + 50)
+	// close事件是否已由组件内部的关闭动作发出，避免show变化时重复发出
+	const closeEmitted = ref(false)
 
-	watch(() => props.show, (newValue) => {
+	watch(() => props.show, (newValue, oldValue) => {
 		if (newValue === true) {
+			closeEmitted.value = false
 			// #ifdef MP-WEIXIN
 			const children = instance?.proxy?.$children || []
 			retryComputedComponentRect(children)
 			// #endif
+		} else if (oldValue === true) {
+			// 外部直接将show置为false时，组件内部没有走过关闭动作，
+			// 此处补发close，保证任意关闭方式都能被监听到
+			if (closeEmitted.value) {
+				// 本次关闭已由内部动作发出过close，消费标记即可
+				closeEmitted.value = false
+			} else {
+				emit('close')
+			}
+			// pageInline模式下transition的show恒为true，不会执行离场动画，
+			// 收不到afterLeave，此处补发closed
+			if (props.pageInline) {
+				emit('closed')
+			}
 		}
 	})
 
@@ -189,21 +208,36 @@
 		}
 	})
 
+	// 发出close事件。标记仅在本次更新周期内有效，
+	// 用于抑制紧随其后的show变化导致watch重复补发close
+	function emitClose() {
+		closeEmitted.value = true
+		emit('close')
+		nextTick(() => {
+			closeEmitted.value = false
+		})
+	}
+
 	// 点击遮罩
 	function overlayClick() {
 		if (props.closeOnClickOverlay) {
 			emit('update:show', false)
-			emit('close')
+			emitClose()
 		}
 	}
 
 	function close(e) {
 		emit('update:show', false)
-		emit('close')
+		emitClose()
 	}
 
 	function afterEnter() {
 		emit('open')
+	}
+
+	// 离场动画结束，弹窗已真正消失
+	function afterLeave() {
+		emit('closed')
 	}
 
 	function clickHandler() {
@@ -250,6 +284,7 @@
 		overlayClick,
 		close,
 		afterEnter,
+		afterLeave,
 		clickHandler,
 		// #ifdef MP-WEIXIN
 		retryComputedComponentRect
