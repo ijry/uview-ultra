@@ -1,3 +1,12 @@
+## 4.5.32
+fix: 修复小程序端使用交叉观察器组件时控制台报枚举实例键告警（uview-plus #864）
+
+- 新增公共方法 `upCreateIntersectionObserver(comp, options)`：优先调用组件实例上的同名方法（内部已完成实例解包，不会把 Vue 代理外泄给原生 API），APP 端实例上没有该方法时回退到全局 API
+- up-sticky、up-lazy-load、up-cate-tab（均为 Vue 版）改用该方法，小程序端不再输出 `Avoid app logic that relies on enumerating keys on a component instance` 告警
+- up-sticky 的 thresholds 原样透传。不能改传 comp.$scope：APP 端页面的 $scope 仅为 `{ $getAppWebview }`，会被全局 API 误判成 options 参数，导致真实配置被静默丢弃
+- up-parse/node 的观察器位于 `#ifdef H5 || APP-PLUS` 条件编译块内，不会编译进小程序，故保持不变；uni-app x（UVue）版本次未改动
+- 新增 verify:up-create-intersection-observer 回归校验
+
 ## 4.5.31（2026-08-20）
 feat: up-cropper 支持裁剪业务侧已有的图片路径
 
