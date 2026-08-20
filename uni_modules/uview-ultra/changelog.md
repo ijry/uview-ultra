@@ -1,4 +1,4 @@
-## 4.5.31
+## 4.5.31（2026-08-20）
 feat: up-cropper 支持裁剪业务侧已有的图片路径
 
 - up-cropper（UVue/Vue）`chooseImage(index, params, data)` 新增 `params.imageSrc`：传入非空路径时直接裁剪该图片，不再打开系统选图；空值或非字符串仍保持原有选图行为
