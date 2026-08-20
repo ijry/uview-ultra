@@ -39,7 +39,7 @@
  */
 import { computed, getCurrentInstance, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { commonProps } from '../../libs/composable/useUltraUI.js'
-import { addUnit, guid } from '../../libs/function/index.js'
+import { addUnit, guid, upCreateIntersectionObserver } from '../../libs/function/index.js'
 
 defineOptions({
 	name: 'up-lazy-load',
@@ -230,11 +230,12 @@ onMounted(() => {
 
 	setTimeout(() => {
 		// #ifndef APP-NVUE
-		// 这里是组件内获取布局状态，不能用uni.createIntersectionObserver，而必须用this.createIntersectionObserver
+		// 这里是组件内获取布局状态，不能直传Vue实例给uni.createIntersectionObserver，
+		// 否则小程序内部会Object.keys(vm)导致告警，统一走upCreateIntersectionObserver
 		// disconnectObserver('contentObserver');
 		// nvue 里不支持
 		const observerContext = proxy
-		const nextObserver = uni.createIntersectionObserver(observerContext)
+		const nextObserver = upCreateIntersectionObserver(observerContext)
 		// 要理解这里怎么计算的，请看这个：
 		// https://blog.csdn.net/qq_25324335/article/details/83687695
 		nextObserver.relativeToViewport({

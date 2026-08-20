@@ -17,7 +17,7 @@
 import { computed, getCurrentInstance, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { props as stickyProps } from './props'
 import { commonProps, useUltraUI } from '../../libs/composable/useUltraUI'
-import { addUnit, addStyle, deepMerge, getPx, guid, getDeviceInfo, os } from '../../libs/function/index'
+import { addUnit, addStyle, deepMerge, getPx, guid, getDeviceInfo, os, upCreateIntersectionObserver } from '../../libs/function/index'
 import zIndex from '../../libs/config/zIndex'
 /**
  * sticky 吸顶
@@ -130,7 +130,7 @@ function initObserveContent() {
 
 function observeContent() {
 	disconnectObserver('contentObserver')
-	const observer = uni.createIntersectionObserver(proxy, {
+	const observer = upCreateIntersectionObserver(proxy, {
 		thresholds: [0.95, 0.98, 1]
 	})
 	observer.relativeToViewport({

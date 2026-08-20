@@ -49,7 +49,7 @@
 <script setup>
 import { getCurrentInstance, nextTick, onMounted, ref, watch } from 'vue'
 import { commonProps } from '../../libs/composable/useUltraUI.js'
-import { addUnit, sleep } from '../../libs/function/index'
+import { addUnit, sleep, upCreateIntersectionObserver } from '../../libs/function/index'
 
 defineOptions({
 	name: 'up-cate-tab',
@@ -183,7 +183,7 @@ async function observer() {
 	_observerList = []
 
 	props.tabList.map((val, index) => {
-		let obs = uni.createIntersectionObserver(proxy)
+		let obs = upCreateIntersectionObserver(proxy)
 		_observerList.push(obs)
 		obs.relativeTo('.up-cate-tab__right-box', {
 			top: 10
