@@ -349,6 +349,11 @@ export default [{
             title: 'Navbar 导航栏',
             title_en: 'Navbar'
         }, {
+            path: '/pages/componentsC/navbarIos/navbarIos',
+            icon: 'navbar',
+            title: 'Navbar iOS 大标题',
+            title_en: 'Navbar iOS'
+        }, {
             path: '/pages/componentsD/navbarMini/navbarMini',
             icon: 'navbarMini',
             title: 'NavbarMini 导航栏',
