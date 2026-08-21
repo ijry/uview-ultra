@@ -378,6 +378,13 @@
 			}
 		},
 		{
+			"path": "navbarIos/navbarIos",
+			"style": {
+				"navigationBarTitleText": "导航栏 iOS 模式",
+				"navigationStyle": "custom"
+			}
+		},
+		{
 			"path": "subsection/subsection",
 			"style": {
 				"navigationBarTitleText": "分段器"

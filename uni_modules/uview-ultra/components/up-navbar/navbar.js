@@ -25,7 +25,9 @@ export default {
 		leftIconSize: 20,
 		leftIconColor: 'var(--up-main-color, #303133)',
 		autoBack: false,
-		titleStyle: ''
+		titleStyle: '',
+		mode: 'default',
+		scrollTop: 0
     }
 
 }

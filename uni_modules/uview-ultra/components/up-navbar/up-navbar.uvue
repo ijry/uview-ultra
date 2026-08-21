@@ -1,18 +1,39 @@
 <template>
 	<view class="up-navbar" :class="[customClass]">
+		<!-- ios 模式：in-flow 层，恒定渲染，随页面原生滚动被带走 -->
+		<view v-if="isIosMode" class="up-navbar__flow">
+			<view :style="flowSpacerStyle"></view>
+			<view
+				v-if="title"
+				class="up-navbar__large-title"
+				:style="largeTitleStyle"
+			>
+				<text
+					class="up-line-1 up-navbar__large-title__text"
+					:style="largeTitleTextStyle"
+				>{{ title }}</text>
+			</view>
+		</view>
+		<!-- default 模式：原有占位块，行为保持不变 -->
 		<view
 			class="up-navbar__placeholder"
-			v-if="fixed && placeholder"
+			v-if="!isIosMode && fixed && placeholder"
 			:style="placeholderStyle"
 		></view>
-		<view :class="[fixed ? 'up-navbar--fixed' : '']">
+		<view :class="[(isIosMode || fixed) ? 'up-navbar--fixed' : '']">
+			<!-- ios 模式的磨砂层：随滚动淡入，位于内容之下 -->
+			<view
+				v-if="isIosMode"
+				class="up-navbar__glass"
+				:style="glassStyle"
+			></view>
 			<up-status-bar
 				v-if="safeAreaInsetTop"
-				:bgColor="bgColor"
+				:bgColor="statusBarBgColor"
 			></up-status-bar>
 			<view
 				class="up-navbar__content"
-				:class="[border ? 'up-border-bottom' : '']"
+				:class="[(border && !isIosMode) ? 'up-border-bottom' : '']"
 				:style="contentStyle"
 			>
 				<view
@@ -35,12 +56,17 @@
 						>{{ leftText }}</text>
 					</slot>
 				</view>
-				<slot name="center">
-					<text
-						class="up-line-1 up-navbar__content__title"
-						:style="titleTextStyle"
-					>{{ title }}</text>
-				</slot>
+				<view
+					class="up-navbar__content__center"
+					:style="centerStyle"
+				>
+					<slot name="center">
+						<text
+							class="up-line-1 up-navbar__content__title"
+							:style="titleTextStyle"
+						>{{ title }}</text>
+					</slot>
+				</view>
 				<view
 					class="up-navbar__content__right"
 					v-if="$slots['right'] != null || rightIcon != '' || rightText != ''"
@@ -178,6 +204,16 @@
 			type: [Object],
 			default: defProps.getAny('navbar.titleStyle')
 		},
+		// 导航栏模式，default-常规，ios-大标题模式
+		mode: {
+			type: String,
+			default: defProps.getString('navbar.mode')
+		},
+		// 页面滚动距离，仅 ios 模式使用，由页面 onPageScroll 传入
+		scrollTop: {
+			type: [String, Number],
+			default: defProps.getAny('navbar.scrollTop')
+		},
 		customClass: {
 			type: String,
 			default: ''
@@ -188,6 +224,96 @@
 	const statusBarHeight = ref(uni.getSystemInfoSync().statusBarHeight ?? 0)
 	const placeholderHeight = ref(addUnit(parseInt(getPx(props.height)) + statusBarHeight.value, 'px'))
 
+	// iOS 大标题行高，同时是压缩进度的分母
+	const LARGE_TITLE_HEIGHT = 52
+	// 居中标题上浮的起始偏移，与淡入同步归零
+	const CENTER_TITLE_RISE = 12
+
+	const isIosMode = computed((): boolean => {
+		return props.mode == 'ios'
+	})
+
+	// 有效大标题行高：title 为空时不渲染大标题行，行高塌陷为 0
+	const largeTitleHeight = computed((): number => {
+		return props.title != '' ? LARGE_TITLE_HEIGHT : 0
+	})
+
+	// 压缩进度。progress=1 即大标题恰好完全没入导航栏
+	const iosProgress = computed((): number => {
+		if (!isIosMode.value) {
+			return 1
+		}
+		const distance = largeTitleHeight.value
+		if (distance <= 0) {
+			return 1
+		}
+		const offset = parseInt(getPx(props.scrollTop))
+		return Math.min(Math.max(offset / distance, 0), 1)
+	})
+
+	// 磨砂在前半段走完，为居中标题的出现铺好不透明底
+	const glassOpacity = computed((): number => {
+		if (!isIosMode.value) {
+			return 0
+		}
+		return Math.min(Math.max(iosProgress.value / 0.5, 0), 1)
+	})
+
+	// 居中标题在后段才启动，此时磨砂层已满不透明，不会与大标题互相透出
+	const centerOpacity = computed((): number => {
+		if (!isIosMode.value) {
+			return 1
+		}
+		return Math.min(Math.max((iosProgress.value - 0.75) / 0.25, 0), 1)
+	})
+
+	// ios 模式下状态栏占位透明，背景由磨砂层统一承担
+	const statusBarBgColor = computed((): string => {
+		return isIosMode.value ? 'transparent' : props.bgColor
+	})
+
+	const flowSpacerStyle = computed((): UTSJSONObject => {
+		const style = {} as UTSJSONObject
+		let top = parseInt(getPx(props.height))
+		if (props.safeAreaInsetTop) {
+			top += statusBarHeight.value
+		}
+		style['height'] = addUnit(top, 'px')
+		return style
+	})
+
+	const largeTitleStyle = computed((): UTSJSONObject => {
+		const style = {} as UTSJSONObject
+		style['height'] = addUnit(largeTitleHeight.value, 'px')
+		return style
+	})
+
+	const largeTitleTextStyle = computed((): UTSJSONObject => {
+		const style = {} as UTSJSONObject
+		return UTSJSONObject.assign(style, addStyle(props.titleStyle) as UTSJSONObject)
+	})
+
+	// 磨砂层。App 原生端不支持 backdrop-filter，0.82 不透明底色即为可读性下限；
+	// backdrop-filter 仍然写入，在 WebView 类端上会自动生效。
+	const glassStyle = computed((): UTSJSONObject => {
+		const style = {} as UTSJSONObject
+		style['opacity'] = glassOpacity.value
+		style['backgroundColor'] = props.bgColor
+		return style
+	})
+
+	// 居中标题由下往上浮现：与淡入同一段行程，位移随之归零
+	const centerStyle = computed((): UTSJSONObject => {
+		const style = {} as UTSJSONObject
+		if (!isIosMode.value) {
+			return style
+		}
+		const opacity = centerOpacity.value
+		style['opacity'] = opacity
+		style['transform'] = 'translateY(' + ((1 - opacity) * CENTER_TITLE_RISE).toString() + 'px)'
+		return style
+	})
+
 	const placeholderStyle = computed((): UTSJSONObject => {
 		const style = {} as UTSJSONObject
 		style['height'] = placeholderHeight.value
@@ -197,7 +323,8 @@
 	const contentStyle = computed((): UTSJSONObject => {
 		const style = {} as UTSJSONObject
 		style['height'] = addUnit(props.height)
-		style['backgroundColor'] = props.bgColor
+		// ios 模式下内容区透明，背景交给磨砂层，避免遮住其淡入效果
+		style['backgroundColor'] = isIosMode.value ? 'transparent' : props.bgColor
 		return style
 	})
 
@@ -230,6 +357,8 @@
 	defineExpose({
 		statusBarHeight,
 		placeholderHeight,
+		isIosMode,
+		iosProgress,
 		leftClick,
 		rightClick
 	})
@@ -248,12 +377,42 @@
 			z-index: 11;
 		}
 
+		&__flow {
+			width: 100%;
+		}
+
+		&__large-title {
+			@include flex(row);
+			align-items: center;
+			padding: 0 13px;
+
+			&__text {
+				font-size: 34px;
+				font-weight: 700;
+				color: $up-main-color;
+			}
+		}
+
+		// App 原生端不支持 backdrop-filter，磨砂退化为 0.82 不透明底色；
+		// 该底色本身即构成文字可读性下限，故两端都不会出现文字读串。
+		&__glass {
+			position: absolute;
+			left: 0;
+			right: 0;
+			top: 0;
+			bottom: 0;
+			-webkit-backdrop-filter: saturate(180%) blur(var(--up-navbar-glass-blur, 20px));
+			        backdrop-filter: saturate(180%) blur(var(--up-navbar-glass-blur, 20px));
+		}
+
 		&__content {
 			@include flex(row);
 			align-items: center;
 			height: 44px;
 			background-color: #9acafc;
+			// 磨砂层是绝对定位的，会盖住同级非定位元素，故内容区显式提升层级
 			position: relative;
+			z-index: 1;
 			justify-content: center;
 
 			&__left,
@@ -277,6 +436,16 @@
 					font-size: 15px;
 					margin-left: 3px;
 				}
+			}
+
+			&__center {
+				@include flex(row);
+				align-items: center;
+				justify-content: center;
+				// 滚动事件离散到达，补一段短过渡让上浮与淡入连续
+				transition-property: opacity, transform;
+				transition-duration: 0.15s;
+				transition-timing-function: ease-out;
 			}
 
 			&__title {

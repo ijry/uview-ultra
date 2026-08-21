@@ -1,0 +1,77 @@
+<template>
+	<view class="ios-demo">
+		<up-navbar
+			mode="ios"
+			title="设置"
+			:scrollTop="scrollTop"
+			:autoBack="true"
+			rightIcon="search"
+			@rightClick="rightClick"
+		></up-navbar>
+		<view class="ios-demo__body">
+			<text class="ios-demo__tip">向下滚动，观察大标题被压缩进导航栏，标题过渡为居中形态并由下方浮现。</text>
+			<view
+				class="ios-demo__cell"
+				v-for="(item, index) in cells"
+				:key="index"
+			>
+				<text class="ios-demo__cell__text">{{ item }}</text>
+			</view>
+		</view>
+	</view>
+</template>
+
+<script setup lang="uts">
+	import { ref } from 'vue'
+
+	defineOptions({
+		styleIsolation: 'app-and-page'
+	})
+
+	const scrollTop = ref(0)
+
+	const cells = ref<string[]>([])
+	for (let i = 1; i <= 30; i++) {
+		cells.value.push('列表项 ' + i.toString())
+	}
+
+	const rightClick = () => {
+		console.log('rightClick')
+	}
+
+	// ios 模式必须由页面把滚动距离喂给组件，
+	// 组件内部无法获取页面级的 onPageScroll。
+	onPageScroll((e: OnPageScrollOptions) => {
+		scrollTop.value = e.scrollTop
+	})
+</script>
+
+<style lang="scss">
+	.ios-demo {
+		flex: 1;
+		background-color: #f3f4f6;
+	}
+
+	.ios-demo__body {
+		padding: 0 15px 40px 15px;
+	}
+
+	.ios-demo__tip {
+		font-size: 13px;
+		color: #909193;
+		padding-top: 12px;
+		padding-bottom: 16px;
+	}
+
+	.ios-demo__cell {
+		background-color: #ffffff;
+		border-radius: 8px;
+		margin-bottom: 8px;
+		padding: 14px 16px;
+	}
+
+	.ios-demo__cell__text {
+		font-size: 15px;
+		color: #303133;
+	}
+</style>

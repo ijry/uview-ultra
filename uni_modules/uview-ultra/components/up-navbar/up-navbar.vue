@@ -1,23 +1,44 @@
 <template>
 	<view class="up-navbar" :class="[customClass]">
+		<!-- ios 模式：in-flow 层，恒定渲染，随页面原生滚动被带走 -->
+		<view v-if="isIosMode" class="up-navbar__flow">
+			<view :style="{ height: flowSpacerHeight }"></view>
+			<view
+				v-if="title"
+				class="up-navbar__large-title"
+				:style="{ height: addUnit(largeTitleHeight) }"
+			>
+				<text
+					class="up-line-1 up-navbar__large-title__text"
+					:style="[addStyle(titleStyle)]"
+				>{{ title }}</text>
+			</view>
+		</view>
+		<!-- default 模式：原有占位块，行为保持不变 -->
 		<view
 			class="up-navbar__placeholder"
-			v-if="fixed && placeholder"
+			v-if="!isIosMode && fixed && placeholder"
 			:style="{
 				height: addUnit(getPx(height) + sys().statusBarHeight,'px'),
 			}"
 		></view>
-		<view :class="[fixed && 'up-navbar--fixed']">
+		<view :class="[(isIosMode || fixed) && 'up-navbar--fixed']">
+			<!-- ios 模式的磨砂层：随滚动淡入，位于内容之下 -->
+			<view
+				v-if="isIosMode"
+				class="up-navbar__glass"
+				:style="{ opacity: glassOpacity, background: glassBgColor }"
+			></view>
 			<up-status-bar
 				v-if="safeAreaInsetTop"
-				:bgColor="bgColor"
+				:bgColor="isIosMode ? 'transparent' : bgColor"
 			></up-status-bar>
 			<view
 				class="up-navbar__content"
-				:class="[border && 'up-border-bottom']"
+				:class="[border && !isIosMode && 'up-border-bottom']"
 				:style="{
 					height: addUnit(height),
-					backgroundColor: bgColor,
+					backgroundColor: isIosMode ? 'transparent' : bgColor,
 				}"
 			>
 				<view
@@ -42,14 +63,19 @@
 						>{{ leftText }}</text>
 					</slot>
 				</view>
-				<slot name="center">
-					<text
-						class="up-line-1 up-navbar__content__title"
-						:style="[{
-							width: addUnit(titleWidth),
-						}, addStyle(titleStyle)]"
-					>{{ title }}</text>
-				</slot>
+				<view
+					class="up-navbar__content__center"
+					:style="[centerStyle]"
+				>
+					<slot name="center">
+						<text
+							class="up-line-1 up-navbar__content__title"
+							:style="[{
+								width: addUnit(titleWidth),
+							}, addStyle(titleStyle)]"
+						>{{ title }}</text>
+					</slot>
+				</view>
 				<view
 					class="up-navbar__content__right"
 					v-if="$slots.right || rightIcon || rightText"
@@ -77,7 +103,12 @@ import { props as navbarProps } from './props.js'
 import { commonProps } from '../../libs/composable/useUltraUI.js'
 import config from '../../libs/config/config.js'
 import { addUnit, addStyle, getPx, sys } from '../../libs/function/index.js'
-import { getCurrentInstance } from 'vue'
+import { computed, getCurrentInstance } from 'vue'
+
+// iOS 大标题行高，同时是压缩进度的分母
+const LARGE_TITLE_HEIGHT = 52
+// 居中标题上浮的起始偏移，与淡入同步归零
+const CENTER_TITLE_RISE = 12
 /**
  * Navbar 自定义导航栏
  * @description 此组件一般用于在特殊情况下，需要自定义导航栏的时候用到，一般建议使用uni-app带的导航栏。
@@ -98,6 +129,8 @@ import { getCurrentInstance } from 'vue'
  * @property {String | Number}	leftIconColor		左侧返回图标的颜色（默认 #303133 ）
  * @property {Boolean}	        autoBack			点击左侧区域(返回图标)，是否自动返回上一页（默认 false ）
  * @property {Object | String}	titleStyle			标题的样式，对象或字符串
+ * @property {String}			mode				导航栏模式，default-常规，ios-大标题模式（默认 'default' ）
+ * @property {String | Number}	scrollTop			页面滚动距离，仅 ios 模式使用，由页面 onPageScroll 传入（默认 0 ）
  * @event {Function} leftClick		点击左侧区域
  * @event {Function} rightClick		点击右侧区域
  * @example <up-navbar title="剑未配妥，出门已是江湖" left-text="返回" right-text="帮助" @click-left="onClickBack" @click-right="onClickRight"></up-navbar>
@@ -116,6 +149,53 @@ const props = defineProps({
 	...navbarProps.props
 })
 const emit = defineEmits(['leftClick', 'rightClick'])
+
+const isIosMode = computed(() => props.mode === 'ios')
+
+// 有效大标题行高：title 为空时不渲染大标题行，行高塌陷为 0
+const largeTitleHeight = computed(() => (props.title ? LARGE_TITLE_HEIGHT : 0))
+
+// in-flow 层顶部让位块高度，为固定层腾出空间
+const flowSpacerHeight = computed(() => {
+	const statusBarHeight = props.safeAreaInsetTop ? sys().statusBarHeight : 0
+	return addUnit(getPx(props.height) + statusBarHeight, 'px')
+})
+
+// 压缩进度。progress=1 即大标题恰好完全没入导航栏
+const iosProgress = computed(() => {
+	if (!isIosMode.value) return 1
+	const distance = largeTitleHeight.value
+	if (distance <= 0) return 1
+	const offset = getPx(props.scrollTop) || 0
+	return Math.min(Math.max(offset / distance, 0), 1)
+})
+
+// 磨砂在前半段走完，为居中标题的出现铺好不透明底
+const glassOpacity = computed(() => {
+	if (!isIosMode.value) return 0
+	return Math.min(Math.max(iosProgress.value / 0.5, 0), 1)
+})
+
+// 居中标题在后段才启动，此时磨砂已满不透明，不会与大标题互相透出
+const centerOpacity = computed(() => {
+	if (!isIosMode.value) return 1
+	return Math.min(Math.max((iosProgress.value - 0.75) / 0.25, 0), 1)
+})
+
+// 0.82 是可读性下限的承重值：backdrop-filter 不生效时，仅靠该不透明度也须保证文字不读串
+const glassBgColor = computed(() => {
+	return 'var(--up-navbar-glass-bg-color, rgba(255, 255, 255, 0.82))'
+})
+
+// 居中标题由下往上浮现：与淡入同一段行程，位移随之归零
+const centerStyle = computed(() => {
+	if (!isIosMode.value) return {}
+	const opacity = centerOpacity.value
+	return {
+		opacity,
+		transform: `translateY(${(1 - opacity) * CENTER_TITLE_RISE}px)`
+	}
+})
 
 function leftClick() {
 	emit('leftClick')
@@ -147,12 +227,43 @@ function rightClick() {
 			z-index: 11;
 		}
 
+		&__flow {
+			width: 100%;
+		}
+
+		&__large-title {
+			@include flex(row);
+			align-items: center;
+			padding: 0 13px;
+
+			&__text {
+				font-size: 34px;
+				font-weight: 700;
+				line-height: 1.2;
+				color: var(--up-main-color, #303133);
+			}
+		}
+
+		&__glass {
+			position: absolute;
+			top: 0;
+			left: 0;
+			right: 0;
+			bottom: 0;
+			// 模糊半径写在静态 class 内使 -webkit- 前缀在编译期确定；
+			// iOS 16 之前的 WKWebView 只认前缀版本，两条都必须保留。
+			-webkit-backdrop-filter: saturate(180%) blur(var(--up-navbar-glass-blur, 20px));
+			        backdrop-filter: saturate(180%) blur(var(--up-navbar-glass-blur, 20px));
+		}
+
 		&__content {
 			@include flex(row);
 			align-items: center;
 			height: 44px;
 			background-color: var(--up-navbar-bg-color, #ffffff);
+			// 磨砂层是绝对定位的，会盖住同级非定位元素，故内容区显式提升层级
 			position: relative;
+			z-index: 1;
 			justify-content: center;
 
 			&__left,
@@ -176,6 +287,14 @@ function rightClick() {
 					font-size: 15px;
 					margin-left: 3px;
 				}
+			}
+
+			&__center {
+				@include flex(row);
+				align-items: center;
+				justify-content: center;
+				// 滚动事件离散到达，补一段短过渡让上浮与淡入连续
+				transition: opacity 0.15s linear, transform 0.15s ease-out;
 			}
 
 			&__title {
