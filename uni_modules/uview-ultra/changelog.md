@@ -11,7 +11,7 @@ feat: up-navbar 新增 iOS 大标题模式
 - 新增 `--up-navbar-glass-bg-color` 与 `--up-navbar-glass-blur` 主题变量
 - UVue 与 Vue 两份实现同步，共用同一套属性与曲线参数
 
-平台差异：`backdrop-filter` 仅在 WebView 类端（Web、H5、微信小程序 iOS 等）生效，呈现真实毛玻璃；App 原生端（UVue）该属性不被渲染器识别，磨砂退化为 0.82 不透明底色。该不透明度本身即构成文字可读性下限，因此两端都不会出现文字与下方内容读串。大标题压缩与居中标题上浮在两端均正常工作。
+平台差异：`backdrop-filter` 在 WebView 类端（Web、H5、微信小程序 iOS 等）生效，呈现真实毛玻璃。App 原生端（UVue）的支持情况取决于渲染器：若不生效，磨砂表现为 0.82 不透明底色。该不透明度本身即构成文字可读性下限，因此无论模糊是否生效都不会出现文字与下方内容读串。大标题压缩与居中标题上浮不依赖 `backdrop-filter`，两端均可工作。
 
 另修复 APP 端示例页缺失滚动容器的问题：APP 端页面根节点不会自动滚动，需显式包一层 `scroll-view`。navbarIos 示例页在 APP 端改从容器 `@scroll` 取 `e.detail.scrollTop`（`scroll-view` 内的滚动不触发页面级 `onPageScroll`），非 APP 端仍走 `onPageScroll`。同时为 gap、grid、code、color、countDown、countTo、switch、table、calendar、form、navbar、scrollList、text、datetimePicker 等内容超屏的示例页补上相同容器。
 
