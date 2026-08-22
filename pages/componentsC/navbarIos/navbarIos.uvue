@@ -1,4 +1,9 @@
 <template>
+	<!-- #ifdef APP -->
+	<!-- APP 端页面根节点不滚动，需显式包一层 scroll-view。
+	     大标题在容器内部，随容器滚动被带走，滚动量由 @scroll 提供。 -->
+	<scroll-view style="flex:1" @scroll="onScroll">
+	<!-- #endif -->
 	<view class="ios-demo">
 		<up-navbar
 			mode="ios"
@@ -19,6 +24,9 @@
 			</view>
 		</view>
 	</view>
+	<!-- #ifdef APP -->
+	</scroll-view>
+	<!-- #endif -->
 </template>
 
 <script setup lang="uts">
@@ -39,16 +47,24 @@
 		console.log('rightClick')
 	}
 
-	// ios 模式必须由页面把滚动距离喂给组件，
-	// 组件内部无法获取页面级的 onPageScroll。
+	// APP 端滚动发生在 scroll-view 内，页面级 onPageScroll 不会触发，
+	// 因此这里从容器的 scroll 事件取滚动量。
+	// #ifdef APP
+	const onScroll = (e: UniScrollEvent) => {
+		scrollTop.value = e.detail.scrollTop
+	}
+	// #endif
+
+	// 非 APP 端由页面自身滚动，走页面级生命周期。
+	// #ifndef APP
 	onPageScroll((e: OnPageScrollOptions) => {
 		scrollTop.value = e.scrollTop
 	})
+	// #endif
 </script>
 
 <style lang="scss">
 	.ios-demo {
-		flex: 1;
 		background-color: #f3f4f6;
 	}
 

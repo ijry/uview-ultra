@@ -1,4 +1,7 @@
 <template>
+	<!-- #ifdef APP -->
+	<scroll-view style="flex:1">
+	<!-- #endif -->
 	<view class="u-page">
 		<view class="u-demo-block">
 			<text class="u-demo-block__title" style="margin-bottom: 15px;">基础使用</text>
@@ -68,6 +71,9 @@
 			</up-scroll-list>
 		</view>
 	</view>
+	<!-- #ifdef APP -->
+	</scroll-view>
+	<!-- #endif -->
 </template>
 
 <script setup lang="uts">
