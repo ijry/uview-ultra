@@ -7,6 +7,7 @@
 	>
 		<view class="up-tabbar-item__content" :class="contentClassNames" :style="midButtonContentStyle">
 			<view
+				ref="up-tabbar-item__icon--mid-button"
 				class="up-tabbar-item__icon"
 				:class="[isMidButton ? 'up-tabbar-item__icon--mid-button' : '']"
 				:style="midButtonShellStyle"
@@ -55,10 +56,11 @@
 </template>
 
 <script setup>
-	import { computed, getCurrentInstance, nextTick, onBeforeUnmount, onMounted, reactive, ref, toRef, useSlots } from 'vue'
+	import { computed, getCurrentInstance, nextTick, onBeforeUnmount, onMounted, reactive, ref, toRef, useSlots, watch } from 'vue'
 	import { props as tabbarItemProps } from './props'
 	import { commonProps, useUltraUI } from '../../libs/composable/useUltraUI.js'
-	import { addStyle, error } from '../../libs/function/index'
+	import { addStyle, error, sleep } from '../../libs/function/index'
+	import { calculateMidButtonBorderClipHeight } from './midButtonGeometry.js'
 	/**
 	 * TabbarItem 底部导航栏子组件
 	 * @description 此组件提供了自定义tabbar的能力。
@@ -92,11 +94,16 @@
 		value: null,
 		activeColor: '',
 		inactiveColor: '',
-		borderColor: ''
+		borderColor: '',
+		border: true,
+		midButtonBorderTopOffset: 0.25,
+		tabbarContentTop: 0,
+		tabbarContentMeasured: false
 	})
-	const { parent, getParentData } = useUltraUI(props, parentData)
+	const { parent, getParentData, $uGetRect } = useUltraUI(props, parentData)
 	const name = toRef(props, 'name')
 	const isActive = ref(false) // 是否处于激活状态
+	const midButtonBorderClipHeightValue = ref(0)
 	const routeSyncTimer = ref(null)
 	const routeSyncLast = ref('')
 
@@ -141,10 +148,8 @@
 
 	const midButtonBorderStyle = computed(() => {
 		if (!isMidButton.value) return {}
-		const clipBaseHeight = hasMidButtonText.value ? 15.5 : 7
-		const clipHeight = Math.min(Math.max(clipBaseHeight - midButtonOffsetValue.value, 0), 64)
 		return {
-			height: `${clipHeight}px`
+			height: `${midButtonBorderClipHeightValue.value}px`
 		}
 	})
 
@@ -249,6 +254,33 @@
 	function updateFromParent() {
 		// 重新初始化
 		init()
+		scheduleMidButtonBorderMeasure()
+	}
+
+	function scheduleMidButtonBorderMeasure() {
+		if (!isMidButton.value) {
+			midButtonBorderClipHeightValue.value = 0
+			return
+		}
+		nextTick(() => updateMidButtonBorderClip())
+	}
+
+	async function updateMidButtonBorderClip() {
+		if (!isMidButton.value || !parent.value || !parentData.tabbarContentMeasured) return
+		await sleep(20)
+		const circleRect = await $uGetRect('.up-tabbar-item__icon--mid-button')
+		const contentTop = Number(parentData.tabbarContentTop)
+		const circleTop = Number(circleRect?.top)
+		const circleHeight = Number(circleRect?.height)
+		if (![contentTop, circleTop, circleHeight].every(Number.isFinite) || circleHeight <= 0) return
+		const clipHeight = calculateMidButtonBorderClipHeight({
+			contentTop,
+			circleTop,
+			borderTopOffset: parentData.border ? parentData.midButtonBorderTopOffset : 0
+		})
+		if (clipHeight !== midButtonBorderClipHeightValue.value) {
+			midButtonBorderClipHeightValue.value = clipHeight
+		}
 	}
 
 	function clickHandler() {
@@ -263,9 +295,14 @@
 		})
 	}
 
+	watch(() => [props.mode, props.text, props.midButtonOffsetY], () => {
+		scheduleMidButtonBorderMeasure()
+	}, { flush: 'post' })
+
 	onMounted(() => {
 		init()
 		startRouteSync()
+		scheduleMidButtonBorderMeasure()
 	})
 
 	onBeforeUnmount(() => {
@@ -275,9 +312,12 @@
 	defineExpose({
 		name,
 		isActive,
+		midButtonBorderClipHeightValue,
 		init,
 		updateParentData,
 		updateFromParent,
+		scheduleMidButtonBorderMeasure,
+		updateMidButtonBorderClip,
 		clearRouteSync
 	})
 </script>

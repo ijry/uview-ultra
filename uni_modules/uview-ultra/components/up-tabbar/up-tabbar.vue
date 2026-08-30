@@ -74,6 +74,9 @@
 		placeholder
 	} = toRefs(props)
 	const placeholderHeight = ref(0)
+	const tabbarContentTop = ref(0)
+	const tabbarContentMeasured = ref(false)
+	const midButtonBorderTopOffset = computed(() => props.border ? 0.25 : 0)
 
 	const tabbarStyle = computed(() => {
 		const style = {
@@ -94,24 +97,30 @@
 		children.value.length && children.value.map(child => child.updateFromParent())
 	}
 
-	// 设置用于防止塌陷元素的高度
+	function applyTabbarContentRect(rect) {
+		const height = Number(rect?.height ?? 50)
+		if (!Number.isFinite(height) || height <= 0) return
+		if (props.fixed && props.placeholder) {
+			placeholderHeight.value = height
+		}
+		const top = Number(rect?.top)
+		if (!Number.isFinite(top)) return
+		tabbarContentTop.value = top
+		tabbarContentMeasured.value = true
+		updateChildren()
+	}
+
+	// 测量 tabbar 顶部，并在需要时同步防塌陷元素高度
 	async function setPlaceholderHeight() {
-		if (!props.fixed || !props.placeholder) return
 		// 延时一定时间
 		await sleep(20)
 		// #ifndef APP-NVUE
-		$uGetRect('.up-tabbar__content').then(({ height = 50 }) => {
-			// 修复IOS safearea bottom 未填充高度
-			placeholderHeight.value = height
-		})
+		$uGetRect('.up-tabbar__content').then(applyTabbarContentRect)
 		// #endif
 
 		// #ifdef APP-NVUE
 		dom.getComponentRect(instance.proxy.$refs['up-tabbar__content'], (res) => {
-			const {
-				size
-			} = res
-			placeholderHeight.value = size.height
+			if (res && res.size) applyTabbarContentRect(res.size)
 		})
 		// #endif
 	}
@@ -125,19 +134,23 @@
 			value: props.value,
 			activeColor: props.activeColor,
 			inactiveColor: props.inactiveColor,
-			borderColor: props.borderColor
+			borderColor: props.borderColor,
+			border: props.border,
+			midButtonBorderTopOffset: midButtonBorderTopOffset.value,
+			tabbarContentTop: tabbarContentTop.value,
+			tabbarContentMeasured: tabbarContentMeasured.value
 		}
 	}
 
-	watch(() => [props.value, props.activeColor, props.inactiveColor, props.borderColor], () => {
+	watch(() => [props.value, props.activeColor, props.inactiveColor, props.borderColor, props.border], () => {
 		// 如果updateChildren中的元素发生了变化，则执行子元素初始化操作
 		updateChildren()
 	})
 
-	watch(() => [props.fixed, props.placeholder], () => {
-		// 如果fixed，placeholder等参数发生变化，重新计算占位元素的高度
+	watch(() => [props.fixed, props.placeholder, props.border, props.customStyle], () => {
+		// 布局相关参数发生变化时，重新测量 tabbar
 		setPlaceholderHeight()
-	})
+	}, { deep: true })
 
 	onMounted(() => {
 		setPlaceholderHeight()
@@ -150,7 +163,11 @@
 		inactiveColor,
 		borderColor,
 		placeholderHeight,
+		tabbarContentTop,
+		tabbarContentMeasured,
+		midButtonBorderTopOffset,
 		updateChildren,
+		applyTabbarContentRect,
 		setPlaceholderHeight,
 		emitChange,
 		getProps

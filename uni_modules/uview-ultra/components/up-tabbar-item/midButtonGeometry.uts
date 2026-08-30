@@ -1,0 +1,15 @@
+const MID_BUTTON_SIZE: number = 64
+
+export function clampMidButtonBorderClipHeight(value: number): number {
+	if (!isFinite(value)) return 0
+	return Math.min(Math.max(value, 0), MID_BUTTON_SIZE)
+}
+
+export function calculateMidButtonBorderClipHeight(
+	contentTop: number,
+	circleTop: number,
+	borderTopOffset: number = 0
+): number {
+	if (!isFinite(contentTop) || !isFinite(circleTop) || !isFinite(borderTopOffset)) return 0
+	return clampMidButtonBorderClipHeight(contentTop + borderTopOffset - circleTop)
+}

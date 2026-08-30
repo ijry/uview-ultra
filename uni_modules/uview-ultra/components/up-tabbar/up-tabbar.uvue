@@ -112,13 +112,20 @@
 
 	const emit = defineEmits(['change'])
 	const placeholderHeight = ref(0)
+	const tabbarContentTop = ref(0)
+	const tabbarContentMeasured = ref(false)
+	const midButtonBorderTopOffset = computed((): number => props.border ? 0.25 : 0)
 
 	const parentDataSelf = computed((): UTSJSONObject => {
 		return {
 			value: props.value,
 			activeColor: props.activeColor,
 			inactiveColor: props.inactiveColor,
-			borderColor: props.borderColor
+			borderColor: props.borderColor,
+			border: props.border,
+			midButtonBorderTopOffset: midButtonBorderTopOffset.value,
+			tabbarContentTop: tabbarContentTop.value,
+			tabbarContentMeasured: tabbarContentMeasured.value
 		} as UTSJSONObject
 	})
 
@@ -138,11 +145,11 @@
 
 	// 监听多个参数的变化，通过在computed执行对应的操作
 	const updateChild = computed((): Array<any | null> => {
-		return [props.value, props.activeColor, props.inactiveColor, props.borderColor] as Array<any | null>
+		return [props.value, props.activeColor, props.inactiveColor, props.borderColor, props.border, tabbarContentTop.value, tabbarContentMeasured.value] as Array<any | null>
 	})
 
 	const updatePlaceholder = computed((): Array<any> => {
-		return [props.fixed, props.placeholder] as Array<any>
+		return [props.fixed, props.placeholder, props.border, props.customStyle] as Array<any>
 	})
 
 	const updateChildren = (): void => {
@@ -154,15 +161,21 @@
 		}
 	}
 
-	// 设置用于防止塌陷元素的高度
+	// 测量 tabbar 顶部，并在需要时同步防塌陷元素高度
 	const setPlaceholderHeight = async (): Promise<void> => {
-		if (!props.fixed || !props.placeholder) return
 		// 延时一定时间
 		await sleep(20)
-		upGetRect('.up-tabbar__content', false, instance).then((size: NodeInfo) => {
-			// 修复IOS safearea bottom 未填充高度
-			placeholderHeight.value = size.height ?? 50
-		})
+		const size = await upGetRect('.up-tabbar__content', false, instance)
+		const height = size.height ?? 50
+		if (!isFinite(height) || height <= 0) return
+		if (props.fixed && props.placeholder) {
+			placeholderHeight.value = height
+		}
+		const top = size.top
+		if (top == null || !isFinite(top)) return
+		tabbarContentTop.value = top
+		tabbarContentMeasured.value = true
+		updateChildren()
 	}
 
 	const stopTabbarTouchMove = (_event: UniEvent): void => {}
@@ -195,6 +208,9 @@
 
 	defineExpose({
 		placeholderHeight,
+		tabbarContentTop,
+		tabbarContentMeasured,
+		midButtonBorderTopOffset,
 		tabbarStyle,
 		updateChild,
 		updatePlaceholder,

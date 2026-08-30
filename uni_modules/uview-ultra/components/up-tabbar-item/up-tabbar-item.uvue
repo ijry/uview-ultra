@@ -7,6 +7,7 @@
 	>
 		<view class="up-tabbar-item__content" :class="contentClassNames" :style="midButtonContentStyle">
 			<view
+				ref="up-tabbar-item__icon--mid-button"
 				class="up-tabbar-item__icon"
 				:class="[isMidButton ? 'up-tabbar-item__icon--mid-button' : '']"
 				:style="midButtonShellStyle"
@@ -53,10 +54,11 @@
 </template>
 
 <script setup lang="uts">
-	import { computed, getCurrentInstance, nextTick, onBeforeUnmount, onMounted, ref, useSlots } from 'vue';
+	import { computed, getCurrentInstance, nextTick, onBeforeUnmount, onMounted, ref, useSlots, watch } from 'vue';
 	import defProps from './tabbarItem.uts';
-	import { addStyle, error } from '../../libs/function/index.uts';
+	import { addStyle, error, sleep, upGetRect } from '../../libs/function/index.uts';
 	import { useUltraUI } from '../../libs/composable/useUltraUI.uts';
+	import { calculateMidButtonBorderClipHeight } from './midButtonGeometry.uts';
 	/**
 	 * TabbarItem 底部导航栏子组件
 	 * @description 此组件提供了自定义tabbar的能力。
@@ -75,7 +77,11 @@
 		value: null as string | number | null,
 		activeColor: '',
 		inactiveColor: '',
-		borderColor: ''
+		borderColor: '',
+		border: true,
+		midButtonBorderTopOffset: 0.25,
+		tabbarContentTop: 0,
+		tabbarContentMeasured: false
 	} as UTSJSONObject)
 	const instance = getCurrentInstance()!.proxy!
 
@@ -155,6 +161,7 @@
 
 	const emit = defineEmits(["click", "change"])
 	const isActive = ref(false)
+	const midButtonBorderClipHeightValue = ref(0)
 	const routeSyncTimer = ref(0 as number)
 	const routeSyncLast = ref('')
 	const slots = useSlots()
@@ -219,9 +226,7 @@
 	const midButtonBorderStyle = computed((): UTSJSONObject => {
 		const style = {} as UTSJSONObject
 		if (isMidButton.value) {
-			const clipBaseHeight = hasMidButtonText.value ? 15.5 : 7
-			const clipHeight = Math.min(Math.max(clipBaseHeight - midButtonOffsetValue.value, 0), 64)
-			style['height'] = clipHeight.toString() + 'px'
+			style['height'] = midButtonBorderClipHeightValue.value.toString() + 'px'
 		}
 		return style
 	})
@@ -338,10 +343,41 @@
 		syncActiveByRouteOrValue()
 	}
 
+	const updateMidButtonBorderClip = async (): Promise<void> => {
+		if (!isMidButton.value || parent.value == null || parentData.value['tabbarContentMeasured'] != true) return
+		await sleep(20)
+		const circleRect = await upGetRect('.up-tabbar-item__icon--mid-button', false, instance)
+		const circleTop = circleRect.top ?? 0
+		const circleHeight = circleRect.height ?? 0
+		const contentTopValue = parentData.value['tabbarContentTop']
+		if (contentTopValue == null || circleHeight <= 0) return
+		const contentTop = parseFloat(contentTopValue.toString())
+		if (!isFinite(contentTop) || !isFinite(circleTop)) return
+		const borderTopOffsetValue = parentData.value['midButtonBorderTopOffset']
+		const borderTopOffset = parentData.value['border'] == true && borderTopOffsetValue != null
+			? parseFloat(borderTopOffsetValue.toString())
+			: 0
+		const clipHeight = calculateMidButtonBorderClipHeight(contentTop, circleTop, borderTopOffset)
+		if (clipHeight != midButtonBorderClipHeightValue.value) {
+			midButtonBorderClipHeightValue.value = clipHeight
+		}
+	}
+
+	const scheduleMidButtonBorderMeasure = (): void => {
+		if (!isMidButton.value) {
+			midButtonBorderClipHeightValue.value = 0
+			return
+		}
+		nextTick(() => {
+			updateMidButtonBorderClip()
+		})
+	}
+
 	// 此方法将会被父组件up-tabbar调用
 	const updateFromParent = (): void => {
 		// 重新初始化
 		init()
+		scheduleMidButtonBorderMeasure()
 	}
 
 	const clickHandler = (): void => {
@@ -356,9 +392,18 @@
 		})
 	}
 
+	const updateMidButtonLayout = computed((): Array<any | null> => {
+		return [props.mode, props.text, props.midButtonOffsetY] as Array<any | null>
+	})
+
+	watch(updateMidButtonLayout, () => {
+		scheduleMidButtonBorderMeasure()
+	}, { flush: 'post' })
+
 	onMounted(() => {
 		init()
 		startRouteSync()
+		scheduleMidButtonBorderMeasure()
 	})
 
 	onBeforeUnmount(() => {
@@ -367,6 +412,7 @@
 
 	defineExpose({
 		isActive,
+		midButtonBorderClipHeightValue,
 		routeSyncTimer,
 		routeSyncLast,
 		parentData,
@@ -385,6 +431,9 @@
 		midButtonShellStyle,
 		midButtonInnerStyle,
 		midButtonIconStyle,
+		updateMidButtonLayout,
+		scheduleMidButtonBorderMeasure,
+		updateMidButtonBorderClip,
 		clearRouteSync,
 		getCurrentRoutePath,
 		normalizeRoutePath,

@@ -1,3 +1,9 @@
+## 4.5.34
+fix: 修复 up-tabbar 中间凸起按钮圆弧边框裁剪越界
+
+- `up-tabbar` / `up-tabbar-item`（Vue 与 UVue）改按 tabbar 顶部和中间圆形按钮的实际位置计算边框裁剪高度，不再依赖固定文字/无文字基线
+- 兼容有文字、无文字、`midButtonOffsetY` 自定义偏移及 `border` 开关，避免圆弧边框超出 tabbar 顶部或被错误截断
+
 ## 4.5.33
 feat: up-navbar 新增 iOS 大标题模式
 

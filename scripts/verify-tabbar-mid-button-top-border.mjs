@@ -19,7 +19,7 @@ const types = read('uni_modules/uview-ultra/types/comps/tabbarItem.d.ts')
 
 assert.equal(
 	packageJson.scripts['verify:tabbar-mid-button-top-border'],
-	'node scripts/verify-tabbar-mid-button-top-border.mjs'
+	'node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/verify-tabbar-mid-button-top-border.mjs'
 )
 
 for (const [name, source] of [
@@ -28,6 +28,9 @@ for (const [name, source] of [
 ]) {
 	assert.match(source, /borderColor:\s*props\.borderColor/, `expected ${name} to expose borderColor to items`)
 	assert.match(source, /props\.value[\s\S]*props\.activeColor[\s\S]*props\.inactiveColor[\s\S]*props\.borderColor/, `expected ${name} to update items when borderColor changes`)
+	assert.match(source, /tabbarContentTop/, `expected ${name} to expose the measured tabbar top to items`)
+	assert.match(source, /tabbarContentMeasured/, `expected ${name} to distinguish an unmeasured top from top zero`)
+	assert.match(source, /midButtonBorderTopOffset/, `expected ${name} to expose the top-border center offset`)
 }
 
 for (const [name, source] of [
@@ -66,10 +69,27 @@ for (const [name, source] of [
 	assert.match(source, /\.up-tabbar-item__mid-button-border-circle[\s\S]*width:\s*64px[\s\S]*height:\s*64px/, `expected ${name} to draw a full 64px circle`)
 	assert.match(source, /\.up-tabbar-item__mid-button-inner[\s\S]*z-index:\s*1/, `expected ${name} to place inner circle over border`)
 	assert.match(source, /(position:\s*'relative'[\s\S]*zIndex:\s*2|style\['position'\]\s*=\s*'relative'[\s\S]*style\['zIndex'\]\s*=\s*2)/, `expected ${name} to place icon over inner circle via inline style`)
-	assert.match(source, /15\.5[\s\S]*7/, `expected ${name} to handle text and no-text clip baselines`)
+	assert.doesNotMatch(source, /15\.5[\s\S]*7/, `expected ${name} not to derive clipping from fixed text baselines`)
+	assert.match(source, /calculateMidButtonBorderClipHeight/, `expected ${name} to use the shared geometry calculation`)
+	assert.match(source, /updateMidButtonBorderClip/, `expected ${name} to update clipping from measured layout`)
+	assert.match(source, /midButtonBorderClipHeightValue/, `expected ${name} to render the measured clip height`)
 	assert.doesNotMatch(source, /up-tabbar-item--mid-button-cover/, `expected ${name} to remove opaque cover`)
 	assert.doesNotMatch(source, /transform:\s*translateY\(-10px\)/, `expected ${name} to avoid moving the item root`)
 	assert.doesNotMatch(source, /width:\s*70px|height:\s*70px/, `expected ${name} to avoid the old 70px mid button size`)
 }
+
+const geometryUts = read('uni_modules/uview-ultra/components/up-tabbar-item/midButtonGeometry.uts')
+
+assert.match(geometryUts, /calculateMidButtonBorderClipHeight/, 'expected UTS to provide the same geometry calculation')
+assert.match(geometryUts, /Math\.min\(Math\.max\(/, 'expected UTS geometry to clamp the clip height')
+
+const { calculateMidButtonBorderClipHeight } = await import('../uni_modules/uview-ultra/components/up-tabbar-item/midButtonGeometry.js')
+
+assert.equal(calculateMidButtonBorderClipHeight(0, -23.5, 0.25), 23.75)
+assert.equal(calculateMidButtonBorderClipHeight({ contentTop: 0, circleTop: -23.5, borderTopOffset: 0.25 }), 23.75)
+assert.equal(calculateMidButtonBorderClipHeight(0, -12.25, 0), 12.25)
+assert.equal(calculateMidButtonBorderClipHeight(10, -100, 0.25), 64)
+assert.equal(calculateMidButtonBorderClipHeight(10, 100, 0.25), 0)
+assert.equal(calculateMidButtonBorderClipHeight(Number.NaN, 0, 0.25), 0)
 
 console.log('uview-ultra tabbar mid-button top border assertions passed')
