@@ -61,9 +61,10 @@ const props = defineProps({
 		type: Boolean,
 		default: true
 	},
+	// 遮罩透明度，下拉框的遮罩默认比弹窗浅，避免整页压暗；传 0 即为完全透明
 	overlayOpacity: {
 		type: Number,
-		default: 0.01
+		default: 0.15
 	},
 	overlayStyle: {
 		type: Object,

@@ -1,3 +1,10 @@
+## 4.5.35
+optimize: up-select 遮罩默认可见但更浅
+
+- `up-select`（Vue 与 UVue）`overlayOpacity` 默认值由 `0.01` 调整为 `0.15`：此前的 0.01 几乎不可见，用户无法察觉下拉已接管整页点击；0.15 明显浅于 `up-popup` 的 `0.5`，不会压暗页面
+- 遮罩仍由 `up-overlay` 渲染，`overlay`、`overlayStyle`、`zIndex`、`duration` 语义不变；需要完全透明的场景显式传 `:overlay-opacity="0"`，需要更深传更大值
+- 新增 verify:select-overlay-opacity 回归校验
+
 ## 4.5.34
 fix: 修复 up-tabbar 中间凸起按钮圆弧边框裁剪越界
 

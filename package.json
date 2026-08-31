@@ -22,7 +22,8 @@
     "verify:calendar-months-item-runtime-type": "node scripts/verify-calendar-months-item-runtime-type.mjs",
     "verify:popup-close-events": "node scripts/verify-popup-close-events.mjs",
     "verify:cropper-image-src": "node scripts/verify-cropper-image-src.mjs",
-    "verify:up-create-intersection-observer": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/verify-up-create-intersection-observer.mjs"
+    "verify:up-create-intersection-observer": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/verify-up-create-intersection-observer.mjs",
+    "verify:select-overlay-opacity": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/verify-select-overlay-opacity.mjs"
   },
   "dependencies": {
   }
