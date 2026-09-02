@@ -1,3 +1,20 @@
+## 4.5.36
+fix: 修复组件卸载后查询节点导致 APP 与鸿蒙端报错
+
+切换页面时 APP 与鸿蒙端会出现大面积 `Uncaught TypeError: Cannot read properties of undefined (reading '$') at uni-app-view.umd.js`，功能不受影响但日志被淹没，H5 端不出现。
+
+原因是组件卸载后仍在执行的异步回调继续发起节点查询：APP 端 service 层取的是已失效的 `$el.nodeId`，视图层按该 id 查映射表时，对应条目在元素移除时已被删除，读到 undefined 再取 `.$` 即抛错。H5 端直接取 `$el`，没有这层 nodeId 映射，因此不复现。
+
+- `useUltraUI` 的 `$uGetRect` 与 `upCreateIntersectionObserver` 集中拦截，覆盖 26 个走 `$uGetRect` 的组件与 3 个交叉观察器组件，卸载后不再把组件交给原生查询
+- 卸载后 `$uGetRect` 返回零尺寸节点信息、`upCreateIntersectionObserver` 返回空观察器，均保持原有调用形态，调用方无需改写
+- 卸载标记由 `useUltraUI` 的 `onBeforeUnmount` 同步置位，早于 Vue 内部异步置位的 `isUnmounted`；未套用 `useUltraUI` 的组件退回 Vue 自身标记
+- 守卫置于条件编译之外，确保 app-harmony 端同样生效
+- 新增 `verify:unmounted-node-query` 回归校验，同时断言挂载期间必须正常发起查询、卸载后必须完全不发起，并逐平台校验守卫存在
+
+该问题在 tabs、sticky、subsection、waterfall、index-list 等所有依赖节点测量的组件上成因相同，本次为统一修复。
+
+本次仅修 Vue 端（classic uni-app）。uni-app x 原生端没有这层 nodeId 映射表，`.uvue` 变体不复现该报错，故不在范围内。
+
 ## 4.5.35
 optimize: up-select 遮罩默认可见但更浅
 

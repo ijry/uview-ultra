@@ -1,5 +1,5 @@
 import { getCurrentInstance, onBeforeUnmount, ref } from 'vue'
-import { deepMerge, $parent, sleep } from '../function/index.js'
+import { deepMerge, $parent, sleep, isCompUnmounted } from '../function/index.js'
 import test from '../function/test.js'
 import route from '../util/route.js'
 
@@ -82,6 +82,17 @@ export function useUltraUI(props = {}, parentData = null) {
     }
 
     function $uGetRect(selector, all) {
+        // 卸载后不得再把组件交给原生查询，否则 APP 端会拿失效 nodeId 去查已删除的视图节点
+        if (isCompUnmounted(proxy)) {
+            return Promise.resolve(all ? [] : {
+                width: 0,
+                height: 0,
+                left: 0,
+                right: 0,
+                top: 0,
+                bottom: 0
+            })
+        }
         return new Promise((resolve) => {
             // #ifndef APP-NVUE
             uni.createSelectorQuery()
@@ -151,6 +162,12 @@ export function useUltraUI(props = {}, parentData = null) {
     }
 
     onBeforeUnmount(() => {
+        // 本 hook 在 setup 期间最早注册，因此先于组件自身的 onBeforeUnmount 执行，
+        // 也早于 Vue 内部在 post-render 队列里异步置位的 isUnmounted，
+        // 异步回调据此拦截节点查询与交叉观察器
+        if (proxy) {
+            proxy.__upUnmounted = true
+        }
         if (parent.value && test.array(parent.value.children)) {
             const childrenList = parent.value.children
             childrenList.forEach((child, index) => {
