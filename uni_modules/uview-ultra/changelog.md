@@ -1,3 +1,16 @@
+## 4.5.37
+fix: 修复 up-waterfall 在 App 切换 tabbar 后瀑布流有数据但不渲染
+
+App 端从瀑布流页面切走 tabbar 再切回，列表数据已更新但页面空白或停留在旧内容，需杀进程重进才恢复。
+
+根因在 `useUltraUI` 的 `$uGetRect`：此前只在 `rect` 为真值时 `resolve`。页面被 tabbar 切走隐藏后节点已不参与布局，`boundingClientRect` 会回调 `null`，两个分支都不命中，Promise 永不 settle。`up-waterfall` 的 `getColumnHeights()` 在此永久挂起，`runDistributionQueue` 的 `finally` 无法执行，`distributionRunning` 永久为 `true`；切回页面后新数据只能入队，`if (!distributionRunning)` 挡住了消费者，于是数据在但列表不渲染。
+
+- `$uGetRect` 对 `null` 查询结果兜底 `resolve` 零尺寸节点信息（`all` 时返回 `[]`），与卸载分支的既有约定一致。该修复对所有依赖节点测量的组件生效，不限于瀑布流
+- `clear()` 与 `redistributeData()` 强制重置 `distributionRunning`、`distributionPromise`，使外部刷新、切换列数、清空数据都能重新解锁
+- 新增 `runToken` 归属机制：锁被强制重置后由新循环接管，旧循环若从挂起中恢复只能安静退出，不会清掉接管者的运行状态，也不会与新循环同时写入 `columnList` 造成重复分配与错乱列高
+- 分配循环的每个 await 点改用 `isStaleDistribution()` 同时校验 `generation` 与 `runToken`
+- 新增 `verify:waterfall-lock-reset` 回归校验
+
 ## 4.5.36
 fix: 修复组件卸载后查询节点导致 APP 与鸿蒙端报错
 
