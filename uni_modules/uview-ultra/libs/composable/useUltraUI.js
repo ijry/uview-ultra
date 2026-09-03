@@ -98,12 +98,20 @@ export function useUltraUI(props = {}, parentData = null) {
             uni.createSelectorQuery()
                 .in(proxy)[all ? 'selectAll' : 'select'](selector)
                 .boundingClientRect((rect) => {
-                    if (all && Array.isArray(rect) && rect.length) {
-                        resolve(rect)
+                    // 页面被 tabbar 切走隐藏时节点查询会回调 null，
+                    // 此处必须兜底 resolve，否则 await 永不返回，调用方会被永久挂起
+                    if (all) {
+                        resolve(Array.isArray(rect) ? rect : [])
+                        return
                     }
-                    if (!all && rect) {
-                        resolve(rect)
-                    }
+                    resolve(rect || {
+                        width: 0,
+                        height: 0,
+                        left: 0,
+                        right: 0,
+                        top: 0,
+                        bottom: 0
+                    })
                 })
                 .exec()
             // #endif

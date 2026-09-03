@@ -110,6 +110,8 @@ const distributionQueue = []
 let distributionRunning = false
 let distributionPromise = null
 let distributionGeneration = 0
+// 每个分配循环持有独立令牌：锁被强制重置后新循环接管，旧循环恢复时只能安静退出
+let distributionRunToken = 0
 
 const copyFlowList = computed(() => {
 	// #ifdef VUE3
@@ -200,6 +202,9 @@ function handleWindowResize(res) {
 }
 
 function redistributeData(data) {
+	// 强制重置锁状态，确保能重新开始分配
+	distributionRunning = false
+	distributionPromise = null
 	clear(false)
 	const allData = cloneData(data || [])
 	return handleData(allData)
@@ -228,38 +233,48 @@ function handleData(newData) {
 async function runDistributionQueue() {
 	if (distributionRunning) return
 	distributionRunning = true
+	const runToken = ++distributionRunToken
 	try {
 		while (distributionQueue.length > 0) {
+			if (runToken !== distributionRunToken) return
 			const task = distributionQueue.shift()
 			if (task.generation !== distributionGeneration) continue
-			await distributeData(task.data, task.generation)
+			await distributeData(task.data, task.generation, runToken)
 		}
 	} finally {
-		distributionRunning = false
-		distributionPromise = null
-		if (distributionQueue.length > 0) {
-			distributionPromise = runDistributionQueue()
+		// 仅当自己仍是当前循环时才释放锁，否则会清掉接管者的运行状态
+		if (runToken === distributionRunToken) {
+			distributionRunning = false
+			distributionPromise = null
+			if (distributionQueue.length > 0) {
+				distributionPromise = runDistributionQueue()
+			}
 		}
 	}
 }
 
-async function distributeData(newData, generation) {
+// 数据被重置或分配循环被接管时，当前循环应立即停止写入
+function isStaleDistribution(generation, runToken) {
+	return generation !== distributionGeneration || runToken !== distributionRunToken
+}
+
+async function distributeData(newData, generation, runToken) {
 	let columnHeights = new Array(columnList.value.length).fill(0)
 	for (const item of newData) {
-		if (generation !== distributionGeneration) return
+		if (isStaleDistribution(generation, runToken)) return
 		columnHeights = await getColumnHeights()
-		if (generation !== distributionGeneration) return
+		if (isStaleDistribution(generation, runToken)) return
 
 		const minHeightIndex = getMinHeightColumnIndex(columnHeights)
 		columnList.value[minHeightIndex].push(item)
 
 		await sleep(props.addTime)
-		if (generation !== distributionGeneration) return
+		if (isStaleDistribution(generation, runToken)) return
 		await nextTick()
-		if (generation !== distributionGeneration) return
+		if (isStaleDistribution(generation, runToken)) return
 		try {
 			const rect = await $uGetRect(`#up-column-${minHeightIndex}`)
-			if (generation !== distributionGeneration) return
+			if (isStaleDistribution(generation, runToken)) return
 			if (rect.height) {
 				columnHeights[minHeightIndex] = rect.height
 				emit('after-add-one', {
@@ -270,7 +285,7 @@ async function distributeData(newData, generation) {
 		} catch (e) {
 		}
 	}
-	if (generation !== distributionGeneration) return
+	if (isStaleDistribution(generation, runToken)) return
 	emit('after-add-all', {
 		columnHeights: columnHeights,
 		newData: newData
@@ -315,6 +330,9 @@ function cloneData(data) {
 function clear(bak = true) {
 	distributionGeneration += 1
 	distributionQueue.splice(0)
+	// 强制重置分配锁状态，避免页面隐藏导致的永久锁死
+	distributionRunning = false
+	distributionPromise = null
 	initColumnList()
 	if (bak) {
 		// #ifdef VUE2
