@@ -56,8 +56,7 @@ import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { props as datetimeProps } from './props.js'
 import { commonProps } from '../../libs/composable/useUltraUI'
 import dayjs from './dayjs.esm.min.js'
-import { range, error, padZero } from '../../libs/function/index.js'
-import test from '../../libs/function/test.js'
+import { range, error, padZero, timeFormat } from '../../libs/function/index.js'
 
 function times(n, iteratee) {
 	let index = -1
@@ -197,7 +196,13 @@ function getInputValue(newValue) {
 		inputValue.value = newValue
 	} else {
 		if (props.format) {
-			inputValue.value = dayjs(newValue).format(props.format)
+			// 判断format中是否包含小写的y，如果有则认为是库自身的yyyy-mm-dd格式，使用timeFormat
+			// 否则认为是dayjs的YYYY-MM-DD格式，直接传给dayjs
+			if (/y/.test(props.format)) {
+				inputValue.value = timeFormat(newValue, props.format)
+			} else {
+				inputValue.value = dayjs(newValue).format(props.format)
+			}
 		} else {
 			let format = ''
 			switch (props.mode) {
@@ -535,13 +540,40 @@ function getOriginColumns() {
 }
 
 
+// 把绑定值统一解析成毫秒时间戳，识别不出日期时返回null
+// 支持毫秒时间戳(number或纯数字字符串)，以及'2024-10-24'、'2024/10/24 15:08:09'这类
+// 文档里写明支持的String绑定值
+function parseDateValue(value) {
+	if (value === '' || value === null || value === undefined) {
+		return null
+	}
+	if (typeof value === 'number') {
+		return Number.isFinite(value) ? value : null
+	}
+	const text = String(value).trim()
+	if (!text) {
+		return null
+	}
+	// 纯数字按时间戳处理，避免dayjs把'1729699200000'当成日期字符串去解析
+	if (/^-?\d+$/.test(text)) {
+		const timestamp = Number(text)
+		return Number.isFinite(timestamp) ? timestamp : null
+	}
+	const parsed = dayjs(text)
+	return parsed.isValid() ? parsed.valueOf() : null
+}
+
 // 得出合法的时间
 function correctValue(value) {
 	const isDateMode = !['time', 'timesecond'].includes(props.mode)
-	if (isDateMode && !test.date(value)) {
-		// 如果是日期类型，但是又没有设置合法的当前时间的话，使用最小时间为当前时间
-		value = props.minDate
-	} else if (!isDateMode && !value) {
+	if (isDateMode) {
+		// 日期类型统一解析成毫秒时间戳，没有设置合法的当前时间时才使用最小时间。
+		// 这里不能用test.date(value)判断：它只认长度为10/13的时间戳与yyyy-mm-dd形态的
+		// 字符串，Date对象与12位(2001年前)毫秒时间戳都会被判为非法并被替换成
+		// minDate(默认当前年份-10)，选择器于是停在十年前(issue #537)
+		const timestamp = parseDateValue(value)
+		value = timestamp === null ? props.minDate : timestamp
+	} else if (!value) {
 		// 如果是时间类型，而又没有默认值的话，就用最小时间
 		value = props.mode === 'timesecond'
 			? `${padZero(props.minHour)}:${padZero(props.minMinute)}:${padZero(props.minSecond)}`

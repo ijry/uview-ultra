@@ -12,6 +12,24 @@ declare interface DatetimePickerProps {
    */
   showToolbar?: boolean
   /**
+   * 是否自带输入框，点击输入框弹出选择器
+   * @default false
+   */
+  hasInput?: boolean
+  /**
+   * hasInput模式下输入框的占位文字
+   * @default "请选择"
+   */
+  placeholder?: string
+  /**
+   * hasInput模式下输入框的日期显示格式。
+   * 同时支持库自身 timeFormat 的写法（`yyyy-mm-dd hh:MM:ss`，小写y为年、MM为分钟）
+   * 与 dayjs 的写法（`YYYY-MM-DD HH:mm:ss`），按是否含小写y自动区分。
+   * 不传时按 mode 取默认格式
+   * @default ""
+   */
+  format?: string
+  /**
    * 绑定值
    */
   ['v-model']?: string | number

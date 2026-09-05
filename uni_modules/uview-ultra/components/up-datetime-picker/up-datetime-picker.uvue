@@ -54,7 +54,7 @@
 	import type { PropType } from 'vue'
 	import { ref, watch, nextTick, onMounted } from 'vue';
 	import {dayuts} from '@/uni_modules/lime-dayuts';
-	import { range, error, padZero } from '../../libs/function/index.uts';
+	import { range, error, padZero, timeFormat } from '../../libs/function/index.uts';
 	import { date as testDate } from '../../libs/function/test.uts';
 	import defProps from './datetimePicker.uts';
 
@@ -244,7 +244,13 @@
 			inputValue.value = newValue
 		} else {
 			if (props.format != '') {
-				inputValue.value = dayuts(newValue).format(props.format)
+				// 判断format中是否包含小写的y，如果有则认为是库自身的yyyy-mm-dd格式，使用timeFormat
+				// 否则认为是dayjs的YYYY-MM-DD格式，直接传给dayjs
+				if (props.format.includes('y')) {
+					inputValue.value = timeFormat(newValue, props.format)
+				} else {
+					inputValue.value = dayuts(newValue).format(props.format)
+				}
 			} else {
 				let format = ''
 				switch (props.mode) {

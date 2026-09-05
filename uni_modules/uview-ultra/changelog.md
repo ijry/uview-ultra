@@ -1,3 +1,16 @@
+## 4.5.38
+fix: 修复 up-datetime-picker 的 format 属性不支持库自身 yyyy-mm-dd 写法 (#537)
+
+issue #537 反馈 `<up-datetime-picker format="yyyy-mm-dd">` 选完日期后不按 format 显示。
+
+根因是 format 直接交给 dayjs 格式化。dayjs 的 token 是大写的 `YYYY-MM-DD`，而 uview-ultra 自己的 `timeFormat`（`$u.timeFormat`）用的是小写 `yyyy-mm-dd`（默认值就是 `'yyyy-mm-dd'`，`up-text` 的 format 也是同一套写法）。于是按库里的通用写法传 `'yyyy-mm-dd'` 时，dayjs 只认得其中的 `mm`(分钟) 与 `dd`(星期)，输入框显示成 `'yyyy-00-Th'`，datetime 模式下是 `'yyyy-13-Su 09:04'`。Vue 与 UVue 两端同一成因。
+
+- Vue/UVue `getInputValue` 中 format 出现小写 y 就按 timeFormat 的规则格式化，大写的 dayjs 写法保持原样
+- Vue `correctValue` 用新增的 `parseDateValue` 统一解析绑定值成毫秒时间戳：number、纯数字字符串、'2024-10-24'、'2024/10/24 15:08:09'、Date 对象都能识别，仍然解析不出来才退回 minDate。此前用 `test.date(value)` 只认 10/13 位时间戳与 yyyy-mm-dd 形态的字符串，Date 对象与 12 位（2001 年前）毫秒时间戳会被判为非法并被替换成 minDate（默认当前年份-10），选择器停在十年前。UVue 版的 `correctValue` 本就自行解析，无此问题
+- 补齐 `hasInput`、`placeholder`、`format` 的类型声明，此前三者在 `types/comps/datetimePicker.d.ts` 中缺失
+- demo 页面新增 hasInput + format 示例，展示库自身的 yyyy-mm-dd hh:MM 写法
+- 新增 `verify:datetime-picker-format` 回归校验：真实挂载组件断言两种 format 写法、字符串/时间戳/12 位时间戳绑定值、非法值回退与边界夹取，未修的代码上 format 用例全部失败
+
 ## 4.5.37
 fix: 修复 up-waterfall 在 App 切换 tabbar 后瀑布流有数据但不渲染
 

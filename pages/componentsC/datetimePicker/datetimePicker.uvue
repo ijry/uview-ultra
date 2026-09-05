@@ -113,6 +113,18 @@
 			@change="changeTime8"
 			@close="close"
 		></up-datetime-picker>
+		<up-datetime-picker
+			:show="show9"
+			v-model="value9"
+			mode="datetime"
+			hasInput
+			format="yyyy-mm-dd hh:MM"
+			closeOnClickOverlay
+			@confirm="confirm"
+			@cancel="cancel"
+			@change="change"
+			@close="close"
+		></up-datetime-picker>
 	</view>
 	<!-- #ifdef APP -->
 	</scroll-view>
@@ -140,6 +152,7 @@
 	const value8 = ref(`${padZero(now8.getHours())}:${padZero(now8.getMinutes())}`)
 	const minHour8 = ref(now8.getHours())
 	const minMinute8 = ref(now8.getMinutes())
+	const value9 = ref(new Date().getTime())
 	const show1 = ref(false)
 	const show2 = ref(false)
 	const show3 = ref(false)
@@ -148,6 +161,7 @@
 	const show6 = ref(false)
 	const show7 = ref(false)
 	const show8 = ref(false)
+	const show9 = ref(false)
 	const list = [
 		{ title: '完整日期时间', iconUrl: 'https://cdn.uviewui.com/uview/demo/datetime-picker/6.png' },
 		{ title: '年月日', iconUrl: 'https://cdn.uviewui.com/uview/demo/datetime-picker/4.png' },
@@ -156,7 +170,8 @@
 		{ title: '过滤器(保留偶数年)', iconUrl: 'https://cdn.uviewui.com/uview/demo/datetime-picker/2.png' },
 		{ title: '格式化', iconUrl: 'https://cdn.uviewui.com/uview/demo/datetime-picker/1.png' },
 		{ title: '限制最大最小值', iconUrl: 'https://cdn.uviewui.com/uview/demo/datetime-picker/7.png' },
-		{ title: '只能选当前时间之后(动态minMinute)', iconUrl: 'https://cdn.uviewui.com/uview/demo/datetime-picker/5.png' }
+		{ title: '只能选当前时间之后(动态minMinute)', iconUrl: 'https://cdn.uviewui.com/uview/demo/datetime-picker/5.png' },
+		{ title: 'hasInput输入框模式+format', iconUrl: 'https://cdn.uviewui.com/uview/demo/datetime-picker/6.png' }
 	]
 
 	function setShow(index: number, value: boolean): void {
@@ -168,6 +183,7 @@
 		if (index == 6) show6.value = value
 		if (index == 7) show7.value = value
 		if (index == 8) show8.value = value
+		if (index == 9) show9.value = value
 	}
 
 	function close() {

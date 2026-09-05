@@ -25,7 +25,8 @@
     "verify:up-create-intersection-observer": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/verify-up-create-intersection-observer.mjs",
     "verify:select-overlay-opacity": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/verify-select-overlay-opacity.mjs",
     "verify:unmounted-node-query": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/verify-unmounted-node-query.mjs",
-    "verify:waterfall-lock-reset": "node scripts/verify-waterfall-lock-reset.mjs"
+    "verify:waterfall-lock-reset": "node scripts/verify-waterfall-lock-reset.mjs",
+    "verify:datetime-picker-format": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/verify-datetime-picker-format.mjs"
   },
   "dependencies": {
   }
