@@ -1,3 +1,11 @@
+## 4.5.39
+fix: 修复 up-button 零延迟节流锁死，补齐组件类型导出
+
+- 修复 throttle(func, 0) 仍依赖异步定时器释放全局锁的问题：up-button 默认 throttleTime 为 0 时，真机首次点击后可能因定时器未释放而无法继续点击；现在零延迟节流直接同步执行回调，不再创建定时器。
+- types/index.d.ts 的包入口声明修正为 uview-ultra，并从组件类型文件同步导出 129 个公开类型（Props、Slots、Ref 等），ref<FormRef>() 等类型可以直接从包名导入。
+- types/comps.d.ts 的模板类型提示补齐 up-、u-、u-- 三种组件前缀，组件清单只维护一份，避免前缀提示漂移。
+- 新增 verify:button-throttle 与 verify:types-barrel-exports 回归校验。
+
 ## 4.5.38
 fix: 修复 up-datetime-picker 的 format 属性不支持库自身 yyyy-mm-dd 写法 (#537)
 

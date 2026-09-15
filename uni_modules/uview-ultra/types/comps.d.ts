@@ -1,5 +1,5 @@
 declare module '@vue/runtime-core' {
-  export interface GlobalComponents {
+  export interface UviewUltraComponents {
     // 基础组件
     ['up-icon']: typeof import('./comps/icon')['Icon']
     ['up-image']: typeof import('./comps/image')['Image']
@@ -101,6 +101,18 @@ declare module '@vue/runtime-core' {
     ['up-status-bar']: typeof import('./comps/statusBar')['StatusBar']
     ['up-safe-bottom']: typeof import('./comps/safeBottom')['SafeBottom']
   }
+
+  /** 把 up-xxx 键改写成 ${P}xxx 键 */
+  type UviewUltraAliasComponents<P extends string> = {
+    [K in keyof UviewUltraComponents & string as K extends `up-${infer Name}`
+      ? `${P}${Name}`
+      : never]: UviewUltraComponents[K]
+  }
+
+  export interface GlobalComponents
+    extends UviewUltraComponents,
+      UviewUltraAliasComponents<'u-'>,
+      UviewUltraAliasComponents<'u--'> {}
 }
 
 export {}

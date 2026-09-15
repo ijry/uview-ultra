@@ -26,7 +26,9 @@
     "verify:select-overlay-opacity": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/verify-select-overlay-opacity.mjs",
     "verify:unmounted-node-query": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/verify-unmounted-node-query.mjs",
     "verify:waterfall-lock-reset": "node scripts/verify-waterfall-lock-reset.mjs",
-    "verify:datetime-picker-format": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/verify-datetime-picker-format.mjs"
+    "verify:datetime-picker-format": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/verify-datetime-picker-format.mjs",
+    "verify:button-throttle": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/verify-button-throttle.mjs",
+    "verify:types-barrel-exports": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/verify-types-barrel-exports.mjs"
   },
   "dependencies": {
   }
