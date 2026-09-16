@@ -104,7 +104,8 @@
 	// 文字内容的样式
 	const textStyle = computed(() => {
 		const style = {}
-		style.whiteSpace = 'nowrap !important'
+		// innerText 切分后的空格可能位于独立 text 节点的首尾，pre 可保留原文空白且不会换行
+		style.whiteSpace = 'pre !important'
 		style.color = props.color
 		style.fontSize = addUnit(props.fontSize)
 		return style
@@ -320,7 +321,8 @@
 				// 这一句很重要，为了能让滚动左右连接起来
 				padding-left: 100%;
 				word-break: keep-all;
-				white-space: nowrap;
+				// pre 而非 nowrap：切分后的空格落在 text 首尾时不能被折叠掉
+				white-space: pre;
 				animation: up-loop-animation 10s linear infinite both;
 				/* #endif */
 				@include flex(row);

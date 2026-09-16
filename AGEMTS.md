@@ -40,6 +40,16 @@
 & "C:\ProgramData\HBuilderX\cli.exe" publish app-android --project "D:\Repos\xyito\open\uview-plus4" --type appResource
 ```
 
+### 3.6 任务提交与版本发布前完整编译（强制）
+- **每次任务提交前、每次版本发布前，必须执行一次完整 Android 项目编译校验。**
+- 标准命令必须使用 `launch app-android --compile true --continue-on-error true`，且**不得带 `--pagePath`**，以编译整个工程，而不是只校验单个页面：
+```powershell
+& "C:\ProgramData\HBuilderX\cli.exe" launch app-android --project "D:\Repos\xyito\open\uview-plus4" --deviceId "<实际设备ID>" --compile true --continue-on-error true
+```
+- 必须看到类似 `当前工程 N 个页面，正在编译为android class` 与 `项目 uview-plus4 编译成功` 的完整工程结果；单页编译不能替代全项目编译。
+- `publish app-android --type appResource` 仅是资源导出/补充校验，**不得作为任务提交前或版本发布前的完整编译证明**。
+- 若设备不可用，必须先启动 MuMu 或连接 Android 设备；仍无法编译时应明确报告阻塞原因，不得以 `appResource` 导出结果代替。
+
 ## 4) Web 编译校验（可选）
 ```powershell
 & "C:\ProgramData\HBuilderX\cli.exe" publish web --project "D:\Repos\xyito\open\uview-plus4" --platform Web --webTitle "uview-plus4"
@@ -47,6 +57,7 @@
 
 ## 5) 强制执行规则（必须遵守）
 - 每次代码修改后，必须至少执行一次对应平台的 CLI 编译/运行校验。
+- 任务提交前和版本发布前，必须额外完成不带 `--pagePath` 的全项目 Android 编译；`publish ... --type appResource` 不可替代。
 - 提交结果前，必须确认：
   1. 无 `error` 级别编译报错；
   2. 若有 `warning`，需说明是否影响当前需求；

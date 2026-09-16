@@ -1,3 +1,9 @@
+## 4.5.40
+fix: 修复 up-row-notice 横向滚动空格丢失
+
+- 修复文本按 20 个字符切分后，空格落在独立 text 节点首尾时被 nowrap 折叠的问题；Vue 与 UVue 两端均保留原文空白且不换行。
+- 新增 verify:row-notice-space 回归校验，覆盖空格位于第二个 text 节点首部的边界场景。
+
 ## 4.5.39
 fix: 修复 up-button 零延迟节流锁死，补齐组件类型导出
 
