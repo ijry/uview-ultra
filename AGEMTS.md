@@ -7,7 +7,7 @@
 
 ## 2) 项目导入
 ```powershell
-& "C:\ProgramData\HBuilderX\cli.exe" project open --path "D:\Repos\xyito\open\uview-plus4"
+& "C:\ProgramData\HBuilderX\cli.exe" project open --path "D:\Repos\xyito\ultra-ui\uview-plus4"
 ```
 
 ## 3) Android 调试（优先）
@@ -22,37 +22,38 @@
 
 ### 3.2 运行到 Android（仅编译校验）
 ```powershell
-& "C:\ProgramData\HBuilderX\cli.exe" launch app-android --project "D:\Repos\xyito\open\uview-plus4" --deviceId "emulator-5554" --compile true --continue-on-error true
+& "C:\ProgramData\HBuilderX\cli.exe" launch app-android --project "D:\Repos\xyito\ultra-ui\uview-plus4" --deviceId "emulator-5554" --compile true --continue-on-error true
 ```
 
 ### 3.3 指定页面编译校验（示例：table2）
 ```powershell
-& "C:\ProgramData\HBuilderX\cli.exe" launch app-android --project "D:\Repos\xyito\open\uview-plus4" --deviceId "emulator-5554" --compile true --continue-on-error true --pagePath "pages/componentsB/table2/table2"
+& "C:\ProgramData\HBuilderX\cli.exe" launch app-android --project "D:\Repos\xyito\ultra-ui\uview-plus4" --deviceId "emulator-5554" --compile true --continue-on-error true --pagePath "pages/componentsB/table2/table2"
 ```
 
 ### 3.4 查看最近构建日志
 ```powershell
-& "C:\ProgramData\HBuilderX\cli.exe" logcat app-android --project "D:\Repos\xyito\open\uview-plus4" --deviceId "emulator-5554" --mode lastBuild
+& "C:\ProgramData\HBuilderX\cli.exe" logcat app-android --project "D:\Repos\xyito\ultra-ui\uview-plus4" --deviceId "emulator-5554" --mode lastBuild
 ```
 
 ### 3.5 Android 导出编译（强校验）
 ```powershell
-& "C:\ProgramData\HBuilderX\cli.exe" publish app-android --project "D:\Repos\xyito\open\uview-plus4" --type appResource
+& "C:\ProgramData\HBuilderX\cli.exe" publish app-android --project "D:\Repos\xyito\ultra-ui\uview-plus4" --type appResource
 ```
 
 ### 3.6 任务提交与版本发布前完整编译（强制）
 - **每次任务提交前、每次版本发布前，必须执行一次完整 Android 项目编译校验。**
 - 标准命令必须使用 `launch app-android --compile true --continue-on-error true`，且**不得带 `--pagePath`**，以编译整个工程，而不是只校验单个页面：
 ```powershell
-& "C:\ProgramData\HBuilderX\cli.exe" launch app-android --project "D:\Repos\xyito\open\uview-plus4" --deviceId "<实际设备ID>" --compile true --continue-on-error true
+& "C:\ProgramData\HBuilderX\cli.exe" launch app-android --project "D:\Repos\xyito\ultra-ui\uview-plus4" --deviceId "<实际设备ID>" --compile true --continue-on-error true
 ```
 - 必须看到类似 `当前工程 N 个页面，正在编译为android class` 与 `项目 uview-plus4 编译成功` 的完整工程结果；单页编译不能替代全项目编译。
+- 若日志只出现 `检测到编译缓存有效，跳过编译` + `项目 uview-plus4 编译成功`，说明本次并未真正编译，**不构成校验证明**。需先移开 `unpackage/cache` 再重跑，直到看到上面那两行完整工程结果为止。
 - `publish app-android --type appResource` 仅是资源导出/补充校验，**不得作为任务提交前或版本发布前的完整编译证明**。
 - 若设备不可用，必须先启动 MuMu 或连接 Android 设备；仍无法编译时应明确报告阻塞原因，不得以 `appResource` 导出结果代替。
 
 ## 4) Web 编译校验（可选）
 ```powershell
-& "C:\ProgramData\HBuilderX\cli.exe" publish web --project "D:\Repos\xyito\open\uview-plus4" --platform Web --webTitle "uview-plus4"
+& "C:\ProgramData\HBuilderX\cli.exe" publish web --project "D:\Repos\xyito\ultra-ui\uview-plus4" --platform Web --webTitle "uview-plus4"
 ```
 
 ## 5) 强制执行规则（必须遵守）
@@ -87,12 +88,12 @@ uview-plus一般是指的同一个父目录下的uview-plus文件夹项目， �
 
 ### 8.2 写入目标（按优先级）
 1. **主文档（强制，本仓库为 uview-ultra / uview-plus4）**  
-   `D:\Repos\xyito\open\uview-plus-doc4\docs\components\changelog.md`
+   `D:\Repos\xyito\ultra-ui\uview-plus-doc4\docs\components\changelog.md`
 2. **插件 changelog（版本相关时强制）**  
    当前仓库：`uni_modules/uview-ultra/changelog.md`  
    （若同步维护 uview-plus，则对应其 `uni_modules/uview-plus/changelog.md`）
 3. **uview-plus 文档（可选，仅当同步维护 uview-plus / 3.x 时）**  
-   `D:\Repos\xyito\open\uview-plus-doc\docs\components\changelog.md`
+   `D:\Repos\xyito\ultra-ui\uview-plus-doc\docs\components\changelog.md`
 
 本仓库默认以 **uview-plus-doc4** 为准；维护 uview-plus 时再写 uview-plus-doc。
 
