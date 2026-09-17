@@ -36,6 +36,9 @@
 
 <script setup>
 	import { computed } from 'vue'
+	// #ifdef APP-VUE
+	import { onMounted } from 'vue'
+	// #endif
 
 	// 引入图标名称，已经对应的unicode
 	import icons from './icons.js'
@@ -86,9 +89,20 @@
 	const emit = defineEmits(['click'])
 	const { preventEvent } = useUltraUI(props)
 
-	if (!fontUtil.params.loaded) {
+	// #ifndef APP-VUE
+	if (!fontUtil.isLoaded()) {
 		fontUtil.loadFont()
 	}
+	// #endif
+
+	// #ifdef APP-VUE
+	// App Vue 的字体注册只对当前页面 WebView 生效，页面未挂载时取不到 getCurrentPages，需等 mounted
+	onMounted(() => {
+		if (!fontUtil.isLoaded()) {
+			fontUtil.loadFont()
+		}
+	})
+	// #endif
 
 	const uClasses = computed(() => {
 		let classes = []

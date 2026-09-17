@@ -1,3 +1,14 @@
+## 4.5.41
+fix: App 端图标字体改用 static 本地字体，新增通用 Vite 插件 UpVite
+
+- 修复 up-icon 在 App 端（Vue / App-vue / App-nvue）仍通过 `?url` 发射字体资源的问题。该路径在 iOS 上不生效（App 本地字体必须落在 uni-app 约定的 static 目录下），图标可能不显示；现在由构建插件把 `upicon.ttf` 复制到应用 `static/app-plus/uview-ultra/`，运行时按 `_www` 路径加载，与 uview-plus 的方案对齐。
+- 新增通用 Vite 插件入口 `libs/vite/index.js`（默认导出 `UpVite`）。App 本地图标字体是它的第一个 feature，后续组件库新增构建期能力只需在 `createUpViteFeatures()` 里追加，业务项目不需要再改自己的 `vite.config`。
+- 本地字体缺失时自动兜底：App-Vue 在 `uni.loadFontFace` 失败后回退 `config.iconUrl`（每个页面只回退一次），App-nvue 注册前用 `plus.io.resolveLocalFileSystemURL` 探测字体文件。未注册插件的项目行为与改造前等价，升级不会丢图标。
+- `up-icon.vue` 的 App Vue 字体注册改到 `onMounted`。页面未挂载时取不到 `getCurrentPages()`，原先在 setup 时机注册会被直接跳过。
+- `util.js` 新增 App Vue 页面级加载状态（`appVueLoadedPages` / `appVueLoadingPages` / `appVueFallbackPages`）并导出 `isLoaded`。
+- 新增 `verify:app-local-icon-font` 回归校验，覆盖 static 路径、两端兜底、插件复制与关闭开关。
+- 不希望使用本地字体可传 `UpVite({ appStaticIconFont: false })` 继续只走远程字体。uvue / uni-app-x、H5、小程序均不受影响。
+
 ## 4.5.40
 fix: 修复 up-row-notice 横向滚动空格丢失
 
