@@ -1,3 +1,16 @@
+## 4.5.42
+fix: 修复签名组件在 App 端无法绘制、笔迹闪退，并补齐 up-canvas 画布能力
+
+up-signature 在 App 端存在无法落笔、笔迹一闪即消失与落点偏移的问题；同时 up-canvas 相比 3.x 缺少画布就绪事件与禁止滚动属性，业务组件无法对齐使用。
+
+- up-canvas 补齐 ready 事件：初始化完成后回调（携带宽高），与 3.x u-canvas 对齐，业务组件可在画布就绪后再响应绘制
+- up-canvas 补齐 disable-scroll 属性并透传到 canvas 节点
+- up-signature（Vue 与 uvue 两条实现）改为等待画布就绪后再接受绘制，修复上下文异步就绪时首笔丢失
+- 修复笔迹画出后立即消失：touchMove 改为「增量线段」绘制（beginPath + moveTo 上一点 + lineTo 当前点 + stroke）并使用 draw(true) 保留已绘制内容，不再每次 draw(false) 清空命令队列
+- 修复 App 端坐标错乱、笔迹落到画布外：触摸坐标减去画布位置换算到画布坐标系（Vue 端优先取画布相对坐标）
+- 收尾不再 closePath，避免手写笔迹出现回连直线；撤销回放逻辑保持兼容
+- 覆盖 APP-PLUS / APP-HARMONY / uni-app-x / NVUE，微信小程序与 H5 行为保持不变
+
 ## 4.5.41
 fix: App 端图标字体改用 static 本地字体，新增通用 Vite 插件入口 UpVite
 
