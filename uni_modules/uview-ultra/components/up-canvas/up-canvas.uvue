@@ -8,6 +8,7 @@
             class="up-canvas__canvas"
             :id="canvasId"
             :canvas-id="canvasId"
+            :disable-scroll="disableScroll"
             :style="canvasStyle"
             @touchstart="onTouchStart"
             @touchmove="onTouchMove"
@@ -87,10 +88,15 @@ const props = defineProps({
         bgColor: {
             type: String,
             default: '#ffffff'
+        },
+        // 是否禁止滚动（与 3.x u-canvas 对齐）
+        disableScroll: {
+            type: Boolean,
+            default: false
         }
 })
 
-const emit = defineEmits(['touchstart', 'touchmove', 'touchend'])
+const emit = defineEmits(['ready', 'touchstart', 'touchmove', 'touchend'])
 const instance = getCurrentInstance()!.proxy!
 const rootId = makeId('rootId-')
 const widthLocal = ref(normalizeSize(props.width, 300))
@@ -123,6 +129,15 @@ const actualWidth = computed((): number => {
 const actualHeight = computed((): number => {
     return props.useRootHeightAndWidth ? normalizeSize(heightLocal.value, 300) : normalizeSize(props.height, 300)
 })
+
+// 与 3.x u-canvas 对齐：初始化完成后通知外部画布已就绪
+function emitCanvasReady(): void {
+    const payload = {
+        width: actualWidth.value,
+        height: actualHeight.value
+    } as UTSJSONObject
+    emit('ready', payload)
+}
 
 const rootStyle = computed((): UTSJSONObject => {
     const style = {} as UTSJSONObject
@@ -224,12 +239,14 @@ function initCanvas(force: boolean = false): Promise<void> {
 				context.requestAnimationFrame((_time: number) => {
 					isReady.value = true
 					fillCanvasBackground()
+					emitCanvasReady()
 					resolve()
 				})
 				// #endif
 				// #ifndef APP-HARMONY
 				isReady.value = true
 				fillCanvasBackground()
+				emitCanvasReady()
 				resolve()
 				// #endif
 			},

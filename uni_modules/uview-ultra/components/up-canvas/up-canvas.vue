@@ -11,6 +11,7 @@
             :id="canvasId"
             :canvas-id="canvasId"
             type="2d"
+            :disable-scroll="disableScroll"
             :style="{ width: width + unit, height: height + unit }"
             @touchstart="onTouchStart"
             @touchmove="onTouchMove"
@@ -22,6 +23,7 @@
             class="up-canvas__canvas"
             :id="canvasId"
             :canvas-id="canvasId"
+            :disable-scroll="disableScroll"
             :style="{ width: width + unit, height: height + unit }"
             @touchstart="onTouchStart"
             @touchmove="onTouchMove"
@@ -88,9 +90,14 @@ const props = defineProps({
 	bgColor: {
 		type: String,
 		default: '#ffffff'
+	},
+	// 是否禁止滚动（与 3.x u-canvas 对齐）
+	disableScroll: {
+		type: Boolean,
+		default: false
 	}
 })
-const emit = defineEmits(['touchstart', 'touchmove', 'touchend'])
+const emit = defineEmits(['ready', 'touchstart', 'touchmove', 'touchend'])
 const instance = getCurrentInstance()
 const proxy = instance?.proxy
 
@@ -216,6 +223,7 @@ function getCanvasContextHost() {
 async function _initializeCanvas(force = false) {
 	try {
 		if (ctx.value && !force) {
+			emit('ready', { width: actualWidth.value, height: actualHeight.value })
 			return true
 		}
 
@@ -250,6 +258,10 @@ async function _initializeCanvas(force = false) {
 
 		// 初始化背景，但不在微信小程序中调用draw
 		clearCanvas();
+		if (ctx.value) {
+			// 与 3.x u-canvas 对齐：初始化完成后通知外部画布已就绪
+			emit('ready', { width: actualWidth.value, height: actualHeight.value })
+		}
 		return !!ctx.value
 	} catch (error) {
 		console.error("初始化Canvas失败:", error);

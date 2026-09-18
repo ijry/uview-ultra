@@ -10,6 +10,7 @@
 				@touchstart="touchStart"
 				@touchmove="touchMove"
 				@touchend="touchEnd"
+				@ready="onCanvasReady"
 				:disable-scroll="true"
 				class="up-signature__canvas"
 				:style="{
@@ -74,7 +75,7 @@
 </template>
 
 <script setup>
-import { nextTick, onMounted, ref, watch } from 'vue'
+import { getCurrentInstance, nextTick, onMounted, ref, watch } from 'vue'
 import { commonProps } from '../../libs/composable/useUltraUI.js'
 import { t } from '../../libs/i18n'
 
@@ -147,6 +148,13 @@ const lastPoint = ref(null)
 const canvasInstance = ref(null)
 const signatureCanvas = ref(null)
 
+const instance = getCurrentInstance()
+const proxy = instance?.proxy
+// up-canvas 画布上下文在部分平台为异步就绪，需等待握手
+const canvasReady = ref(false)
+// 画布在视口中的位置，用于把视口坐标换算为画布坐标
+const canvasRect = ref({ left: 0, top: 0 })
+
 function getCanvasInstance() {
 	if (canvasInstance.value) {
 		return canvasInstance.value
@@ -155,31 +163,97 @@ function getCanvasInstance() {
 	const canvasRef = signatureCanvas.value
 	if (canvasRef) {
 		canvasInstance.value = canvasRef
+		// 实例已就绪则同步标记，避免首笔被 touchStart 拦截
+		if (canvasRef.ctx) {
+			canvasReady.value = true
+		}
 		return canvasRef
 	}
 	return null
 }
 
-function getCanvasPoint(e) {
-	// #ifdef MP-WEIXIN
-	const touch = e.touches && e.touches[0] ? e.touches[0] : e.mp.touches[0]
-	// #endif
-	// #ifndef MP-WEIXIN
-	const touch = e.touches[0]
-	// #endif
+// 主动等待 up-canvas 完成初始化（部分平台画布上下文为异步）
+async function initCanvasInstance() {
+	const ref = getCanvasInstance()
+	if (!ref) return
+	if (typeof ref.initCanvas === 'function') {
+		try {
+			const ok = await ref.initCanvas(true)
+			if (ok) {
+				onCanvasReady()
+			}
+		} catch (e) {
+			// 忽略，等待后续触摸时兜底重试
+		}
+	}
+}
 
+// up-canvas 初始化完成后：标记就绪、缓存画布位置并重绘背景
+function onCanvasReady() {
+	if (canvasReady.value) return
+	canvasReady.value = true
+	getCanvasInstance()
+	refreshCanvasRect()
+	clearCanvas()
+}
+
+// 缓存画布在视口中的位置，用于将视口坐标换算为画布坐标
+function refreshCanvasRect() {
+	try {
+		uni.createSelectorQuery()
+			.in(proxy)
+			.select('#' + canvasId.value)
+			.boundingClientRect((rect) => {
+				if (rect && (rect.left || rect.top || rect.width)) {
+					canvasRect.value = { left: rect.left || 0, top: rect.top || 0 }
+				}
+			})
+			.exec()
+	} catch (e) {
+		// 忽略查询失败，退化为不偏移
+	}
+}
+
+function getCanvasPoint(e) {
+	const touch =
+		(e.touches && e.touches[0]) ||
+		(e.changedTouches && e.changedTouches[0]) ||
+		null
+	if (!touch) return { x: 0, y: 0 }
+
+	// 2D canvas（MP/H5）与部分平台会在事件上直接挂载画布相对坐标
+	if (typeof touch.x === 'number' && typeof touch.y === 'number') {
+		return { x: touch.x, y: touch.y }
+	}
+
+	// 旧版 canvas（如 APP-PLUS）的 touch 仅提供视口坐标，需减去画布位置
+	const rect = canvasRect.value || { left: 0, top: 0 }
+	const clientX = touch.clientX !== undefined
+		? touch.clientX
+		: (touch.pageX !== undefined ? touch.pageX : 0)
+	const clientY = touch.clientY !== undefined
+		? touch.clientY
+		: (touch.pageY !== undefined ? touch.pageY : 0)
 	return {
-		x: touch.x,
-		y: touch.y
+		x: clientX - rect.left,
+		y: clientY - rect.top
 	}
 }
 
 function touchStart(e) {
-	if (!canvasInstance.value || !canvasInstance.value.ctx) {
+	if (!canvasReady.value || !canvasInstance.value || !canvasInstance.value.ctx) {
+		// 画布尚未就绪：尝试初始化一次，待就绪后下一次触摸即可绘制
 		getCanvasInstance()
+		if (canvasInstance.value && typeof canvasInstance.value.initCanvas === 'function') {
+			canvasInstance.value.initCanvas(true)
+				.then(() => {
+					canvasReady.value = true
+					refreshCanvasRect()
+				})
+				.catch(() => {})
+		}
+		return
 	}
-
-	if (!canvasInstance.value || !canvasInstance.value.ctx) return
 
 	isDrawing.value = true
 	isEmpty.value = false
@@ -188,9 +262,9 @@ function touchStart(e) {
 	const { x, y } = getCanvasPoint(e)
 
 	canvasInstance.value.setLineStyle(lineColor.value, lineWidth.value)
-	canvasInstance.value.beginPath()
-	canvasInstance.value.moveTo(x, y)
 
+	// 仅记录起点，真正的绘制在 touchMove 中以“增量线段”方式完成
+	lastPoint.value = { x, y }
 	currentPath.value.push({
 		x,
 		y,
@@ -199,7 +273,6 @@ function touchStart(e) {
 		width: lineWidth.value
 	})
 
-	lastPoint.value = { x, y }
 	e.preventDefault()
 }
 
@@ -210,14 +283,21 @@ function touchMove(e) {
 
 	const { x, y } = getCanvasPoint(e)
 
+	// 增量绘制：以上一个点为起点画到当前点。
+	// 旧版 canvas（APP-PLUS）每次 draw 会刷新命令队列，必须以“单段”方式绘制；
+	// 2D canvas 亦适用（draw 为 no-op，stroke 即时生效并保留已有像素）。
+	canvasInstance.value.setLineStyle(lineColor.value, lineWidth.value)
+	canvasInstance.value.beginPath()
+	canvasInstance.value.moveTo(lastPoint.value.x, lastPoint.value.y)
 	canvasInstance.value.lineTo(x, y)
 	canvasInstance.value.stroke()
+	canvasInstance.value.draw(true) // reserve：保留已绘制内容，避免笔迹闪退
+
 	currentPath.value.push({
 		x,
 		y,
 		type: 'move'
 	})
-	canvasInstance.value.draw(false)
 
 	lastPoint.value = { x, y }
 }
@@ -226,13 +306,13 @@ function touchEnd(e) {
 	if (!isDrawing.value || !canvasInstance.value || !canvasInstance.value.ctx) return
 
 	isDrawing.value = false
-	canvasInstance.value.closePath()
 	lastPoint.value = null
 
 	if (currentPath.value.length > 0) {
 		pathStack.value.push([...currentPath.value])
 	}
 
+	// 收尾绘制（保留已有内容）
 	canvasInstance.value.draw(true)
 }
 
@@ -348,9 +428,9 @@ watch(() => props.thickness, (newVal) => {
 }, { immediate: true })
 
 onMounted(() => {
+	// 等待 up-canvas 完成初始化（APP / NVUE 画布上下文需异步就绪）
 	nextTick(() => {
-		getCanvasInstance()
-		clearCanvas()
+		initCanvasInstance()
 	})
 })
 

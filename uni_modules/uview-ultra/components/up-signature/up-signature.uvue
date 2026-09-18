@@ -10,6 +10,8 @@
 				@touchstart="touchStart"
 				@touchmove="touchMove"
 				@touchend="touchEnd"
+				@ready="onCanvasReady"
+				:disable-scroll="true"
 				class="up-signature__canvas"
 			></up-canvas>
 		</view>
@@ -66,8 +68,9 @@
 </template>
 
 <script setup lang="uts">
-import { computed, ref, watch } from 'vue'
+import { computed, getCurrentInstance, onMounted, ref, watch } from 'vue'
 import { t } from '../../libs/i18n/index.uts'
+import { upGetRect } from '../../libs/function/index.uts'
 
 type SignaturePoint = {
 	x: number,
@@ -129,7 +132,8 @@ function getTouchPoint(e: UniTouchEvent): SignaturePoint {
 		x = e.changedTouches[0].pageX
 		y = e.changedTouches[0].pageY
 	}
-	return createPoint(x, y, 'move', '', 0)
+	// pageX/pageY 为页面坐标，需减去画布位置得到画布相对坐标
+	return createPoint(x - rectLeft.value, y - rectTop.value, 'move', '', 0)
 }
 
 defineOptions({
@@ -179,6 +183,14 @@ const isEmpty = ref(true)
 const presetColors = ref<Array<string>>(createColors())
 const showBrushSettings = ref(false)
 const showColorSettings = ref(false)
+// up-canvas 画布上下文在部分平台为异步就绪，需等待握手
+const canvasReady = ref(false)
+// 画布在视口中的位置，用于把视口坐标换算为画布坐标
+const rectLeft = ref(0)
+const rectTop = ref(0)
+// 上一个触摸点（增量绘制用）
+const lastX = ref(0)
+const lastY = ref(0)
 
 const pathCount = computed((): number => {
 	const stack = pathStack.value as Array<Array<SignaturePoint>>
@@ -224,7 +236,42 @@ const getLineWidth = (): number => {
 	return normalizeNumber(lineWidth.value, 3)
 }
 
+// 缓存画布在页面中的位置，用于把页面坐标换算为画布坐标
+const refreshCanvasRect = (): void => {
+	const inst = getCurrentInstance()
+	if (inst == null) {
+		return
+	}
+	upGetRect('#' + canvasId.value, false, inst.proxy).then((rect: NodeInfo) => {
+		rectLeft.value = rect.left
+		rectTop.value = rect.top
+	}).catch((_err: any | null) => {})
+}
+
+// up-canvas 初始化完成（@ready）后：标记就绪、缓存画布位置
+const onCanvasReady = (): void => {
+	if (canvasReady.value) {
+		return
+	}
+	canvasReady.value = true
+	refreshCanvasRect()
+}
+
+// 主动触发 up-canvas 初始化（幂等：已就绪时为空操作）
+const initCanvasInstance = (): void => {
+	const canvas = getCanvasInstance()
+	if (canvas == null) {
+		return
+	}
+	canvas.$callMethod('initCanvas', false)
+}
+
 const touchStart = (e: UniTouchEvent): void => {
+	if (canvasReady.value == false) {
+		// 画布尚未就绪：触发初始化，待 @ready 后下一次触摸即可绘制
+		initCanvasInstance()
+		return
+	}
 	const canvas = getCanvasInstance()
 	if (canvas == null) {
 		return
@@ -235,12 +282,15 @@ const touchStart = (e: UniTouchEvent): void => {
 	const point = getTouchPoint(e)
 	const color = getLineColor()
 	const width = getLineWidth()
-	const startPoint = createPoint(normalizeNumber(point.x, 0), normalizeNumber(point.y, 0), 'start', color, width)
+	const x = normalizeNumber(point.x, 0)
+	const y = normalizeNumber(point.y, 0)
+	const startPoint = createPoint(x, y, 'start', color, width)
 	const path = currentPath.value as Array<SignaturePoint>
 	path.push(startPoint)
 	canvas.$callMethod('setLineStyle', color, width)
-	canvas.$callMethod('beginPath')
-	canvas.$callMethod('moveTo', startPoint.x, startPoint.y)
+	// 仅记录起点，真正的绘制在 touchMove 中以“增量线段”方式完成
+	lastX.value = x
+	lastY.value = y
 	emit('change', path)
 }
 
@@ -253,12 +303,20 @@ const touchMove = (e: UniTouchEvent): void => {
 		return
 	}
 	const point = getTouchPoint(e)
-	const movePoint = createPoint(normalizeNumber(point.x, 0), normalizeNumber(point.y, 0), 'move', getLineColor(), getLineWidth())
+	const x = normalizeNumber(point.x, 0)
+	const y = normalizeNumber(point.y, 0)
+	const movePoint = createPoint(x, y, 'move', getLineColor(), getLineWidth())
 	const path = currentPath.value as Array<SignaturePoint>
 	path.push(movePoint)
-	canvas.$callMethod('lineTo', movePoint.x, movePoint.y)
+	// 增量绘制：以上一个点为起点画到当前点，draw(true) 保留已有笔迹
+	canvas.$callMethod('setLineStyle', getLineColor(), getLineWidth())
+	canvas.$callMethod('beginPath')
+	canvas.$callMethod('moveTo', lastX.value, lastY.value)
+	canvas.$callMethod('lineTo', x, y)
 	canvas.$callMethod('stroke')
-	canvas.$callMethod('draw', false)
+	canvas.$callMethod('draw', true)
+	lastX.value = x
+	lastY.value = y
 	emit('change', path)
 }
 
@@ -269,7 +327,7 @@ const touchEnd = (): void => {
 	const canvas = getCanvasInstance()
 	isDrawing.value = false
 	if (canvas != null) {
-		canvas.$callMethod('closePath')
+		// 收尾绘制（保留已有内容），不闭合路径避免出现回连直线
 		canvas.$callMethod('draw', true)
 	}
 	const path = currentPath.value as Array<SignaturePoint>
@@ -389,6 +447,11 @@ watch((): any => props.thickness, (newVal: any | null) => {
 	lineWidth.value = normalizeNumber(newVal, 3)
 }, { immediate: true })
 
+onMounted((): void => {
+	// 触发 up-canvas 初始化，@ready 回调后 onCanvasReady 标记画布就绪
+	initCanvasInstance()
+})
+
 defineExpose({
 	signatureCanvas,
 	canvasId,
@@ -412,6 +475,10 @@ defineExpose({
 	getCanvasInstance,
 	getLineColor,
 	getLineWidth,
+	canvasReady,
+	onCanvasReady,
+	refreshCanvasRect,
+	initCanvasInstance,
 	touchStart,
 	touchMove,
 	touchEnd,
