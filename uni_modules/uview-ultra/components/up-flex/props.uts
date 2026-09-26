@@ -1,0 +1,13 @@
+import { defineMixin } from '../../libs/vue'
+import defProps from './flex'
+let crtProp = defProps['flex'] as UTSJSONObject
+
+export const propsFlex = defineMixin({
+    props: {
+        direction: { type: String, default: crtProp['direction'] },
+        justify: { type: String, default: crtProp['justify'] },
+        align: { type: String, default: crtProp['align'] },
+        wrap: { type: Boolean, default: crtProp['wrap'] },
+        gap: { type: [String, Number], default: crtProp['gap'] }
+    }
+})

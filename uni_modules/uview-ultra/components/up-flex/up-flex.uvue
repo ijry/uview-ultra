@@ -1,0 +1,71 @@
+<template>
+	<view
+	    class="up-flex"
+	    :style="[flexStyle, $up.addStyle(props.customStyle)]"
+	    @tap="clickHandler"
+	>
+		<slot />
+	</view>
+</template>
+
+<script setup lang="uts">
+	import { computed } from 'vue'
+	import defProps from './flex'
+	import { addUnit } from '../../libs/function/index'
+
+	defineOptions({
+	  styleIsolation: 'app-and-page',
+	  name: 'up-flex'
+	})
+
+	const props = defineProps({
+	    customStyle: {
+	        type: [Object, String],
+	        default: () => ({})
+	    },
+	    customClass: {
+	        type: String,
+	        default: ''
+	    },
+		direction: { type: String, default: () => defProps.getString('flex.direction') },
+		justify: { type: String, default: () => defProps.getString('flex.justify') },
+		align: { type: String, default: () => defProps.getString('flex.align') },
+		wrap: { type: Boolean, default: () => defProps.getBoolean('flex.wrap') },
+		gap: { type: [String, Number], default: () => defProps.getNumber('flex.gap') }
+	})
+
+	const emit = defineEmits(["click"])
+
+	const uJustify = computed(() : string => {
+		if (props.justify == 'start' || props.justify == 'end') return 'flex-' + props.justify
+		else return props.justify
+	})
+
+	const flexStyle = computed(() : any => {
+		const style = {
+			display: 'flex',
+			flexDirection: props.direction,
+			justifyContent: uJustify.value,
+			alignItems: props.align,
+			flexWrap: props.wrap ? 'wrap' : 'nowrap'
+		}
+		const gapStr = `${props.gap}`
+		if (gapStr != '' && gapStr != '0') {
+			// @ts-ignore
+			style['gap'] = addUnit(props.gap)
+		}
+		return style
+	})
+
+	const clickHandler = (e: any): void => {
+		emit('click')
+	}
+</script>
+
+<style lang="scss" scoped>
+	@import "../../libs/css/components.scss";
+
+	.up-flex {
+		@include flex;
+	}
+</style>

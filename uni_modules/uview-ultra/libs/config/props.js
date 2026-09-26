@@ -31,6 +31,7 @@ import CountTo from '../../components/up-count-to/countTo.js'
 import DatetimePicker from '../../components/up-datetime-picker/datetimePicker.js'
 import Divider from '../../components/up-divider/divider.js'
 import Empty from '../../components/up-empty/empty.js'
+import Flex from '../../components/up-flex/flex.js'
 import Form from '../../components/up-form/form.js'
 import GormItem from '../../components/up-form-item/formItem.js'
 import Gap from '../../components/up-gap/gap.js'
@@ -126,6 +127,7 @@ export default {
     ...DatetimePicker,
     ...Divider,
     ...Empty,
+    ...Flex,
     ...Form,
     ...GormItem,
     ...Gap,
