@@ -1,3 +1,14 @@
+## 4.5.43
+feat: 新增 up-flex 弹性布局容器组件
+
+新增 up-flex 弹性布局容器，用于快速搭建 flex 布局，替代手写 display:flex 样式；同时提供 Vue 与 uvue（uni-app-x）两套实现，覆盖 App / H5 / 小程序 / 鸿蒙。
+
+- 新增 up-flex 组件：通过 direction / justify / align / wrap / gap 属性控制主轴方向、主轴与交叉轴对齐、是否换行以及子元素间距
+- justify 支持 start / end 简写，内部自动映射为 flex-start / flex-end，与 CSS 原生取值兼容
+- gap 支持数字或字符串，非 0 时自动补单位；默认 direction=row、justify=flex-start、align=stretch、wrap=false、gap=0
+- 提供默认插槽承载子元素，支持 click 事件与 customStyle 自定义样式
+- 全部默认值集中在 libs/config/props.js，可通过全局配置统一覆盖
+
 ## 4.5.42
 fix: 修复签名组件在 App 端无法绘制、笔迹闪退，并补齐 up-canvas 画布能力
 
