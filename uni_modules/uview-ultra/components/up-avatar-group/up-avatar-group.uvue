@@ -5,7 +5,7 @@
 		    v-for="(item, index) in showUrl"
 		    :key="index"
 		    :style="{
-				marginLeft: index == 0 ? 0 : $up.addUnit(0-parseFloat(size.toString()) * parseFloat(gap.toString()))
+				marginLeft: index == 0 ? 0 : addUnit(0-parseFloat(size.toString()) * parseFloat(gap.toString()))
 			}"
 		>
 			<up-avatar

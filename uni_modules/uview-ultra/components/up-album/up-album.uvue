@@ -28,7 +28,7 @@
                         {
                             width: imageWidth,
                             height: imageHeight,
-                            borderRadius: shape == 'circle' ? '10000px' : $up.addUnit(radius)
+                            borderRadius: shape == 'circle' ? '10000px' : addUnit(radius)
                         }
                     ]"
                 ></image>
@@ -41,7 +41,7 @@
                     "
                     class="up-album__row__wrapper__text"
                     :style="{
-					    borderRadius: shape == 'circle' ? '50%' : $up.addUnit(radius),
+					    borderRadius: shape == 'circle' ? '50%' : addUnit(radius),
 				    }"
                 >
                     <up-text

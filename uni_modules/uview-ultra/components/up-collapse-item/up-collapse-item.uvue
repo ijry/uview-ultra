@@ -44,7 +44,7 @@
 		</up-cell>
 		<view
 			class="up-collapse-item__content"
-			:style="{height: $up.addUnit(height)}"
+			:style="{height: addUnit(height)}"
 			:animation="animationData"
 			ref="animation"
 		>
@@ -61,7 +61,7 @@
 <script setup lang="uts">
 	import { nextTick, ref, watch, computed } from 'vue'
 	import defProps from './collapseItem.uts'
-	import { guid, sleep, upGetRect, error } from '../../libs/function/index'
+	import { guid, sleep, upGetRect, error, addUnit } from '../../libs/function/index'
 	import { array as testArray } from '../../libs/function/test'
 	import { useUltraUI } from '../../libs/composable/useUltraUI'
 	const { parent, parentData, getParentData } = useUltraUI()

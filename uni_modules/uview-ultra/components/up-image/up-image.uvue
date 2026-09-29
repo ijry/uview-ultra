@@ -7,7 +7,7 @@
 		<view
 			class="up-image"
 			@tap="onClick"
-			:style="[wrapStyle, backgroundStyle, $up.addStyle(customStyle)]"
+			:style="[wrapStyle, backgroundStyle, addStyle(customStyle)]"
 		>
 			<image
 				:src="src"
@@ -17,19 +17,19 @@
 				:lazy-load="lazyLoad"
 				class="up-image__image"
 				:style="{
-					borderRadius: shape == 'circle' ? '10000px' : $up.addUnit(radius),
-					width: $up.addUnit(width),
-					height: $up.addUnit(height)
+					borderRadius: shape == 'circle' ? '10000px' : addUnit(radius),
+					width: addUnit(width),
+					height: addUnit(height)
 				}"
 			></image>
 			<view
 				v-if="showLoading && loading"
 				class="up-image__loading"
 				:style="{
-					borderRadius: shape == 'circle' ? '50%' : $up.addUnit(radius),
+					borderRadius: shape == 'circle' ? '50%' : addUnit(radius),
 					backgroundColor: bgColor,
-					width: $up.addUnit(width),
-					height: $up.addUnit(height)
+					width: addUnit(width),
+					height: addUnit(height)
 				}"
 			>
 				<slot name="loading">
@@ -44,9 +44,9 @@
 				v-if="showError && isError && !loading"
 				class="up-image__error"
 				:style="{
-					borderRadius: shape == 'circle' ? '50%' : $up.addUnit(radius),
-					width: $up.addUnit(width),
-					height: $up.addUnit(height)
+					borderRadius: shape == 'circle' ? '50%' : addUnit(radius),
+					width: addUnit(width),
+					height: addUnit(height)
 				}"
 			>
 				<slot name="error">

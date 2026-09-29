@@ -1,7 +1,7 @@
 <template>
 	<view
 	    class="up-empty"
-	    :style="[emptyStyle, $up.addStyle(customStyle)]"
+	    :style="[emptyStyle, addStyle(customStyle)]"
 	    v-if="show"
 	>
 		<up-icon
@@ -14,8 +14,8 @@
 		<image
 		    v-else
 		    :style="{
-				width: $up.addUnit(width),
-				height: $up.addUnit(height),
+				width: addUnit(width),
+				height: addUnit(height),
 			}"
 		    :src="icon"
 		    mode="widthFix"

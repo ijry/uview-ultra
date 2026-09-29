@@ -3,7 +3,7 @@
 		class="up-list"
 		:scroll-into-view="scrollIntoView"
 		:style="[listStyle]"
-		:scroll-y="scrollable"
+		:direction="(scrollable ? 'vertical' : 'none')"
 		:scroll-top="parseFloat(scrollTop.toString())"
 		:lower-threshold="parseFloat(lowerThreshold.toString())"
 		:upper-threshold="parseFloat(upperThreshold.toString())"

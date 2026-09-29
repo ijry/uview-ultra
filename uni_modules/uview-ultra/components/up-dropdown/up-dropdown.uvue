@@ -1,9 +1,9 @@
 <template>
 	<view class="up-dropdown" :style="{
-		height: active ? $up.addUnit((contentHeight + parseInt(props.height.toString()))) : $up.addUnit(props.height)
+		height: active ? addUnit((contentHeight + parseInt(props.height.toString()))) : addUnit(props.height)
 	}">
 		<view class="up-dropdown__menu" :style="{
-			height: $up.addUnit(props.height)
+			height: addUnit(props.height)
 		}" :class="{
 			'u-border-bottom': props.borderBottom
 		}">
@@ -11,20 +11,20 @@
 				<view class="up-flex up-flex-row">
 					<text class="up-dropdown__menu__item__text" :style="{
 						color: item.disabled ? '#c0c4cc' : (index === current || highlightIndexList.includes(index)) ? props.activeColor : props.inactiveColor,
-						fontSize: $up.addUnit(props.titleSize)
+						fontSize: addUnit(props.titleSize)
 					}">{{item['title']}}</text>
 					<view class="up-dropdown__menu__item__arrow" :class="{
 						'up-dropdown__menu__item__arrow--rotate': index === current
 					}">
 						<up-icon :custom-style="{display: 'flex'}" :name="props.menuIcon"
-							:size="$up.addUnit(props.menuIconSize)"
+							:size="addUnit(props.menuIconSize)"
 							:color="index === current || highlightIndexList.includes(index) ? props.activeColor : '#c0c4cc'"></up-icon>
 					</view>
 				</view>
 			</view>
 		</view>
 		<view class="up-dropdown__content" :style="[contentStyle, {
-			top: $up.addUnit(props.height),
+			top: addUnit(props.height),
 			transition: `opacity ${parseInt(props.duration.toString()) / 1000}s, z-index ${parseInt(props.duration.toString()) / 1000}s linear`,
 		}]"
 		 @tap="maskClick" @touchmove.stop.prevent>
@@ -354,7 +354,7 @@
 				position: relative;
 				z-index: 10;
 				transition: transform 0.3s;
-				transform: translate3D(0, -100%, 0);
+				transform: translate3d(0, -100%, 0);
 				overflow: hidden;
 			}
 		}

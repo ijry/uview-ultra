@@ -4,7 +4,7 @@
 			<text class="up-novel-reader__catalog-title">目录</text>
 			<text class="up-novel-reader__catalog-count">{{ chapters.length }} 章</text>
 		</view>
-		<scroll-view v-if="chapters.length > 0" class="up-novel-reader__catalog-scroll" scroll-y>
+		<scroll-view v-if="chapters.length > 0" class="up-novel-reader__catalog-scroll" direction="vertical">
 			<view
 				v-for="chapter in chapters"
 				:key="chapterKey(chapter)"

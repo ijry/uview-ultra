@@ -1,5 +1,5 @@
 <template>
-    <view class="up-input" :class="inputClass" :style="[wrapperStyle, $up.addStyle(customStyle)]">
+    <view class="up-input" :class="inputClass" :style="[wrapperStyle, addStyle(customStyle)]">
         <view class="up-input__content">
             <view
                 class="up-input__content__prefix-icon"

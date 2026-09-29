@@ -64,7 +64,7 @@
 			<scroll-view
 				v-if="!monthSwitch"
 				:style="{height: addUnit(listHeight)}"
-				scroll-y
+				direction="vertical"
 				@scroll="onScroll"
 				:scroll-top="scrollTop"
 				:scrollIntoView="scrollIntoView"

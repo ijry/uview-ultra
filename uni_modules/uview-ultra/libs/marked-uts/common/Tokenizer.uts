@@ -242,7 +242,9 @@ export class Tokenizer implements I_Tokenizer {
 	}
 
 	// #ifdef APP-ANDROID
+	// #ifndef VUE3-VAPOR
 	@Suppress("RedundantFieldInitialization")
+	// #endif
 	// #endif
 	blockquote(src : string) : NodesToken | null {
 		const cap = this.rules!.block.blockquote.exec(src);

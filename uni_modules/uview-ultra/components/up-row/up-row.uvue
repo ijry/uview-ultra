@@ -2,7 +2,7 @@
 	<view
 	    class="up-row"
 		ref="up-row"
-	    :style="[rowStyle, $up.addStyle(props.customStyle)]"
+	    :style="[rowStyle, addStyle(props.customStyle)]"
 	    @tap="clickHandler"
 	>
 		<slot />
@@ -44,17 +44,17 @@
 		// 栅格间隔，左右各为此值的一半，单位px
 		gutter: {
 		    type: [String, Number],
-		    default: defProps.getNumber('row.gutter')
+		    default: defProps.getNumber('row.gutter', 0)
 		},
 		// 水平排列方式(微信小程序暂不支持) 可选值为`start`(或`flex-start`)、`end`(或`flex-end`)、`center`、`around`(或`space-around`)、`between`(或`space-between`)
 		justify: {
 		    type: String,
-		    default: defProps.getNumber('row.justify')
+		    default: defProps.getString('row.justify', 'start')
 		},
 		// 垂直排列方式
 		align: {
 		    type: String,
-		    default: defProps.getNumber('row.align')
+		    default: defProps.getString('row.align', 'center')
 		}
 	})
 	

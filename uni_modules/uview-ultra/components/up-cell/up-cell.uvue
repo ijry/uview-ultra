@@ -1,5 +1,5 @@
 <template>
-	<view class="up-cell" :class="[customClass]" :style="[$up.addStyle(customStyle)]"
+	<view class="up-cell" :class="[customClass]" :style="[addStyle(customStyle)]"
 		:hover-class="(!disabled && (clickable || isLink)) ? 'up-cell--clickable' : ''" :hover-stay-time="250"
 		@tap="clickHandler">
 		<view class="up-cell__body"

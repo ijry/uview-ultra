@@ -63,7 +63,7 @@ function createOther(): Other {
 	startAngleBracket: /^</,
 	endAngleBracket: />$/,
 	pedanticHrefTitle: /^([^'"]*[^\s])\s+(['"])(.*)\2/,
-	unicodeAlphaNumeric: /[\p{L}\p{N}]/u,
+	unicodeAlphaNumeric: /[A-Za-z0-9]/u,
 	escapeTest: /[&<>"']/,
 	escapeReplace: /[&<>"']/g,
 	caret: /(^|[^\[])\^/g,
@@ -338,17 +338,20 @@ const inlineCode = /^(`+)([^`]|[^`][\s\S]*?[^`])\1(?!`)/;
 const br = /^( {2,}|\\)\n(?!\s*$)/;
 const inlineText = /^(`+|[^`])(?:(?= {2,}\n)|[\s\S]*?(?:(?=[\\<!\[`*_]|\b_|$)|[^ ](?= {2,}\n)))/;
 
+// uni-app-x 运行期 JS 引擎不支持 \p{...} Unicode property escape（直接 SyntaxError 白屏），
+// 而 UTS 编译器也不接受正则字面量里的 \uXXXX 转义（报 Unterminated regexp literal），
+// 故改用 ASCII 标点字面量字符类，与 [\p{P}\p{S}] 在 0x00-0x7F 范围内逐字符等价。
 // list of unicode punctuation marks, plus any missing characters from CommonMark spec
-const _punctuation = /[\p{P}\p{S}]/u;
-const _punctuationOrSpace = /[\s\p{P}\p{S}]/u;
-const _notPunctuationOrSpace = /[^\s\p{P}\p{S}]/u;
+const _punctuation = /[!"#$%&'()*+,\-.\/:;<=>?@\[\]\\^_`{|}~]/;
+const _punctuationOrSpace = /[\s!"#$%&'()*+,\-.\/:;<=>?@\[\]\\^_`{|}~]/;
+const _notPunctuationOrSpace = /[^\s!"#$%&'()*+,\-.\/:;<=>?@\[\]\\^_`{|}~]/;
 const punctuation = edit(/^((?![*_])punctSpace)/, 'u')
 	.replace(/punctSpace/g, _punctuationOrSpace).getRegex();
 
 // GFM allows ~ inside strong and em for strikethrough
-const _punctuationGfmStrongEm = /(?!~)[\p{P}\p{S}]/u;
-const _punctuationOrSpaceGfmStrongEm = /(?!~)[\s\p{P}\p{S}]/u;
-const _notPunctuationOrSpaceGfmStrongEm = /(?:[^\s\p{P}\p{S}]|~)/u;
+const _punctuationGfmStrongEm = /(?!~)[!"#$%&'()*+,\-.\/:;<=>?@\[\]\\^_`{|}~]/;
+const _punctuationOrSpaceGfmStrongEm = /(?!~)[\s!"#$%&'()*+,\-.\/:;<=>?@\[\]\\^_`{|}~]/;
+const _notPunctuationOrSpaceGfmStrongEm = /(?:[^\s!"#$%&'()*+,\-.\/:;<=>?@\[\]\\^_`{|}~]|~)/;
 
 // sequences em should skip over [title](link), `code`, <html>
 // #ifdef uniVersion >= 4.72

@@ -2,8 +2,8 @@
 	<view class="up-dropdown-item" v-if="active"
 		@touchmove.stop.prevent="() => {}"@tap.stop.prevent="() => {}">
 		<template v-if="$slots['default'] == null && $slots['$default'] == null">
-			<view class="up-dropdown-item__scroll" scroll-y="false" :style="{
-				height: $up.addUnit(props.height)
+			<scroll-view direction="vertical" class="up-dropdown-item__scroll" :style="{
+				height: addUnit(props.height)
 			}">
 				<view class="up-dropdown-item__options">
 					<up-cell-group>
@@ -18,7 +18,7 @@
 						</up-cell>
 					</up-cell-group>
 				</view>
-			</view>
+			</scroll-view>
 		</template>
 		<template v-else>
 			<slot />
@@ -93,7 +93,7 @@
 		// 下拉弹窗的高度
 		height: {
 			type: [Number, String],
-			default: defProps.getNumber('dropdownItem.height')
+			default: defProps.getString('dropdownItem.height', 'auto')
 		},
 		// 点击遮罩是否可以收起弹窗
 		closeOnClickOverlay: {

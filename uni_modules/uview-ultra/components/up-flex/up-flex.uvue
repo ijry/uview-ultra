@@ -1,7 +1,7 @@
 <template>
 	<view
 	    class="up-flex"
-	    :style="[flexStyle, $up.addStyle(props.customStyle)]"
+	    :style="[flexStyle, addStyle(props.customStyle)]"
 	    @tap="clickHandler"
 	>
 		<slot />
@@ -11,7 +11,7 @@
 <script setup lang="uts">
 	import { computed } from 'vue'
 	import defProps from './flex'
-	import { addUnit } from '../../libs/function/index'
+	import { addUnit, addStyle } from '../../libs/function/index'
 
 	defineOptions({
 	  styleIsolation: 'app-and-page',

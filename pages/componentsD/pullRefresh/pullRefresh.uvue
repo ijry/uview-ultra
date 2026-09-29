@@ -112,7 +112,7 @@
 	  				<scroll-view
 	  				  class="scroll-area"
 	  				  style="height: 100px;"
-	  				  :scroll-y="true"
+	  				  :direction="'vertical'"
 	  				  @scrolltolower="onScrollToLower"
 	  				>
 	  				  <view class="list-content">

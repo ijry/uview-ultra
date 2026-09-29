@@ -2,7 +2,7 @@
 	<text
 		class="up-count-num"
 		:style="{
-			fontSize: $up.addUnit(fontSize),
+			fontSize: addUnit(fontSize),
 			fontWeight: bold ? 'bold' : 'normal',
 			color: color
 		}"
@@ -14,6 +14,7 @@ defineOptions({
 	styleIsolation: 'app-and-page'
 })
 
+import { addUnit } from '../../libs/function/index'
 import defProps from './countTo';
 
 /**

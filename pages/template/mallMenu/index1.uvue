@@ -7,14 +7,14 @@
 			</view>
 		</view>
 		<view class="u-menu-wrap">
-			<scroll-view scroll-y scroll-with-animation class="u-tab-view menu-scroll-view" :scroll-top="scrollTop">
+			<scroll-view direction="vertical" scroll-with-animation class="u-tab-view menu-scroll-view" :scroll-top="scrollTop">
 				<view v-for="(item,index) in getTabbar()" :key="index" class="u-tab-item" :class="[current==index ? 'u-tab-item-active' : '']"
 				 :data-current="index" @tap.stop="swichMenu(index)">
 					<text class="u-line-1">{{ getItemName(item) }}</text>
 				</view>
 			</scroll-view>
 			<block v-for="(item,index) in getTabbar()" :key="index">
-				<scroll-view scroll-y class="right-box" v-if="current==index">
+				<scroll-view direction="vertical" class="right-box" v-if="current==index">
 					<view class="page-view">
 						<view class="class-item">
 							<view class="item-title">

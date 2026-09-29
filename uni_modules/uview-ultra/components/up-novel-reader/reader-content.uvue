@@ -23,7 +23,7 @@
 		<scroll-view
 			v-else-if="mode == 'scroll'"
 			class="up-novel-reader__scroll"
-			scroll-y
+			direction="vertical"
 			:scroll-top="scrollTop"
 			@scroll="handleScroll"
 		>

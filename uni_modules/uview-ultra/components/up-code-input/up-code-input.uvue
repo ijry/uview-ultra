@@ -13,7 +13,7 @@
 			<text
 				v-else
 				:style="{
-					fontSize: $up.addUnit(fontSize),
+					fontSize: addUnit(fontSize),
 					fontWeight: bold ? 'bold' : 'normal',
 					color: color
 				}"
@@ -38,7 +38,7 @@
 			class="up-code-input__input"
 			@input="inputHandler"
 			:style="{
-				height: $up.addUnit(size)
+				height: addUnit(size)
 			}"
 			@focus="isFocus = true"
 			@blur="isFocus = false"

@@ -29,7 +29,7 @@
                     </slot>
                 </view>
                 
-                <scroll-view class="up-goods-sku__content" scroll-y>
+                <scroll-view class="up-goods-sku__content" direction="vertical">
                     <view v-for="(treeItem, index) in skuTreeList" :key="index" class="up-goods-sku__content__item">
                         <view class="up-goods-sku__content__item__title">{{ getTreeLabel(treeItem) }}</view>
                         <view class="up-goods-sku__content__item__list">

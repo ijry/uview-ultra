@@ -3,7 +3,7 @@
 		<view class="up-cate-tab__wrap">
 			<scroll-view
 				class="up-cate-tab__view up-cate-tab__menu-scroll-view"
-				scroll-y
+				direction="vertical"
 				scroll-with-animation
 				:scroll-top="scrollTop"
 				:scroll-into-view="itemId"
@@ -21,7 +21,7 @@
 				</view>
 			</scroll-view>
 			<scroll-view
-				scroll-y
+				direction="vertical"
 				scroll-with-animation
 				class="up-cate-tab__right-box"
 				:scroll-top="scrollRightTop"

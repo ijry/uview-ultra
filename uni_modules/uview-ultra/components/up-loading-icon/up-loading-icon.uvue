@@ -417,7 +417,6 @@
 		}
 	}
 
-	$radius: v-bind(size)px;
 	@for $i from 1 through 12 {
 		// .up-loading-icon__dot:nth-of-type(#{$i}) {
 		// 	transform: rotate(($i + 2) * 30deg);

@@ -1,6 +1,6 @@
 <template>
 	<!-- #ifdef APP -->
-	<scroll-view style="flex:1" :scroll-y="!swipeScrolling">
+	<scroll-view style="flex:1" :direction="(!swipeScrolling ? 'vertical' : 'none')">
 	<!-- #endif -->
 	<view class="u-page">
 		<view class="u-demo-block">

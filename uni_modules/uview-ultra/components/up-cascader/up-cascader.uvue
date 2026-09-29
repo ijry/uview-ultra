@@ -40,7 +40,7 @@
 						:style="getAreaItemStyle()"
 					>
 						<view class="up-padding-10 up-bg-gray" style="height: 100%;">
-							<scroll-view :scroll-y="true" style="height: 100%;">
+							<scroll-view :direction="'vertical'" style="height: 100%;">
 								<up-cell-group v-if="canShowLevel(levelIndex)">
 									<up-cell
 										v-for="(item,index) in levelData"

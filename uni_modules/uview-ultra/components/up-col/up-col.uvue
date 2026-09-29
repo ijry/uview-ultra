@@ -5,7 +5,7 @@
 	    :class="[
 			'up-col-' + span
 		]"
-	    :style="[colStyle, $up.addStyle(customStyle)]"
+	    :style="[colStyle, addStyle(customStyle)]"
 	    @tap="clickHandler"
 	>
 		<slot></slot>

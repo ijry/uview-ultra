@@ -1,7 +1,7 @@
 <template>
     <view class="up-table2" :class="border ? 'up-table-border' : ''">
         <!-- #ifdef APP -->
-        <scroll-view :scroll-x="true" :scroll-y="false" enable-flex class="up-table2-scroll" :style="getScrollStyle()" @scroll="onScroll">
+        <scroll-view direction="horizontal" class="up-table2-scroll" :style="getScrollStyle()" @scroll="onScroll">
         <!-- #endif -->
         <!-- #ifndef APP -->
         <view class="up-table2-scroll up-table2-scroll-h5" :style="getScrollStyle()" @scroll="onScrollRaw">

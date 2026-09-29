@@ -4,9 +4,9 @@
 		:class="[`up-avatar--${shape}`]"
 		:style="[{
 			backgroundColor: getBackColor,
-			width: $up.addUnit(size),
-			height: $up.addUnit(size),
-		}, $up.addStyle(customStyle)]"
+			width: addUnit(size),
+			height: addUnit(size),
+		}, addStyle(customStyle)]"
 		@tap="clickHandler"
 	>
 		<slot>
@@ -15,8 +15,8 @@
 				v-if="mpAvatar && allowMp"
 				type="userAvatarUrl"
 				:style="[{
-					width: $up.addUnit(size),
-					height: $up.addUnit(size)
+					width: addUnit(size),
+					height: addUnit(size)
 				}]"
 			/>
 			<!-- #endif -->
@@ -49,8 +49,8 @@
 					:mode="mode"
 					@error="errorHandler"
 					:style="[{
-						width: $up.addUnit(size),
-						height: $up.addUnit(size)
+						width: addUnit(size),
+						height: addUnit(size)
 					}]"
 				></image>
 			</template>

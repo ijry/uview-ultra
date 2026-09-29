@@ -5,14 +5,14 @@
 			inverted ? 'up-badge--inverted' : '',
 			shape === 'horn' ? 'up-badge--horn' : '',
 			inverted ? `up-badge--${type}--inverted` : `up-badge--${type}`]"
-		:style="[$up.addStyle(customStyle), badgeStyle]"
+		:style="[addStyle(customStyle), badgeStyle]"
 	>{{ isDot ? '' : showValue }}</text>
 </template>
 
 <script setup lang="uts">
 	import type { PropType } from 'vue'
 	import { computed } from 'vue'
-	import { addUnit } from '../../libs/function/index';
+	import { addUnit, addStyle } from '../../libs/function/index';
 	import defProps from './badge.uts'
 	
 	/**

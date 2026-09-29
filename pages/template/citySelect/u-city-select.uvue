@@ -9,7 +9,7 @@
 			<view class="u-flex" :class="{ 'change':isChange }">
 				<view class="area-item">
 					<view class="u-padding-10 u-bg-gray" style="height: 100%;">
-						<scroll-view :scroll-y="true" style="height: 100%">
+						<scroll-view :direction="'vertical'" style="height: 100%">
 							<up-cell-group>
 								<up-cell v-for="(item,index) in getProvinces()"
 									:title="getRegionLabel(item)" :arrow="false"
@@ -26,7 +26,7 @@
 				</view>
 				<view class="area-item">
 					<view class="u-padding-10 u-bg-gray" style="height: 100%;">
-						<scroll-view :scroll-y="true" style="height: 100%">
+						<scroll-view :direction="'vertical'" style="height: 100%">
 							<up-cell-group v-if="isChooseP">
 								<up-cell v-for="(item,index) in getCitys()"
 									:title="getRegionLabel(item)" :arrow="false"
@@ -43,7 +43,7 @@
 				</view>
 				<view class="area-item">
 					<view class="u-padding-10 u-bg-gray" style="height: 100%;">
-						<scroll-view :scroll-y="true" style="height: 100%">
+						<scroll-view :direction="'vertical'" style="height: 100%">
 							<up-cell-group v-if="isChooseC">
 								<up-cell v-for="(item,index) in getAreas()"
 									:title="getRegionLabel(item)" :arrow="false"

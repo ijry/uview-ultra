@@ -6,7 +6,7 @@
 			</view>
 			<swiper class="swiper-box" :current="swiperCurrent" @transition="transition" @animationfinish="animationfinish">
 				<swiper-item class="swiper-item">
-					<scroll-view scroll-y style="height: 100%;width: 100%;" @scrolltolower="reachBottom">
+					<scroll-view direction="vertical" style="height: 100%;width: 100%;" @scrolltolower="reachBottom">
 						<view class="page-box">
 							<view class="order" v-for="(res, index) in getOrderPage(0)" :key="getOrderId(res)">
 								<view class="top">
@@ -51,7 +51,7 @@
 					</scroll-view>
 				</swiper-item>
 				<swiper-item class="swiper-item">
-					<scroll-view scroll-y style="height: 100%;width: 100%;" @scrolltolower="reachBottom">
+					<scroll-view direction="vertical" style="height: 100%;width: 100%;" @scrolltolower="reachBottom">
 						<view class="page-box">
 							<view class="order" v-for="(res, index) in getOrderPage(1)" :key="getOrderId(res)">
 								<view class="top">
@@ -96,7 +96,7 @@
 					</scroll-view>
 				</swiper-item>
 				<swiper-item class="swiper-item">
-					<scroll-view scroll-y style="height: 100%;width: 100%;">
+					<scroll-view direction="vertical" style="height: 100%;width: 100%;">
 						<view class="page-box">
 							<view>
 								<view class="centre">
@@ -112,7 +112,7 @@
 					</scroll-view>
 				</swiper-item>
 				<swiper-item class="swiper-item">
-					<scroll-view scroll-y style="height: 100%;width: 100%;" @scrolltolower="reachBottom">
+					<scroll-view direction="vertical" style="height: 100%;width: 100%;" @scrolltolower="reachBottom">
 						<view class="page-box">
 							<view class="order" v-for="(res, index) in getOrderPage(3)" :key="getOrderId(res)">
 								<view class="top">

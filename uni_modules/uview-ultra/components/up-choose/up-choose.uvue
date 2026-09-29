@@ -11,7 +11,7 @@
 
 <template>
 	<scroll-view 
-		:scroll-x="!wrap" 
+		:direction="(!wrap ? 'horizontal' : 'none')" 
 		:class="['up-choose', wrap ? 'up-choose-wrap' : 'up-choose-nowrap']">
         <template :key="index"  v-for="(item,index) in options">
             <view :style="{width: itemWidth, display: 'inline-block'}">

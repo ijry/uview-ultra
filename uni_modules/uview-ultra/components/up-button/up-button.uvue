@@ -1,18 +1,18 @@
 <template>
 	<view style="position: relative"
-		:style="[baseColor, $up.addStyle(customStyle)]"
+		:style="[baseColor, addStyle(customStyle)]"
 		class="up-button"
 		:hover-class="!disabled && !loading ? 'up-button--active' : ''"
 		:class="bemClass">
 		<template v-if="loading">
 		    <up-loading-icon
 		        :mode="loadingMode"
-		        :size="$up.addUnit(loadingSize * 1.15)"
+		        :size="addUnit(loadingSize * 1.15)"
 		        :color="loadingColor"
 		    ></up-loading-icon>
 		    <text
 		        class="up-button__text up-button__loading-text"
-		        :style="[{ fontSize: textSize + 'px', color: textColor }]"
+		        :style="[{ fontSize: textSize, color: textColor }]"
 		        >{{ loadingText != '' ? loadingText : text }}</text
 		    >
 		</template>
@@ -21,13 +21,13 @@
 		        v-if="icon != ''"
 		        :name="icon"
 		        :color="iconColorCom"
-		        :size="$up.addUnit(parseInt($up.getPx(textSize)) * 1.35)"
+		        :size="addUnit(parseInt(getPx(textSize)) * 1.35)"
 		        :customStyle="{ marginRight: '2px' }"
 		    ></up-icon>
 		    <slot>
 		        <text
 		            class="up-button__text"
-		            :style="[{ fontSize: textSize + 'px', color: textColor }]"
+		            :style="[{ fontSize: textSize, color: textColor }]"
 		            >
 		            {{ text }}
 		        </text>

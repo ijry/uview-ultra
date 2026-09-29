@@ -2,7 +2,7 @@
   <view class="up-virtual-list" :style="rootStyle" ref="container">
     <scroll-view
       class="virtual-scroll-container"
-      :scroll-y="true"
+      :direction="'vertical'"
       :scroll-top="scrollTop"
       :style="{ height: '100%' }"
       @scroll="handleScroll"

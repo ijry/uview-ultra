@@ -1,7 +1,7 @@
 <template>
 	<view class="u-page">
 	<!-- #ifdef APP -->
-	<scroll-view class="dragsort-scroll" scroll-y="true" :style="scrollStyle">
+	<scroll-view class="dragsort-scroll" direction="vertical" :style="scrollStyle">
 	<!-- #endif -->
     <view class="dragsort-content">
 	  <up-alert class="u-m-b-20" description="PC端查看时需要触摸仿真模式才会正确计算位置"></up-alert>

@@ -59,7 +59,7 @@
       <scroll-view
         v-if="useScrollView"
         class="scroll-wrapper"
-        :scroll-y="true"
+        :direction="'vertical'"
         :enable-back-to-top="enableBackToTop"
         :scroll-top="scrollTop"
         :lower-threshold="lowerThreshold"
