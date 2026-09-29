@@ -147,7 +147,8 @@
 			if (parentRef.$data['inactiveColor'] != null) {
 				inactiveColor.value = parentRef.$data['inactiveColor'].toString();
 			}
-			if ((parentRef.$data['children'] as Array<ComponentPublicInstance>).length == 1) active.value = true;
+			const parentChildren = parentRef.$callMethod('getChildren') as Array<ComponentPublicInstance> | null;
+			if (parentChildren != null && parentChildren.length == 1) active.value = true;
 			// 父组件无法监听children的变化，故将子组件的title，传入父组件的menuList数组中
 			parentRef.$callMethod('addMenuListItem', {
 				title: props.title.toString(),

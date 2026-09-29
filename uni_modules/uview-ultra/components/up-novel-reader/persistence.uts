@@ -84,7 +84,11 @@ export function readPersistedState(key: String): UTSJSONObject | null {
         const rawValue = uni.getStorageSync(key)
         let parsed: UTSJSONObject | null = null
         if (rawValue != null && typeof rawValue == 'string') {
-            parsed = JSON.parseObject<UTSJSONObject>(rawValue as String)
+            const rawText = (rawValue as String).trim()
+            // 空串/非法 JSON 直接走 catch 分支，避免 UTS.JSON.parseObject 抛出原生异常
+            if (rawText.length > 0) {
+                parsed = JSON.parseObject<UTSJSONObject>(rawText)
+            }
         } else if (rawValue != null) {
             parsed = rawValue as UTSJSONObject
         }

@@ -114,7 +114,7 @@
 					:max="100" 
 					:step="1"
 					:show-value="false"
-                    :innerStyle="{ padding: 0 }"
+                    :innerStyle="sliderInnerStyle"
                     activeColor="rgba(255,255,255,0.32)"
 					inactive-color="rgba(255,255,255,0.3)"
 					block-size="6px"
@@ -231,6 +231,12 @@ function booleanValue(value: any | null): boolean {
 	}
 	return value != null && value.toString() == 'true'
 }
+
+const sliderInnerStyle = computed((): UTSJSONObject => {
+	const style = {} as UTSJSONObject
+	style['padding'] = 0
+	return style
+})
 
 defineOptions({
 	styleIsolation: 'app-and-page',

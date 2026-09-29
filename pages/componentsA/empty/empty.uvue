@@ -21,7 +21,7 @@
 			>
 			</up-button>
 		</up-empty>
-		<div class="empty-select">
+		<view class="empty-select">
 			<up-cell
 				:titleStyle="{fontWeight: 500}"
 				@click="openImg(item['imgName'].toString())"
@@ -38,7 +38,7 @@
 					></image>
 				</template>
 			</up-cell>
-		</div>
+		</view>
 	</view>
 	<!-- #ifdef APP -->
 	</scroll-view>

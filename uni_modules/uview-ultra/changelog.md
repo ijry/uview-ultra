@@ -14,6 +14,13 @@ HBuilderX 5.26 起 uni-app-x 进入蒸汽模式（vapor），运行期与编译�
 - up-button：`textSize` 已含 px 又拼接一次导致字号异常（约 11px → 14px）
 - up-dropdown-item：`scroll-view` 被误写为 `view` 且 `scroll-y="false"`，已改回 `<scroll-view direction="vertical">`
 - up-dropdown / up-lazy-load：修正 `translate3D` / `transition3d` 拼写
+- up-dropdown-item / up-grid-item / useUltraUI：跨组件读取 `$data['children']` 在新版下为 undefined，改用父组件暴露的 `$callMethod('getChildren')`（修复下拉菜单、宫格无 name 时点击报错）
+- up-textarea：`placeholder-style` 统一传字符串、新增 `cursor` 数字计算（-1 表示不指定），修复原生类型校验告警与 `ClassCastException`
+- up-tabbar：内联样式不再拼接 `!important`（新版不支持），修复 `border-*-color` 非法值
+- up-short-video：传给 up-slider 的 `innerStyle` 改为 `UTSJSONObject`，修复 prop 类型校验告警
+- libs/function/test.uts：修正 `date()` 判断反转（数字时间戳被误判非法），修复 up-text 日期模式报「需要为日期或时间戳格式」
+- up-novel-reader：`readPersistedState` 对空串/非法 JSON 加保护，避免 `JSON.parse` 抛原生异常
+- 演示页：empty 页 `<div>` 改 `<view>`；slider 页内联 `<svg>` 改 `up-icon`（uni-app-x 不支持 HTML/SVG 标签）
 ## 4.5.44
 fix: 修复 up-markdown 在 uni-app-x 4.72+（含蒸汽模式）Android 端编译报错，以及 up-signature 的 UTS 编译错误
 

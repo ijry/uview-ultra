@@ -45,7 +45,7 @@ export function useUltraUI(parentDataInit: UTSJSONObject = {}): UPUseUltraUIType
     const getChildIndex = function(ins: ComponentPublicInstance): number {
         let index = -1
         if (parent.value != null) {
-            (parent.value!!.$data['children'] as ComponentPublicInstance[]).forEach((child: ComponentPublicInstance, idx: number) => {
+            (parent.value!!.$callMethod('getChildren') as ComponentPublicInstance[]).forEach((child: ComponentPublicInstance, idx: number) => {
                 if (child == ins) {
                     index = idx
                 }

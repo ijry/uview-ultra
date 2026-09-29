@@ -134,7 +134,7 @@
 			zIndex: props.zIndex
 		} as UTSJSONObject
 		if (props.borderColor != '') {
-			style['borderColor'] = props.borderColor + ' !important'
+			style['borderColor'] = props.borderColor
 		}
 		if (props.backgroundColor != '') {
 			style['backgroundColor'] = props.backgroundColor

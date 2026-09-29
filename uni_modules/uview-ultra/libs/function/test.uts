@@ -30,48 +30,39 @@ export function date(value: any): boolean {
   }
 
   // 将值转换为字符串进行后续处理
-  let valueStr:string = value.toString();
+  const valueStr: string = value.toString();
 
-  // 判断是否是数字类型的时间戳
-  if (!number(valueStr)) {
-    // 检查是否是有效的秒级或毫秒级时间戳
-    if (valueStr.length == 10 || valueStr.length == 13) {
-      const date = new Date(valueStr);
-      return !isNaN(date.getTime());
+  // 纯数字：按 10 位秒级 / 13 位毫秒级时间戳判断
+  if (number(valueStr)) {
+    if (valueStr.length != 10 && valueStr.length != 13) {
+      return false;
     }
-    return false;
+    const date = new Date(parseFloat(valueStr));
+    return !isNaN(date.getTime());
   }
 
   // 检查是否为有效日期字符串
-  //if (typeof value === "string") {
-    // 检查长度是否在合理范围内
-    if (valueStr.length < 10 || valueStr.length > 19) {
-      return false;
-    }
+  // 检查长度是否在合理范围内
+  if (valueStr.length < 10 || valueStr.length > 19) {
+    return false;
+  }
 
-    // 定义日期格式的正则表达式
-    const dateRegex =
-      /^\d{4}[-\/]\d{2}[-\/]\d{2}( \d{1,2}:\d{2}(:\d{2})?)?$/;
+  // 定义日期格式的正则表达式
+  const dateRegex =
+    /^\d{4}[-\/]\d{2}[-\/]\d{2}( \d{1,2}:\d{2}(:\d{2})?)?$/;
 
-    // 使用正则表达式匹配日期格式
-    if (!dateRegex.test(valueStr)) {
-      return false;
-    }
+  // 使用正则表达式匹配日期格式
+  if (!dateRegex.test(valueStr)) {
+    return false;
+  }
 
-    // 尝试将字符串转换为 Date 对象
-    const dateValue = new Date(valueStr);
+  // 尝试将字符串转换为 Date 对象
+  const dateValue = new Date(valueStr);
 
-    // 检查是否为有效日期
-    return !isNaN(dateValue.getTime());
-  //}
-
-  // 如果不是数字或字符串类型，返回 false
-  // return false;
+  // 检查是否为有效日期
+  return !isNaN(dateValue.getTime());
 }
 
-/**
- * 验证ISO类型的日期格式
- */
 export function dateISO(value: string): boolean {
     return /^\d{4}[\/\-](0?[1-9]|1[012])[\/\-](0?[1-9]|[12][0-9]|3[01])$/.test(value)
 }

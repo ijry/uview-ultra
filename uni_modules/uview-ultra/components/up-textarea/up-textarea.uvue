@@ -12,7 +12,7 @@
             :autoHeight="autoHeight"
             :fixed="fixed"
             :cursorSpacing="cursorSpacing"
-            :cursor="cursor"
+            :cursor="cursorValue"
             :showConfirmBar="showConfirmBar"
             :selectionStart="selectionStart"
             :selectionEnd="selectionEnd"
@@ -296,9 +296,25 @@ const fieldStyle = computed((): UTSJSONObject => {
     } as UTSJSONObject
 })
 
-const placeholderStyleValue = computed((): UTSJSONObject => {
-    return addStyle(props.placeholderStyle) as UTSJSONObject
+const placeholderStyleValue = computed((): string => {
+// 原生 textarea 的 placeholder-style 只接受字符串，这里统一转成 CSS 字符串
+return addStyle(props.placeholderStyle, 'string') as string
 })
+
+const cursorValue = computed((): number => {
+
+	// 原生 textarea 的 cursor 只接受数字，-1 表示不指定位置
+
+	const c = props.cursor
+
+	if (typeof c === 'number') return c
+
+	const parsed = parseInt(c.toString())
+
+	return isNaN(parsed) ? -1 : parsed
+
+})
+
 
 const countStyle = computed((): UTSJSONObject => {
     return {
@@ -361,6 +377,7 @@ defineExpose({
     textareaStyle,
     fieldStyle,
     placeholderStyleValue,
+    cursorValue,
     countStyle,
     normalizeValue,
     setFormatter,
