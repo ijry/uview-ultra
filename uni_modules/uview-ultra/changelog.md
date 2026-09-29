@@ -1,12 +1,11 @@
 ## 4.5.44
+fix: 修复 up-markdown 在 uni-app-x 4.72+（含蒸汽模式）Android 端编译报错，以及 up-signature 的 UTS 编译错误
 
-fix: 修复 up-markdown 在 uni-app-x 4.72+ Android 端编译报错，以及 up-signature 的 UTS 编译错误
+marked-uts 为兼容旧版 uni-app-x Android 端的 JS 正则引入了原生模块 io.dcloud.uts.jsreg.JSReg，该模块在 uni-app-x 4.72+ 已移除，但相关 import 仅用 #ifdef APP-ANDROID 包裹、未按版本裁剪，导致新版编译时无法解析（Could not resolve "io.dcloud.uts.jsreg.JSReg"），markdown 解析为空、页面空白。同时 up-signature 的 uvue 实现存在 ref 先于使用声明、NodeInfo 坐标可空赋值两处 UTS 编译错误，导致 App-Android 端无法编译通过。
 
-marked-uts 为兼容旧版 uni-app-x Android 端的 JS 正则引入了原生模块 io.dcloud.uts.jsreg.JSReg，该模块在 uni-app-x 4.72+（含蒸汽模式版本）已移除，但 import 仅用 #ifdef APP-ANDROID 包裹、未按版本裁剪，导致新版编译时无法解析、markdown 解析为空页面空白；同时 up-signature 的 uvue 实现存在 ref 声明先于使用、NodeInfo 坐标可空赋值两处 UTS 编译错误。
-
-- marked-uts 的 JSReg import 与 callJSReg 定义统一补上 #ifdef uniVersion < 4.72 版本条件（Tokenizer.uts / rules.uts / utssdk/app-android/index.uts），4.72+ 走原生正则分支，旧版（< 4.72）行为保持不变
-- up-signature：rectLeft/rectTop 两个 ref 移到 getTouchPoint 之前声明，修复 UTS “找不到名称” 报错
-- up-signature：rect.left/rect.top 为可空类型，改用 normalizeNumber 兜底赋值，修复 Number? 与 Number 的类型不匹配
+- marked-uts：Tokenizer.uts 删除未使用的 JSReg import；rules.uts 的 callJSReg import 与 utssdk/app-android/index.uts 的 JSReg import、callJSReg 定义统一补上 #ifdef uniVersion < 4.72 版本条件，4.72+ 走原生正则分支，旧版（< 4.72）行为保持不变
+- up-signature：rectLeft / rectTop 两个 ref 移到 getTouchPoint 之前声明，修复 UTS “找不到名称 rectLeft/rectTop” 报错
+- up-signature：rect.left / rect.top 为可空类型（Number?），改用 normalizeNumber 兜底赋值，修复与 Number 的类型不匹配
 - 仅影响 App-Android，H5 / 小程序 / 鸿蒙 / uni-app-x 其它端不受影响
 
 ## 4.5.43
