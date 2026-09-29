@@ -1,3 +1,19 @@
+## 待发布
+
+fix: 适配 uni-app-x 蒸汽模式（HBuilderX 5.26），并修复复选框禁用、表格列固定等多处缺陷
+
+HBuilderX 5.26 起 uni-app-x 进入蒸汽模式（vapor），运行期与编译器均有变化：不再支持 `\p{...}` Unicode 属性转义、`scroll-view` 移除 `scroll-x`/`scroll-y`/`enable-flex`，且部分运行期 API 与 UTS 注解处理方式改变。本次一并修复由此暴露的组件缺陷。
+
+- marked-uts：`\p{P}\p{S}` 等 Unicode 属性转义改为等价的 ASCII 字面量字符类（设备 JS 引擎不支持会导致运行期 SyntaxError 白屏），并保留 `u` 标志
+- marked-uts/Tokenizer：`@Suppress` 注解补 `#ifndef VUE3-VAPOR` 守卫，修复蒸汽模式下 `Suppress is not defined`
+- 组件模板不再遮蔽全局 `$up`（`index.uts` 注册的 UPUtils 实例）：移除 `import * as $up`，改为直接调用 `addUnit` / `addStyle` / `getPx`
+- up-loading-icon：删除触发 `vue.useVaporCssVars` 的死代码 `$radius: v-bind(size)px`，修复按钮页等打开即报错
+- scroll-view：迁移到新版 `direction`（`scroll-x`/`scroll-y`/`enable-flex` 已移除），涉及 up-table2 / up-list / up-choose / up-cascader / up-cate-tab / up-calendar / up-action-sheet / up-goods-sku / up-virtual-list / up-pull-refresh / up-novel-reader / up-dragsort / up-dropdown-item 等
+- up-checkbox：`disabled` / `labelDisabled` 同时识别布尔与字符串，修复 `<up-checkbox disabled>` 禁用无效
+- up-row / up-gap / up-card / up-dropdown-item：默认值取值函数与配置类型不匹配（对字符串配置用 getNumber/getBoolean）导致 null，已修正并补显式默认值
+- up-button：`textSize` 已含 px 又拼接一次导致字号异常（约 11px → 14px）
+- up-dropdown-item：`scroll-view` 被误写为 `view` 且 `scroll-y="false"`，已改回 `<scroll-view direction="vertical">`
+- up-dropdown / up-lazy-load：修正 `translate3D` / `transition3d` 拼写
 ## 4.5.44
 fix: 修复 up-markdown 在 uni-app-x 4.72+（含蒸汽模式）Android 端编译报错，以及 up-signature 的 UTS 编译错误
 
