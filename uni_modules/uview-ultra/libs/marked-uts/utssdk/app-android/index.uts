@@ -1,8 +1,11 @@
+// #ifdef uniVersion < 4.72
 import JSReg from 'io.dcloud.uts.jsreg.JSReg';
+// #endif
 import { NodesToken } from '../interface';
 
 export * from '../../common/marked';
 
+// #ifdef uniVersion < 4.72
 export function callJSReg(reg: string | RegExp): RegExp {
 	if (typeof reg ==='string') {
 		return JSReg(reg as string).toUTSRegExp();
@@ -10,6 +13,7 @@ export function callJSReg(reg: string | RegExp): RegExp {
 	
 	return JSReg(reg as RegExp).toUTSRegExp();
 }
+// #endif
 
 export function noop() {
 	// 仅用于激活相关type的响应式编译

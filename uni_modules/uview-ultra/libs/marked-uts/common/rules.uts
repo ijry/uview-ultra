@@ -1,6 +1,8 @@
 import { Other, EditObject, NoopTest, BlockNormal, BlockGfm, BlockPedantic, InlineNormal, InlinePedantic, InlineGfm, InlineBreaks, Block, Inline } from '../utssdk/interface';
 // #ifdef APP-ANDROID
+// #ifdef uniVersion < 4.72
 import { callJSReg } from '../utssdk/app-android';
+// #endif
 // #endif
 
 const noopTest = {

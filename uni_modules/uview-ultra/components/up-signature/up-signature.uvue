@@ -122,6 +122,10 @@ function createPoint(x: number, y: number, type: string, color: string, width: n
 	} as SignaturePoint
 }
 
+// 画布在视口中的位置，用于把视口坐标换算为画布坐标
+const rectLeft = ref(0)
+const rectTop = ref(0)
+
 function getTouchPoint(e: UniTouchEvent): SignaturePoint {
 	let x = 0
 	let y = 0
@@ -185,9 +189,6 @@ const showBrushSettings = ref(false)
 const showColorSettings = ref(false)
 // up-canvas 画布上下文在部分平台为异步就绪，需等待握手
 const canvasReady = ref(false)
-// 画布在视口中的位置，用于把视口坐标换算为画布坐标
-const rectLeft = ref(0)
-const rectTop = ref(0)
 // 上一个触摸点（增量绘制用）
 const lastX = ref(0)
 const lastY = ref(0)
@@ -243,8 +244,8 @@ const refreshCanvasRect = (): void => {
 		return
 	}
 	upGetRect('#' + canvasId.value, false, inst.proxy).then((rect: NodeInfo) => {
-		rectLeft.value = rect.left
-		rectTop.value = rect.top
+		rectLeft.value = normalizeNumber(rect.left, 0)
+		rectTop.value = normalizeNumber(rect.top, 0)
 	}).catch((_err: any | null) => {})
 }
 
