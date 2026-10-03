@@ -70,7 +70,7 @@
 
         <up-loadmore
           v-if="showLoadmore"
-          v-bind="loadmoreProps"
+          :status="getLoadmoreStatus()"
         />
       </scroll-view>
 
@@ -79,7 +79,7 @@
 
         <up-loadmore
           v-if="showLoadmore"
-          v-bind="loadmoreProps"
+          :status="getLoadmoreStatus()"
         />
       </view>
     </view>
@@ -89,12 +89,6 @@
 <script setup lang="uts">
 import { ref, watch } from 'vue'
 import type { PropType } from 'vue'
-
-function createLoadmoreProps(): UTSJSONObject {
-  const props = {} as UTSJSONObject
-  props['status'] = 'loadmore'
-  return props
-}
 
 function getTouchPageY(e: UniTouchEvent): number {
   if (e.touches != null && e.touches.length > 0) {

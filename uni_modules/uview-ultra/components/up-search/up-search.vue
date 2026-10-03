@@ -13,6 +13,7 @@
 				backgroundColor: bgColor,
 				borderRadius: shape == 'round' ? '100px' : '4px',
 				borderColor: borderColor,
+				'--up-search-placeholder-color': placeholderColor,
 			}"
 		>
 			<template v-if="$slots.label || label !== null">
@@ -226,6 +227,20 @@ defineExpose({
 </script>
 
 
+<style lang="scss">
+/**
+ * placeholder-class 指定的类不能写在 scoped 中：小程序端 placeholder 节点由 input 内部渲染，
+ * 不会带上 scoped 的 data-v- 类，编译出的 .xxx--placeholder.data-v-xxx 永远匹配不到它，
+ * placeholderColor 就只剩内联 placeholder-style 一条通路，而真机上首次渲染并不总会应用它，
+ * 表现为“输入内容后颜色才生效”。颜色统一由 --up-search-placeholder-color 变量传入。
+ */
+$up-search-input-placeholder-color: $up-tips-color !default;
+
+.up-search__content__input--placeholder {
+	color: var(--up-search-placeholder-color, #{$up-search-input-placeholder-color});
+}
+</style>
+
 <style lang="scss" scoped>
 $up-search-content-padding: 0 10px !default;
 $up-search-label-color: $up-main-color !default;
@@ -300,9 +315,6 @@ $up-search-action-margin-left: 5px !default;
 			margin: $up-search-input-margin;
 			color: $up-search-input-color;
 
-			&--placeholder {
-				color: $up-search-input-placeholder-color;
-			}
 		}
 	}
 
