@@ -86,6 +86,7 @@ declare module '@vue/runtime-core' {
     ['up-steps']: typeof import('./comps/steps')['Steps']
     ['up-steps-item']: typeof import('./comps/stepsItem')['StepsItem']
     ['up-empty']: typeof import('./comps/empty')['Empty']
+    ['up-pagination']: typeof import('./comps/pagination')['Pagination']
 
     // 其他组件
     ['up-parse']: typeof import('./comps/parse')['Parse']

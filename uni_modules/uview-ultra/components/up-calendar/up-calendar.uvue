@@ -534,6 +534,9 @@ function scrollIntoDefaultMonth(selectedMonth: string): void {
 		return `${year}-${month}` === selectedMonth
 	})
 	if (index != -1) {
+		// 滚动位置是程序主动设置的，同步更新副标题指向的月份索引。
+		// 只依赖scroll事件的话，滚动位置没有真正变化时收不到事件，副标题就会停留在上一次的月份
+		monthIndex.value = index
 		// #ifndef MP-WEIXIN
 		nextTick(() => {
 			scrollIntoView.value = ''
@@ -570,12 +573,30 @@ const jumpToToday = (): void => {
 }
 const onScroll = (event: UniScrollEvent): void => {
 	const currentScrollTop = Math.max(0, event.detail.scrollTop)
+	// 月份的top值尚未测量出来时不做判断，否则所有月份的判断阈值相同(listHeight)，
+	// 会把副标题固定到最后一个月份上
+	let hasMeasured = false
 	for (let i = 0; i < months.value.length; i++) {
-		if (currentScrollTop >= (months.value[i].top > 0 ? months.value[i].top : listHeight.value)) {
-			monthIndex.value = i
-			scrollIntoViewScroll.value = `month-${i}`
+		if (months.value[i].top > 0) {
+			hasMeasured = true
+			break
 		}
 	}
+	if (!hasMeasured) return
+	// 将当前滚动条数值，与各月份的top值比较，可以得出当前滚动到了哪一个月份的索引
+	let currentIndex = 0
+	for (let i = 0; i < months.value.length; i++) {
+		const top = months.value[i].top
+		// top尚未测量出来的月份跳过，等测量完成后自然会参与判断
+		if (top <= 0) continue
+		if (currentScrollTop >= top) {
+			currentIndex = i
+		} else {
+			break
+		}
+	}
+	monthIndex.value = currentIndex
+	scrollIntoViewScroll.value = `month-${currentIndex}`
 }
 function updateMonthTopM(topArr: Array<number>): void {
 	topArr.map((item: number, index: number) => {

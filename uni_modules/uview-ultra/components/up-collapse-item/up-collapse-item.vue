@@ -124,6 +124,9 @@
 			? parent.value.getProps()
 			: parent.value
 		const { value, accordion } = parentProps
+		// value 为 null/undefined 代表“未设置”，此时不重置已展开的状态，
+		// 否则外部把 value 清空会把已展开的面板全部收起
+		if (value === null || value === undefined) return
 
 		if (accordion) {
 			if (test.array(value)) {

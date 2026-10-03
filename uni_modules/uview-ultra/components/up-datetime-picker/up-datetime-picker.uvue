@@ -299,6 +299,9 @@
 	
 	// 更新索引
 	function updateIndexs(value: any) {
+		// 值为空（从未选择或被外部清空）时各列停在默认位置（defaultIndex），
+		// 直接拿空值去算会得到 NaN 索引，反而把列滚到非法位置
+		if (value == null || value == '') return
 		let values: string[] = []
 		let formatterFunc = (type: string, value: string) => {return value}
 		formatterFunc = getFormatFunc()
@@ -587,6 +590,10 @@
 	
 	// 得出合法的时间
 	function correctValue(val: number | string | null): any {
+		// 空值代表“未选择/已清空”，直接返回空串。
+		// 否则日期模式会被夹取成minDate、时间模式会被夹取成minHour:minMinute，
+		// 导致外部清空绑定值后输入框仍然显示最小日期/最小时间
+		if (val == null || val == '') return ''
 		let value: number | string = ''
 		if (val != null && val != '') {
 			value = val
@@ -733,6 +740,14 @@
 	
 	// 点击工具栏的确定按钮
 	function confirm() {
+		// 值为空(从未选择或被外部清空)时，用户看到的是各列当前停留的位置，
+		// 直接上抛空值会“所见非所得”，故先按各列当前显示值取一次真实值
+		if ((innerValue.value == null || innerValue.value == '') && columns.value.length > 0) {
+			change({
+				indexs: innerDefaultIndex.value,
+				values: columns.value
+			} as UTSJSONObject)
+		}
 		emit('update:modelValue', innerValue.value)
 		if (props.hasInput) {
 			getInputValue(innerValue.value.toString())

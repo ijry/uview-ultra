@@ -43,8 +43,8 @@ declare module 'uview-ultra' {
 		digits(value: number): boolean;
 		/** 验证身份证号码 */
 		idCard(value: string | number): boolean;
-		/** 是否车牌号 */
-		carNo(value: string): boolean;
+		/** 是否车牌号，空值直接返回false */
+		carNo(value: string | null): boolean;
 		/** 金额,只允许2位小数 */
 		amount(value: string | number): boolean;
 		/** 校验是否是中文 */

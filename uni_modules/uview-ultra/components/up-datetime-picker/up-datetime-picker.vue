@@ -311,6 +311,14 @@ function cancel() {
 
 // 点击工具栏的确定按钮
 function confirm() {
+	// 值为空(从未选择或被外部清空)时，用户看到的是各列当前停留的位置，
+	// 直接上抛空值会“所见非所得”，故先按各列当前显示值取一次真实值
+	if (isEmptyValue(innerValue.value) && columns.value.length > 0) {
+		change({
+			indexs: innerDefaultIndex.value,
+			values: columns.value
+		})
+	}
 	// #ifdef VUE3
 	emit('update:modelValue', innerValue.value)
 	// #endif
@@ -463,6 +471,9 @@ function syncColumnsAfterChange(value) {
 
 // 更新索引
 function updateIndexs(value) {
+	// 值为空（从未选择或被外部清空）时各列停在默认位置（defaultIndex），
+	// 直接拿空值去算会得到 NaN 索引，反而把列滚到非法位置
+	if (value === '' || value === null || value === undefined) return
 	let values = []
 	const formatter = props.formatter || innerFormatter.value
 	if (props.mode === 'time' || props.mode === 'timesecond') {
@@ -563,8 +574,17 @@ function parseDateValue(value) {
 	return parsed.isValid() ? parsed.valueOf() : null
 }
 
+// 是否为“未选择/已清空”的空值。空值必须原样透传，不能被夹取成边界值
+function isEmptyValue(value) {
+	return value === '' || value === null || value === undefined
+}
+
 // 得出合法的时间
 function correctValue(value) {
+	// 空值代表“未选择/已清空”，直接返回空串。
+	// 否则日期模式会被夹取成minDate、时间模式会被夹取成minHour:minMinute，
+	// 导致外部清空绑定值后输入框仍然显示最小日期/最小时间
+	if (isEmptyValue(value)) return ''
 	const isDateMode = !['time', 'timesecond'].includes(props.mode)
 	if (isDateMode) {
 		// 日期类型统一解析成毫秒时间戳，没有设置合法的当前时间时才使用最小时间。
@@ -676,7 +696,12 @@ function getRanges() {
 
 // 根据minDate、maxDate、minHour、maxHour等边界值，判断各列的开始和结束边界值
 function getBoundary(type, currentInnerValue) {
-	const value = new Date(currentInnerValue)
+	let value = new Date(currentInnerValue)
+	// 内层值为空（从未选择或被外部清空）时退化到当前时间，
+	// 否则 Invalid Date 会在各列的边界计算中产生 NaN，列表直接空掉
+	if (isNaN(value.getTime())) {
+		value = new Date()
+	}
 	const boundary = new Date(props[`${type}Date`])
 	const year = dayjs(boundary).year()
 	let month = 1

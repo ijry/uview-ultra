@@ -524,8 +524,14 @@
 		let clientX = event.x - sliderRect.value.left
 		const min = toSliderNumber(props.min)
 		const max = toSliderNumber(props.max, 100)
+		// 滑块在弹窗等元素中未显示时量不到长度，此时算出来的只会是min，
+		// 别把它当成"用户点了min"发出去，等 onMounted 量到尺寸后由用户重新操作
+		if (sliderRect.value.width == 0) return
 		newValue.value = ((clientX / sliderRect.value.width) * (max - min)) + min
-		updateValue(newValue.value, false, 1)
+		// 点击等同于一次完整的取值，需要和拖动结束一样对外发出change，
+		// 否则单向绑定(:modelValue)时外部拿不到点击后的值
+		const $crtFmtValue = updateValue(newValue.value, false, 1)
+		emit('change', $crtFmtValue)
 		// #endif
 	}
 

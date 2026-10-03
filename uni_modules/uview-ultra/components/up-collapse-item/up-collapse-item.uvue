@@ -203,7 +203,11 @@
 		if (parent.value == null) {
 			return error('up-collapse-item必须要搭配up-collapse组件使用')
 		}
-		let value = parentData.value['value'] ?? ''
+		const rawValue = parentData.value['value']
+		// value 为 null/undefined 代表“未设置”，此时不重置已展开的状态，
+		// 否则外部把 value 清空会把已展开的面板全部收起
+		if (rawValue == null) return
+		let value = rawValue
 		const accordion = parentData.value['accordion']
 
 		if (accordion != null && accordion as boolean) {

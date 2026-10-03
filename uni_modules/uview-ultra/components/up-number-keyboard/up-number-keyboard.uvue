@@ -25,7 +25,8 @@
 				class="up-keyboard__button-wrapper__button up-keyboard__button-wrapper__button--gray"
 				hover-class="up-hover-class"
 				:hover-stay-time="200"
-				@touchstart.stop="backspaceClick"
+				@tap="backspaceClick"
+				@touchstart.stop="backspaceTouchStart"
 				@touchend="clearTimer"
 			>
 				<up-icon
@@ -118,18 +119,31 @@ const itemStyle = (index: number): UTSJSONObject => {
 	return style
 }
 
-// 点击退格键
+// 点击退格键，PC端浏览器(如电脑版微信内置浏览器)只有鼠标事件不触发touch，故由tap触发删除
 const backspaceClick = (): void => {
 	emit('backspace')
-	clearInterval(timer.value ?? 0) // 再次清空定时器，防止重复注册定时器
-	timer.value = null
-	timer.value = setInterval(() => {
+}
+
+// 触摸退格键，一定时间后进入长按连续删除状态，短按时会在touchend前被清除
+const backspaceTouchStart = (): void => {
+	clearTimer() // 再次清空定时器，防止重复注册定时器
+	timer.value = setTimeout(() => {
 		emit('backspace')
+		backspaceLongPress()
+	}, 600)
+}
+
+// 长按状态下每隔一段时间删除一次
+const backspaceLongPress = (): void => {
+	clearTimer()
+	timer.value = setTimeout(() => {
+		emit('backspace')
+		backspaceLongPress()
 	}, 250)
 }
 
 const clearTimer = (): void => {
-	clearInterval(timer.value ?? 0)
+	clearTimeout(timer.value ?? 0)
 	timer.value = null
 }
 

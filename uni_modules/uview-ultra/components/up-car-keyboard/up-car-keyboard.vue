@@ -47,7 +47,8 @@
 			</view>
 			<view
 				v-if="i === 3"
-				@touchstart="backspaceClick"
+				@tap="backspaceClick"
+				@touchstart="backspaceTouchStart"
 				@touchend="clearTimer"
 				class="up-keyboard__button__inner-wrapper"
 			>
@@ -137,7 +138,8 @@
 			'澳',
 			'新',
 			'使',
-			'学'
+			'学',
+			'警'
 		]
 		const tmp = []
 		// 打乱顺序
@@ -146,7 +148,7 @@
 		tmp[0] = data.slice(0, 10)
 		tmp[1] = data.slice(10, 20)
 		tmp[2] = data.slice(20, 30)
-		tmp[3] = data.slice(30, 36)
+		tmp[3] = data.slice(30, 37)
 		return tmp
 	})
 
@@ -214,18 +216,31 @@
 		abc.value = !abc.value
 	}
 
-	// 点击退格键
+	// 点击退格键，PC端浏览器(如电脑版微信内置浏览器)只有鼠标事件不触发touch，故由tap触发删除
 	function backspaceClick() {
 		emit('backspace')
-		clearInterval(timer.value) //再次清空定时器，防止重复注册定时器
-		timer.value = null
-		timer.value = setInterval(() => {
+	}
+
+	// 触摸退格键，一定时间后进入长按连续删除状态，短按时会在touchend前被清除
+	function backspaceTouchStart() {
+		clearTimer() //再次清空定时器，防止重复注册定时器
+		timer.value = setTimeout(() => {
 			emit('backspace')
+			backspaceLongPress()
+		}, 600)
+	}
+
+	// 长按状态下每隔一段时间删除一次
+	function backspaceLongPress() {
+		clearTimer()
+		timer.value = setTimeout(() => {
+			emit('backspace')
+			backspaceLongPress()
 		}, 250)
 	}
 
 	function clearTimer() {
-		clearInterval(timer.value)
+		clearTimeout(timer.value)
 		timer.value = null
 	}
 
@@ -242,6 +257,8 @@
 		carInputClick,
 		changeCarInputMode,
 		backspaceClick,
+		backspaceTouchStart,
+		backspaceLongPress,
 		clearTimer
 	})
 </script>
