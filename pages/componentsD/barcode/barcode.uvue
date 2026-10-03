@@ -1,8 +1,5 @@
 <template>
   <view class="u-page">
-    <!-- #ifdef APP -->
-    <scroll-view style="flex:1">
-    <!-- #endif -->
 	  <view class="u-page__item">
 	      <text class="u-page__item__title">CODE128 条形码</text>
 	      <view class="u-page__item__content">
@@ -104,9 +101,6 @@
 	          </up-barcode>
 	      </view>
 	  </view>
-    <!-- #ifdef APP -->
-    </scroll-view>
-    <!-- #endif -->
   </view>
 </template>
 

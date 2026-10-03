@@ -1,7 +1,4 @@
 <template>
-    <!-- #ifdef APP -->
-    <scroll-view style="flex:1">
-    <!-- #endif -->
     <view class="wrap">
         <view class="item-warp">
             <view class="item" v-for="(item, index) in list" :key="index">
@@ -11,9 +8,6 @@
         </view>
         <up-loadmore :status="status" @loadmore="getData"></up-loadmore>
     </view>
-    <!-- #ifdef APP -->
-    </scroll-view>
-    <!-- #endif -->
 </template>
 
 <script setup lang="uts">

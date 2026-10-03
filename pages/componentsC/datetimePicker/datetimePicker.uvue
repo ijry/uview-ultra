@@ -1,7 +1,4 @@
 <template>
-	<!-- #ifdef APP -->
-	<scroll-view style="flex:1">
-	<!-- #endif -->
 	<view class="u-page">
 		<up-navbar
 			title="datetimePicker 时间日期选择器"
@@ -126,9 +123,6 @@
 			@close="close"
 		></up-datetime-picker>
 	</view>
-	<!-- #ifdef APP -->
-	</scroll-view>
-	<!-- #endif -->
 </template>
 <script setup lang="uts">
 	defineOptions({

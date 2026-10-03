@@ -1,7 +1,4 @@
 <template>
-	<!-- #ifdef APP -->
-	<scroll-view style="flex:1">
-	<!-- #endif -->
 	<view class="u-page">
 		<view class="u-demo-block">
 			<view class="u-demo-block__title">基础使用</view>
@@ -122,9 +119,6 @@
 			</view>
 		</view>
 	</view>
-	<!-- #ifdef APP -->
-	</scroll-view>
-	<!-- #endif -->
 </template>
 
 <script setup lang="uts">

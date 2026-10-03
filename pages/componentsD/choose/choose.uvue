@@ -1,8 +1,5 @@
 <template>
 	<view class="u-demo">
-		<!-- #ifdef APP -->
-		<scroll-view style="flex:1">
-		<!-- #endif -->
 		<view class="u-demo-block">
 			<text class="u-demo-block__title">基本用法</text>
 			<view class="u-demo-block__content">
@@ -54,9 +51,6 @@
 				<up-choose v-model="value5" :options="options4" :wrap="false" itemWidth="250rpx" itemHeight="220rpx"></up-choose>
 			</view>
 		</view>
-		<!-- #ifdef APP -->
-		</scroll-view>
-		<!-- #endif -->
 	</view>
 </template>
 

@@ -1,7 +1,4 @@
 <template>
-	<!-- #ifdef APP -->
-	<scroll-view style="flex:1">
-	<!-- #endif -->
 	<up-button type="primary" size="small" style="width: 120px;"
 		@click="show = true">打开弹窗</up-button>
 	<!-- 因为up-popup默认带有安全底部需要取消。 -->
@@ -58,9 +55,6 @@
 			</up-index-list>
 		</view>
 	</up-popup>
-	<!-- #ifdef APP -->
-	</scroll-view>
-	<!-- #endif -->
 </template>
 
 <script setup lang="uts">

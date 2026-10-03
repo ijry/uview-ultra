@@ -1,7 +1,4 @@
 <template>
-	<!-- #ifdef APP -->
-	<scroll-view style="flex:1">
-	<!-- #endif -->
     <view class="wrap">
         <up-waterfall v-model="flowList" columns="auto" ref="uWaterfallRef">
             <template v-slot:column="{ colList }">
@@ -31,9 +28,6 @@
         <up-loadmore bg-color="rgb(240, 240, 240)" :status="loadStatus"
 			@loadmore="addRandomData"></up-loadmore>
     </view>
-	<!-- #ifdef APP -->
-	</scroll-view>
-	<!-- #endif -->
 </template>
 
 <script setup lang="uts">

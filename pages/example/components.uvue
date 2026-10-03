@@ -1,7 +1,4 @@
 <template>
-	<!-- #ifdef APP -->
-	<scroll-view style="flex:1">
-	<!-- #endif -->
 	<view class="wrap">
 		<page-nav :desc="desc"></page-nav>
 		<view class="list-wrap">
@@ -24,9 +21,6 @@
 		</view>
 		<up-gap height="30px" bgColor="#fff"></up-gap>
 	</view>
-	<!-- #ifdef APP -->
-	</scroll-view>
-	<!-- #endif -->
 </template>
 
 <script setup lang="uts">

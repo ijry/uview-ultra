@@ -1,8 +1,5 @@
 <template>
 	<view class="u-page">
-		<!-- #ifdef APP -->
-		<scroll-view style="flex:1">
-		<!-- #endif -->
 		<up-navbar-mini
 			safeAreaInsetTop
 			fixed
@@ -34,9 +31,6 @@
 			</up-navbar-mini>
 		</view>
 		<up-gap height="50"></up-gap>
-		<!-- #ifdef APP -->
-		</scroll-view>
-		<!-- #endif -->
 	</view>
 </template>
 

@@ -1,7 +1,4 @@
 <template>
-	<!-- #ifdef APP -->
-	<scroll-view style="flex:1">
-	<!-- #endif -->
 	<view class="u-page">
 		<view class="u-page__item">
 			<view class="u-page__item__title">
@@ -104,9 +101,6 @@
 		</view>
 		<up-gap height="50"></up-gap>
 	</view>
-	<!-- #ifdef APP -->
-	</scroll-view>
-	<!-- #endif -->
 </template>
 
 <script setup lang="uts">

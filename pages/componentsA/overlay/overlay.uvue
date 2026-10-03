@@ -1,7 +1,4 @@
 <template>
-	<!-- #ifdef APP -->
-	<scroll-view style="flex:1">
-	<!-- #endif -->
 	<view class="u-page">
 		<up-navbar
 			title="遮罩层"
@@ -61,9 +58,6 @@
 			</view>
 		</up-overlay>
 	</view>
-	<!-- #ifdef APP -->
-	</scroll-view>
-	<!-- #endif -->
 </template>
 
 <script setup lang="uts">

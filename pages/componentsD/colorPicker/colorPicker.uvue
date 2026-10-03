@@ -1,8 +1,5 @@
 <template>
 	<view class="content">		
-		<!-- #ifdef APP -->
-		<scroll-view style="flex:1">
-		<!-- #endif -->
 		<view class="main">
 			<view class="card">
 				<text class="title">颜色选择器示例</text>
@@ -36,9 +33,6 @@
 				<text class="desc">包含常用颜色选项</text>
 			</view>
 		</view>
-		<!-- #ifdef APP -->
-		</scroll-view>
-		<!-- #endif -->
 	</view>
 </template>
 

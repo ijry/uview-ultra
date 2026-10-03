@@ -1,7 +1,4 @@
 <template>
-	<!-- #ifdef APP -->
-	<scroll-view style="flex:1">
-	<!-- #endif -->
 	<view class="u-page">
 		<!-- 2.0.19支持autoBack，默认为false -->
 		<up-navbar
@@ -66,9 +63,6 @@
 		</view>
 		<up-gap height="50"></up-gap>
 	</view>
-	<!-- #ifdef APP -->
-	</scroll-view>
-	<!-- #endif -->
 </template>
 
 <script setup lang="uts">

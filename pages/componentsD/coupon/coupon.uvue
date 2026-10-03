@@ -1,8 +1,5 @@
 <template>
 	<view class="u-page">
-		<!-- #ifdef APP -->
-		<scroll-view style="flex:1">
-		<!-- #endif -->
 		<view class="u-page__item">
 			<text class="u-page__item__title">基础优惠券</text>
 			<view class="u-page__item__content">
@@ -121,9 +118,6 @@
 				</up-coupon>
 			</view>
 		</view>
-		<!-- #ifdef APP -->
-		</scroll-view>
-		<!-- #endif -->
 	</view>
 </template>
 

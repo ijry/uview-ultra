@@ -1,8 +1,5 @@
 <template>
 	<view class="u-page">
-		<!-- #ifdef APP -->
-		<scroll-view style="flex:1">
-		<!-- #endif -->
 		<view class="u-demo-block">
 			<text class="u-demo-block__title">基础功能</text>
 			<view class="u-demo-block__content">
@@ -82,9 +79,6 @@
 				</view>
 			</view>
 		</view>
-		<!-- #ifdef APP -->
-		</scroll-view>
-		<!-- #endif -->
 	</view>
 </template>
 

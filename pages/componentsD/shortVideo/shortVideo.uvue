@@ -1,8 +1,5 @@
 <template>
 	<view class="page">
-		<!-- #ifdef APP -->
-		<scroll-view style="flex:1">
-		<!-- #endif -->
 		<up-short-video 
 			:tabs-list="tabsList"
 			:video-list="videoList"
@@ -58,9 +55,6 @@
                 </up-tabbar>
 			</template>
 		</up-short-video>
-		<!-- #ifdef APP -->
-		</scroll-view>
-		<!-- #endif -->
 	</view>
 </template>
 

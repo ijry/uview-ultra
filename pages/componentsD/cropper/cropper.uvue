@@ -1,8 +1,5 @@
 <template>
 	<view class="u-page">
-		<!-- #ifdef APP -->
-		<scroll-view style="flex:1">
-		<!-- #endif -->
 		<view class="u-page__item">
 			<text class="u-page__item__title">头像裁剪</text>
 			<view class="u-page__item__content">
@@ -51,9 +48,6 @@
 				<up-cropper ref="existingRef" @confirm="cutImage"></up-cropper>
 			</view>
 		</view>
-		<!-- #ifdef APP -->
-		</scroll-view>
-		<!-- #endif -->
 	</view>
 </template>
 

@@ -1,7 +1,4 @@
 <template>
-	<!-- #ifdef APP -->
-	<scroll-view style="flex:1">
-	<!-- #endif -->
 	<view class="u-page">
 		<up-navbar
 			title="模态框"
@@ -109,10 +106,7 @@
 			:zoom="false"
 			@confirm="() => {show9 = false}"
 		></up-modal>
-	</view><!-- #ifdef APP -->
-	</scroll-view>
-	<!-- #endif -->
-</template>
+	</view></template>
 
 <script setup lang="uts">
 	defineOptions({

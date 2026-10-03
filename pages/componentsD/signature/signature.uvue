@@ -1,8 +1,5 @@
 <template>
     <view class="u-page">
-        <!-- #ifdef APP -->
-        <scroll-view style="flex:1">
-        <!-- #endif -->
         <up-alert class="u-m-b-20" description="PC端查看时需要触摸仿真模式"></up-alert>
         <view class="u-page__item">
             <text class="u-page__item__title" style="margin-top: 0;">基础签名示例</text>
@@ -46,9 +43,6 @@
                 </view>
             </view>
         </view>
-        <!-- #ifdef APP -->
-        </scroll-view>
-        <!-- #endif -->
     </view>
 </template>
 

@@ -1,7 +1,4 @@
 <template>
-	<!-- #ifdef APP -->
-	<scroll-view style="flex:1">
-	<!-- #endif -->
 	<view class="cell-page">
 		<view class="u-page__item">
 			<text class="u-page__item__title">基础功能</text>
@@ -132,9 +129,6 @@
 		</view>
 		<up-gap height="30"></up-gap>
 	</view>
-	<!-- #ifdef APP -->
-	</scroll-view>
-	<!-- #endif -->
 </template>
 <script setup lang="uts">
 	defineOptions({

@@ -1,8 +1,5 @@
 <template>
 	<view class="u-page">
-		<!-- #ifdef APP -->
-		<scroll-view style="flex:1">
-		<!-- #endif -->
 		<view class="u-demo-block">
 			<text class="u-demo-block__title">基本使用</text>
 			<view class="u-demo-block__content">
@@ -73,9 +70,6 @@
 			<text class="u-demo-result__title">选择结果:</text>
 			<text class="u-demo-result__content">{{ result }}</text>
 		</view>
-		<!-- #ifdef APP -->
-		</scroll-view>
-		<!-- #endif -->
 	</view>
 </template>
 

@@ -1,7 +1,4 @@
 <template>
-	<!-- #ifdef APP -->
-	<scroll-view style="flex:1">
-	<!-- #endif -->
 	<view class="">
 		<up-cell-group :border="true">
 			<up-cell
@@ -189,9 +186,6 @@
 			</up-cell>
 		</up-cell-group>
 	</view>
-	<!-- #ifdef APP -->
-	</scroll-view>
-	<!-- #endif -->
 </template>
 
 <script setup lang="uts">
