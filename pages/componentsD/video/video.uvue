@@ -1,0 +1,195 @@
+<template>
+	<view class="page">
+		<view class="u-page__item">
+			<text class="u-page__item__title">默认：封面、倍速、音量、全屏</text>
+			<view class="u-page__item__content">
+				<up-video
+					:src="mainVideo"
+					:poster="cover"
+					title="上海城市宣传片"
+					height="211px"
+					radius="8px"
+					@play="log('play')"
+					@pause="log('pause')"
+					@ratechange="onRateChange"
+					@volumechange="onVolumeChange"
+					@fullscreenchange="log('fullscreenchange')"
+				></up-video>
+			</view>
+		</view>
+
+		<view class="u-page__item">
+			<text class="u-page__item__title">弹幕：滚动、顶部、发送</text>
+			<view class="u-page__item__content">
+				<up-video
+					ref="danmuVideo"
+					:src="mainVideo"
+					:poster="cover"
+					:danmu-list="danmuList"
+					enable-danmu
+					height="211px"
+					radius="8px"
+					@danmu="onDanmu"
+					@danmu-toggle="onDanmuToggle"
+				></up-video>
+				<view class="demo-row">
+					<up-button size="mini" text="发一条弹幕" @click="pushDanmu"></up-button>
+				</view>
+			</view>
+		</view>
+
+		<view class="u-page__item">
+			<text class="u-page__item__title">选集：切集自动播放</text>
+			<view class="u-page__item__content">
+				<up-video
+					:episodes="episodes"
+					v-model:episode-index="episodeIndex"
+					show-center-play-btn
+					height="211px"
+					radius="8px"
+					@episode-change="onEpisodeChange"
+				></up-video>
+				<text class="demo-tip">当前第 {{ episodeIndex + 1 }} 集，播完自动切下一集</text>
+			</view>
+		</view>
+
+		<view class="u-page__item">
+			<text class="u-page__item__title">广告：前置贴片、暂停贴片、后置贴片</text>
+			<view class="u-page__item__content">
+				<up-video
+					:src="mainVideo"
+					:ads="ads"
+					height="211px"
+					radius="8px"
+					@ad-start="onAdStart"
+					@ad-click="onAdClick"
+				></up-video>
+			</view>
+		</view>
+
+		<view class="u-page__item">
+			<text class="u-page__item__title">事件日志</text>
+			<view class="u-page__item__content">
+				<text class="demo-log" v-for="(item, index) in logs" :key="index">{{ item }}</text>
+				<text class="demo-log" v-if="logs.length == 0">暂无日志</text>
+			</view>
+		</view>
+	</view>
+</template>
+
+<script setup lang="uts">
+	import { ref } from 'vue'
+
+	defineOptions({
+		styleIsolation: 'app-and-page'
+	})
+
+	const HOST = 'https://uview-plus.jiangruyi.com'
+	const mainVideo = HOST + '/big/shanghai.mp4'
+	const cover = '/static/uview/common/logo.png'
+
+	const logs = ref<string[]>([] as string[])
+	const episodeIndex = ref(0)
+
+	const danmuVideo = ref<ComponentPublicInstance | null>(null)
+
+	const danmuList = [
+		{ text: '这里风景不错', time: 1, color: '#91d5ff' },
+		{ text: '滚动弹幕演示', time: 3 },
+		{ text: '顶部弹幕', time: 5, type: 'top' },
+		{ text: '底部弹幕', time: 6, type: 'bottom' },
+		{ text: '倍速看更快', time: 8, color: '#ff7875' }
+	] as Array<UTSJSONObject>
+
+	const episodes = [
+		{ title: '1', src: HOST + '/big/shanghai.mp4' },
+		{ title: '2', src: HOST + '/big/rjtsdl.MP4' },
+		{ title: '3', src: HOST + '/big/shanghai.mp4' },
+		{ title: '4', src: HOST + '/big/rjtsdl.MP4' },
+		{ title: '5', src: HOST + '/big/shanghai.mp4' }
+	] as Array<UTSJSONObject>
+
+	const ads = [
+		{
+			type: 'preroll',
+			image: '/static/uview/common/logo.png',
+			duration: 5,
+			skipAfter: 3,
+			link: 'https://uview-plus.jiangruyi.com'
+		},
+		{
+			type: 'pause',
+			image: '/static/uview/common/gray-logo.png',
+			link: 'https://uview-plus.jiangruyi.com'
+		},
+		{
+			type: 'postroll',
+			image: '/static/uview/common/logo.png',
+			duration: 3,
+			skipAfter: 0
+		}
+	] as Array<UTSJSONObject>
+
+	const log = (message: string): void => {
+		logs.value.unshift(message)
+		if (logs.value.length > 6) {
+			logs.value.pop()
+		}
+	}
+
+	const onRateChange = (rate: number): void => {
+		log('ratechange ' + rate.toString() + 'x')
+	}
+
+	const onVolumeChange = (payload: UTSJSONObject): void => {
+		const volume = Math.round(Number(payload['volume'] ?? 0) * 100)
+		const muted = payload['muted'] == true
+		log('volumechange ' + volume.toString() + (muted ? ' muted' : ''))
+	}
+
+	const onDanmu = (item: UTSJSONObject): void => {
+		log('danmu ' + (item['text'] ?? '').toString())
+	}
+
+	const onDanmuToggle = (open: boolean): void => {
+		log('danmu-toggle ' + open.toString())
+	}
+
+	const pushDanmu = (): void => {
+		// 组件方法也可以直接调用
+		danmakuVideo.value?.$callMethod('sendDanmu', '来自页面的弹幕')
+	}
+
+	const onEpisodeChange = (payload: UTSJSONObject): void => {
+		log('episode-change ' + ((payload['index'] ?? 0) as number + 1).toString())
+	}
+
+	const onAdStart = (ad: UTSJSONObject): void => {
+		log('ad-start ' + (ad['type'] ?? '').toString())
+	}
+
+	const onAdClick = (ad: UTSJSONObject | null): void => {
+		// 广告跳转由业务侧决定，组件只抛事件
+		const link = ad != null ? (ad['link'] ?? '') : ''
+		log('ad-click ' + link.toString())
+	}
+</script>
+
+<style lang="scss" scoped>
+	.demo-row {
+		flex-direction: row;
+		align-items: center;
+		margin-top: 10px;
+	}
+
+	.demo-tip {
+		margin-top: 8px;
+		color: #909399;
+		font-size: 12px;
+	}
+
+	.demo-log {
+		color: #606266;
+		font-size: 12px;
+	}
+</style>

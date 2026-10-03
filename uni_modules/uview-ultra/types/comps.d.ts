@@ -90,6 +90,7 @@ declare module '@vue/runtime-core' {
 
     // 其他组件
     ['up-parse']: typeof import('./comps/parse')['Parse']
+    ['up-video']: typeof import('./comps/video')['Video']
     ['up-code-input']: typeof import('./comps/codeInput')['CodeInput']
     ['up-loadmore']: typeof import('./comps/loadMore')['LoadMore']
     ['up-read-more']: typeof import('./comps/readMore')['ReadMore']

@@ -1,0 +1,48 @@
+export type UPVideoDanmu = {
+    text: string,
+    color: string,
+    time: number,
+    type: string
+}
+
+export type UPVideoEpisode = {
+    src: string,
+    title: string,
+    poster: string,
+    danmuList: Array<any> | null
+}
+
+export type UPVideoAd = {
+    type: string,
+    src: string,
+    image: string,
+    link: string,
+    text: string,
+    duration: number,
+    skipAfter: number
+}
+
+export type UPVideoDanmuState = {
+    tracks: number[]
+}
+
+export type UPVideoTrackOptions = {
+    now: number,
+    itemWidth: number,
+    containerWidth: number,
+    duration: number,
+    trackCount: number,
+    hold: number
+}
+
+export type UPVideoDanmuView = {
+	id: number,
+	text: string,
+	color: string,
+	width: number,
+	type: string,
+	offset: number,
+	x: number,
+	moving: boolean,
+	life: number
+}

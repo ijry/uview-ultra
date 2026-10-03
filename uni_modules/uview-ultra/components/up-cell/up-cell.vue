@@ -11,12 +11,14 @@
 						:custom-style="iconStyle"
 						:size="size === 'large' ? 22 : 18"></up-icon>
 				</view>
+				<!-- 必填星号用真实节点渲染，绝对定位的伪元素在 nvue 和小程序下不显示，且通栏布局时会跑到屏幕外 -->
+				<text v-if="required" class="up-cell__required">*</text>
 				<view class="up-cell__title">
                     <!-- 将slot与默认内容用if/else分开主要是因为微信小程序不支持slot嵌套传递，这样才能解决collapse组件的slot不失效问题，label暂时未用到。 -->
 					<slot name="title" v-if="$slots.title || !title">
 					</slot>
                     <text v-else class="up-cell__title-text" :style="[titleTextStyle]"
-                        :class="[required && 'up-cell--required', disabled && 'up-cell--disabled', size === 'large' && 'up-cell__title-text--large']">{{ title }}</text>
+                        :class="[disabled && 'up-cell--disabled', size === 'large' && 'up-cell__title-text--large']">{{ title }}</text>
 					<slot name="label">
 						<text class="up-cell__label" v-if="label"
 							:class="[disabled && 'up-cell--disabled', size === 'large' && 'up-cell__label--large']">{{ label }}</text>
@@ -129,6 +131,8 @@
 	$up-cell-title-font-size: 15px !default;
 	$up-cell-title-line-height: 22px !default;
 	$up-cell-title-color: $up-main-color !default;
+	$up-cell-required-font-size: 14px !default;
+	$up-cell-required-color: #f56c6c !default;
 	$up-cell-label-font-size: 12px !default;
 	$up-cell-label-color: $up-tips-color !default;
 	$up-cell-label-line-height: 18px !default;
@@ -237,23 +241,11 @@
 			}
 		}
 
-		&--required {
-			/* #ifndef APP-NVUE */
-			overflow: visible;
-			/* #endif */
-			@include flex;
-			align-items: center;
-		}
-
-		&--required:before {
-			position: absolute;
-			/* #ifndef APP-NVUE */
-			content: '*';
-			/* #endif */
-			left: -8px;
-			margin-top: 4rpx;
-			font-size: 14px;
-			color: $up-error;
+		&__required {
+			align-self: flex-start;
+			margin-right: 2px;
+			font-size: $up-cell-required-font-size;
+			color: $up-cell-required-color;
 		}
 
 		&--clickable {

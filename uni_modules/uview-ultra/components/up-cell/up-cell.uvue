@@ -3,7 +3,7 @@
 		:hover-class="(!disabled && (clickable || isLink)) ? 'up-cell--clickable' : ''" :hover-stay-time="250"
 		@tap="clickHandler">
 		<view class="up-cell__body"
-			aclass="[ center && 'up-cell--center', size === 'large' && 'up-cell__body--large']">
+			:class="[ center && 'up-cell--center', size === 'large' && 'up-cell__body--large']">
 			<view class="up-cell__body__content">
 				<view class="up-cell__left-icon-wrap"
 					v-if="$slots['icon'] != null || hasLeftIcon">
@@ -13,17 +13,19 @@
 						:custom-style="iconStyle"
 						:size="size === 'large' ? '22px' : '18px'"></up-icon>
 				</view>
+				<!-- 必填星号用真实节点渲染，绝对定位的伪元素在 nvue 和小程序下不显示，且通栏布局时会跑到屏幕外 -->
+				<text v-if="required" class="up-cell__required">*</text>
 				<view class="up-cell__title">
 					<slot name="title" v-if="$slots['title'] != null && title == ''">
 					</slot>
 					<text v-else class="up-cell__title-text"
 						:style="[titleTextStyle]"
-						aclass="[disabled && 'up-cell--disabled', size === 'large' && 'up-cell__title-text--large']">
+						:class="[disabled && 'up-cell--disabled', size === 'large' && 'up-cell__title-text--large']">
 						{{ title }}
 					</text>
 					<slot name="label">
 						<text class="up-cell__label" v-if="label"
-							aclass="[disabled && 'up-cell--disabled', size === 'large' && 'up-cell__label--large']">
+							:class="[disabled && 'up-cell--disabled', size === 'large' && 'up-cell__label--large']">
 							{{ label }}
 							</text>
 					</slot>
@@ -31,7 +33,7 @@
 			</view>
 			<slot name="value">
 				<text class="up-cell__value"
-					aclass="[disabled && 'up-cell--disabled', size === 'large' && 'up-cell__value--large']"
+					:class="[disabled && 'up-cell--disabled', size === 'large' && 'up-cell__value--large']"
 					v-if="testEmpty(value) == false">{{ value }}</text>
 			</slot>
 			<view class="up-cell__right-icon-wrap"
@@ -71,6 +73,11 @@
 		title: {
 			type: String,
 			default: defProps.getString('cell.title')
+		},
+		// 是否显示表单状态下的必填星号
+		required: {
+			type: Boolean,
+			default: defProps.getBoolean('cell.required')
 		},
 		label: {
 			type: String,
@@ -201,6 +208,8 @@
 	$up-cell-title-font-size: 15px !important;
 	$up-cell-title-line-height: 22px !important;
 	$up-cell-title-color: $up-main-color !important;
+	$up-cell-required-font-size: 14px !important;
+	$up-cell-required-color: #f56c6c !important;
 	$up-cell-label-font-size: 12px !important;
 	$up-cell-label-color: $up-tips-color !important;
 	$up-cell-label-line-height: 18px !important;
@@ -303,6 +312,13 @@
 			&--large {
 				font-size: $up-cell-value-font-size-large;
 			}
+		}
+
+		&__required {
+			align-self: flex-start;
+			margin-right: 2px;
+			font-size: $up-cell-required-font-size;
+			color: $up-cell-required-color;
 		}
 
 		&--clickable {

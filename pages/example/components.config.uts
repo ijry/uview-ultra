@@ -559,6 +559,11 @@ export default [{
         title: 'Markdown 解析器',
         title_en: 'Markdown'
     }, {
+        path: '/pages/componentsD/video/video',
+        icon: 'video',
+        title: 'Video 视频播放器',
+        title_en: 'Video'
+    }, {
         path: '/pages/componentsD/shortVideo/shortVideo',
         icon: 'shortVideo',
         title: 'ShortVideo 短视频切换',

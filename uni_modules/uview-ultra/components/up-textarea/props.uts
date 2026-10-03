@@ -36,6 +36,11 @@ export const propsTextarea = defineMixin({
 			type: String,
 			default: crtProp['confirmType']
 		},
+		// 点击键盘右下角按钮时是否保持键盘不收起，confirmType 非 return 时有效
+		confirmHold: {
+			type: Boolean,
+			default: crtProp['confirmHold']
+		},
 		// 是否禁用
 		disabled: {
 			type: Boolean,

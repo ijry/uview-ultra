@@ -1,0 +1,210 @@
+<template>
+	<view
+		class="up-video-slider"
+		:class="[disabled ? 'up-video-slider--disabled' : '']"
+		@touchstart.stop.prevent="onTouchStart"
+		@touchmove.stop.prevent="onTouchMove"
+		@touchend.stop="onTouchEnd"
+		@touchcancel.stop="onTouchEnd"
+		@tap="onTrackTap"
+	>
+		<view class="up-video-slider__track" :style="{ height: barHeight }">
+			<view
+				v-if="bufferedNumber > 0"
+				class="up-video-slider__buffered"
+				:style="{ width: bufferedText }"
+			></view>
+			<view
+				class="up-video-slider__active"
+				:style="activeStyle"
+			></view>
+			<view
+				class="up-video-slider__block"
+				:style="blockStyle"
+			></view>
+		</view>
+	</view>
+</template>
+
+<script setup lang="uts">
+	import { computed, getCurrentInstance, onMounted, ref, watch } from 'vue'
+	import { upGetRect } from '../../libs/function/index.uts'
+	import { clampNumber } from './video-utils.uts'
+
+	defineOptions({
+		styleIsolation: 'app-and-page',
+		name: 'video-slider'
+	})
+
+	const props = defineProps({
+		percent: {
+			type: [Number, String],
+			default: 0
+		},
+		// 已缓冲百分比，仅进度条使用
+		buffered: {
+			type: [Number, String],
+			default: 0
+		},
+		activeColor: {
+			type: String,
+			default: '#2979ff'
+		},
+		barHeight: {
+			type: String,
+			default: '2px'
+		},
+		blockSize: {
+			type: String,
+			default: '10px'
+		},
+		disabled: {
+			type: Boolean,
+			default: false
+		}
+	})
+	const emit = defineEmits(['start', 'changing', 'change'])
+
+	// up-video 内部使用的拖动条，进度与音量共用。
+	// 文件名不以 up- 开头，避免被 easycom 收录成公开组件。
+	const instance = getCurrentInstance()?.proxy
+
+	const dragging = ref(false)
+	const innerPercent = ref(0)
+	const rectLeft = ref(0)
+	const rectWidth = ref(0)
+	const rectReady = ref(false)
+	const touchedAt = ref(0)
+
+	const bufferedNumber = computed((): number => clampNumber(props.buffered, 0, 100))
+	const bufferedText = computed((): string => bufferedNumber.value.toString() + '%')
+	const activeStyle = computed((): UTSJSONObject => {
+		return {
+			width: innerPercent.value.toString() + '%',
+			backgroundColor: props.activeColor
+		} as UTSJSONObject
+	})
+	const blockStyle = computed((): UTSJSONObject => {
+		const size = parseFloat(props.blockSize)
+		const unit = props.blockSize.replace(/[\d.]/g, '') != '' ? props.blockSize.replace(/[\d.]/g, '') : 'px'
+		const half = (size / 2).toString() + unit
+		return {
+			left: innerPercent.value.toString() + '%',
+			width: props.blockSize,
+			height: props.blockSize,
+			marginLeft: '-' + half,
+			marginTop: '-' + half,
+			backgroundColor: props.activeColor
+		} as UTSJSONObject
+	})
+
+	const ensureRect = async (): Promise<void> => {
+		if (rectReady.value) return
+		const rect = await upGetRect('.up-video-slider__track', false, instance)
+		if (rect != null && (rect.width ?? 0) > 0) {
+			rectLeft.value = rect.left ?? 0
+			rectWidth.value = rect.width ?? 0
+			rectReady.value = true
+		}
+	}
+
+	const percentFromPageX = (pageX: number): number => {
+		if (!rectReady.value || rectWidth.value <= 0) return innerPercent.value
+		return clampNumber(((pageX - rectLeft.value) / rectWidth.value) * 100, 0, 100)
+	}
+
+	const firstPageX = (event: UniTouchEvent): number => {
+		if (event.touches.length > 0) return event.touches[0].pageX
+		if (event.changedTouches.length > 0) return event.changedTouches[0].pageX
+		return -1
+	}
+
+	const onTouchStart = async (event: UniTouchEvent): Promise<void> => {
+		if (props.disabled) return
+		dragging.value = true
+		await ensureRect()
+		emit('start')
+		onTouchMove(event)
+	}
+
+	const onTouchMove = (event: UniTouchEvent): void => {
+		if (props.disabled || !dragging.value) return
+		const pageX = firstPageX(event)
+		if (pageX < 0) return
+		innerPercent.value = percentFromPageX(pageX)
+		emit('changing', innerPercent.value)
+	}
+
+	const onTouchEnd = (): void => {
+		if (props.disabled || !dragging.value) return
+		dragging.value = false
+		touchedAt.value = Date.now()
+		emit('change', innerPercent.value)
+	}
+
+	// 触摸设备上 touchend 后还会补一个 tap，这里只服务鼠标点击
+	const onTrackTap = async (event: UniPointerEvent): Promise<void> => {
+		if (props.disabled || dragging.value) return
+		if (touchedAt.value > 0 && Date.now() - touchedAt.value < 400) return
+		await ensureRect()
+		innerPercent.value = percentFromPageX(event.x)
+		emit('change', innerPercent.value)
+	}
+
+	watch((): number => clampNumber(props.percent, 0, 100), (value: number) => {
+		// 拖动过程中不接受外部回写，否则手指会被播放进度拽走
+		if (!dragging.value) innerPercent.value = value
+	})
+
+	onMounted(() => {
+		innerPercent.value = clampNumber(props.percent, 0, 100)
+	})
+
+	defineExpose({
+		onTouchStart,
+		onTouchMove,
+		onTouchEnd,
+		onTrackTap
+	})
+</script>
+
+<style lang="scss" scoped>
+	@import "../../libs/css/components.scss";
+
+	.up-video-slider {
+		flex: 1;
+		padding-top: 8px;
+		padding-bottom: 8px;
+		justify-content: center;
+	}
+
+	.up-video-slider--disabled {
+		opacity: 0.5;
+	}
+
+	.up-video-slider__track {
+		position: relative;
+		width: 100%;
+		border-radius: 4px;
+		background-color: rgba(255, 255, 255, 0.3);
+	}
+
+	.up-video-slider__buffered,
+	.up-video-slider__active {
+		position: absolute;
+		top: 0;
+		bottom: 0;
+		left: 0;
+		border-radius: 4px;
+	}
+
+	.up-video-slider__buffered {
+		background-color: rgba(255, 255, 255, 0.45);
+	}
+
+	.up-video-slider__block {
+		position: absolute;
+		top: 50%;
+		border-radius: 50%;
+	}
+</style>

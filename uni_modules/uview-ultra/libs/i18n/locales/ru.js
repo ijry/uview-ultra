@@ -82,5 +82,18 @@ export default {
     "up_goodsSku_price": "Цена",
     "up_goodsSku_amount": "Штуки",
     "up_goodsSku_choosed": "Выбрано",
-    "up_goodsSku_buyAmount": "Количество"
+    "up_goodsSku_buyAmount": "Количество",
+    "up_video_rate": "Скорость",
+    "up_video_volume": "Громкость",
+    "up_video_danmu": "Комментарии",
+    "up_video_danmuPlaceholder": "Отправить комментарий",
+    "up_video_send": "Отправить",
+    "up_video_episodes": "Серии",
+    "up_video_lock": "Заблокировано",
+    "up_video_unlock": "Разблокировано",
+    "up_video_ad": "Реклама",
+    "up_video_adCountdown": "Реклама {seconds} с",
+    "up_video_skipAd": "Пропустить рекламу",
+    "up_video_adDetail": "Подробнее",
+    "up_video_error": "Ошибка воспроизведения"
 }

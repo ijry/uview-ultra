@@ -82,5 +82,18 @@ export default {
     "up_goodsSku_price": "価格",
     "up_goodsSku_amount": "アイテム",
     "up_goodsSku_choosed": "選択済み",
-    "up_goodsSku_buyAmount": "購入数量"
+    "up_goodsSku_buyAmount": "購入数量",
+    "up_video_rate": "再生速度",
+    "up_video_volume": "音量",
+    "up_video_danmu": "コメント",
+    "up_video_danmuPlaceholder": "コメントを送信",
+    "up_video_send": "送信",
+    "up_video_episodes": "エピソード",
+    "up_video_lock": "ロック中",
+    "up_video_unlock": "ロック解除",
+    "up_video_ad": "広告",
+    "up_video_adCountdown": "広告 {seconds}秒",
+    "up_video_skipAd": "広告をスキップ",
+    "up_video_adDetail": "詳細を見る",
+    "up_video_error": "再生できません"
 }

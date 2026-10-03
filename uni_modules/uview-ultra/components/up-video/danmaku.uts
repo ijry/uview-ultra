@@ -1,0 +1,106 @@
+import { array as testArray } from '../../libs/function/test.uts'
+import { toNumber } from './video-utils.uts'
+import { UPVideoDanmu, UPVideoDanmuState, UPVideoTrackOptions } from './types.uts'
+
+// 同一轨道上两条弹幕之间的最小像素间隔
+const TRACK_GAP = 20
+
+export function normalizeDanmuItem(item: any): UPVideoDanmu {
+	let danmu = {} as UTSJSONObject
+	if (typeof item == 'string') {
+		danmu['text'] = item
+	} else if (item != null) {
+		danmu = item as UTSJSONObject
+	}
+	const rawText = danmu['text']
+	const time = toNumber(danmu['time'], 0)
+	const type = danmu['type'] as string
+	const isType = type == 'scroll' || type == 'top' || type == 'bottom'
+	return {
+		text: (rawText == null ? '' : rawText.toString()),
+		color: (danmu['color'] ?? '') as string,
+		time: (!isNaN(time) && time > 0) ? time : 0,
+		type: isType ? type : 'scroll'
+	} as UPVideoDanmu
+}
+
+// 按出现时间升序排列，播放过程中只需要向后推进游标
+export function normalizeDanmuList(list: any): UPVideoDanmu[] {
+	if (!testArray(list)) return [] as UPVideoDanmu[]
+	const source = list as any[]
+	const result: UPVideoDanmu[] = [] as UPVideoDanmu[]
+	for (let i = 0; i < source.length; i++) {
+		const item = normalizeDanmuItem(source[i])
+		if (item.text != '') result.push(item)
+	}
+	result.sort((a: UPVideoDanmu, b: UPVideoDanmu): number => a.time - b.time)
+	return result
+}
+
+// 二分查找第一条时间点不早于 time 的弹幕，拖动进度条后用它重置游标
+export function findDanmuCursor(list: UPVideoDanmu[], time: any): number {
+	if (list == null || list.length == 0) return 0
+	const target = toNumber(time, 0)
+	let low = 0
+	let high = list.length
+	while (low < high) {
+		const middle = (low + high) >> 1
+		if (list[middle].time < target) {
+			low = middle + 1
+		} else {
+			high = middle
+		}
+	}
+	return low
+}
+
+// 粗略估算弹幕宽度：中文按一个字宽，其余按 0.55 字宽
+export function estimateDanmuWidth(text: string, fontSize: any): number {
+	const rawSize = toNumber(fontSize, 0)
+	const size = rawSize > 0 ? rawSize : 14
+	const content = text == null ? '' : text
+	let units = 0
+	for (let i = 0; i < content.length; i++) {
+		units += content.charCodeAt(i) > 0x2e80 ? 1 : 0.55
+	}
+	return Math.ceil(units * size) + size
+}
+
+export function createDanmuState(): UPVideoDanmuState {
+	return { tracks: [] as number[] } as UPVideoDanmuState
+}
+
+export function resetDanmuState(state: UPVideoDanmuState | null): void {
+	if (state != null) state.tracks = [] as number[]
+}
+
+/**
+ * 取一条空闲轨道，全部占用时返回 -1（该条弹幕直接丢弃）。
+ * 滚动弹幕在尾巴完全进场后即可复用轨道；hold 用于顶/底部固定弹幕。
+ */
+export function acquireDanmuTrack(state: UPVideoDanmuState | null, options: UPVideoTrackOptions): number {
+	if (state == null) return -1
+	const total = Math.max(1, Math.floor(options.trackCount))
+	let busyFor = toNumber(options.hold, 0)
+	if (isNaN(busyFor) || busyFor <= 0) {
+		const distance = toNumber(options.containerWidth, 0) + toNumber(options.itemWidth, 0)
+		const dur = toNumber(options.duration, 8)
+		const speed = distance > 0 && dur > 0 ? distance / (dur * 1000) : 0
+		busyFor = speed > 0 ? (toNumber(options.itemWidth, 0) + TRACK_GAP) / speed : 0
+	}
+	for (let index = 0; index < total; index++) {
+		if (index >= state.tracks.length) {
+			while (state.tracks.length <= index) {
+				state.tracks.push(0)
+			}
+			state.tracks[index] = options.now + busyFor
+			return index
+		}
+		const freeAt = state.tracks[index]
+		if (options.now >= freeAt) {
+			state.tracks[index] = options.now + busyFor
+			return index
+		}
+	}
+	return -1
+}

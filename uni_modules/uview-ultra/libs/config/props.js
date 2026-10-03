@@ -94,6 +94,7 @@ import Toast from '../../components/up-toast/toast.js'
 import Toolbar from '../../components/up-toolbar/toolbar.js'
 import Tooltip from '../../components/up-tooltip/tooltip.js'
 import Transition from '../../components/up-transition/transition.js'
+import Video from '../../components/up-video/video.js'
 import Upload from '../../components/up-upload/upload.js'
 
 const {
@@ -190,5 +191,6 @@ export default {
     ...Toolbar,
     ...Tooltip,
     ...Transition,
+    ...Video,
     ...Upload
 }

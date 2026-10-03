@@ -1,0 +1,127 @@
+import { array as testArray } from '../../libs/function/test.uts'
+import { UPVideoAd } from './types.uts'
+
+// 宽松转数字，无法解析时返回 fallback
+export function toNumber(value: any | null, fallback: number = 0): number {
+	if (value == null || value == '') return fallback
+	const num = parseFloat(value.toString())
+	return isNaN(num) ? fallback : num
+}
+
+// 把数值限制在 [min, max] 区间
+export function clampNumber(value: any, min: number, max: number): number {
+	const number = toNumber(value, min)
+	if (isNaN(number)) return min
+	if (number < min) return min
+	if (number > max) return max
+	return number
+}
+
+// 秒数格式化为 mm:ss，超过一小时输出 hh:mm:ss
+export function formatVideoTime(seconds: any): string {
+	const total = Math.floor(toNumber(seconds, 0))
+	if (isNaN(total) || total <= 0) return '00:00'
+	const hour = Math.floor(total / 3600)
+	const minute = Math.floor((total % 3600) / 60)
+	const second = total % 60
+	const pad = (value: number): string => (value < 10 ? '0' + value.toString() : value.toString())
+	if (hour > 0) return pad(hour) + ':' + pad(minute) + ':' + pad(second)
+	return pad(minute) + ':' + pad(second)
+}
+
+// 倍速列表去重、去掉非法值并升序排列，兜底为 [1]
+export function normalizeRateList(list: any): number[] {
+	if (!testArray(list)) return [1] as number[]
+	const source = list as any[]
+	const rates: number[] = [] as number[]
+	source.forEach((item: any) => {
+		const rate = toNumber(item, 0)
+		if (!isNaN(rate) && rate > 0 && rates.indexOf(rate) == -1) {
+			rates.push(rate)
+		}
+	})
+	if (rates.length == 0) return [1] as number[]
+	return rates.sort((a: number, b: number): number => a - b)
+}
+
+// 选集支持直接传地址字符串，默认标题为集数序号
+export function normalizeEpisodes(list: any): Array<UTSJSONObject> {
+	if (!testArray(list)) return [] as Array<UTSJSONObject>
+	const source = list as any[]
+	const result: Array<UTSJSONObject> = [] as Array<UTSJSONObject>
+	for (let i = 0; i < source.length; i++) {
+		const item = source[i]
+		let episode = {} as UTSJSONObject
+		if (typeof item == 'string') {
+			episode['src'] = item
+		} else if (item != null) {
+			episode = item as UTSJSONObject
+		}
+		const rawTitle = episode['title']
+		const title = (rawTitle == null || rawTitle == '') ? (i + 1).toString() : rawTitle as string
+		const rawDanmu = episode['danmuList']
+		result.push({
+			src: (episode['src'] ?? '') as string,
+			title: title,
+			poster: (episode['poster'] ?? '') as string,
+			danmuList: testArray(rawDanmu) ? (rawDanmu as any[]) : null
+		} as UTSJSONObject)
+	}
+	return result
+}
+
+// 广告归一化：type 默认前置贴片，图片广告没有时长时给 5 秒
+export function normalizeAds(list: any): UPVideoAd[] {
+	if (!testArray(list)) return [] as UPVideoAd[]
+	const source = list as any[]
+	const result: UPVideoAd[] = [] as UPVideoAd[]
+	for (let i = 0; i < source.length; i++) {
+		const item = source[i]
+		const ad = (item != null ? item : {}) as UTSJSONObject
+		const rawType = ad['type'] as string
+		const type = (rawType == 'preroll' || rawType == 'pause' || rawType == 'postroll') ? rawType : 'preroll'
+		const src = (ad['src'] ?? '') as string
+		const rawDuration = toNumber(ad['duration'], 0)
+		const duration = rawDuration > 0 ? rawDuration : (src != '' ? 0 : 5)
+		const skipAfter = toNumber(ad['skipAfter'], -1)
+		result.push({
+			type: type,
+			src: src,
+			image: (ad['image'] ?? '') as string,
+			link: (ad['link'] ?? '') as string,
+			text: (ad['text'] ?? '') as string,
+			duration: duration,
+			skipAfter: isNaN(skipAfter) ? -1 : skipAfter
+		} as UPVideoAd)
+	}
+	return result
+}
+
+export function pickAds(ads: UPVideoAd[], type: string): UPVideoAd[] {
+	if (ads == null) return [] as UPVideoAd[]
+	const result: UPVideoAd[] = [] as UPVideoAd[]
+	ads.forEach((ad: UPVideoAd) => {
+		if (ad != null && ad.type == type) result.push(ad)
+	})
+	return result
+}
+
+// skipAfter: -1 不可跳过，0 立即可跳过，n 播放 n 秒后可跳过
+export function adSkippable(ad: UPVideoAd | null, elapsed: any): boolean {
+	if (ad == null) return false
+	const skipAfter = toNumber(ad.skipAfter, -1)
+	if (isNaN(skipAfter) || skipAfter < 0) return false
+	return toNumber(elapsed, 0) >= skipAfter
+}
+
+export function timeToProgress(time: any, duration: any): number {
+	const total = toNumber(duration, 0)
+	if (isNaN(total) || total <= 0) return 0
+	return clampNumber((toNumber(time, 0) / total) * 100, 0, 100)
+}
+
+export function progressToTime(percent: any, duration: any): number {
+	const total = toNumber(duration, 0)
+	if (isNaN(total) || total <= 0) return 0
+	return clampNumber((clampNumber(percent, 0, 100) / 100) * total, 0, total)
+}

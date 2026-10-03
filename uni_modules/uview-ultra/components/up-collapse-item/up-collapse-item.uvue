@@ -143,7 +143,7 @@
 	// 定义响应式数据
 	const timer = ref(0)
 	const elId = ref(guid())
-	const height = ref(0)
+	const height = ref<any>(0)
 	// uni.createAnimation的导出数据
 	const animationData = ref({})
 	// 是否展开状态
@@ -176,8 +176,12 @@
 		// 好处是，父组件从服务端获取内容后，变更折叠面板后可以获得最新的高度
 		expanded.value = expandedFrom
 		const rect: NodeInfo = await upGetRect(`#${elId.value}`, false, instance)
-		height.value = expanded.value ? (rect.height == null ? 0 : rect.height) : 0
+		// 收起前先把当前高度固定下来，否则从 auto 直接跳到 0 没有过渡起点
+		height.value = rect.height == null ? 0 : rect.height
 		animating.value = true
+		if (!expanded.value) {
+			height.value = 0
+		}
 	
 		// #ifndef APP-NVUE
 		// const animation = uni.createAnimation({
@@ -194,6 +198,11 @@
 		// 标识动画结束
 		await sleep(parseInt(props.duration.toString()))
 		animating.value = false
+		if (expanded.value) {
+			// 展开结束后把高度交还给内容：内容里的图片、异步数据等在测量之后才变高时，
+			// 面板不会停留在过时的测量值上被 overflow:hidden 裁掉一截
+			height.value = 'auto'
+		}
 		// #endif
 	}
 	

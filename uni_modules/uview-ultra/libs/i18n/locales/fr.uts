@@ -82,5 +82,18 @@ export default {
     "up_goodsSku_price": "Prix",
     "up_goodsSku_amount": "Pièces",
     "up_goodsSku_choosed": "Sélectionné",
-    "up_goodsSku_buyAmount": "Quantité"
+    "up_goodsSku_buyAmount": "Quantité",
+    "up_video_rate": "Vitesse",
+    "up_video_volume": "Volume",
+    "up_video_danmu": "Commentaires",
+    "up_video_danmuPlaceholder": "Envoyer un commentaire",
+    "up_video_send": "Envoyer",
+    "up_video_episodes": "Épisodes",
+    "up_video_lock": "Verrouillé",
+    "up_video_unlock": "Déverrouillé",
+    "up_video_ad": "Publicité",
+    "up_video_adCountdown": "Publicité {seconds}s",
+    "up_video_skipAd": "Ignorer la publicité",
+    "up_video_adDetail": "En savoir plus",
+    "up_video_error": "Échec de la lecture"
 }

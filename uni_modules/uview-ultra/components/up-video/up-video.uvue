@@ -1,0 +1,1451 @@
+<template>
+	<view
+		class="up-video"
+		:class="[customClass, fullscreen ? 'up-video--fullscreen' : '']"
+		:style="[rootStyle, addStyle(customStyle)]"
+	>
+		<video
+			:id="innerVideoId"
+			class="up-video__player"
+			:src="playingSrc"
+			:poster="currentPoster"
+			:controls="false"
+			:autoplay="nativeAutoplay"
+			:loop="loop"
+			:muted="innerMuted"
+			:initial-time="initialTime"
+			:object-fit="objectFit"
+			:direction="nativeDirection"
+			:show-fullscreen-btn="false"
+			:show-play-btn="false"
+			:show-center-play-btn="false"
+			:show-mute-btn="false"
+			:enable-progress-gesture="enableProgressGesture"
+			:page-gesture="pageGesture"
+			:vslide-gesture="vslideGesture"
+			:auto-pause-if-navigate="autoPauseIfNavigate"
+			:auto-pause-if-open-native="autoPauseIfOpenNative"
+			@play="onPlay"
+			@pause="onPause"
+			@ended="onEnded"
+			@timeupdate="onTimeUpdate"
+			@waiting="onWaiting"
+			@error="onError"
+			@progress="onProgress"
+			@fullscreenchange="onFullscreenChange"
+			@loadedmetadata="onLoadedMetadata"
+		></video>
+
+		<!-- 自绘控制层。uni-app-x 的 video 是原生组件，内部无法承载子节点，
+		     因此这里用同级的绝对定位覆盖层，进全屏后请走原生全屏按钮。 -->
+		<view class="up-video__layer">
+			<VideoDanmaku
+				v-if="enableDanmu"
+				ref="danmaku"
+				class="up-video__danmu-layer"
+				:list="activeDanmuList"
+				:open="innerDanmuOpen"
+				:color="danmuColor"
+				:fontSize="danmuFontSize"
+				:duration="danmuDuration"
+				:area="danmuArea"
+				:opacity="danmuOpacity"
+				:max="danmuMax"
+			></VideoDanmaku>
+
+			<view class="up-video__layer" @click="onPlayerTap"></view>
+
+			<view v-if="loading" class="up-video__layer up-video__center">
+				<up-loading-icon mode="circle" color="#ffffff" size="30"></up-loading-icon>
+			</view>
+
+			<view v-if="errored" class="up-video__layer up-video__center up-video__mask">
+				<text class="up-video__hint">{{ t('up.video.video_error') }}</text>
+				<view class="up-video__retry" @click.stop="retry">
+					<text class="up-video__retry-text">{{ t('up.common.retry') }}</text>
+				</view>
+			</view>
+
+			<view v-if="coverVisible" class="up-video__layer up-video__cover" @click="onCoverTap">
+				<image v-if="currentPoster" class="up-video__cover-image" :src="currentPoster" mode="aspectFill"></image>
+				<view class="up-video__cover-mask"></view>
+				<view v-if="showCenterPlayBtn" class="up-video__cover-btn">
+					<up-icon name="play-right-fill" color="#ffffff" size="26"></up-icon>
+				</view>
+			</view>
+
+			<view v-if="topBarVisible" class="up-video__top">
+				<view v-if="showBack" class="up-video__icon-btn" @click="onBack">
+					<up-icon :name="backIcon" color="#ffffff" size="20"></up-icon>
+				</view>
+				<text v-if="title" class="up-video__top-title">{{ title }}</text>
+			</view>
+
+			<view v-if="locked" class="up-video__unlock" @click="toggleLock">
+				<up-icon name="lock-fill" color="#ffffff" size="18"></up-icon>
+			</view>
+
+			<view v-if="barVisible" class="up-video__controls">
+				<view class="up-video__row">
+					<view class="up-video__icon-btn" @click="toggle">
+						<up-icon :name="playing ? 'pause' : 'play-right-fill'" color="#ffffff" size="18"></up-icon>
+					</view>
+					<text class="up-video__time">{{ timeText }}</text>
+					<VideoSlider
+						:percent="progressPercent"
+						:buffered="bufferedPercent"
+						:activeColor="activeColor"
+						@start="onProgressStart"
+						@changing="onProgressChanging"
+						@change="onProgressChange"
+					></VideoSlider>
+					<text class="up-video__time">{{ durationText }}</text>
+					<view v-if="showVolume" class="up-video__icon-btn" @click="togglePanel('volume')">
+						<up-icon :name="volumeIcon" color="#ffffff" size="18"></up-icon>
+					</view>
+					<view v-if="danmuEntryVisible" class="up-video__icon-btn" @click="togglePanel('danmu')">
+						<up-icon name="chat-fill" color="#ffffff" size="18"></up-icon>
+					</view>
+					<view v-if="showRate" class="up-video__text-btn" @click="togglePanel('rate')">
+						<text class="up-video__btn-text">{{ rateText }}</text>
+					</view>
+					<view v-if="showLock" class="up-video__icon-btn" @click="toggleLock">
+						<up-icon name="lock-fill" color="#ffffff" size="18"></up-icon>
+					</view>
+					<view v-if="showFullscreenBtn" class="up-video__icon-btn" @click="toggleFullscreen">
+						<view class="up-video__fullscreen">
+							<view class="up-video__corner-tl"></view>
+							<view class="up-video__corner-tr"></view>
+							<view class="up-video__corner-bl"></view>
+							<view class="up-video__corner-br"></view>
+						</view>
+					</view>
+				</view>
+			</view>
+
+			<view v-if="panel == 'rate'" class="up-video__layer up-video__panel" @click="closePanel">
+				<view class="up-video__panel-body" @click="noop">
+					<text class="up-video__panel-title">{{ t('up.video.video_rate') }}</text>
+					<view
+						v-for="(item, index) in rates"
+						:key="index"
+						class="up-video__panel-item"
+						@click="setRate(item)"
+					>
+						<text
+							class="up-video__panel-text"
+							:style="{ color: item == innerRate ? activeColor : '#ffffff' }"
+						>{{ item }}x</text>
+					</view>
+				</view>
+			</view>
+
+			<view v-if="panel == 'episode'" class="up-video__layer up-video__panel" @click="closePanel">
+				<view class="up-video__panel-body up-video__panel-body--wide" @click="noop">
+					<text class="up-video__panel-title">{{ t('up.video.video_episodes') }}</text>
+					<view class="up-video__episode-grid">
+						<view
+							v-for="(item, index) in episodeList"
+							:key="index"
+							class="up-video__episode-cell"
+							:style="{ width: episodeWidth }"
+							@click="switchEpisode(index)"
+						>
+							<view class="up-video__episode" :style="episodeStyle(index)">
+								<text class="up-video__episode-text">{{ item.title }}</text>
+							</view>
+						</view>
+					</view>
+				</view>
+			</view>
+
+			<view v-if="panel == 'volume'" class="up-video__volume" @click="noop">
+				<view class="up-video__icon-btn" @click="toggleMute">
+					<up-icon :name="volumeIcon" color="#ffffff" size="16"></up-icon>
+				</view>
+				<text class="up-video__volume-label">{{ t('up.video.video_volume') }}</text>
+				<VideoSlider
+					:percent="volumePercent"
+					:activeColor="activeColor"
+					@changing="onVolumeChanging"
+					@change="onVolumeChange"
+				></VideoSlider>
+				<text class="up-video__volume-value">{{ volumeText }}</text>
+			</view>
+		</view>
+
+		<view v-if="currentAd != null" class="up-video__ad">
+			<video
+				v-if="currentAd.src != ''"
+				:id="adVideoId"
+				class="up-video__ad-media"
+				:src="currentAd.src"
+				:controls="false"
+				:muted="innerMuted"
+				autoplay
+				object-fit="contain"
+				@timeupdate="onAdTimeUpdate"
+				@ended="onAdEnded"
+				@error="onAdEnded"
+			></video>
+			<image
+				v-else-if="currentAd.image != ''"
+				class="up-video__ad-media"
+				:src="currentAd.image"
+				mode="aspectFill"
+				@click="onAdClick"
+			></image>
+			<view class="up-video__ad-bar">
+				<text class="up-video__ad-tag">{{ adTagText }}</text>
+				<view v-if="currentAd.link != ''" class="up-video__ad-btn" @click="onAdClick">
+					<text class="up-video__ad-btn-text">{{ t('up.video.video_adDetail') }}</text>
+				</view>
+				<view v-if="adCanSkip" class="up-video__ad-btn" @click="skipAd">
+					<text class="up-video__ad-btn-text">{{ t('up.video.video_skipAd') }}</text>
+				</view>
+			</view>
+		</view>
+
+		<view v-if="pauseAdVisible" class="up-video__pause-ad">
+			<image
+				class="up-video__pause-ad-media"
+				:src="pauseAdItem.image"
+				mode="aspectFit"
+				@click="onAdClick"
+			></image>
+			<view class="up-video__pause-ad-close" @click="closePauseAd">
+				<up-icon name="close" color="#ffffff" size="14"></up-icon>
+			</view>
+		</view>
+
+		<view v-if="panel == 'danmu'" class="up-video__danmu-input">
+			<input
+				class="up-video__danmu-field"
+				:value="danmuText"
+				type="text"
+				:placeholder="t('up.video.video_danmuPlaceholder')"
+				placeholder-style="color: rgba(255, 255, 255, 0.5)"
+				confirm-type="send"
+				@input="onDanmuInput"
+				@confirm="onDanmuConfirm"
+			/>
+			<view class="up-video__danmu-send" :style="{ backgroundColor: activeColor }" @click="sendDanmu()">
+				<text class="up-video__danmu-send-text">{{ t('up.video.video_send') }}</text>
+			</view>
+		</view>
+	</view>
+</template>
+
+<script setup lang="uts">
+	import { computed, getCurrentInstance, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+	import { addStyle, addUnit, guid, toast } from '../../libs/function/index.uts'
+	import { t } from '../../libs/i18n/index.uts'
+	import defProps from './video.uts'
+	import VideoDanmaku from './video-danmaku.uvue'
+	import VideoSlider from './video-slider.uvue'
+	import {
+		adSkippable,
+		clampNumber,
+		formatVideoTime,
+		normalizeAds,
+		normalizeEpisodes,
+		normalizeRateList,
+		pickAds,
+		progressToTime,
+		toNumber,
+		timeToProgress
+	} from './video-utils.uts'
+	import { UPVideoAd } from './types.uts'
+
+	defineOptions({
+		styleIsolation: 'app-and-page',
+		name: 'up-video'
+	})
+
+	const props = defineProps({
+		// 视频地址，传了 episodes 时作为兜底地址
+		src: { type: String, default: (defProps['video'] as UTSJSONObject)['src'] },
+		poster: { type: String, default: (defProps['video'] as UTSJSONObject)['poster'] },
+		title: { type: String, default: (defProps['video'] as UTSJSONObject)['title'] },
+		width: { type: [String, Number], default: (defProps['video'] as UTSJSONObject)['width'] },
+		height: { type: [String, Number], default: (defProps['video'] as UTSJSONObject)['height'] },
+		radius: { type: [String, Number], default: (defProps['video'] as UTSJSONObject)['radius'] },
+		objectFit: { type: String, default: (defProps['video'] as UTSJSONObject)['objectFit'] },
+		autoplay: { type: Boolean, default: (defProps['video'] as UTSJSONObject)['autoplay'] },
+		loop: { type: Boolean, default: (defProps['video'] as UTSJSONObject)['loop'] },
+		muted: { type: Boolean, default: (defProps['video'] as UTSJSONObject)['muted'] },
+		initialTime: { type: [String, Number], default: (defProps['video'] as UTSJSONObject)['initialTime'] },
+		controls: { type: Boolean, default: (defProps['video'] as UTSJSONObject)['controls'] },
+		showCenterPlayBtn: { type: Boolean, default: (defProps['video'] as UTSJSONObject)['showCenterPlayBtn'] },
+		showFullscreenBtn: { type: Boolean, default: (defProps['video'] as UTSJSONObject)['showFullscreenBtn'] },
+		showBack: { type: Boolean, default: (defProps['video'] as UTSJSONObject)['showBack'] },
+		backIcon: { type: String, default: (defProps['video'] as UTSJSONObject)['backIcon'] },
+		autoHide: { type: [String, Number], default: (defProps['video'] as UTSJSONObject)['autoHide'] },
+		showLock: { type: Boolean, default: (defProps['video'] as UTSJSONObject)['showLock'] },
+		showRate: { type: Boolean, default: (defProps['video'] as UTSJSONObject)['showRate'] },
+		rate: { type: [String, Number], default: (defProps['video'] as UTSJSONObject)['rate'] },
+		rateList: { type: Array, default: (defProps['video'] as UTSJSONObject)['rateList'] },
+		showVolume: { type: Boolean, default: (defProps['video'] as UTSJSONObject)['showVolume'] },
+		volume: { type: [String, Number], default: (defProps['video'] as UTSJSONObject)['volume'] },
+		enableDanmu: { type: Boolean, default: (defProps['video'] as UTSJSONObject)['enableDanmu'] },
+		danmuList: { type: Array, default: (defProps['video'] as UTSJSONObject)['danmuList'] },
+		danmuBtn: { type: Boolean, default: (defProps['video'] as UTSJSONObject)['danmuBtn'] },
+		danmuOpen: { type: Boolean, default: (defProps['video'] as UTSJSONObject)['danmuOpen'] },
+		danmuColor: { type: String, default: (defProps['video'] as UTSJSONObject)['danmuColor'] },
+		danmuFontSize: { type: [String, Number], default: (defProps['video'] as UTSJSONObject)['danmuFontSize'] },
+		danmuDuration: { type: [String, Number], default: (defProps['video'] as UTSJSONObject)['danmuDuration'] },
+		danmuArea: { type: String, default: (defProps['video'] as UTSJSONObject)['danmuArea'] },
+		danmuOpacity: { type: [String, Number], default: (defProps['video'] as UTSJSONObject)['danmuOpacity'] },
+		danmuMax: { type: [String, Number], default: (defProps['video'] as UTSJSONObject)['danmuMax'] },
+		episodes: { type: Array, default: (defProps['video'] as UTSJSONObject)['episodes'] },
+		episodeIndex: { type: [String, Number], default: (defProps['video'] as UTSJSONObject)['episodeIndex'] },
+		episodeColumns: { type: [String, Number], default: (defProps['video'] as UTSJSONObject)['episodeColumns'] },
+		autoNext: { type: Boolean, default: (defProps['video'] as UTSJSONObject)['autoNext'] },
+		ads: { type: Array, default: (defProps['video'] as UTSJSONObject)['ads'] },
+		enableProgressGesture: { type: Boolean, default: (defProps['video'] as UTSJSONObject)['enableProgressGesture'] },
+		pageGesture: { type: Boolean, default: (defProps['video'] as UTSJSONObject)['pageGesture'] },
+		vslideGesture: { type: Boolean, default: (defProps['video'] as UTSJSONObject)['vslideGesture'] },
+		direction: { type: [String, Number], default: (defProps['video'] as UTSJSONObject)['direction'] },
+		autoPauseIfNavigate: { type: Boolean, default: (defProps['video'] as UTSJSONObject)['autoPauseIfNavigate'] },
+		autoPauseIfOpenNative: { type: Boolean, default: (defProps['video'] as UTSJSONObject)['autoPauseIfOpenNative'] },
+		videoId: { type: String, default: (defProps['video'] as UTSJSONObject)['videoId'] },
+		activeColor: { type: String, default: (defProps['video'] as UTSJSONObject)['activeColor'] },
+		customStyle: {
+			type: [Object, String],
+			default: () => ({}),
+		},
+		customClass: {
+			type: String,
+			default: ''
+		}
+	})
+
+	const emit = defineEmits([
+		'play', 'pause', 'ended', 'timeupdate', 'waiting', 'error', 'progress',
+		'fullscreenchange', 'loadedmetadata', 'ratechange', 'controlstoggle', 'lock',
+		'back', 'volumechange', 'danmu-toggle', 'danmu', 'episode-change',
+		'ad-start', 'ad-end', 'ad-skip', 'ad-click',
+		'update:rate', 'update:volume', 'update:danmuOpen', 'update:episodeIndex'
+	])
+
+	const instance = getCurrentInstance()?.proxy
+	const danmaku = ref<ComponentPublicInstance | null>(null)
+	const ctx = ref<VideoContext | null>(null)
+	let hideTimer = 0
+	let adTimer = 0
+
+	const innerVideoId = ref(props.videoId != '' ? props.videoId : 'up-video-' + guid(10, false))
+	const adVideoId = ref(innerVideoId.value + '-ad')
+
+	const playing = ref(false)
+	const started = ref(false)
+	const loading = ref(false)
+	const errored = ref(false)
+	const currentTime = ref(0)
+	const videoDuration = ref(0)
+	const buffered = ref(0)
+	const dragging = ref(false)
+	const dragPercent = ref(0)
+	const controlsVisible = ref(true)
+	const locked = ref(false)
+	const fullscreen = ref(false)
+	// '' | rate | episode | volume | danmu
+	const panel = ref('')
+	const innerRate = ref(toNumber(props.rate, 0) > 0 ? toNumber(props.rate, 1) : 1)
+	const innerVolume = ref(clampNumber(props.volume, 0, 1))
+	const innerMuted = ref(props.muted)
+	const innerDanmuOpen = ref(props.danmuOpen)
+	const innerEpisodeIndex = ref(parseInt(props.episodeIndex.toString()) || 0)
+	const danmuText = ref('')
+	const currentAd = ref<UPVideoAd | null>(null)
+	const adRole = ref('')
+	const adElapsed = ref(0)
+	const adDuration = ref(0)
+	const prerollCursor = ref(0)
+	const postrollCursor = ref(0)
+	const pauseAdVisible = ref(false)
+
+	const noop = (): void => {}
+
+	// ============ 计算属性 ============
+	const rootStyle = computed((): UTSJSONObject => {
+		const style = {
+			width: addUnit(props.width),
+			height: addUnit(props.height)
+		} as UTSJSONObject
+		if ((props.radius ?? '') != '') {
+			style['borderRadius'] = addUnit(props.radius)
+		}
+		return style
+	})
+
+	// uni 的 direction 只接受 0 / 90 / -90，-1 表示交给系统判断
+	const nativeDirection = computed((): number => {
+		const direction = toNumber(props.direction, -1)
+		if (direction == 0 || direction == 90 || direction == -90) return direction
+		return -1
+	})
+
+	const episodeList = computed((): Array<UTSJSONObject> => normalizeEpisodes(props.episodes))
+	const currentEpisode = computed((): UTSJSONObject | null => {
+		const index = innerEpisodeIndex.value
+		if (index < 0 || index >= episodeList.value.length) return null
+		return episodeList.value[index]
+	})
+	const playingSrc = computed((): string => {
+		const episode = currentEpisode.value
+		if (episode != null && (episode['src'] ?? '') != '') return episode['src'] as string
+		return props.src
+	})
+	const currentPoster = computed((): string => {
+		const episode = currentEpisode.value
+		if (episode != null && (episode['poster'] ?? '') != '') return episode['poster'] as string
+		return props.poster
+	})
+	const activeDanmuList = computed((): Array<any> => {
+		return props.danmuList as Array<any>
+	})
+
+	const rates = computed((): number[] => normalizeRateList(props.rateList))
+	const normalizedAds = computed((): UPVideoAd[] => normalizeAds(props.ads))
+	const prerollAds = computed((): UPVideoAd[] => pickAds(normalizedAds.value, 'preroll'))
+	const postrollAds = computed((): UPVideoAd[] => pickAds(normalizedAds.value, 'postroll'))
+	const pauseAdItem = computed((): UPVideoAd | null => {
+		const list = pickAds(normalizedAds.value, 'pause')
+		return list.length > 0 ? list[0] : null
+	})
+
+	// 有前置广告时交给组件自己调度，避免原生自动播放抢在广告之前
+	const nativeAutoplay = computed((): boolean => props.autoplay && prerollAds.value.length == 0)
+
+	const coverVisible = computed((): boolean => !started.value && currentAd.value == null)
+	const topBarVisible = computed((): boolean => {
+		return controlsVisible.value && !locked.value && currentAd.value == null && (props.showBack || props.title != '')
+	})
+	const barVisible = computed((): boolean => {
+		return props.controls && controlsVisible.value && !locked.value && currentAd.value == null
+	})
+	const danmuEntryVisible = computed((): boolean => props.enableDanmu && props.danmuBtn)
+
+	const progressPercent = computed((): number => {
+		return dragging.value ? dragPercent.value : timeToProgress(currentTime.value, videoDuration.value)
+	})
+	const bufferedPercent = computed((): number => clampNumber(buffered.value, 0, 100))
+	const timeText = computed((): string => {
+		const time = dragging.value ? progressToTime(dragPercent.value, videoDuration.value) : currentTime.value
+		return formatVideoTime(time)
+	})
+	const durationText = computed((): string => formatVideoTime(videoDuration.value))
+	const rateText = computed((): string => innerRate.value.toString() + 'x')
+	const volumePercent = computed((): number => {
+		return innerMuted.value ? 0 : clampNumber(innerVolume.value * 100, 0, 100)
+	})
+	const volumeText = computed((): string => Math.round(volumePercent.value).toString())
+	const volumeIcon = computed((): string => {
+		return (innerMuted.value || innerVolume.value <= 0) ? 'volume-off' : 'volume'
+	})
+	const episodeWidth = computed((): string => {
+		const columns = Math.max(1, parseInt(props.episodeColumns.toString()) || 1)
+		return (100 / columns).toFixed(4) + '%'
+	})
+	const adCanSkip = computed((): boolean => {
+		return currentAd.value != null && adSkippable(currentAd.value, adElapsed.value)
+	})
+	const adTagText = computed((): string => {
+		if (currentAd.value == null) return ''
+		const total = toNumber(adDuration.value, 0)
+		if (total > 0) {
+			const left = Math.max(0, Math.ceil(total - adElapsed.value))
+			return t('up.video.adCountdown', { seconds: left } as UTSJSONObject)
+		}
+		return t('up.video.ad')
+	})
+
+	const episodeStyle = (index: number): UTSJSONObject => {
+		const active = index == innerEpisodeIndex.value
+		return {
+			backgroundColor: active ? props.activeColor : 'rgba(255, 255, 255, 0.16)'
+		} as UTSJSONObject
+	}
+
+	// ============ VideoContext ============
+	const getContext = (): VideoContext | null => {
+		if (ctx.value == null) {
+			ctx.value = uni.createVideoContext(innerVideoId.value, instance)
+		}
+		return ctx.value
+	}
+
+	// ============ 播放控制 ============
+	const playMain = (): void => {
+		started.value = true
+		errored.value = false
+		closePauseAd()
+		const context = getContext()
+		if (context != null) context.play()
+	}
+
+	const play = (): void => {
+		if (currentAd.value != null) return
+		if (playAdQueue('preroll')) return
+		playMain()
+	}
+
+	const pause = (): void => {
+		const context = getContext()
+		if (context != null) context.pause()
+	}
+
+	const toggle = (): void => {
+		if (playing.value) {
+			pause()
+		} else {
+			play()
+		}
+	}
+
+	const stop = (): void => {
+		const context = getContext()
+		if (context != null) context.stop()
+		playing.value = false
+		started.value = false
+		currentTime.value = 0
+	}
+
+	const seek = (time: any): number => {
+		const target = clampNumber(time, 0, videoDuration.value > 0 ? videoDuration.value : toNumber(time, 0))
+		const context = getContext()
+		if (context != null) context.seek(target)
+		currentTime.value = target
+		danmaku.value?.$callMethod('reset', target)
+		return target
+	}
+
+	const retry = (): void => {
+		errored.value = false
+		loading.value = true
+		nextTick(() => playMain())
+	}
+
+	// 换源、换集后把播放态清干净，广告游标一起重置
+	const resetPlayback = (): void => {
+		playing.value = false
+		started.value = false
+		loading.value = false
+		errored.value = false
+		currentTime.value = 0
+		videoDuration.value = 0
+		buffered.value = 0
+		dragging.value = false
+		prerollCursor.value = 0
+		postrollCursor.value = 0
+		closePauseAd()
+		danmaku.value?.$callMethod('reset', 0)
+	}
+
+	// ============ 原生事件 ============
+	const onPlay = (e: UniEvent): void => {
+		playing.value = true
+		started.value = true
+		loading.value = false
+		errored.value = false
+		closePauseAd()
+		applyRate()
+		applyVolume()
+		scheduleHide()
+		emit('play', e)
+	}
+
+	const onPause = (e: UniEvent): void => {
+		playing.value = false
+		showControls()
+		if (pauseAdItem.value != null && started.value && currentAd.value == null) {
+			pauseAdVisible.value = true
+		}
+		emit('pause', e)
+	}
+
+	const onEnded = (e: UniEvent): void => {
+		playing.value = false
+		emit('ended', e)
+		if (props.loop) return
+		if (props.autoNext && innerEpisodeIndex.value < episodeList.value.length - 1) {
+			switchEpisode(innerEpisodeIndex.value + 1)
+			return
+		}
+		if (playAdQueue('postroll')) return
+		started.value = false
+		currentTime.value = 0
+		showControls()
+	}
+
+	const onTimeUpdate = (e: UniCustomEvent<UTSJSONObject>): void => {
+		const detail = e.detail
+		if (!dragging.value && detail['currentTime'] != null) {
+			currentTime.value = toNumber(detail['currentTime'], 0)
+		}
+		if (toNumber(detail['duration'], 0) > 0) {
+			videoDuration.value = toNumber(detail['duration'], 0)
+		}
+		loading.value = false
+		danmaku.value?.$callMethod('sync', currentTime.value)
+		emit('timeupdate', e)
+	}
+
+	const onWaiting = (e: UniEvent): void => {
+		loading.value = true
+		emit('waiting', e)
+	}
+
+	const onError = (e: UniEvent): void => {
+		loading.value = false
+		playing.value = false
+		errored.value = true
+		emit('error', e)
+	}
+
+	const onProgress = (e: UniCustomEvent<UTSJSONObject>): void => {
+		if (e.detail['buffered'] != null) {
+			buffered.value = toNumber(e.detail['buffered'], 0)
+		}
+		emit('progress', e)
+	}
+
+	const onFullscreenChange = (e: UniCustomEvent<UTSJSONObject>): void => {
+		fullscreen.value = e.detail['fullScreen'] == true
+		showControls()
+		emit('fullscreenchange', e)
+	}
+
+	const onLoadedMetadata = (e: UniCustomEvent<UTSJSONObject>): void => {
+		if (toNumber(e.detail['duration'], 0) > 0) {
+			videoDuration.value = toNumber(e.detail['duration'], 0)
+		}
+		loading.value = false
+		emit('loadedmetadata', e)
+	}
+
+	// ============ 控制层显示 ============
+	const clearHideTimer = (): void => {
+		if (hideTimer != 0) {
+			clearTimeout(hideTimer)
+			hideTimer = 0
+		}
+	}
+
+	const scheduleHide = (): void => {
+		clearHideTimer()
+		const delay = toNumber(props.autoHide, 0)
+		if (delay <= 0) return
+		hideTimer = setTimeout(() => {
+			// 面板打开或暂停时不收起，避免操作被打断
+			if (panel.value != '' || !playing.value) return
+			controlsVisible.value = false
+			emit('controlstoggle', false)
+		}, delay)
+	}
+
+	const showControls = (): void => {
+		controlsVisible.value = true
+		scheduleHide()
+	}
+
+	const toggleControls = (): void => {
+		controlsVisible.value = !controlsVisible.value
+		emit('controlstoggle', controlsVisible.value)
+		if (controlsVisible.value) scheduleHide()
+	}
+
+	const togglePanel = (name: string): void => {
+		panel.value = panel.value == name ? '' : name
+		if (panel.value != '') clearHideTimer()
+		else scheduleHide()
+	}
+
+	const closePanel = (): void => {
+		panel.value = ''
+		scheduleHide()
+	}
+
+	const onPlayerTap = (): void => {
+		if (locked.value) return
+		if (panel.value != '') {
+			closePanel()
+			return
+		}
+		toggleControls()
+	}
+
+	const onCoverTap = (): void => {
+		play()
+	}
+
+	const toggleLock = (): void => {
+		locked.value = !locked.value
+		if (locked.value) {
+			panel.value = ''
+			controlsVisible.value = false
+			toast(t('up.video.lock'))
+		} else {
+			showControls()
+			toast(t('up.video.unlock'))
+		}
+		emit('lock', locked.value)
+	}
+
+	const onBack = (): void => {
+		if (fullscreen.value) {
+			exitFullScreen()
+			return
+		}
+		emit('back')
+	}
+
+	// ============ 进度拖动 ============
+	const onProgressStart = (): void => {
+		dragging.value = true
+		dragPercent.value = timeToProgress(currentTime.value, videoDuration.value)
+		clearHideTimer()
+	}
+
+	const onProgressChanging = (percent: number): void => {
+		dragPercent.value = percent
+	}
+
+	const onProgressChange = (percent: number): void => {
+		dragging.value = false
+		seek(progressToTime(percent, videoDuration.value))
+		scheduleHide()
+	}
+
+	// ============ 倍速 ============
+	const applyRate = (): void => {
+		const context = getContext()
+		if (context != null) context.playbackRate(innerRate.value)
+	}
+
+	const setRate = (rate: any, silent: boolean = false): void => {
+		const value = toNumber(rate, 0)
+		if (value <= 0) return
+		innerRate.value = value
+		applyRate()
+		closePanel()
+		if (!silent) {
+			emit('update:rate', value)
+			emit('ratechange', value)
+		}
+	}
+
+	// ============ 音量 ============
+	// uni-app-x 没有播放器级音量接口，App 端只能靠 muted 静音，
+	// 因此这里只维护内部状态并同步给 video 的 muted。
+	const applyVolume = (): void => {
+		if (innerVolume.value <= 0) innerMuted.value = true
+		return innerMuted.value ? 0 : clampNumber(innerVolume.value, 0, 1)
+	}
+
+	const setVolume = (value: any, silent: boolean = false): void => {
+		innerVolume.value = clampNumber(value, 0, 1)
+		if (innerVolume.value > 0) innerMuted.value = false
+		applyVolume()
+		if (!silent) {
+			emit('update:volume', innerVolume.value)
+			emit('volumechange', {
+				volume: innerVolume.value,
+				muted: innerMuted.value
+			} as UTSJSONObject)
+		}
+	}
+
+	const onVolumeChanging = (percent: number): void => {
+		setVolume(percent / 100, true)
+	}
+
+	const onVolumeChange = (percent: number): void => {
+		setVolume(percent / 100)
+	}
+
+	const toggleMute = (): void => {
+		innerMuted.value = !innerMuted.value
+		applyVolume()
+		emit('volumechange', {
+			volume: innerVolume.value,
+			muted: innerMuted.value
+		} as UTSJSONObject)
+	}
+
+	// ============ 弹幕 ============
+	const toggleDanmu = (): void => {
+		innerDanmuOpen.value = !innerDanmuOpen.value
+		emit('update:danmuOpen', innerDanmuOpen.value)
+		emit('danmu-toggle', innerDanmuOpen.value)
+	}
+
+	const sendDanmu = (payload: any = null): UTSJSONObject | null => {
+		let text = ''
+		let color = props.danmuColor
+		let type = 'scroll'
+		if (typeof payload == 'string') {
+			text = payload
+		} else if (payload != null) {
+			const source = payload as UTSJSONObject
+			if ((source['text'] ?? '') != '') text = source['text'] as string
+			if ((source['color'] ?? '') != '') color = source['color'] as string
+			if ((source['type'] ?? '') != '') type = source['type'] as string
+		} else {
+			text = danmuText.value
+		}
+		if (text == '') return null
+		const item = {
+			text: text,
+			color: color,
+			time: currentTime.value,
+			type: type
+		} as UTSJSONObject
+		if (danmaku.value != null) {
+			if (!innerDanmuOpen.value) {
+				innerDanmuOpen.value = true
+				emit('update:danmuOpen', true)
+			}
+			danmaku.value?.$callMethod('push', item)
+		}
+		danmuText.value = ''
+		closePanel()
+		emit('danmu', item)
+		return item
+	}
+
+	const onDanmuInput = (e: UniInputInputEvent): void => {
+		danmuText.value = e.detail.value
+	}
+
+	const onDanmuConfirm = (e: UniEvent): void => {
+		sendDanmu(null)
+	}
+
+	// ============ 选集 ============
+	const switchEpisode = (index: any, silent: boolean = false): void => {
+		closePanel()
+		const target = parseInt(index.toString())
+		if (isNaN(target) || target < 0 || target >= episodeList.value.length) return
+		if (target == innerEpisodeIndex.value && started.value) return
+		innerEpisodeIndex.value = target
+		resetPlayback()
+		if (!silent) {
+			emit('update:episodeIndex', target)
+			emit('episode-change', {
+				index: target,
+				episode: episodeList.value[target]
+			} as UTSJSONObject)
+		}
+		// 等 src 生效后再播，否则部分平台会播上一集
+		nextTick(() => play())
+	}
+
+	const playNext = (): void => {
+		switchEpisode(innerEpisodeIndex.value + 1)
+	}
+
+	// ============ 全屏 ============
+	const requestFullScreen = (): void => {
+		const context = getContext()
+		if (context == null) return
+		const direction = nativeDirection.value
+		if (direction == -1) {
+			context.requestFullScreen({} as RequestFullScreenOptions)
+		} else {
+			context.requestFullScreen({ direction: direction } as RequestFullScreenOptions)
+		}
+	}
+
+	const exitFullScreen = (): void => {
+		const context = getContext()
+		if (context != null) context.exitFullScreen()
+	}
+
+	const toggleFullscreen = (): void => {
+		if (fullscreen.value) {
+			exitFullScreen()
+		} else {
+			requestFullScreen()
+		}
+	}
+
+	// ============ 广告 ============
+	const clearAdTimer = (): void => {
+		if (adTimer != 0) {
+			clearInterval(adTimer)
+			adTimer = 0
+		}
+	}
+
+	const finishAd = (skipped: boolean = false): void => {
+		const ad = currentAd.value
+		const role = adRole.value
+		clearAdTimer()
+		currentAd.value = null
+		adRole.value = ''
+		adElapsed.value = 0
+		adDuration.value = 0
+		if (ad != null) {
+			emit('ad-end', { ad: ad, skipped: skipped } as UTSJSONObject)
+		}
+		nextTick(() => {
+			if (role == 'preroll') {
+				if (!playAdQueue('preroll')) playMain()
+				return
+			}
+			if (role == 'postroll' && !playAdQueue('postroll')) {
+				// 后置广告播完回到封面
+				started.value = false
+				currentTime.value = 0
+			}
+		})
+	}
+
+	const startAd = (ad: UPVideoAd): void => {
+		// 先落 currentAd，再暂停正片，避免异步的 pause 事件把暂停贴片顶出来
+		currentAd.value = ad
+		adElapsed.value = 0
+		adDuration.value = toNumber(ad.duration, 0)
+		panel.value = ''
+		pause()
+		closePauseAd()
+		emit('ad-start', ad)
+		// 图片广告没有 timeupdate，用定时器走倒计时
+		if (ad.src == '') {
+			clearAdTimer()
+			adTimer = setInterval(() => {
+				adElapsed.value += 0.5
+				if (adDuration.value > 0 && adElapsed.value >= adDuration.value) finishAd()
+			}, 500)
+		}
+	}
+
+	const playAdQueue = (role: string): boolean => {
+		const list = role == 'preroll' ? prerollAds.value : postrollAds.value
+		const cursor = role == 'preroll' ? prerollCursor : postrollCursor
+		if (cursor.value >= list.length) return false
+		const ad = list[cursor.value]
+		cursor.value += 1
+		adRole.value = role
+		startAd(ad)
+		return true
+	}
+
+	const onAdTimeUpdate = (e: UniCustomEvent<UTSJSONObject>): void => {
+		if (e.detail['currentTime'] != null) {
+			adElapsed.value = toNumber(e.detail['currentTime'], 0)
+		}
+		if (adDuration.value == 0 && toNumber(e.detail['duration'], 0) > 0) {
+			adDuration.value = toNumber(e.detail['duration'], 0)
+		}
+	}
+
+	const onAdEnded = (e: UniEvent): void => {
+		finishAd(false)
+	}
+
+	const skipAd = (): void => {
+		if (!adCanSkip.value) return
+		emit('ad-skip', currentAd.value)
+		finishAd(true)
+	}
+
+	const onAdClick = (): void => {
+		// 只抛事件，跳转交给业务侧决定
+		emit('ad-click', currentAd.value ?? pauseAdItem.value)
+	}
+
+	const closePauseAd = (): void => {
+		pauseAdVisible.value = false
+	}
+
+	// ============ 监听 ============
+	watch((): string => props.src, () => {
+		resetPlayback()
+	})
+
+	watch((): number => parseInt(props.episodeIndex.toString()) || 0, (value: number) => {
+		if (value != innerEpisodeIndex.value) switchEpisode(value, true)
+	})
+
+	watch((): number => toNumber(props.rate, 0), (value: number) => {
+		if (value > 0) setRate(value, true)
+	})
+
+	watch((): number => clampNumber(props.volume, 0, 1), (value: number) => {
+		innerVolume.value = value
+		applyVolume()
+	})
+
+	watch((): boolean => props.muted, (value: boolean) => {
+		innerMuted.value = value
+		applyVolume()
+	})
+
+	watch((): boolean => props.danmuOpen, (value: boolean) => {
+		innerDanmuOpen.value = value
+	})
+
+	onMounted(() => {
+		applyVolume()
+		if (props.autoplay) {
+			// 原生 autoplay 已经被前置广告接管时，这里补一次调度
+			if (prerollAds.value.length > 0) {
+				play()
+			} else {
+				started.value = true
+			}
+		}
+		scheduleHide()
+	})
+
+	onBeforeUnmount(() => {
+		clearHideTimer()
+		clearAdTimer()
+	})
+
+	defineExpose({
+		play,
+		pause,
+		toggle,
+		stop,
+		seek,
+		retry,
+		sendDanmu,
+		toggleDanmu,
+		toggleControls,
+		toggleLock,
+		toggleFullscreen,
+		requestFullScreen,
+		exitFullScreen,
+		switchEpisode,
+		playNext,
+		skipAd,
+		closePanel,
+		closePauseAd,
+		playing,
+		started,
+		currentTime,
+		videoDuration,
+		fullscreen,
+		locked,
+		panel
+	})
+</script>
+
+<style lang="scss" scoped>
+	@import "../../libs/css/components.scss";
+
+    .up-video {
+        position: relative;
+        overflow: hidden;
+        background-color: #000000;
+    }
+
+    .up-video__player {
+        width: 100%;
+        height: 100%;
+    }
+
+    /* 控制层统一铺满 video 节点 */
+    .up-video__layer {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+    }
+
+    .up-video__danmu-layer {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+    }
+
+    .up-video__center {
+        align-items: center;
+        justify-content: center;
+    }
+
+    .up-video__mask {
+        background-color: rgba(0, 0, 0, 0.5);
+    }
+
+    .up-video__hint {
+        color: #ffffff;
+        font-size: 14px;
+    }
+
+    .up-video__retry {
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+        margin-top: 10px;
+        padding: 4px 14px;
+        border-radius: 30px;
+        border-width: 1px;
+        border-style: solid;
+        border-color: rgba(255, 255, 255, 0.7);
+    }
+
+    .up-video__retry-text {
+        color: #ffffff;
+        font-size: 12px;
+    }
+
+    .up-video__cover {
+        align-items: center;
+        justify-content: center;
+        background-color: #000000;
+    }
+
+    .up-video__cover-image {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+    }
+
+    .up-video__cover-mask {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(0, 0, 0, 0.25);
+    }
+
+    .up-video__cover-btn {
+        width: 52px;
+        height: 52px;
+        border-radius: 26px;
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+        background-color: rgba(0, 0, 0, 0.45);
+    }
+
+    .up-video__top {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 40px;
+        flex-direction: row;
+        align-items: center;
+        padding-left: 6px;
+        padding-right: 6px;
+        background-color: rgba(0, 0, 0, 0.3);
+    }
+
+    .up-video__top-title {
+        flex: 1;
+        margin-left: 6px;
+        color: #ffffff;
+        font-size: 14px;
+        lines: 1;
+        text-overflow: ellipsis;
+        overflow: hidden;
+    }
+
+    .up-video__icon-btn {
+        width: 30px;
+        height: 30px;
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .up-video__text-btn {
+        height: 30px;
+        padding-left: 5px;
+        padding-right: 5px;
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .up-video__btn-text {
+        color: #ffffff;
+        font-size: 12px;
+    }
+
+    .up-video__controls {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        padding-left: 4px;
+        padding-right: 4px;
+        background-color: rgba(0, 0, 0, 0.35);
+    }
+
+    .up-video__row {
+        flex-direction: row;
+        align-items: center;
+    }
+
+    .up-video__time {
+        width: 44px;
+        color: #ffffff;
+        font-size: 11px;
+        text-align: center;
+    }
+
+    .up-video__unlock {
+        position: absolute;
+        left: 12px;
+        top: 50%;
+        margin-top: -16px;
+        width: 32px;
+        height: 32px;
+        border-radius: 16px;
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+        background-color: rgba(0, 0, 0, 0.5);
+    }
+
+    /* 全屏图标用 4 个角括号拼出来，图标字体里没有对应字形 */
+    .up-video__fullscreen {
+        position: relative;
+        width: 15px;
+        height: 15px;
+    }
+
+    .up-video__corner-tl,
+    .up-video__corner-tr,
+    .up-video__corner-bl,
+    .up-video__corner-br {
+        position: absolute;
+        width: 6px;
+        height: 6px;
+        border-style: solid;
+        border-color: #ffffff;
+        border-top-width: 0;
+        border-right-width: 0;
+        border-bottom-width: 0;
+        border-left-width: 0;
+    }
+
+    .up-video__corner-tl {
+        top: 0;
+        left: 0;
+        border-top-width: 2px;
+        border-left-width: 2px;
+    }
+
+    .up-video__corner-tr {
+        top: 0;
+        right: 0;
+        border-top-width: 2px;
+        border-right-width: 2px;
+    }
+
+    .up-video__corner-bl {
+        bottom: 0;
+        left: 0;
+        border-bottom-width: 2px;
+        border-left-width: 2px;
+    }
+
+    .up-video__corner-br {
+        bottom: 0;
+        right: 0;
+        border-bottom-width: 2px;
+        border-right-width: 2px;
+    }
+
+    .up-video__panel {
+        flex-direction: row;
+        justify-content: flex-end;
+        background-color: rgba(0, 0, 0, 0.4);
+    }
+
+    .up-video__panel-body {
+        width: 104px;
+        height: 100%;
+        padding: 10px;
+        background-color: rgba(0, 0, 0, 0.85);
+    }
+
+    .up-video__panel-body--wide {
+        width: 240px;
+    }
+
+    .up-video__panel-title {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 12px;
+        margin-bottom: 6px;
+    }
+
+    .up-video__panel-item {
+        height: 32px;
+        justify-content: center;
+    }
+
+    .up-video__panel-text {
+        font-size: 13px;
+    }
+
+    .up-video__episode-grid {
+        flex-direction: row;
+        flex-wrap: wrap;
+    }
+
+    .up-video__episode {
+        height: 32px;
+        margin: 3px;
+        border-radius: 4px;
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .up-video__episode-text {
+        color: #ffffff;
+        font-size: 12px;
+    }
+
+    .up-video__volume {
+        position: absolute;
+        right: 44px;
+        bottom: 44px;
+        width: 200px;
+        flex-direction: row;
+        align-items: center;
+        padding-left: 4px;
+        padding-right: 10px;
+        border-radius: 30px;
+        background-color: rgba(0, 0, 0, 0.85);
+    }
+
+    .up-video__volume-label {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 11px;
+        margin-right: 6px;
+    }
+
+    .up-video__volume-value {
+        width: 28px;
+        margin-left: 6px;
+        color: #ffffff;
+        font-size: 11px;
+        text-align: right;
+    }
+
+    .up-video__ad {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #000000;
+    }
+
+    .up-video__ad-media {
+        width: 100%;
+        height: 100%;
+    }
+
+    .up-video__ad-bar {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        flex-direction: row;
+        align-items: center;
+    }
+
+    .up-video__ad-tag {
+        color: #ffffff;
+        font-size: 11px;
+        padding: 2px 6px;
+        border-radius: 3px;
+        background-color: rgba(0, 0, 0, 0.55);
+    }
+
+    .up-video__ad-btn {
+        margin-left: 6px;
+        padding: 2px 8px;
+        border-radius: 3px;
+        flex-direction: row;
+        align-items: center;
+        border-width: 1px;
+        border-style: solid;
+        border-color: rgba(255, 255, 255, 0.6);
+        background-color: rgba(0, 0, 0, 0.55);
+    }
+
+    .up-video__ad-btn-text {
+        color: #ffffff;
+        font-size: 11px;
+    }
+
+    .up-video__pause-ad {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        align-items: center;
+        justify-content: center;
+        background-color: rgba(0, 0, 0, 0.6);
+    }
+
+    .up-video__pause-ad-media {
+        width: 70%;
+        height: 60%;
+    }
+
+    .up-video__pause-ad-close {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        width: 24px;
+        height: 24px;
+        border-radius: 12px;
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+        background-color: rgba(0, 0, 0, 0.6);
+    }
+
+    .up-video__danmu-input {
+        position: absolute;
+        left: 8px;
+        right: 8px;
+        bottom: 8px;
+        flex-direction: row;
+        align-items: center;
+        padding: 4px 4px 4px 12px;
+        border-radius: 30px;
+        background-color: rgba(0, 0, 0, 0.85);
+    }
+
+    .up-video__danmu-field {
+        flex: 1;
+        height: 30px;
+        color: #ffffff;
+        font-size: 13px;
+    }
+
+    .up-video__danmu-send {
+        height: 28px;
+        padding-left: 14px;
+        padding-right: 14px;
+        border-radius: 20px;
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .up-video__danmu-send-text {
+        color: #ffffff;
+        font-size: 12px;
+    }
+</style>

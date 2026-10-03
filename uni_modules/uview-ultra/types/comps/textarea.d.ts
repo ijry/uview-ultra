@@ -20,6 +20,11 @@ declare interface TextareaProps {
    */
   confirmType?: string
   /**
+   * 点击键盘右下角按钮时是否保持键盘不收起，confirmType 非 'return' 时有效
+   * @default false
+   */
+  confirmHold?: boolean
+  /**
    * 是否禁用
    * @default false
    */
