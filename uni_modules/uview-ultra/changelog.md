@@ -1,26 +1,55 @@
-## 待发布
+## 4.5.45
+feat: 新增 up-video 视频播放器，并适配 uni-app-x 蒸汽模式（HBuilderX 5.26）
 
-fix: 适配 uni-app-x 蒸汽模式（HBuilderX 5.26），并修复复选框禁用、表格列固定等多处缺陷
+HBuilderX 5.26 起 uni-app-x 进入蒸汽模式（vapor），运行期与编译器均有变化：不再支持 \p{...} Unicode 属性转义、scroll-view 移除 scroll-x/scroll-y/enable-flex，部分运行期 API 与 UTS 注解处理方式也发生改变。本次一并修复由此暴露的组件缺陷，并对齐 uview-plus 3.8.127 / 3.8.128 的上游修复。
 
-HBuilderX 5.26 起 uni-app-x 进入蒸汽模式（vapor），运行期与编译器均有变化：不再支持 `\p{...}` Unicode 属性转义、`scroll-view` 移除 `scroll-x`/`scroll-y`/`enable-flex`，且部分运行期 API 与 UTS 注解处理方式改变。本次一并修复由此暴露的组件缺陷。
+新增：
+- up-video（对齐 uview-plus u-video）：自绘控制层的播放器，支持倍速、音量、封面、锁屏、返回、全屏
+- video-danmaku 弹幕层：归一化、时间游标二分查找、轨道分配，支持滚动 / 顶部 / 底部三种模式
+- video-slider：进度与音量共用的拖动条；配套选集面板、贴片广告（前置 / 暂停 / 后置）与暂停贴片
+- 注册进 props 配置、10 种语言 i18n、types/comps/video.d.ts；新增示例页 pages/componentsD/video
+- 说明：uni-app-x 的 video 为原生组件无法承载子节点，控制层改用同级绝对定位覆盖层；进全屏请走原生全屏按钮
 
-- marked-uts：`\p{P}\p{S}` 等 Unicode 属性转义改为等价的 ASCII 字面量字符类（设备 JS 引擎不支持会导致运行期 SyntaxError 白屏），并保留 `u` 标志
-- marked-uts/Tokenizer：`@Suppress` 注解补 `#ifndef VUE3-VAPOR` 守卫，修复蒸汽模式下 `Suppress is not defined`
-- 组件模板不再遮蔽全局 `$up`（`index.uts` 注册的 UPUtils 实例）：移除 `import * as $up`，改为直接调用 `addUnit` / `addStyle` / `getPx`
-- up-loading-icon：删除触发 `vue.useVaporCssVars` 的死代码 `$radius: v-bind(size)px`，修复按钮页等打开即报错
-- scroll-view：迁移到新版 `direction`（`scroll-x`/`scroll-y`/`enable-flex` 已移除），涉及 up-table2 / up-list / up-choose / up-cascader / up-cate-tab / up-calendar / up-action-sheet / up-goods-sku / up-virtual-list / up-pull-refresh / up-novel-reader / up-dragsort / up-dropdown-item 等
-- up-checkbox：`disabled` / `labelDisabled` 同时识别布尔与字符串，修复 `<up-checkbox disabled>` 禁用无效
+蒸汽模式（vapor）适配与缺陷修复：
+- marked-uts：\p{P}\p{S} 等 Unicode 属性转义改为等价 ASCII 字面量字符类（设备 JS 引擎不支持会直接 SyntaxError 白屏），并保留 u 标志
+- marked-uts/Tokenizer：@Suppress 注解补 #ifndef VUE3-VAPOR 守卫，修复 Suppress is not defined
+- 组件模板不再遮蔽全局 $up（index.uts 注册的 UPUtils 实例）：移除 import * as $up，改为直接调用 addUnit / addStyle / getPx
+- up-loading-icon：删除触发 vue.useVaporCssVars 的死代码 $radius: v-bind(size)px，修复按钮页等打开即报错
+- scroll-view：迁移到新版 direction（scroll-x/scroll-y/enable-flex 已移除），涉及 up-table2 / up-list / up-choose / up-cascader / up-cate-tab / up-calendar / up-action-sheet / up-goods-sku / up-virtual-list / up-pull-refresh / up-novel-reader / up-dragsort / up-dropdown-item 等；表格列固定随之恢复生效
+- up-checkbox：disabled / labelDisabled 同时识别布尔与字符串，修复 <up-checkbox disabled> 禁用无效
 - up-row / up-gap / up-card / up-dropdown-item：默认值取值函数与配置类型不匹配（对字符串配置用 getNumber/getBoolean）导致 null，已修正并补显式默认值
-- up-button：`textSize` 已含 px 又拼接一次导致字号异常（约 11px → 14px）
-- up-dropdown-item：`scroll-view` 被误写为 `view` 且 `scroll-y="false"`，已改回 `<scroll-view direction="vertical">`
-- up-dropdown / up-lazy-load：修正 `translate3D` / `transition3d` 拼写
-- up-dropdown-item / up-grid-item / useUltraUI：跨组件读取 `$data['children']` 在新版下为 undefined，改用父组件暴露的 `$callMethod('getChildren')`（修复下拉菜单、宫格无 name 时点击报错）
-- up-textarea：`placeholder-style` 统一传字符串、新增 `cursor` 数字计算（-1 表示不指定），修复原生类型校验告警与 `ClassCastException`
-- up-tabbar：内联样式不再拼接 `!important`（新版不支持），修复 `border-*-color` 非法值
-- up-short-video：传给 up-slider 的 `innerStyle` 改为 `UTSJSONObject`，修复 prop 类型校验告警
-- libs/function/test.uts：修正 `date()` 判断反转（数字时间戳被误判非法），修复 up-text 日期模式报「需要为日期或时间戳格式」
-- up-novel-reader：`readPersistedState` 对空串/非法 JSON 加保护，避免 `JSON.parse` 抛原生异常
-- 演示页：empty 页 `<div>` 改 `<view>`；slider 页内联 `<svg>` 改 `up-icon`（uni-app-x 不支持 HTML/SVG 标签）
+- up-button：textSize 已含 px 又拼接一次导致字号异常（约 11px → 14px）
+- up-dropdown-item：scroll-view 被误写为 view 且带 scroll-y="false"，已改回 <scroll-view direction="vertical">
+- up-dropdown-item / up-grid-item / useUltraUI：跨组件读取 $data['children'] 在新版下为 undefined，改用父组件暴露的 $callMethod('getChildren')
+- up-textarea：placeholder-style 统一传字符串、新增 cursor 数字计算（-1 表示不指定），修复原生类型校验告警与 ClassCastException
+- up-tabbar：内联样式不再拼接 !important（新版不支持），修复 border-*-color 非法值
+- up-short-video：传给 up-slider 的 innerStyle 改为 UTSJSONObject，修复 prop 类型校验告警
+- libs/function/test.uts：修正 date() 判断反转（数字时间戳被误判非法），修复 up-text 日期模式误报
+- up-novel-reader：readPersistedState 对空串 / 非法 JSON 加保护，避免 JSON.parse 抛原生异常
+- up-dropdown / up-lazy-load：修正 translate3D / transition3d 拼写
+
+对齐 uview-plus 3.8.127 / 3.8.128：
+- up-slider：点击轨道时不再丢弃 updateValue 返回值，直接触发 change；补 sliderRect 宽度为 0 的兜底
+- up-datetime-picker：空值不再被夹取成 minDate / minHour:minMinute，外部清空后输入框保持为空；confirm 时先按各列当前显示值取真值；getBoundary / updateIndexs 补空值兜底，避免 Invalid Date 产生 NaN
+- up-car-keyboard：补「警」字（省份切分 30~37）；up-car-keyboard / up-number-keyboard 退格键改为 tap 单删 + touchstart 600ms 长按递推，短按不再连删，PC 端浏览器无 touch 时也可删除
+- up-parse：parser.js 支持 quill 的 align-left / align-right / justify class
+- up-calendar：onScroll 在各月份 top 未测量出来时不再把副标题钉到最后一个月；scrollIntoDefaultMonth 同步更新 monthIndex
+- up-collapse-item：init() 在父组件 value 为 null / undefined 时不再重置已展开状态；展开动画结束后把高度交还内容，避免异步变高的内容被裁切；快速连点只认最后一次动画回调
+- up-cate-tab：leftMenuStatus 仅在选中项真正变化时同步 update:current，消除重复通知
+- up-textarea：confirmType 默认改为 return（回车换行，与原生一致），新增 confirmHold 属性
+- up-cell：必填星号改用真实 <text> 节点渲染（原 :before 伪元素在 nvue / 小程序下不显示且通栏布局会跑出屏幕）；补上此前完全缺失的 required 属性；修正 aclass= 笔误
+- up-upload：H5 下 chooseVideo 返回的真实 File 对象透传给 uni.uploadFile，修复部分 webview 读 blob: 得到空内容导致上传失败（#801）
+
+小程序相关修复：
+- up-search：placeholder-class 改为非 scoped 样式块 + CSS 变量下发颜色，解决 scoped 类名匹配不到小程序内部 placeholder 节点的问题
+- up-icon：字体加载失败后由定时器重试有限次数，不再立刻释放请求锁（#844）
+- 解决 mp-weixin 编译挂死：up-pull-refresh / up-novel-reader 中 uni-app-x 不支持的 v-bind 改为显式属性传递
+
+示例与其它：
+- 移除 90 个示例页根节点的 App 专用 scroll-view 包装层（蒸汽模式下页面本身可滚动，保留会触发嵌套滚动告警）
+- 修复示例页中的 HTML / SVG 标签：empty 页 <div> 改 <view>，slider 页内联 <svg> 改用 up-icon
+- types：新增 pagination.d.ts 并在 comps.d.ts 注册，补齐 numberBox / form 的类型与事件载荷
+
 ## 4.5.44
 fix: 修复 up-markdown 在 uni-app-x 4.72+（含蒸汽模式）Android 端编译报错，以及 up-signature 的 UTS 编译错误
 
