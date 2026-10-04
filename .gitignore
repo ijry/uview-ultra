@@ -17,3 +17,9 @@ deploy.sh
 unpackage/codex-logs/
 unpackage/screenshots/
 cachePath/
+
+# 临时脚本 / 本地草稿目录（勿入库）
+.tmpfix/
+.gen01.py
+.mkfix.py
+.freebuff/
