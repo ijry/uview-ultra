@@ -40,7 +40,6 @@
  */
 import { getCurrentInstance, nextTick, ref } from 'vue'
 import { commonProps } from '../../libs/composable/useUltraUI.js'
-import { rpx2px } from '../../libs/function/index.js'
 
 defineOptions({
 	name: 'up-poster',
@@ -476,10 +475,10 @@ function generateQRCode(text, width, height) {
 function convertRpxToPx(rpxValue) {
 	if (typeof rpxValue === 'number') return rpxValue;
 
-	// 使用rpx2px方法
+	// 使用 uni.upx2px（rpx 与 upx 等价）把 rpx 换算成 px
 	if (typeof rpxValue === 'string' && rpxValue.endsWith('rpx')) {
 		const value = parseFloat(rpxValue);
-		return rpx2px(value);
+		return uni.upx2px(value);
 	}
 
 	return parseFloat(rpxValue) || 0;

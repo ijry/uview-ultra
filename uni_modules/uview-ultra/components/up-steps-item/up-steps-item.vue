@@ -61,7 +61,7 @@
 
 <script setup>
 	import { computed, getCurrentInstance, onMounted, reactive, ref, toRef } from 'vue'
-	import { props as stepsItemProps } from './props'
+	import { props as stepsItemProps } from './props.js'
 	import { commonProps, useUltraUI } from '../../libs/composable/useUltraUI.js'
 	import { sleep, error } from '../../libs/function/index.js'
 	import color from '../../libs/config/color.js'

@@ -1,4 +1,4 @@
-import { t } from '../../libs/i18n'
+import { t } from '../../libs/i18n/index.js'
 
 export default {
 	section: {

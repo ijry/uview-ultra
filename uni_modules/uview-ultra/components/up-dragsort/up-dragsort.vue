@@ -29,8 +29,8 @@
 
 <script setup>
 import { computed, getCurrentInstance, nextTick, onMounted, ref, useSlots, watch } from 'vue'
-import { commonProps } from '../../libs/composable/useUltraUI'
-import { guid, sleep } from '../../libs/function/index'
+import { commonProps } from '../../libs/composable/useUltraUI.js'
+import { guid, sleep } from '../../libs/function/index.js'
 
 defineOptions({
 	name: 'up-dragsort',

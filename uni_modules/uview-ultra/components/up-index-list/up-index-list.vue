@@ -95,9 +95,9 @@
 
 <script setup>
 	import { computed, getCurrentInstance, nextTick, onMounted, ref, toRef, watch } from 'vue'
-	import { props as indexListProps } from './props'
+	import { props as indexListProps } from './props.js'
 	import { commonProps, useUltraUI } from '../../libs/composable/useUltraUI.js'
-	import { addUnit, getWindowInfo, sleep, getPx } from '../../libs/function/index'
+	import { addUnit, getWindowInfo, sleep, getPx } from '../../libs/function/index.js'
 
 	const indexList = () => {
 		const indexList = []

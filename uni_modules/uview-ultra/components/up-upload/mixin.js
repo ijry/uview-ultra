@@ -1,4 +1,4 @@
-import { error } from '../../libs/function/index'
+import { error } from '../../libs/function/index.js'
 
 export const mixinUpload = {
     watch: {

@@ -1,6 +1,6 @@
 'use strict'
 
-import * as utils from '../utils'
+import * as utils from '../utils.js'
 
 function encode(val) {
     return encodeURIComponent(val)

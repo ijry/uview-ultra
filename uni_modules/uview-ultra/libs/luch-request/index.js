@@ -1,3 +1,3 @@
-import Request from './core/Request'
+import Request from './core/Request.js'
 
 export default Request

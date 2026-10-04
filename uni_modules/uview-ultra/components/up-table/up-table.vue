@@ -8,7 +8,7 @@
 
 <script setup>
 	import { computed, nextTick, ref, toRefs, watch } from 'vue'
-	import { props as tableProps } from './props'
+	import { props as tableProps } from './props.js'
 	import { commonProps } from '../../libs/composable/useUltraUI.js'
 	/**
 	 * Table 表格 

@@ -9,7 +9,7 @@
 
 <script setup>
 	import { toRefs, watch } from 'vue'
-	import { props as stepsProps } from './props'
+	import { props as stepsProps } from './props.js'
 	import { commonProps, useUltraUI } from '../../libs/composable/useUltraUI.js'
 	/**
 	 * Steps 步骤条

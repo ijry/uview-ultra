@@ -11,12 +11,12 @@
  * HBuilderX: beat-3.0.4 alpha-3.0.4
  */
 
-import dispatchRequest from './dispatchRequest'
-import InterceptorManager from './InterceptorManager'
-import mergeConfig from './mergeConfig'
-import defaults from './defaults'
-import { isPlainObject } from '../utils'
-import clone from '../utils/clone'
+import dispatchRequest from './dispatchRequest.js'
+import InterceptorManager from './InterceptorManager.js'
+import mergeConfig from './mergeConfig.js'
+import defaults from './defaults.js'
+import { isPlainObject } from '../utils.js'
+import clone from '../utils/clone.js'
 
 export default class Request {
     /**

@@ -6,7 +6,7 @@
 
 <script setup>
 	import { getCurrentInstance, onMounted, ref } from 'vue'
-	import { props as tdProps } from './props'
+	import { props as tdProps } from './props.js'
 	import { commonProps } from '../../libs/composable/useUltraUI.js'
 	import { addUnit, $parent } from '../../libs/function/index.js'
 	/** 

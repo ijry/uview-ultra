@@ -14,7 +14,7 @@
 		isSameSecond,
 		parseFormat,
 		parseTimeData
-	} from './utils';
+	} from './utils.js';
 	/**
 	 * up-count-down 倒计时
 	 * @description 该组件一般使用于某个活动的截止时间上，通过数字的变化，给用户明确的时间感受，提示用户进行某一个行为操作。

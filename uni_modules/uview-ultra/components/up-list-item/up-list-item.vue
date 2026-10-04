@@ -17,9 +17,9 @@
 
 <script setup>
 	import { getCurrentInstance, inject, onMounted, ref, toRef, watch } from 'vue'
-	import { props as listItemProps } from './props'
+	import { props as listItemProps } from './props.js'
 	import { commonProps, useUltraUI } from '../../libs/composable/useUltraUI.js'
-	import { getWindowInfo } from '../../libs/function/index'
+	import { getWindowInfo } from '../../libs/function/index.js'
 	// #ifdef APP-NVUE
 	const dom = uni.requireNativePlugin('dom')
 	// #endif
@@ -88,7 +88,13 @@
 			const windowHeight = sys.windowHeight
 			// #ifndef APP-NVUE
 			if (lastChild) {
-				rect.value.top = lastChild.rect.top + lastChild.rect.height
+				// children 是父级 up-list 共用的，里面可能混着 up-cell 等同父级组件
+				// （它们也走 getParentData('up-list')），不是每个都有 rect。
+				// 拿不到 rect 就跳过偏移，否则会抛 "Cannot read properties of undefined (reading 'top')"。
+				const lastRect = lastChild.rect
+				if (lastRect) {
+					rect.value.top = (lastRect.top ?? 0) + (lastRect.height ?? 0)
+				}
 			}
 			if (size.top >= getInnerScrollTop() + (1 + preLoadScreen) * windowHeight) {
 				show.value = false

@@ -42,9 +42,9 @@
 <script setup>
 	import { computed, onBeforeUnmount, ref } from 'vue'
 	import { commonProps } from '../../libs/composable/useUltraUI.js'
-	import { os, getWindowInfo, deepMerge, type2icon } from '../../libs/function/index'
-	import color from '../../libs/config/color'
-	import { hexToRgb } from '../../libs/function/colorGradient'
+	import { os, getWindowInfo, deepMerge, type2icon } from '../../libs/function/index.js'
+	import color from '../../libs/config/color.js'
+	import { hexToRgb } from '../../libs/function/colorGradient.js'
 	/**
 	 * toast 消息提示
 	 * @description 此组件表现形式类似uni的uni.showToastAPI，但也有不同的地方。

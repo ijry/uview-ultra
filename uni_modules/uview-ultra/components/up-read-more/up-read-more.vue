@@ -50,9 +50,9 @@
 const dom = uni.requireNativePlugin('dom')
 // #endif
 import { computed, onMounted, ref } from 'vue'
-import { props as readMoreProps } from './props'
-import { commonProps, useUltraUI } from '../../libs/composable/useUltraUI'
-import { addUnit, guid, getPx, sleep } from '../../libs/function/index'
+import { props as readMoreProps } from './props.js'
+import { commonProps, useUltraUI } from '../../libs/composable/useUltraUI.js'
+import { addUnit, guid, getPx, sleep } from '../../libs/function/index.js'
 /**
  * readMore 阅读更多
  * @description 该组件一般用于内容较长，预先收起一部分，点击展开全部内容的场景。

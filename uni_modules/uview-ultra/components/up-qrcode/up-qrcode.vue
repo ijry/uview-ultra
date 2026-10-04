@@ -139,11 +139,26 @@ let isNvue = false
 function getVueCtx() {
 	// qrcode.js 需要组件实例 (createCanvasContext / canvasToTempFilePath) 以及 drawImage
 	const base = proxy || {}
-	return Object.assign(Object.create(base), {
-		drawImage,
-		get ctx() { return ctx.value },
-		set ctx(v) { ctx.value = v },
+	// 这里必须用 defineProperties 而不是 Object.assign：
+	// Object.assign 走的是 [[Set]]，会沿原型链命中 Vue 组件实例代理的 set 陷阱，
+	// 陷阱返回 false 就抛 "'set' on proxy: trap returned falsish for property 'drawImage'"。
+	// defineProperties 只在 vueCtx 自身上定义属性，不触发原型链的 set。
+	const vueCtx = Object.create(base)
+	Object.defineProperties(vueCtx, {
+		drawImage: {
+			value: drawImage,
+			writable: true,
+			enumerable: true,
+			configurable: true,
+		},
+		ctx: {
+			get() { return ctx.value },
+			set(v) { ctx.value = v },
+			enumerable: true,
+			configurable: true,
+		},
 	})
+	return vueCtx
 }
 
 async function _makeCode() {

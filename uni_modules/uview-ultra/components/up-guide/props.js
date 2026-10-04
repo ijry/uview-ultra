@@ -1,4 +1,4 @@
-import { defineMixin } from '../../libs/vue'
+import { defineMixin } from '../../libs/vue.js'
 import GuideDefaultProps from './guide'
 import { registerComponentProps } from '../../libs/config/props.js'
 

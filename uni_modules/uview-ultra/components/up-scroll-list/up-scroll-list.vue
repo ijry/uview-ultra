@@ -97,12 +97,12 @@
 // #ifdef APP-NVUE
 const dom = uni.requireNativePlugin('dom')
 const BindingX = uni.requireNativePlugin('bindingx')
-import { os } from '../../libs/function/index'
+import { os } from '../../libs/function/index.js'
 // #endif
 import { computed, onMounted, ref } from 'vue'
-import { props as scrollListProps } from './props'
-import { commonProps, useUltraUI } from '../../libs/composable/useUltraUI'
-import { addStyle, addUnit, getPx, sleep } from '../../libs/function/index'
+import { props as scrollListProps } from './props.js'
+import { commonProps, useUltraUI } from '../../libs/composable/useUltraUI.js'
+import { addStyle, addUnit, getPx, sleep } from '../../libs/function/index.js'
 
 defineOptions({
 	name: 'up-scroll-list',

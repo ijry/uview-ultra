@@ -121,19 +121,15 @@ defineOptions({
     // #endif
 })
 
-const buttonProps = {
+const props = defineProps({
+    ...commonProps,
     sessionFrom: String,
     sendMessageTitle: String,
     sendMessagePath: String,
     sendMessageImg: String,
     showMessageCard: Boolean,
     appParameter: String,
-    formType: String
-}
-
-const props = defineProps({
-    ...commonProps,
-    ...buttonProps,
+    formType: String,
     ...propsText.props
 })
 

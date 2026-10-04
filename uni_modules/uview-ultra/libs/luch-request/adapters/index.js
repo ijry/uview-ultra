@@ -1,7 +1,7 @@
-import buildURL from '../helpers/buildURL'
-import buildFullPath from '../core/buildFullPath'
-import settle from '../core/settle'
-import { isUndefined } from '../utils'
+import buildURL from '../helpers/buildURL.js'
+import buildFullPath from '../core/buildFullPath.js'
+import settle from '../core/settle.js'
+import { isUndefined } from '../utils.js'
 
 /**
  * 返回可选值存在的配置

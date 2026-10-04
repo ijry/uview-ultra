@@ -101,7 +101,7 @@ const {
     color
 } = config
 
-export default {
+const props = {
     ...ActionSheet,
     ...Album,
     ...Alert,
@@ -194,3 +194,17 @@ export default {
     ...Video,
     ...Upload
 }
+
+/**
+ * 把某个组件的默认 props 注册进全局 props 表，供组件自己的 props.js 读取。
+ * 与 uview-plus 3.x 的同名 API 行为一致：合并进全局表并返回全局表，
+ * 这样全局 setConfig({ props }) 的覆盖依然生效。
+ */
+export function registerComponentProps(defaultProps = {}) {
+    Object.keys(defaultProps || {}).forEach((key) => {
+        props[key] = Object.assign({}, props[key], defaultProps[key])
+    })
+    return props
+}
+
+export default props

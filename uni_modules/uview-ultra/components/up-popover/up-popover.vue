@@ -32,7 +32,7 @@
 
 <script setup>
 	import { ref } from 'vue'
-    import { props as popoverProps } from './props'
+    import { props as popoverProps } from './props.js'
 	import { commonProps } from '../../libs/composable/useUltraUI.js'
 	/**
 	 * popover 气泡弹出框

@@ -34,8 +34,8 @@
  * @example <up-waterfall :flowList="flowList"></up-waterfall>
  */
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { commonProps, useUltraUI } from '../../libs/composable/useUltraUI'
-import { sleep } from '../../libs/function/index'
+import { commonProps, useUltraUI } from '../../libs/composable/useUltraUI.js'
+import { sleep } from '../../libs/function/index.js'
 
 defineOptions({
 	name: 'up-waterfall',

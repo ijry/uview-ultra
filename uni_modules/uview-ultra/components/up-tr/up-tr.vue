@@ -5,7 +5,7 @@
 </template>
 
 <script setup>
-	import { props as trProps } from './props'
+	import { props as trProps } from './props.js'
 	import { commonProps } from '../../libs/composable/useUltraUI.js'
 	/**
 	 * Tr  

@@ -35,7 +35,7 @@
 const dom = uni.requireNativePlugin('dom')
 // #endif
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
-import { commonProps, useUltraUI } from '../../libs/composable/useUltraUI'
+import { commonProps, useUltraUI } from '../../libs/composable/useUltraUI.js'
 import { addUnit, deepClone, toast, sleep, getWindowInfo } from '../../libs/function/index.js'
 import { colorGradient } from '../../libs/function/colorGradient.js'
 import test from '../../libs/function/test.js'

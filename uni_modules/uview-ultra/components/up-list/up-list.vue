@@ -48,9 +48,9 @@
 
 <script setup>
 	import { computed, provide, ref, toRefs, watch } from 'vue'
-	import { props as listProps } from './props'
+	import { props as listProps } from './props.js'
 	import { commonProps, useUltraUI } from '../../libs/composable/useUltraUI.js'
-	import { addUnit, addStyle, deepMerge, sleep, getWindowInfo } from '../../libs/function/index'
+	import { addUnit, addStyle, deepMerge, sleep, getWindowInfo } from '../../libs/function/index.js'
 	// #ifdef APP-NVUE
 	const dom = uni.requireNativePlugin('dom')
 	// #endif

@@ -32,7 +32,7 @@
 
 <script setup>
 	import { computed } from 'vue'
-	import { props as swiperIndicatorProps } from './props'
+	import { props as swiperIndicatorProps } from './props.js'
 	import { commonProps } from '../../libs/composable/useUltraUI.js'
 	import { addUnit } from '../../libs/function/index.js'
 	/**

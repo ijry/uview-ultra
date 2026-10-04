@@ -24,9 +24,9 @@
 
 <script setup>
 	import { computed, getCurrentInstance, onMounted, ref, toRefs, watch } from 'vue'
-	import { props as tabbarProps } from './props'
+	import { props as tabbarProps } from './props.js'
 	import { commonProps, useUltraUI } from '../../libs/composable/useUltraUI.js'
-	import { addStyle, deepMerge, sleep } from '../../libs/function/index'
+	import { addStyle, deepMerge, sleep } from '../../libs/function/index.js'
 	// #ifdef APP-NVUE
 	const dom = uni.requireNativePlugin('dom')
 	// #endif
@@ -94,7 +94,13 @@
 
 	function updateChildren() {
 		// 如果存在子元素，则执行子元素的updateFromParent进行更新数据
-		children.value.length && children.value.map(child => child.updateFromParent())
+		// children 里可能混进非 tabbar-item 的实例，必须判一下再调，
+		// 否则会抛 "child.updateFromParent is not a function"
+		children.value.map(child => {
+			if (typeof child.updateFromParent === 'function') {
+				child.updateFromParent()
+			}
+		})
 	}
 
 	function applyTabbarContentRect(rect) {

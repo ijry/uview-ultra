@@ -42,7 +42,7 @@
 <script setup>
 import { ref, watch, onMounted } from 'vue'
 import { commonProps } from '../../libs/composable/useUltraUI.js'
-import { t } from '../../libs/i18n'
+import { t } from '../../libs/i18n/index.js'
 
 defineOptions({
 	name: 'up-city-locate',

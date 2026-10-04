@@ -79,9 +79,9 @@
 
 <script setup>
 import { computed, nextTick, ref, watch } from 'vue'
-import { props as searchProps } from './props'
-import { commonProps } from '../../libs/composable/useUltraUI'
-import { addUnit, addStyle } from '../../libs/function/index'
+import { props as searchProps } from './props.js'
+import { commonProps } from '../../libs/composable/useUltraUI.js'
+import { addUnit, addStyle } from '../../libs/function/index.js'
 /**
  * search 搜索框
  * @description 搜索组件，集成了常见搜索框所需功能，用户可以一键引入，开箱即用。

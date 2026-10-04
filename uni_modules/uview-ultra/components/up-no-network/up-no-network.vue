@@ -44,10 +44,10 @@
 
 <script setup>
 import { onMounted, ref } from 'vue'
-import { props as noNetworkProps } from './props'
-import { commonProps, useUltraUI } from '../../libs/composable/useUltraUI'
-import { toast, getDeviceInfo } from '../../libs/function/index'
-import { t } from '../../libs/i18n'
+import { props as noNetworkProps } from './props.js'
+import { commonProps, useUltraUI } from '../../libs/composable/useUltraUI.js'
+import { toast, getDeviceInfo } from '../../libs/function/index.js'
+import { t } from '../../libs/i18n/index.js'
 /**
  * noNetwork 无网络提示
  * @description 该组件无需任何配置，引入即可，内部自动处理所有功能和事件。

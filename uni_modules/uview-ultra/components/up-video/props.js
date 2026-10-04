@@ -1,4 +1,4 @@
-import defProps from './video'
+import defProps from './video.js'
 
 export const props = {
     // 视频地址，传了 episodes 时作为兜底地址

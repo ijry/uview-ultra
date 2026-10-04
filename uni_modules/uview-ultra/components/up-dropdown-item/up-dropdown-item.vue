@@ -22,9 +22,9 @@
 
 <script setup>
 	import { computed, onMounted, ref, toRef, watch } from 'vue'
-	import { props as dropdownItemProps } from './props'
+	import { props as dropdownItemProps } from './props.js'
 	import { commonProps, useUltraUI } from '../../libs/composable/useUltraUI.js'
-	import { addUnit } from '../../libs/function/index'
+	import { addUnit } from '../../libs/function/index.js'
 	/**
 	 * dropdown-item 下拉菜单
 	 * @description 该组件一般用于向下展开菜单，同时可切换多个选项卡的场景

@@ -95,9 +95,9 @@
 <script setup>
 import { computed, getCurrentInstance, ref, watch } from 'vue'
 import { props as swiperProps } from './props.js'
-import { commonProps } from '../../libs/composable/useUltraUI'
-import { addUnit, addStyle, error } from '../../libs/function/index'
-import test from '../../libs/function/test'
+import { commonProps } from '../../libs/composable/useUltraUI.js'
+import { addUnit, addStyle, error } from '../../libs/function/index.js'
+import test from '../../libs/function/test.js'
 /**
  * Swiper 轮播图
  * @description 该组件一般用于导航轮播，广告展示等场景,可开箱即用，

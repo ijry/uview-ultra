@@ -26,9 +26,9 @@
 
 <script setup>
 	import { computed, getCurrentInstance, onMounted, toRef } from 'vue'
-	import { props as anchorProps } from './props'
+	import { props as anchorProps } from './props.js'
 	import { commonProps } from '../../libs/composable/useUltraUI.js'
-	import { addUnit, $parent, error } from '../../libs/function/index'
+	import { addUnit, $parent, error } from '../../libs/function/index.js'
 	// #ifdef APP-NVUE
 	const dom = uni.requireNativePlugin('dom')
 	// #endif

@@ -1,7 +1,7 @@
 'use strict'
 
-import isAbsoluteURL from '../helpers/isAbsoluteURL'
-import combineURLs from '../helpers/combineURLs'
+import isAbsoluteURL from '../helpers/isAbsoluteURL.js'
+import combineURLs from '../helpers/combineURLs.js'
 
 /**
  * Creates a new URL by combining the baseURL with the requestedURL,

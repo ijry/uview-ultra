@@ -46,7 +46,7 @@
 <script setup>
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { props as guideProps } from './props'
-import { commonProps } from '../../libs/composable/useUltraUI'
+import { commonProps } from '../../libs/composable/useUltraUI.js'
 /**
  * Guide 首屏引导
  * @description 全屏首屏引导组件，支持一次性记忆与多页滑动

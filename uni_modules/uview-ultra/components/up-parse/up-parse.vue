@@ -54,10 +54,10 @@ defineOptions({
 	// #ifdef MP-WEIXIN
 	options: {
 		virtualHost: true
-	}
+	},
 	// #endif
 	// #ifndef APP-PLUS-NVUE
-	, components: {
+	components: {
 		node
 	}
 	// #endif

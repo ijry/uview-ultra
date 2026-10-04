@@ -1,5 +1,12 @@
 import { defineMixin } from '../../libs/vue.js'
-import defProps from './album.js'
+import AlbumDefaultProps from './album.js'
+import { registerComponentProps } from '../../libs/config/props.js'
+
+// 这里必须走 registerComponentProps 拿全局 props 表：
+// 下面的 shape / radius 取自 defProps.image（image 组件的默认值），
+// 只 import 本地 album.js 的话 defProps.image 是 undefined，读 .shape 会直接抛。
+const defProps = registerComponentProps(AlbumDefaultProps)
+
 export const props = defineMixin({
     props: {
         // 图片地址，Array<String>|Array<Object>形式

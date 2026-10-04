@@ -4,7 +4,7 @@
  * @version      : 3.0
  * @Date         : 2026-05-29 14:40:00
  */
-import { t } from '../../libs/i18n'
+import { t } from '../../libs/i18n/index.js'
 
 export default {
     calendarStrip: {

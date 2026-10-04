@@ -2,7 +2,7 @@
 // const pleaseSetTranspileDependencies = {}, babelTest = pleaseSetTranspileDependencies?.test
 
 // 全局挂载引入http相关请求拦截插件
-import Request from './libs/luch-request'
+import Request from './libs/luch-request/index.js'
 
 // 路由封装
 import route from './libs/util/route.js'
@@ -72,7 +72,7 @@ import zIndex from './libs/config/zIndex.js'
 // 关于颜色的配置，特殊场景使用
 import color from './libs/config/color.js'
 // 平台
-import platform from './libs/function/platform'
+import platform from './libs/function/platform.js'
 
 // fontUtil
 import fontUtil from './components/up-icon/util.js'
@@ -256,8 +256,9 @@ export const mount$u = function() {
 }
 
 // #ifdef H5
+// 注意：这里只 glob .vue。index.js 是 uni-app Vue3 的入口（uni-app x 走 index.uts），
+// Vue3 编译器不认识 .uvue 语法，把 .uvue 一起 glob 进来会让整个构建失败。
 const importFn = import.meta.glob('./components/up-*/up-*.vue', { eager: true })
-const miniImportFn = import.meta.glob('./components/up-*/up-*.uvue', { eager: true })
 let components = [];
 
 // 批量注册全局组件
@@ -274,17 +275,6 @@ for (const key in importFn) {
     }
 }
 
-// 注册 .uvue 组件
-for (const key in miniImportFn) {
-    let component = miniImportFn[key].default;
-    if (component.name) {
-        component.install = function (Vue) {
-            Vue.component(component.name, component);
-        };
-        
-        components.push(component);
-    }
-}
 // #endif
 
 function defineGlobalThemeHelpers(Vue) {
@@ -351,5 +341,4 @@ const install = (Vue) => {
 
 export default {
     install,
-    UpNoNetwork,
 }

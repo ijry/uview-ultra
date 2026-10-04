@@ -40,7 +40,7 @@
 </template>
 
 <script setup>
-	import { props as navbarMiniProps } from './props'
+	import { props as navbarMiniProps } from './props.js'
 	import { commonProps } from '../../libs/composable/useUltraUI.js'
 	import { addUnit } from '../../libs/function/index.js'
 	/**

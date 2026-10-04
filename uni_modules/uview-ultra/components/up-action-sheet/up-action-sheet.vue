@@ -161,7 +161,8 @@ defineOptions({
 	// #endif
 })
 
-const buttonProps = {
+const props = defineProps({
+	...commonProps,
 	lang: String,
 	sessionFrom: String,
 	sendMessageTitle: String,
@@ -170,12 +171,7 @@ const buttonProps = {
 	showMessageCard: Boolean,
 	appParameter: String,
 	formType: String,
-	openType: String
-}
-
-const props = defineProps({
-	...commonProps,
-	...buttonProps,
+	openType: String,
 	...actionSheetProps.props
 })
 const emit = defineEmits([

@@ -192,12 +192,12 @@
  * @example <up-upload :action="action" :fileList="fileList" ></up-upload>
  */
 import { ref, watch } from 'vue'
-import { chooseFile as chooseFileUtil } from './utils'
-import { props as uploadProps } from './props'
-import { commonProps } from '../../libs/composable/useUltraUI'
-import { addStyle, addUnit, toast, error } from '../../libs/function/index'
-import test from '../../libs/function/test'
-import { t } from '../../libs/i18n'
+import { chooseFile as chooseFileUtil } from './utils.js'
+import { props as uploadProps } from './props.js'
+import { commonProps } from '../../libs/composable/useUltraUI.js'
+import { addStyle, addUnit, toast, error } from '../../libs/function/index.js'
+import test from '../../libs/function/test.js'
+import { t } from '../../libs/i18n/index.js'
 
 // 组装uni.uploadFile的文件参数。
 // H5下选择结果里带的是真实File对象，直接交给uni.uploadFile；否则它只能拿blob:

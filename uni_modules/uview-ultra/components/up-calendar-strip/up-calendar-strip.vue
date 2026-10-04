@@ -88,9 +88,9 @@
 <script setup>
 import { computed, nextTick, ref, watch } from 'vue'
 import { props as calendarStripProps } from './props'
-import { commonProps } from '../../libs/composable/useUltraUI'
+import { commonProps } from '../../libs/composable/useUltraUI.js'
 import dayjs from '../up-datetime-picker/dayjs.esm.min.js'
-import test from '../../libs/function/test'
+import test from '../../libs/function/test.js'
 
 /**
  * CalendarStrip 单行日历

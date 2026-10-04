@@ -54,8 +54,8 @@
 
 <script setup>
 import { computed, ref, watch } from 'vue'
-import { commonProps } from '../../libs/composable/useUltraUI'
-import { addStyle } from '../../libs/function/index'
+import { commonProps } from '../../libs/composable/useUltraUI.js'
+import { addStyle } from '../../libs/function/index.js'
 
 defineOptions({
 	name: 'up-tabs-pro',

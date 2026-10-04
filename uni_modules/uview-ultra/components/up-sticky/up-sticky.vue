@@ -15,10 +15,10 @@
 
 <script setup>
 import { computed, getCurrentInstance, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { props as stickyProps } from './props'
-import { commonProps, useUltraUI } from '../../libs/composable/useUltraUI'
-import { addUnit, addStyle, deepMerge, getPx, guid, getDeviceInfo, os, upCreateIntersectionObserver } from '../../libs/function/index'
-import zIndex from '../../libs/config/zIndex'
+import { props as stickyProps } from './props.js'
+import { commonProps, useUltraUI } from '../../libs/composable/useUltraUI.js'
+import { addUnit, addStyle, deepMerge, getPx, guid, getDeviceInfo, os, upCreateIntersectionObserver } from '../../libs/function/index.js'
+import zIndex from '../../libs/config/zIndex.js'
 /**
  * sticky 吸顶
  * @description 该组件与CSS中position: sticky属性实现的效果一致，当组件达到预设的到顶部距离时， 就会固定在指定位置，组件位置大于预设的顶部距离时，会重新按照正常的布局排列。

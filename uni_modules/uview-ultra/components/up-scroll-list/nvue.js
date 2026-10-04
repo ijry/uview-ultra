@@ -1,6 +1,6 @@
 // 引入bindingx，此库类似于微信小程序wxs，目的是让js运行在视图层，减少视图层和逻辑层的通信折损
 const BindingX = uni.requireNativePlugin('bindingx')
-import { os } from '../../libs/function/index';
+import { os } from '../../libs/function/index.js';
 export default {
     methods: {
         // 此处不写注释，请自行体会

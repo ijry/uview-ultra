@@ -32,10 +32,10 @@
 
 <script setup>
 	import { computed } from 'vue'
-	import { props as emptyProps } from './props'
+	import { props as emptyProps } from './props.js'
 	import { commonProps } from '../../libs/composable/useUltraUI.js'
-	import { addUnit, addStyle, deepMerge } from '../../libs/function/index'
-	import { t } from '../../libs/i18n'
+	import { addUnit, addStyle, deepMerge } from '../../libs/function/index.js'
+	import { t } from '../../libs/i18n/index.js'
 
 	defineOptions({
 		name: 'up-empty',

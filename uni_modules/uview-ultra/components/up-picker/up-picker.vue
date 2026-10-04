@@ -80,7 +80,7 @@
  */
 import { computed, nextTick, ref, watch } from 'vue'
 import { props as pickerProps } from './props.js'
-import { commonProps } from '../../libs/composable/useUltraUI'
+import { commonProps } from '../../libs/composable/useUltraUI.js'
 import { addUnit, deepClone, sleep } from '../../libs/function/index.js'
 import test from '../../libs/function/test.js'
 

@@ -49,7 +49,7 @@
 <script setup>
 import { getCurrentInstance, nextTick, onMounted, ref, watch } from 'vue'
 import { commonProps } from '../../libs/composable/useUltraUI.js'
-import { addUnit, sleep, upCreateIntersectionObserver } from '../../libs/function/index'
+import { addUnit, sleep, upCreateIntersectionObserver } from '../../libs/function/index.js'
 
 defineOptions({
 	name: 'up-cate-tab',

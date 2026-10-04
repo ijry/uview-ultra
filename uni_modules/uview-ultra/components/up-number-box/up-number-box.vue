@@ -94,9 +94,9 @@
 
 <script setup>
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
-import { props as numberBoxProps } from './props'
-import { commonProps } from '../../libs/composable/useUltraUI'
-import { getPx, addUnit } from '../../libs/function/index'
+import { props as numberBoxProps } from './props.js'
+import { commonProps } from '../../libs/composable/useUltraUI.js'
+import { getPx, addUnit } from '../../libs/function/index.js'
 /**
  * numberBox 步进器
  * @description 该组件一般用于商城购物选择物品数量的场景。

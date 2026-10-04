@@ -57,9 +57,9 @@
 
 <script setup>
 	import { computed, getCurrentInstance, nextTick, onBeforeUnmount, onMounted, reactive, ref, toRef, useSlots, watch } from 'vue'
-	import { props as tabbarItemProps } from './props'
+	import { props as tabbarItemProps } from './props.js'
 	import { commonProps, useUltraUI } from '../../libs/composable/useUltraUI.js'
-	import { addStyle, error, sleep } from '../../libs/function/index'
+	import { addStyle, error, sleep } from '../../libs/function/index.js'
 	import { calculateMidButtonBorderClipHeight } from './midButtonGeometry.js'
 	/**
 	 * TabbarItem 底部导航栏子组件

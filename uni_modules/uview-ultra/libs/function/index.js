@@ -119,6 +119,59 @@ export function getWindowInfo() {
 }
 
 /**
+ * @description 获取设备信息接口
+ * @link 获取设备信息 https://uniapp.dcloud.io/api/system/info?id=getdeviceinfo
+ */
+export function getDeviceInfo() {
+	let ret = {}
+	// #ifdef APP || H5 || MP-WEIXIN
+	ret = uni.getDeviceInfo()
+	// #endif
+	// #ifndef APP || H5 || MP-WEIXIN
+	ret = sys()
+	// #endif
+	return ret
+}
+
+function emptyNodeInfo() {
+	return {
+		width: 0,
+		height: 0,
+		left: 0,
+		right: 0,
+		top: 0,
+		bottom: 0
+	}
+}
+
+/**
+ * @description 查询节点信息
+ * @param {String} selector 选择器
+ * @param {Boolean} all 是否查询所有匹配节点
+ * @param {Object} comp 组件实例，查询组件内部节点时需要
+ * @returns {Promise<Object>} 节点信息
+ */
+export function upGetRect(selector, all = false, comp = null) {
+	return new Promise((resolve) => {
+		if (all == true) {
+			uni.createSelectorQuery()
+				.in(comp).selectAll(selector)
+				.boundingClientRect((res) => {
+					resolve(res != null && res.length > 0 ? res[0] : emptyNodeInfo())
+				})
+				.exec()
+		} else {
+			uni.createSelectorQuery()
+				.in(comp).select(selector)
+				.boundingClientRect((res) => {
+					resolve(res != null ? res : emptyNodeInfo())
+				})
+				.exec()
+		}
+	})
+}
+
+/**
  * @description 取一个区间数
  * @param {Number} min 最小值
  * @param {Number} max 最大值

@@ -95,9 +95,9 @@
 
 <script setup>
 	import { computed, ref, watch } from 'vue'
-	import { props as modalProps } from './props'
+	import { props as modalProps } from './props.js'
 	import { commonProps } from '../../libs/composable/useUltraUI.js'
-	import { addUnit } from '../../libs/function/index'
+	import { addUnit } from '../../libs/function/index.js'
 	/**
 	 * Modal 模态框
 	 * @description 弹出模态框，常用于消息提示、消息确认、在当前页面内完成特定的交互操作。

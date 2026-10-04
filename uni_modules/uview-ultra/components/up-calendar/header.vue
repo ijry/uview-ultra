@@ -53,7 +53,7 @@
 </template>
 
 <script setup>
-import { commonProps } from '../../libs/composable/useUltraUI'
+import { commonProps } from '../../libs/composable/useUltraUI.js'
 /**
  * up-calendar-header
  */

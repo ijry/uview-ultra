@@ -39,7 +39,7 @@
 
 <script setup>
 	import { computed, nextTick, watch } from 'vue'
-	import { props as switchProps } from './props'
+	import { props as switchProps } from './props.js'
 	import { commonProps } from '../../libs/composable/useUltraUI.js'
 	import { addStyle, addUnit, error } from '../../libs/function/index.js'
 	/**

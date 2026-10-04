@@ -37,8 +37,8 @@
 
 <script setup>
 import { computed, nextTick, ref } from 'vue'
-import { commonProps, useUltraUI } from '../../libs/composable/useUltraUI'
-import { getWindowInfo } from '../../libs/function/index'
+import { commonProps, useUltraUI } from '../../libs/composable/useUltraUI.js'
+import { getWindowInfo } from '../../libs/function/index.js'
 /**
  * select 下拉选择
  */

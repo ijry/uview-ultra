@@ -112,10 +112,10 @@ const animation = uni.requireNativePlugin('animation')
 const dom = uni.requireNativePlugin('dom')
 // #endif
 import { computed, getCurrentInstance, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { props as tabsProps } from './props'
-import { commonProps, useUltraUI } from '../../libs/composable/useUltraUI'
+import { props as tabsProps } from './props.js'
+import { commonProps, useUltraUI } from '../../libs/composable/useUltraUI.js'
 import defProps from '../../libs/config/props.js'
-import { addUnit, addStyle, deepClone, deepMerge, getPx, sleep, getWindowInfo } from '../../libs/function/index'
+import { addUnit, addStyle, deepClone, deepMerge, getPx, sleep, getWindowInfo } from '../../libs/function/index.js'
 /**
  * Tabs 标签
  * @description tabs标签组件，在标签多的时候，可以配置为左右滑动，标签少的时候，可以禁止滑动。 该组件的一个特点是配置为滚动模式时，激活的tab会自动移动到组件的中间位置。

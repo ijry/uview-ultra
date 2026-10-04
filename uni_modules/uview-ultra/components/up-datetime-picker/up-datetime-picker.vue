@@ -54,7 +54,7 @@
  */
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { props as datetimeProps } from './props.js'
-import { commonProps } from '../../libs/composable/useUltraUI'
+import { commonProps } from '../../libs/composable/useUltraUI.js'
 import dayjs from './dayjs.esm.min.js'
 import { range, error, padZero, timeFormat } from '../../libs/function/index.js'
 

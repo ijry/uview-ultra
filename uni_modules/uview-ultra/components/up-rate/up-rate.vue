@@ -75,9 +75,9 @@
 
 <script setup>
 import { onMounted, ref, watch } from 'vue'
-import { props as rateProps } from './props'
-import { commonProps, useUltraUI } from '../../libs/composable/useUltraUI'
-import { addUnit, addStyle, guid, sleep, range, os } from '../../libs/function/index'
+import { props as rateProps } from './props.js'
+import { commonProps, useUltraUI } from '../../libs/composable/useUltraUI.js'
+import { addUnit, addStyle, guid, sleep, range, os } from '../../libs/function/index.js'
 // #ifdef APP-NVUE
 const dom = weex.requireModule('dom')
 // #endif

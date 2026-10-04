@@ -23,7 +23,7 @@
 </template>
 
 <script setup>
-import { t } from '../../libs/i18n'
+import { t } from '../../libs/i18n/index.js'
 import { getCurrentInstance, nextTick, ref, watch, onMounted } from 'vue'
 import { commonProps } from '../../libs/composable/useUltraUI.js'
 

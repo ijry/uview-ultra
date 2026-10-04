@@ -1,5 +1,8 @@
 import { defineMixin } from '../../libs/vue.js'
 import defProps from '../../libs/config/props.js'
+
+const crtProp = defProps.grid
+
 export const propsGrid = defineMixin({
     props: {
         // 分成几列

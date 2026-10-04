@@ -53,7 +53,7 @@
 
 <script setup>
 import { computed, getCurrentInstance, ref, watch } from 'vue'
-import { commonProps } from '../../libs/composable/useUltraUI'
+import { commonProps } from '../../libs/composable/useUltraUI.js'
 import { getThemeVar } from '../../libs/theme/runtime.js'
 
 /**

@@ -50,10 +50,10 @@
 
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue'
-import { props as skeletonProps } from './props'
-import { commonProps, useUltraUI } from '../../libs/composable/useUltraUI'
-import { addUnit, sleep, error } from '../../libs/function/index'
-import test from '../../libs/function/test'
+import { props as skeletonProps } from './props.js'
+import { commonProps, useUltraUI } from '../../libs/composable/useUltraUI.js'
+import { addUnit, sleep, error } from '../../libs/function/index.js'
+import test from '../../libs/function/test.js'
 // #ifdef APP-NVUE
 const dom = uni.requireNativePlugin('dom')
 const animation = uni.requireNativePlugin('animation')

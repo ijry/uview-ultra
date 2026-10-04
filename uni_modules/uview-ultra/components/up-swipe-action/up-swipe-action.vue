@@ -6,7 +6,7 @@
 
 <script setup>
 	import { toRef, watch } from 'vue'
-	import { props as swipeActionProps } from './props'
+	import { props as swipeActionProps } from './props.js'
 	import { commonProps, useUltraUI } from '../../libs/composable/useUltraUI.js'
 	/**
 	 * SwipeAction 滑动单元格 

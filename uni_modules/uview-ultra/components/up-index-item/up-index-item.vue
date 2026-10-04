@@ -16,9 +16,9 @@
 
 <script setup>
 	import { getCurrentInstance, onMounted, ref } from 'vue'
-	import { props as itemProps } from './props'
+	import { props as itemProps } from './props.js'
 	import { commonProps, useUltraUI } from '../../libs/composable/useUltraUI.js'
-	import { sleep, error } from '../../libs/function/index'
+	import { sleep, error } from '../../libs/function/index.js'
 	// #ifdef APP-NVUE
 	// 由于weex为阿里的KPI业绩考核的产物，所以不支持百分比单位，这里需要通过dom查询组件的宽度
 	const dom = uni.requireNativePlugin('dom')

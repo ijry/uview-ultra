@@ -221,7 +221,7 @@
 </template>
 
 <script setup>
-import { addUnit, sleep } from '../../libs/function/index';
+import { addUnit, sleep } from '../../libs/function/index.js';
 import tableRow from './tableRow.vue'; // 引入递归组件
 
 import { computed, getCurrentInstance, nextTick, ref, watch, onMounted } from 'vue'

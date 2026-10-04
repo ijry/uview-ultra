@@ -2,7 +2,7 @@
 const dom = uni.requireNativePlugin('dom');
 const bindingX = uni.requireNativePlugin('bindingx');
 const animation = uni.requireNativePlugin('animation');
-import { getPx, getDuration } from '../../libs/function/index';
+import { getPx, getDuration } from '../../libs/function/index.js';
 export default {
 	data() {
 		return {

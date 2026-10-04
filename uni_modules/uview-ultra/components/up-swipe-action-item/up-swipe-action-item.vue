@@ -67,8 +67,8 @@
  */
 import { computed, getCurrentInstance, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { props as swipeActionItemProps } from './props.js'
-import { commonProps, useUltraUI } from '../../libs/composable/useUltraUI'
-import { addUnit, getPx, sleep, getDuration } from '../../libs/function/index'
+import { commonProps, useUltraUI } from '../../libs/composable/useUltraUI.js'
+import { addUnit, getPx, sleep, getDuration } from '../../libs/function/index.js'
 
 // #ifdef APP-NVUE
 const dom = uni.requireNativePlugin('dom')

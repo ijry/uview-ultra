@@ -99,8 +99,8 @@
 
 <script setup>
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
-import { props as sliderProps } from './props'
-import { commonProps, useUltraUI } from '../../libs/composable/useUltraUI'
+import { props as sliderProps } from './props.js'
+import { commonProps, useUltraUI } from '../../libs/composable/useUltraUI.js'
 import { addStyle, getPx, sleep } from '../../libs/function/index.js'
 import { digitLength, strip } from '../../libs/function/digit.js'
 // #ifdef APP-NVUE

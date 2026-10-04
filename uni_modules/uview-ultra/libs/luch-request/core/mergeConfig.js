@@ -1,4 +1,4 @@
-import { deepMerge, isUndefined } from '../utils'
+import { deepMerge, isUndefined } from '../utils.js'
 
 /**
  * 合并局部配置优先的配置，如果局部有该配置项则用局部，如果全局有该配置项则用全局
