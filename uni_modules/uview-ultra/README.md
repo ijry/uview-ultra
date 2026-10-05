@@ -8,6 +8,7 @@
 [![Website](https://img.shields.io/badge/nvue-compatible-green)](https://uview-ultra.lingyun.net/)
 [![Website](https://img.shields.io/badge/vue-compatible-green)](https://uview-ultra.lingyun.net/)
 [![Website](https://img.shields.io/badge/build-passing-green)](https://uview-ultra.lingyun.net/)
+[![npm](https://img.shields.io/npm/v/uview-ultra.svg)](https://www.npmjs.com/package/uview-ultra)
 
 
 
@@ -60,6 +61,51 @@
 ## 安装
 
 #### **uni-app插件市场链接** —— [https://ext.dcloud.net.cn/plugin?name=uview-ultra](https://ext.dcloud.net.cn/plugin?name=uview-ultra)
+
+#### **npm（uni-app CLI 工程）**
+
+```bash
+npm i uview-ultra
+```
+
+npm 方式安装不会自动写入 easycom 规则，需要在 `pages.json` 里自己加一条
+（插件市场安装会自动配好）：
+
+```json
+{
+	"easycom": {
+		"autoscan": true,
+		"custom": {
+			"^up-(.*)": "uview-ultra/components/up-$1/up-$1.vue"
+		}
+	}
+}
+```
+
+并在 `main.js` 里挂载插件、引入全局样式：
+
+```js
+import uviewUltra from 'uview-ultra'
+import 'uview-ultra/index.scss'
+
+export function createApp() {
+	const app = createSSRApp(App)
+	app.use(uviewUltra)
+	return { app }
+}
+```
+
+全局样式也可以不写在 `main.js`，改到 `App.vue` 的 `<style lang="scss">` 里：
+
+```html
+<style lang="scss">
+	@import 'uview-ultra/index.scss';
+</style>
+```
+
+> npm 包的入口是 `index.js`（uni-app / Vue3 的实现）。
+> **uni-app x 工程请用插件市场安装** —— 它走的是 `.uvue` 那套实现，
+> 而 npm 包同时包含 `.vue` 与 `.uvue` 两份源码，混用容易装错组件。
 
 ## 快速上手
 
