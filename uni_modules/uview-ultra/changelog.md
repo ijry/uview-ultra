@@ -1,3 +1,27 @@
+## 4.5.46
+fix: 修复 uni-app Vue3（.js/.vue）侧无法编译与运行的 12 处问题，并补全 168 处导入扩展名
+
+uview-ultra 是双实现：`.uts`/`.uvue` 走 uni-app x 编译链，`.js`/`.vue` 走 uni-app Vue3 编译链。此前只有 uni-app x 工程，`.js`/`.vue` 那一套从未进入任何编译链，缺陷只能等用户反馈。本次搭了独立的 uni-app Vue3 工程做全量编译门禁与 126 个示例页逐页运行时验证，并修掉暴露出的问题。
+
+Vue3 侧编译期问题：
+- `libs/config/props.js`：补回 `registerComponentProps()`。3.x 有这个 API，4.x 移植时漏了，而 `up-calendar-strip` / `up-guide` 的 `props.js` 都在 import 它，构建报 `does not provide an export named 'registerComponentProps'`
+- `up-grid/props.js`：`crtProp` 未声明（漏了 `const crtProp = defProps.grid`）
+- `up-action-sheet.vue` / `up-text.vue`：`defineProps` 里展开了局部 const `buttonProps`，而 defineProps 的参数会被 hoist 到 setup 之外，编译器直接拒绝，改为内联进字面量
+- `up-parse.vue`：`defineOptions` 里 `, components:` 与 `#ifdef MP-WEIXIN` 的 `options` 块共用同一个逗号，非小程序平台裁掉 options 后变成双逗号，编译报 `Unexpected token`
+- `libs/function/index.js`：补 `getDeviceInfo()` 与 `upGetRect()`。`.vue` 侧一直在 import，`.js` 侧却没有实现，构建报 `not exported by`
+- `up-album/props.js`：`defProps` 被换成了本地 `album.js`，`defProps.image` 为 undefined，读 `.shape` 直接抛。改回 `registerComponentProps(AlbumDefaultProps)`，与 3.x 一致
+- `index.js`：去掉 `export default` 里未定义的 `UpNoNetwork`（`index.uts` 与 3.x 都不导出它，运行期直接报 `UpNoNetwork is not defined`）；H5 分支不再 glob `./components/up-*/up-*.uvue`，Vue3 编译器不认识 uvue 语法
+
+Vue3 侧运行期问题：
+- `up-tabbar.vue`：`children` 里可能混进非 `tabbar-item` 的实例，调用 `updateFromParent` 前加 `typeof` 判断（`up-steps.vue` 本来就有这个防御）
+- `up-list-item.vue`：`children` 是父级 `up-list` 共用的，里面会混进 `up-cell`，取 `lastChild.rect` 前判空，并按 uvue 侧语义补 `?? 0`
+- `up-qrcode.vue`：`Object.assign(Object.create(componentProxy), ...)` 会走 `[[Set]]` 命中 Vue 组件实例代理的 set 陷阱并抛 `'set' on proxy: trap returned falsish`，改用 `Object.defineProperties`
+- `up-poster.vue`：`rpx2px` 全库不存在，改用 `uni.upx2px`
+
+影响面最大的一类是导入解析：uni-app 的 `resolve.extensions` 是 `['.uts', '.mjs', '.js', ...]`，`.uts` 排在第一位，而且非 uni-app x 构建也是这个顺序（见 `@dcloudio/uni-cli-shared` 的 `COMMON_EXTENSIONS`）。凡是「同名 `.js` 与 `.uts` 并存、导入又省略扩展名」的地方，在 Vue3 工程里都会解析到 `.uts`，被 esbuild 当 UTS 解析而失败；目录导入（如 `libs/i18n`）会解析到 `index.uts`，运行期直接报 `UTSJSONObject is not defined`。本次给 `.js`/`.vue` 里 168 处相对导入补全了显式 `.js` 扩展名，涉及 96 个文件。
+
+验证方式：新增独立的 uni-app Vue3 工程（`ly-ultra-ui/uview-ultra-uni-app`），六段门禁——示例页漂移 / 导入解析 / SFC 全量编译 / no-undef / 模块加载冒烟 / 真实 `uni build`（H5），全绿；126 个示例页 Playwright 逐页运行时冒烟全部通过。
+
 ## 4.5.45
 feat: 新增 up-video 视频播放器，并适配 uni-app-x 蒸汽模式（HBuilderX 5.26）
 
