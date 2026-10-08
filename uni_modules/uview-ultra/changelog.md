@@ -1,3 +1,10 @@
+## 4.5.47
+fix: 修复导航栏胶囊遮挡、条码画布初始化时序并补齐类型导出
+
+- up-navbar（.vue / .uvue）：新增默认开启的 avoidCapsule，微信小程序右侧文字、图标及插槽内容自动避让原生胶囊；设置 :avoidCapsule="false" 可恢复原布局，其他平台和胶囊信息无效时保持原布局。同步 JS/UTS 默认配置、props 和类型声明。
+- up-barcode：.vue 画布渲染、.uvue 图片生成及导出在创建或查询画布前等待组件宿主视图完成更新，避免全局 nextTick 已结束但画布节点或尺寸尚未提交；.uvue 默认 View 条码展示逻辑不变。
+- 类型入口：补齐 FormValidateError、NumberBoxFocusPayload、NumberBoxChangePayload、PaginationProps、VideoEpisode、VideoAd、VideoDanmu、VideoProps 共 8 个已有类型的导出，修复包入口 import type 报未导出成员及类型导出一致性校验失败。
+
 ## 4.5.46
 fix: 修复 uni-app Vue3（.js/.vue）侧无法编译与运行的 12 处问题，并补全 168 处导入扩展名
 

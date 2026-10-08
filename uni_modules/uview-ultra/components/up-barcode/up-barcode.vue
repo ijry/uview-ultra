@@ -214,7 +214,8 @@ async function renderToCanvas(options) {
         // 计算canvas尺寸
         calculateCanvasSize(options)
 
-        await nextTick()
+        // 等待组件宿主视图完成更新，避免小程序画布尚未挂载或尺寸未提交。
+        await proxy.$nextTick()
 
         // 获取canvas上下文
         const ctx = uni.createCanvasContext(canvasId.value, proxy)

@@ -27,7 +27,8 @@ export default {
 		autoBack: false,
 		titleStyle: '',
 		mode: 'default',
-		scrollTop: 0
+		scrollTop: 0,
+		avoidCapsule: true
     }
 
 }

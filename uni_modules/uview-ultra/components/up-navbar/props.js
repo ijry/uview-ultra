@@ -92,6 +92,11 @@ export const props = defineMixin({
 		scrollTop: {
 			type: [String, Number],
 			default: () => defProps.navbar.scrollTop
+		},
+		// 微信小程序右侧区域是否避让原生胶囊
+		avoidCapsule: {
+			type: Boolean,
+			default: () => defProps.navbar.avoidCapsule
 		}
 	}
 })

@@ -69,6 +69,7 @@
 				</view>
 				<view
 					class="up-navbar__content__right"
+					:style="navbarRightStyle"
 					v-if="$slots['right'] != null || rightIcon != '' || rightText != ''"
 					@tap="rightClick"
 				>
@@ -114,6 +115,7 @@
 	 * @property {String | Number}	leftIconColor		左侧返回图标的颜色（默认 #303133 ）
 	 * @property {Boolean}	        autoBack			点击左侧区域(返回图标)，是否自动返回上一页（默认 false ）
 	 * @property {Object | String}	titleStyle			标题的样式，对象或字符串
+	 * @property {Boolean}			avoidCapsule		微信小程序右侧区域是否避让原生胶囊（默认 true ）
 	 * @event {Function} leftClick		点击左侧区域
 	 * @event {Function} rightClick		点击右侧区域
 	 * @example <up-navbar title="剑未配妥，出门已是江湖" left-text="返回" right-text="帮助" @click-left="onClickBack" @click-right="onClickRight"></up-navbar>
@@ -214,6 +216,11 @@
 			type: [String, Number],
 			default: defProps.getAny('navbar.scrollTop')
 		},
+		// 微信小程序右侧区域是否避让原生胶囊
+		avoidCapsule: {
+			type: Boolean,
+			default: defProps.getBoolean('navbar.avoidCapsule')
+		},
 		customClass: {
 			type: String,
 			default: ''
@@ -228,6 +235,20 @@
 	const LARGE_TITLE_HEIGHT = 52
 	// 居中标题上浮的起始偏移，与淡入同步归零
 	const CENTER_TITLE_RISE = 12
+
+	// 胶囊 API 仅在微信小程序编译；其他平台保持原有布局。
+	const navbarRightStyle = computed((): UTSJSONObject => {
+		// #ifdef MP-WEIXIN
+		if (!props.avoidCapsule) return {} as UTSJSONObject
+		const rect = uni.getMenuButtonBoundingClientRect()
+		const windowWidth = uni.getWindowInfo().windowWidth
+		if (rect == null || rect.left <= 0 || windowWidth <= 0 || rect.left >= windowWidth) return {} as UTSJSONObject
+		return { right: (windowWidth - rect.left).toString() + 'px' } as UTSJSONObject
+		// #endif
+		// #ifndef MP-WEIXIN
+		return {} as UTSJSONObject
+		// #endif
+	})
 
 	const isIosMode = computed((): boolean => {
 		return props.mode == 'ios'

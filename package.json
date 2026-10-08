@@ -2,6 +2,8 @@
   "name": "uviewultra",
   "version": "4.0.0",
   "scripts": {
+    "verify:navbar-avoid-capsule": "node scripts/verify-navbar-avoid-capsule.mjs",
+    "verify:barcode-canvas-tick": "node scripts/verify-barcode-canvas-tick.mjs",
     "verify:waterfall-distribution": "node scripts/verify-waterfall-distribution.mjs",
     "verify:dragsort-stable-identity": "node scripts/verify-dragsort-stable-identity.mjs",
     "verify:swipe-action-scrolling": "node scripts/verify-swipe-action-scrolling.mjs",

@@ -78,6 +78,7 @@
 				</view>
 				<view
 					class="up-navbar__content__right"
+					:style="navbarRightStyle"
 					v-if="$slots.right || rightIcon || rightText"
 					@tap="rightClick"
 				>
@@ -102,7 +103,7 @@
 import { props as navbarProps } from './props.js'
 import { commonProps } from '../../libs/composable/useUltraUI.js'
 import config from '../../libs/config/config.js'
-import { addUnit, addStyle, getPx, sys } from '../../libs/function/index.js'
+import { addUnit, addStyle, getPx, sys, getWindowInfo } from '../../libs/function/index.js'
 import { computed, getCurrentInstance } from 'vue'
 
 // iOS 大标题行高，同时是压缩进度的分母
@@ -131,6 +132,7 @@ const CENTER_TITLE_RISE = 12
  * @property {Object | String}	titleStyle			标题的样式，对象或字符串
  * @property {String}			mode				导航栏模式，default-常规，ios-大标题模式（默认 'default' ）
  * @property {String | Number}	scrollTop			页面滚动距离，仅 ios 模式使用，由页面 onPageScroll 传入（默认 0 ）
+ * @property {Boolean}			avoidCapsule		微信小程序右侧区域是否避让原生胶囊（默认 true ）
  * @event {Function} leftClick		点击左侧区域
  * @event {Function} rightClick		点击右侧区域
  * @example <up-navbar title="剑未配妥，出门已是江湖" left-text="返回" right-text="帮助" @click-left="onClickBack" @click-right="onClickRight"></up-navbar>
@@ -149,6 +151,20 @@ const props = defineProps({
 	...navbarProps.props
 })
 const emit = defineEmits(['leftClick', 'rightClick'])
+
+// 微信小程序右侧内容避让原生胶囊；关闭或胶囊信息无效时保留原布局。
+const navbarRightStyle = computed(() => {
+	// #ifdef MP-WEIXIN
+	if (!props.avoidCapsule) return {}
+	const rect = uni.getMenuButtonBoundingClientRect()
+	const windowWidth = getWindowInfo().windowWidth
+	if (!rect || rect.left <= 0 || !windowWidth || rect.left >= windowWidth) return {}
+	return { right: (windowWidth - rect.left) + 'px' }
+	// #endif
+	// #ifndef MP-WEIXIN
+	return {}
+	// #endif
+})
 
 const isIosMode = computed(() => props.mode === 'ios')
 

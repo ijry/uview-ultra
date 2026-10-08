@@ -93,6 +93,11 @@ export const propsNavbar = defineMixin({
 		scrollTop: {
 			type: [String, Number],
 			default: crtProp['scrollTop']
+		},
+		// 微信小程序右侧区域是否避让原生胶囊
+		avoidCapsule: {
+			type: Boolean,
+			default: crtProp['avoidCapsule']
 		}
 	}
 })

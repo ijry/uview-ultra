@@ -77,6 +77,11 @@ declare interface NavbarProps {
    */
   titleStyle?: unknown
   /**
+   * 微信小程序右侧区域是否避让原生胶囊，其他平台不生效
+   * @default true
+   */
+  avoidCapsule?: boolean
+  /**
    * 点击左侧区域
    */
   onLeftClick?: () => any

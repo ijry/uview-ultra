@@ -638,7 +638,8 @@ const drawCanvasBarcode = (): Promise<void> => {
 const exportImage = (): Promise<string> => {
   return new Promise((resolve, reject) => {
     showCanvas.value = true
-    nextTick(() => {
+    // 等待条件渲染的画布提交到组件宿主视图后再查询节点。
+    instance.$nextTick(() => {
       initCanvas().then(() => {
         drawCanvasBarcode().then(() => {
           const canvas = canvasContext.value
