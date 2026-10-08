@@ -55,7 +55,7 @@
                 </slot>
             </template>
             <template #error="slotProps">
-                <slot name="error" v-bind="slotProps">
+                <slot name="error" :error="slotProps.error" :retry="slotProps.retry">
                     <text class="up-novel-reader__state-text">{{ error && error.message || '章节加载失败' }}</text>
                     <view class="up-novel-reader__state-action" @tap.stop="handleRetry">重试</view>
                 </slot>

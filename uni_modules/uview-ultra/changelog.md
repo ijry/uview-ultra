@@ -1,3 +1,10 @@
+## 4.5.48
+fix: 修复 up-tabs-pro、up-novel-reader Vue 版微信小程序编译报错
+
+- up-tabs-pro（.vue）：移除原生 view 上不受小程序编译器支持的对象形式 v-bind="$attrs"，修复 v-bind="" is not supported. 报错。
+- 同时恢复默认根节点属性继承，保留 H5 下 id、data-*、外部 class/style 及原生事件绑定；组件 props、事件、插槽 API 与 .uvue 实现保持不变。
+- up-novel-reader（.vue）：error 插槽改为显式传递 error、retry，修复对象形式 v-bind 导致的微信小程序编译报错；保留错误对象、重试回调、默认错误提示和重试按钮，插槽 API 与 .uvue 实现不变。
+
 ## 4.5.47
 fix: 修复导航栏胶囊遮挡、条码画布初始化时序并补齐类型导出
 
