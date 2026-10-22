@@ -8,6 +8,7 @@
             mode="bottom"
             :closeable="pageInline ? false : closeable"
             :pageInline="pageInline"
+            :safeAreaInsetBottom="safeAreaInsetBottom"
             :border-radius="20"
             @close="close"
             @closed="closedHandler"
@@ -77,7 +78,7 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { commonProps } from '../../libs/composable/useUltraUI.js'
 import { t } from '../../libs/i18n/index.js'
 
@@ -107,6 +108,11 @@ const props = defineProps({
 		type: Array,
 		default: () => []
 	},
+	// 默认选中的SKU
+	defaultSku: {
+		type: Object,
+		default: () => ({})
+	},
 	// 最大购买数量
 	maxBuy: {
 		type: Number,
@@ -126,12 +132,17 @@ const props = defineProps({
 	pageInline: {
 		type: Boolean,
 		default: false
+	},
+	// 是否留出底部安全距离
+	safeAreaInsetBottom: {
+		type: Boolean,
+		default: true
 	}
 })
 const emit = defineEmits(['open', 'confirm', 'close', 'closed'])
 
 const show = ref(false)
-const selectedSku = ref({})
+const selectedSku = ref({ ...props.defaultSku })
 const buyNum = ref(1)
 
 if (props.pageInline) {
@@ -270,9 +281,14 @@ function onNumChange(e) {
 }
 
 function reset() {
-	selectedSku.value = {}
+	selectedSku.value = { ...props.defaultSku }
 	buyNum.value = 1
 }
+
+// 外部更新 defaultSku 时，同步替换内部选中状态
+watch(() => props.defaultSku, (sku) => {
+	selectedSku.value = { ...(sku || {}) }
+})
 
 function open() {
 	show.value = true

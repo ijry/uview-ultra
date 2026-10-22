@@ -8,6 +8,7 @@
             mode="bottom"
             :closeable="pageInline ? false : closeable"
             :pageInline="pageInline"
+            :safeAreaInsetBottom="safeAreaInsetBottom"
             :border-radius="20"
             @close="close"
             @closed="closedHandler"
@@ -78,7 +79,7 @@
 
 <script setup lang="uts">
 	import type { PropType } from 'vue'
-	import { computed, ref } from 'vue'
+	import { computed, ref, watch } from 'vue'
 	function emptySkuList(): Array<UTSJSONObject> {
 		return [] as Array<UTSJSONObject>
 	}
@@ -87,6 +88,17 @@
 	}
 	function emptyObject(): UTSJSONObject {
 		return {} as UTSJSONObject
+	}
+	function cloneSkuObject(value: UTSJSONObject | null): UTSJSONObject {
+		if (value == null) {
+			return emptyObject()
+		}
+		const result = emptyObject()
+		const keys = UTSJSONObject.keys(value)
+		for (let i = 0; i < keys.length; i++) {
+			result[keys[i]] = value[keys[i]]
+		}
+		return result
 	}
 	function normalizeNumber(value: any | null, defaultValue: number = 0): number {
 		if (typeof value === 'number') {
@@ -148,6 +160,13 @@ const props = defineProps({
 				return [] as Array<UTSJSONObject>
 			}
 		},
+		// 默认选中的SKU
+		defaultSku: {
+			type: Object as PropType<UTSJSONObject>,
+			default(): UTSJSONObject {
+				return {} as UTSJSONObject
+			}
+		},
 		// 最大购买数量
 		maxBuy: {
 			type: Number,
@@ -167,12 +186,17 @@ const props = defineProps({
 		pageInline: {
 			type: Boolean,
 			default: false
+		},
+		// 是否留出底部安全距离
+		safeAreaInsetBottom: {
+			type: Boolean,
+			default: true
 		}
 })
 
 const emit = defineEmits(['open', 'confirm', 'close', 'closed'])
 const show = ref(props.pageInline)
-const selectedSku = ref(emptyObject())
+const selectedSku = ref(cloneSkuObject(props.defaultSku))
 const buyNum = ref(1)
 
 const skuTreeList = computed((): Array<UTSJSONObject> => {
@@ -380,9 +404,14 @@ const onNumChange = (e: UTSJSONObject): void => {
 }
 
 const reset = (): void => {
-	selectedSku.value = emptyObject()
+	selectedSku.value = cloneSkuObject(props.defaultSku)
 	buyNum.value = 1
 }
+
+// 外部更新 defaultSku 时，同步替换内部选中状态
+watch(() : UTSJSONObject | null => props.defaultSku, (newVal: UTSJSONObject | null) => {
+	selectedSku.value = cloneSkuObject(newVal)
+})
 
 const open = (): void => {
 	show.value = true

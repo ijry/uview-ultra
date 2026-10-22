@@ -14,6 +14,7 @@
     "verify:action-sheet-slot-close": "node scripts/verify-action-sheet-slot-close.mjs",
     "verify:overlay-qrcode-canvas-init": "node scripts/verify-overlay-qrcode-canvas-init.mjs",
     "verify:novel-reader-props": "node scripts/verify-novel-reader-props.mjs",
+    "verify:goods-sku-default-selection": "node scripts/verify-goods-sku-default-selection.mjs",
     "verify:novel-reader-data": "node scripts/verify-novel-reader-data.mjs",
     "verify:novel-reader-layout": "node scripts/verify-novel-reader-layout.mjs",
     "verify:novel-reader-ui": "node scripts/verify-novel-reader-ui.mjs",
