@@ -1,3 +1,10 @@
+## 4.5.52
+fix: 修复 up-icon 的 folder 图标在 uni-app x（.uvue）下不显示
+
+- up-icon/icons.uts：folder 的 key 误写为 `uiupiconcon-folder`（.js 侧为 `uicon-folder`），
+  up-icon.uvue 按 `upicon-folder` 查表落空返回空字符串，图标不渲染；已修正 key，
+  并全量比对 icons.js 与 icons.uts 的 key 集合确认无其它缺失（212 vs 211 → 212 对齐）
+
 ## 4.5.51
 fix: 蒸汽模式运行时主题的原生 UI 同步仅在 App 端执行
 
