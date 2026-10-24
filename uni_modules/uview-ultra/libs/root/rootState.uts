@@ -1,0 +1,74 @@
+/**
+ * uni-app x（蒸汽模式）全局 root 宿主状态。
+ *
+ * up-root-toast-host.uvue 挂载时把 up-toast / up-notify 的组件实例注册进来，
+ * 业务侧通过 rootToast() / rootNotify() 触发全局提示；没有宿主时降级
+ * uni.showToast。
+ */
+import { ref } from 'vue'
+
+export const rootToastRef = ref<ComponentPublicInstance | null>(null)
+export const rootNotifyRef = ref<ComponentPublicInstance | null>(null)
+
+export function setRootToastRef(instance: ComponentPublicInstance | null): void {
+    rootToastRef.value = instance
+}
+
+export function setRootNotifyRef(instance: ComponentPublicInstance | null): void {
+    rootNotifyRef.value = instance
+}
+
+function normalizeOptions(options: UTSJSONObject | string): UTSJSONObject {
+    if (options instanceof String) {
+        const obj = {} as UTSJSONObject
+        obj['message'] = options.toString()
+        return obj
+    }
+    const source = options as UTSJSONObject
+    const message = source['message']
+    if (message == null) {
+        const title = source['title']
+        if (title != null && typeof title === 'string') {
+            source['message'] = title
+        }
+    }
+    return source
+}
+
+export function rootToast(options: UTSJSONObject | string): void {
+    const toastOptions = normalizeOptions(options)
+    const instance = rootToastRef.value
+    if (instance != null) {
+        instance.$callMethod('show', toastOptions)
+        return
+    }
+    const message = toastOptions['message']
+    if (message == null || typeof message !== 'string') return
+    const durationValue = toastOptions['duration']
+    let duration = 2000
+    if (typeof durationValue === 'number') duration = Math.round(durationValue as number)
+    uni.showToast({
+        title: message as string,
+        icon: 'none',
+        duration
+    })
+}
+
+export function rootNotify(options: UTSJSONObject | string): void {
+    const notifyOptions = normalizeOptions(options)
+    const instance = rootNotifyRef.value
+    if (instance != null) {
+        instance.$callMethod('show', notifyOptions)
+        return
+    }
+    const message = notifyOptions['message']
+    if (message == null || typeof message !== 'string') return
+    const durationValue = notifyOptions['duration']
+    let duration = 3000
+    if (typeof durationValue === 'number') duration = Math.round(durationValue as number)
+    uni.showToast({
+        title: message as string,
+        icon: 'none',
+        duration
+    })
+}

@@ -1,3 +1,23 @@
+## 4.5.50
+feat: 新增蒸汽模式运行时主题系统与 up-root 页面级根组件，支持运行时暗黑切换
+
+uni-app x 蒸汽模式下 App.uvue 不允许 template，无法在应用根注入主题；且样式隔离 2.0 下组件默认 isolated。本次补齐 uview-ultra 在蒸汽模式的暗黑能力：
+
+- 新增 libs/theme/theme.uts：运行时主题系统（与 .js 侧 theme.js 同一套默认色值与 u-theme-mode 存储 key），状态基于 vue ref，模板/computed 中调用 upThemeVar() 可建立响应式依赖，切换主题自动刷新。导出 initThemeSystem / setTheme / setThemePreference / getThemePreference / getThemeVars / upThemeVar / upThemeIsDark / upThemeVarsStyle / getThemePageStyle / getThemeCardStyle / getThemeTabBarStyle，index.uts 统一再导出，install 时自动 initThemeSystem()
+- 新增 up-root 页面级根组件（.uvue + .vue 双实现）：作为每页根容器，把主题 CSS 变量表（--up-* / --u-*）绑定到根节点 style，页面与 app-and-page 隔离的子组件通过 var(--up-*) 消费；可选注入页面底色/文字色，内嵌全局 toast/notify 宿主（toastHost 属性可关闭）
+- 新增 up-root-toast-host.uvue + libs/root/rootState.uts：up-toast / up-notify 全局宿主注册，导出 rootToast() / rootNotify()，未挂宿主时降级 uni.showToast
+- 用法：每页 <up-root> 包裹根节点；业务样式继续写 var(--up-primary, fallback)，脚本侧 upThemeVar('--up-primary', '#3c9cff')
+
+## 4.5.49
+feat: up-goods-sku 支持默认选中与底部安全区配置
+
+up-goods-sku 的 .vue 与 .uvue 实现同步补齐 defaultSku 与 safeAreaInsetBottom 能力，行为与 uview-plus 3.x 保持一致。
+
+- up-goods-sku：新增 defaultSku 属性，支持设置默认选中的 SKU，并支持响应式更新与重置恢复
+- up-goods-sku：新增 safeAreaInsetBottom 属性（默认 true），可关闭底部安全距离，并透传给 up-popup
+- up-goods-sku：.uvue 侧通过 cloneSkuObject 复制传入的默认选中对象，避免直接引用外部对象
+- 回归验证：新增 scripts/verify-goods-sku-default-selection.mjs，静态断言模板、props、初始化、watch 与 reset 行为
+
 ## 4.5.48
 fix: 修复 up-tabs-pro、up-novel-reader Vue 版微信小程序编译报错
 

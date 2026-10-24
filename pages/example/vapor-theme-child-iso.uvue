@@ -1,0 +1,24 @@
+<template>
+	<view class="child-box">
+		<text class="child-read">蓝(#3c9cff)=继承穿透通过；红=失败</text>
+	</view>
+</template>
+
+<script setup lang="uts">
+	defineOptions({
+		styleIsolation: 'isolated'
+	})
+</script>
+
+<style>
+	.child-box {
+		padding: 8px;
+		border-radius: 6px;
+		background-color: #fafafa;
+	}
+
+	.child-read {
+		color: var(--t1-color, #ff4d4f);
+		font-size: 14px;
+	}
+</style>

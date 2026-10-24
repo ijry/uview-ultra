@@ -81,9 +81,56 @@ class UPUtils {
 	}
 }
 const uputils = new UPUtils()
+
+// 运行时主题系统（蒸汽模式暗黑支持）
+import {
+	initThemeSystem,
+	setTheme,
+	setThemePreference,
+	getThemePreference,
+	getSystemTheme,
+	getThemeVars,
+	upThemeVar,
+	upThemeIsDark,
+	upThemeVarsStyle,
+	getThemePageStyle,
+	getThemeCardStyle,
+	getThemeTabBarStyle,
+	applyNativeThemeUI,
+	upThemeMode,
+	upThemePreference,
+	upThemeVersion,
+	upThemeVars
+} from './libs/theme/theme.uts'
+export {
+	initThemeSystem,
+	setTheme,
+	setThemePreference,
+	getThemePreference,
+	getSystemTheme,
+	getThemeVars,
+	upThemeVar,
+	upThemeIsDark,
+	upThemeVarsStyle,
+	getThemePageStyle,
+	getThemeCardStyle,
+	getThemeTabBarStyle,
+	applyNativeThemeUI
+}
+
+// 全局 root 宿主（up-root + 全局 toast/notify）
+import {
+	rootToast,
+	rootNotify,
+	setRootToastRef,
+	setRootNotifyRef
+} from './libs/root/rootState.uts'
+export { rootToast, rootNotify, setRootToastRef, setRootNotifyRef }
+
 export const install = (app: VueApp): void => {
 	app.config.globalProperties.$u = uputils
     app.config.globalProperties.$up = uputils
+	initThemeSystem()
 }
 
 export default {

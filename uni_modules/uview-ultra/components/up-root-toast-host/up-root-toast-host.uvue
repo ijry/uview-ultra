@@ -1,0 +1,27 @@
+<template>
+	<up-toast ref="toastRef"></up-toast>
+	<up-notify ref="notifyRef"></up-notify>
+</template>
+
+<script setup lang="uts">
+	defineOptions({
+		name: 'up-root-toast-host',
+		styleIsolation: 'app-and-page'
+	})
+
+	import { onBeforeUnmount, onMounted, ref } from 'vue'
+	import { setRootToastRef, setRootNotifyRef } from '../../libs/root/rootState.uts'
+
+	const toastRef = ref<ComponentPublicInstance | null>(null)
+	const notifyRef = ref<ComponentPublicInstance | null>(null)
+
+	onMounted(() => {
+		setRootToastRef(toastRef.value)
+		setRootNotifyRef(notifyRef.value)
+	})
+
+	onBeforeUnmount(() => {
+		setRootToastRef(null)
+		setRootNotifyRef(null)
+	})
+</script>

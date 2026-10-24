@@ -1,0 +1,111 @@
+<template>
+	<view class="wrap" :style="pageVars">
+		<view class="section">
+			<text class="title">T1 var() 读取 :style 内联定义的变量</text>
+			<text class="t1-read">蓝(#3c9cff)=通过；红=失败(读到 fallback)</text>
+		</view>
+		<view class="section">
+			<text class="title">T2 变量继承穿透子组件（app-and-page）</text>
+			<vapor-theme-child></vapor-theme-child>
+		</view>
+		<view class="section">
+			<text class="title">T3 变量继承穿透子组件（isolated）</text>
+			<vapor-theme-child-iso></vapor-theme-child-iso>
+		</view>
+		<view class="section">
+			<text class="title">T4 运行时切换变量表（响应式刷新）</text>
+			<text class="t4-read">{{ switchLabel }}</text>
+			<view class="btn" @click="toggleVars">
+				<text class="btn-text">切换变量表</text>
+			</view>
+		</view>
+		<view class="section">
+			<text class="title">T5 页面根底色跟随变量（背景）</text>
+			<text class="t5-read">背景变紫=运行时背景切换通过</text>
+		</view>
+	</view>
+</template>
+
+<script setup lang="uts">
+	defineOptions({
+		styleIsolation: 'app-and-page'
+	})
+
+	import VaporThemeChild from './vapor-theme-child.uvue'
+	import VaporThemeChildIso from './vapor-theme-child-iso.uvue'
+
+	// 预演 up-root 的主题注入方式：根节点 :style 绑定变量表 UTSJSONObject
+	const lightVars = {
+		'--t1-color': '#3c9cff',
+		'--t4-color': '#3c9cff',
+		'--t5-bg': '#f3f4f6'
+	} as UTSJSONObject
+	const darkVars = {
+		'--t1-color': '#3c9cff',
+		'--t4-color': '#7c4dff',
+		'--t5-bg': '#ede7f6'
+	} as UTSJSONObject
+
+	const pageVars = ref<UTSJSONObject>(lightVars)
+	const switchLabel = ref('当前色: #3c9cff(蓝)')
+
+	function toggleVars() {
+		if (pageVars.value.getString('--t4-color') == '#3c9cff') {
+			pageVars.value = darkVars
+			switchLabel.value = '当前色: #7c4dff(紫)'
+		} else {
+			pageVars.value = lightVars
+			switchLabel.value = '当前色: #3c9cff(蓝)'
+		}
+	}
+</script>
+
+<style lang="scss">
+	.wrap {
+		padding: 12px;
+		background-color: var(--t5-bg, #ffffff);
+	}
+
+	.section {
+		padding: 12px;
+		margin-bottom: 12px;
+		border: 1px solid #d8d8d8;
+		border-radius: 8px;
+		flex-direction: column;
+	}
+
+	.title {
+		font-size: 15px;
+		font-weight: bold;
+		color: #303133;
+		margin-bottom: 8px;
+	}
+
+	.t1-read {
+		color: var(--t1-color, #ff4d4f);
+		font-size: 14px;
+	}
+
+	.t4-read {
+		color: var(--t4-color, #ff4d4f);
+		font-size: 14px;
+		margin-bottom: 8px;
+	}
+
+	.t5-read {
+		color: #303133;
+		font-size: 14px;
+	}
+
+	.btn {
+		padding: 8px 16px;
+		background-color: #3c9cff;
+		border-radius: 6px;
+		align-self: flex-start;
+	}
+
+	.btn-text {
+		color: #ffffff;
+		font-size: 14px;
+	}
+</style>

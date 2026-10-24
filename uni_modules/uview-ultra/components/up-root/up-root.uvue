@@ -1,0 +1,57 @@
+<template>
+	<view class="up-root" :style="rootStyle">
+		<slot></slot>
+		<up-root-toast-host v-if="toastHost"></up-root-toast-host>
+	</view>
+</template>
+
+<script setup lang="uts">
+	/**
+	 * up-root 页面级根组件（uni-app x 蒸汽模式）。
+	 *
+	 * uni-app x 的 App.uvue 不允许 template，无法像老工程那样在应用根注入
+	 * 主题变量 —— 用 up-root 作为每个页面的根容器：把运行时主题系统的
+	 * CSS 变量表（--up-* / --u-*）绑定到根节点 style，页面与子组件
+	 * （styleIsolation: 'app-and-page'）即可通过 var(--up-*) 消费，
+	 * 切换暗黑时整页自动刷新。
+	 */
+	defineOptions({
+		name: 'up-root',
+		styleIsolation: 'app-and-page'
+	})
+
+	import { computed } from 'vue'
+	import { propsRoot } from './props.uts'
+	import { upThemeVarsStyle, upThemeVar } from '../../libs/theme/theme.uts'
+
+	const props = defineProps(propsRoot)
+
+	const rootStyle = computed((): UTSJSONObject => {
+		const style = {} as UTSJSONObject
+		const vars = upThemeVarsStyle()
+		UTSJSONObject.keys(vars).forEach((key: string) => {
+			const value = vars[key]
+			if (typeof value === 'string') {
+				style[key] = value
+			}
+		})
+		if (props.background) {
+			style['backgroundColor'] = upThemeVar('--up-page-bg-color', '#f3f4f6')
+			style['color'] = upThemeVar('--up-main-color', '#303133')
+		}
+		const customStyle = props.customStyle
+		if (customStyle instanceof UTSJSONObject) {
+			const custom = customStyle as UTSJSONObject
+			UTSJSONObject.keys(custom).forEach((key: string) => {
+				style[key] = custom[key]
+			})
+		}
+		return style
+	})
+</script>
+
+<style>
+	.up-root {
+		flex: 1;
+	}
+</style>

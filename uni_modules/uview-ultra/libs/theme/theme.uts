@@ -1,0 +1,417 @@
+/**
+ * uni-app x（蒸汽模式）运行时主题系统。
+ *
+ * 与 libs/theme/theme.js 保持同一套默认色值与存储 key（u-theme-mode），
+ * 但状态层改为 vue ref，保证模板/computed 中调用 upThemeVar() 等函数时
+ * 能建立响应式依赖：切换主题只需替换 ref 值，所有读取处自动刷新。
+ *
+ * 用法（页面/组件）：
+ *   import { upThemeVar, upThemeVarsStyle, setThemePreference, initThemeSystem } from '@/uni_modules/uview-ultra/libs/theme/theme.uts'
+ *   <view :style="upThemeVarsStyle()"> 或 <up-root> 包裹整页
+ *   :color="upThemeVar('--up-primary', '#3c9cff')"
+ */
+import { ref } from 'vue'
+import config from '../config/config.uts'
+
+// ---------------- 默认色值表（与 theme.js 对齐） ----------------
+
+const LIGHT_COLORS: UTSJSONObject = {
+    primary: '#3c9cff',
+    info: '#909399',
+    warning: '#f9ae3d',
+    error: '#f56c6c',
+    success: '#5ac725',
+    mainColor: '#303133',
+    contentColor: '#606266',
+    tipsColor: '#909193',
+    lightColor: '#c0c4cc',
+    borderColor: '#dadbde',
+    bgColor: '#f3f4f6',
+    disabledColor: '#c8c9cc',
+    primaryDark: '#398ade',
+    primaryDisabled: '#9acafc',
+    primaryLight: '#ecf5ff',
+    warningDark: '#f1a532',
+    warningDisabled: '#f9d39b',
+    warningLight: '#fdf6ec',
+    successDark: '#53c21d',
+    successDisabled: '#a9e08f',
+    successLight: '#f5fff0',
+    errorDark: '#e45656',
+    errorDisabled: '#f7b2b2',
+    errorLight: '#fef0f0',
+    infoDark: '#767a82',
+    infoDisabled: '#c4c6c9',
+    infoLight: '#f4f4f5'
+}
+
+const DARK_COLORS: UTSJSONObject = {
+    primary: '#3c9cff',
+    info: '#909399',
+    warning: '#f9ae3d',
+    error: '#f56c6c',
+    success: '#5ac725',
+    mainColor: '#f5f5f5',
+    contentColor: '#d1d5db',
+    tipsColor: '#9ca3af',
+    lightColor: '#6b7280',
+    borderColor: '#3a3a3c',
+    bgColor: '#1f1f1f',
+    disabledColor: '#4b5563',
+    primaryDark: '#5aa8ff',
+    primaryDisabled: '#4c6f92',
+    primaryLight: '#10243a',
+    warningDark: '#ffbf66',
+    warningDisabled: '#8a6a3a',
+    warningLight: '#3d2f1b',
+    successDark: '#7ad94b',
+    successDisabled: '#5f7f4f',
+    successLight: '#1f3316',
+    errorDark: '#ff8a8a',
+    errorDisabled: '#8d5858',
+    errorLight: '#3a2222',
+    infoDark: '#b0b3b8',
+    infoDisabled: '#5f6368',
+    infoLight: '#2f3238'
+}
+
+const EXTRA_LIGHT_VARS: UTSJSONObject = {
+    '--up-table2-header-bg-color': '#f5f7fa',
+    '--up-table2-zebra-bg-color': '#fafafa',
+    '--up-table2-highlight-bg-color': '#f5f7fa',
+    '--up-gap-bg-color': '#f3f4f6',
+    '--up-skeleton-bg-color': '#f1f2f4',
+    '--up-skeleton-shimmer-color': '#e6e6e6',
+    '--up-swipe-action-button-bg-color': '#c7c6cd',
+    '--up-index-list-indicator-bg-color': '#c9c9c9',
+    '--up-calendar-month-mark-color': 'rgba(231, 232, 234, 0.83)'
+}
+
+const EXTRA_DARK_VARS: UTSJSONObject = {
+    '--up-table2-header-bg-color': '#2a2d33',
+    '--up-table2-zebra-bg-color': '#23262b',
+    '--up-table2-highlight-bg-color': '#2f3440',
+    '--up-gap-bg-color': '#111111',
+    '--up-skeleton-bg-color': '#2f3135',
+    '--up-skeleton-shimmer-color': 'rgba(255, 255, 255, 0.12)',
+    '--up-swipe-action-button-bg-color': '#4b5563',
+    '--up-index-list-indicator-bg-color': '#4b5563',
+    '--up-calendar-month-mark-color': 'rgba(255, 255, 255, 0.04)'
+}
+
+// 主题色字段 -> CSS 变量 token（不含 --up-/--u- 前缀）
+const FIELD_TOKENS: UTSJSONObject = {
+    'primary': 'primary',
+    'primaryDark': 'primary-dark',
+    'primaryDisabled': 'primary-disabled',
+    'primaryLight': 'primary-light',
+    'warning': 'warning',
+    'warningDark': 'warning-dark',
+    'warningDisabled': 'warning-disabled',
+    'warningLight': 'warning-light',
+    'success': 'success',
+    'successDark': 'success-dark',
+    'successDisabled': 'success-disabled',
+    'successLight': 'success-light',
+    'error': 'error',
+    'errorDark': 'error-dark',
+    'errorDisabled': 'error-disabled',
+    'errorLight': 'error-light',
+    'info': 'info',
+    'infoDark': 'info-dark',
+    'infoDisabled': 'info-disabled',
+    'infoLight': 'info-light',
+    'mainColor': 'main-color',
+    'contentColor': 'content-color',
+    'tipsColor': 'tips-color',
+    'lightColor': 'light-color',
+    'borderColor': 'border-color',
+    'bgColor': 'bg-color',
+    'disabledColor': 'disabled-color'
+}
+
+const THEME_MODE_STORAGE_KEY = 'u-theme-mode'
+
+// ---------------- 响应式状态 ----------------
+
+/** 实际生效的主题模式：'light' | 'dark' */
+export const upThemeMode = ref<string>('light')
+/** 用户偏好：'light' | 'dark' | 'system' */
+export const upThemePreference = ref<string>('system')
+/** 主题版本号，每次切换 +1 */
+export const upThemeVersion = ref<number>(0)
+/** 当前完整 CSS 变量表（含 --up-* 与 --u-* 双前缀） */
+export const upThemeVars = ref<UTSJSONObject>({} as UTSJSONObject)
+
+let hasRegisterThemeListener = false
+
+// ---------------- 工具函数 ----------------
+
+function normalizeThemeMode(theme: string): string {
+    return theme === 'dark' ? 'dark' : 'light'
+}
+
+function normalizeThemePreference(mode: string): string {
+    return mode === 'dark' || mode === 'light' ? mode : 'system'
+}
+
+function pickColor(colors: UTSJSONObject, field: string, fallback: string): string {
+    const value = colors[field]
+    if (value instanceof String) {
+        const text = value.toString()
+        if (text.length > 0) return text
+    }
+    if (typeof value === 'string') {
+        if ((value as string).length > 0) return value as string
+    }
+    return fallback
+}
+
+/** 读取 config.uts color 中显式配置的 token（支持 up-/u- 双前缀 key） */
+function configColorOverride(token: string): string {
+    const colorMap = config['color']
+    if (!(colorMap instanceof UTSJSONObject)) return ''
+    const conf = colorMap as UTSJSONObject
+    const upKey = `up-${token}`
+    const uKey = `u-${token}`
+    const upValue = conf[upKey]
+    if (typeof upValue === 'string' && (upValue as string).length > 0) return upValue as string
+    const uValue = conf[uKey]
+    if (typeof uValue === 'string' && (uValue as string).length > 0) return uValue as string
+    return ''
+}
+
+function configColorExtraVars(out: UTSJSONObject): void {
+    const colorMap = config['color']
+    if (!(colorMap instanceof UTSJSONObject)) return
+    const conf = colorMap as UTSJSONObject
+    UTSJSONObject.keys(conf).forEach((key: string) => {
+        const value = conf[key]
+        if (typeof value !== 'string') return
+        const isUpToken = key.indexOf('up-') === 0
+        const isUToken = key.indexOf('u-') === 0
+        if (!isUpToken && !isUToken) return
+        const cssVarName = `--${key}`
+        if (out[cssVarName] != null) return
+        out[cssVarName] = value
+        // --up- <-> --u- 别名
+        const aliasVarName = isUpToken
+            ? `--u-${key.slice(3)}`
+            : `--up-${key.slice(2)}`
+        out[aliasVarName] = value
+    })
+}
+
+// ---------------- 主题变量表构建 ----------------
+
+/** 构建指定模式的完整变量表（直接色值，无 bridge var() 引用）。 */
+export function getThemeVars(mode: string | null = null): UTSJSONObject {
+    const themeMode = normalizeThemeMode(mode == null ? upThemeMode.value : (mode as string))
+    const isDark = themeMode === 'dark'
+    const base = isDark ? DARK_COLORS : LIGHT_COLORS
+    const vars = {} as UTSJSONObject
+    UTSJSONObject.keys(FIELD_TOKENS).forEach((field: string) => {
+        const token = FIELD_TOKENS[field] as string
+        const fallback = pickColor(base, field, isDark ? '#1f1f1f' : '#303133')
+        const override = configColorOverride(token)
+        const value = override.length > 0 ? override : fallback
+        vars[`--up-${token}`] = value
+        vars[`--u-${token}`] = value
+    })
+    const hoverBg = isDark ? '#343741' : '#e7ebf0'
+    vars['--up-hover-bg-color'] = hoverBg
+    vars['--u-hover-bg-color'] = hoverBg
+    const pageBg = pickColor(base, 'bgColor', isDark ? '#1f1f1f' : '#f3f4f6')
+    vars['--up-page-bg-color'] = pageBg
+    const cardBg = isDark ? '#1c1c1e' : '#ffffff'
+    vars['--up-card-bg-color'] = cardBg
+    const navbarBg = isDark ? '#1c1c1e' : '#ffffff'
+    vars['--up-navbar-bg-color'] = navbarBg
+    const extra = isDark ? EXTRA_DARK_VARS : EXTRA_LIGHT_VARS
+    UTSJSONObject.keys(extra).forEach((key: string) => {
+        const value = extra[key]
+        if (typeof value !== 'string') return
+        vars[key] = value
+        if (key.indexOf('--up-') === 0) vars[`--u-${key.slice(5)}`] = value
+    })
+    configColorExtraVars(vars)
+    return vars
+}
+
+/**
+ * 根节点注入用 style 对象：整页 <up-root> 或根 view :style 绑定。
+ * 读取 upThemeVars ref，切换主题时自动刷新。
+ */
+export function upThemeVarsStyle(): UTSJSONObject {
+    // 读 ref 建立响应式依赖
+    return upThemeVars.value
+}
+
+/** 页面底色 style。 */
+export function getThemePageStyle(): UTSJSONObject {
+    const bg = upThemeVar('--up-page-bg-color', upThemeMode.value === 'dark' ? '#1f1f1f' : '#f3f4f6')
+    const style = {} as UTSJSONObject
+    style['backgroundColor'] = bg
+    return style
+}
+
+/** 卡片底色/边框 style。 */
+export function getThemeCardStyle(): UTSJSONObject {
+    const isDark = upThemeMode.value === 'dark'
+    const style = {} as UTSJSONObject
+    style['backgroundColor'] = upThemeVar('--up-card-bg-color', isDark ? '#1c1c1e' : '#ffffff')
+    style['borderColor'] = upThemeVar('--up-border-color', isDark ? '#3a3a3c' : '#dadbde')
+    return style
+}
+
+export function getThemeTabBarStyle(): UTSJSONObject {
+    const isDark = upThemeMode.value === 'dark'
+    const style = {} as UTSJSONObject
+    style['color'] = isDark ? '#8e8e93' : '#909399'
+    style['selectedColor'] = isDark ? '#f2f2f7' : '#303133'
+    style['backgroundColor'] = isDark ? '#111111' : '#ffffff'
+    style['borderStyle'] = isDark ? 'white' : 'black'
+    return style
+}
+
+/**
+ * 读取主题变量值（响应式：内部读 upThemeVars ref）。
+ * 支持 --up-* / --u- / up-* / u- 前缀，未命中时返回 fallbackColor。
+ */
+export function upThemeVar(varName: string, fallbackColor: string = ''): string {
+    if (varName.length == 0) return fallbackColor
+    let cssVarName = varName.indexOf('--') === 0 ? varName : `--${varName}`
+    const vars = upThemeVars.value
+    let value = vars[cssVarName]
+    if (typeof value === 'string' && (value as string).length > 0) return value as string
+    // 别名 --up- <-> --u-
+    let aliasVarName = ''
+    if (cssVarName.indexOf('--up-') === 0) aliasVarName = `--u-${cssVarName.slice(5)}`
+    else if (cssVarName.indexOf('--u-') === 0) aliasVarName = `--up-${cssVarName.slice(4)}`
+    if (aliasVarName.length > 0) {
+        value = vars[aliasVarName]
+        if (typeof value === 'string' && (value as string).length > 0) return value as string
+    }
+    return fallbackColor
+}
+
+/** 当前是否暗黑（响应式）。 */
+export function upThemeIsDark(): boolean {
+    return upThemeMode.value === 'dark'
+}
+
+export function getSystemTheme(): string {
+    let theme = 'light'
+    try {
+        const appBaseInfo = uni.getAppBaseInfo()
+        if (appBaseInfo.theme != null && appBaseInfo.theme.length > 0) {
+            theme = appBaseInfo.theme
+        }
+    } catch (e) {
+        theme = 'light'
+    }
+    return normalizeThemeMode(theme)
+}
+
+export function getThemePreference(): string {
+    return upThemePreference.value
+}
+
+// ---------------- 原生 UI 同步 ----------------
+
+export function applyNativeThemeUI(mode: string | null = null): void {
+    const syncEnabled = config['nativeThemeSync']
+    if (syncEnabled !== true) return
+    const themeMode = normalizeThemeMode(mode == null ? upThemeMode.value : (mode as string))
+    const isDark = themeMode === 'dark'
+    const pageBg = upThemeVar('--up-page-bg-color', isDark ? '#1f1f1f' : '#f3f4f6')
+    const navBg = upThemeVar('--up-navbar-bg-color', isDark ? '#1c1c1e' : '#ffffff')
+    try {
+        uni.setNavigationBarColor({
+            frontColor: isDark ? '#ffffff' : '#000000',
+            backgroundColor: navBg,
+            animation: { duration: 0, timingFunc: 'linear' }
+        })
+    } catch (e) {}
+    try {
+        uni.setBackgroundColor({
+            backgroundColor: pageBg,
+            backgroundColorTop: pageBg,
+            backgroundColorBottom: pageBg
+        })
+    } catch (e) {}
+    const tabBarStyle = getThemeTabBarStyle()
+    try {
+        uni.setTabBarStyle({
+            color: tabBarStyle['color'] as string,
+            selectedColor: tabBarStyle['selectedColor'] as string,
+            backgroundColor: tabBarStyle['backgroundColor'] as string,
+            borderStyle: tabBarStyle['borderStyle'] as 'white' | 'black'
+        })
+    } catch (e) {}
+}
+
+function applyTheme(mode: string): void {
+    const themeMode = normalizeThemeMode(mode)
+    upThemeMode.value = themeMode
+    upThemeVars.value = getThemeVars(themeMode)
+    upThemeVersion.value = upThemeVersion.value + 1
+    applyNativeThemeUI(themeMode)
+    try {
+        uni.$emit('uThemeChange', {
+            mode: themeMode,
+            version: upThemeVersion.value,
+            vars: upThemeVars.value
+        } as UTSJSONObject)
+    } catch (e) {}
+}
+
+/** 设置并持久化主题偏好（'light' | 'dark'）。 */
+export function setTheme(mode: string): void {
+    const preference = normalizeThemeMode(mode)
+    upThemePreference.value = preference
+    try {
+        uni.setStorageSync(THEME_MODE_STORAGE_KEY, preference)
+    } catch (e) {}
+    applyTheme(preference)
+}
+
+/** 设置主题偏好（'light' | 'dark' | 'system'），system 时跟随系统。 */
+export function setThemePreference(mode: string): void {
+    const preference = normalizeThemePreference(mode)
+    upThemePreference.value = preference
+    try {
+        uni.setStorageSync(THEME_MODE_STORAGE_KEY, preference)
+    } catch (e) {}
+    if (preference === 'system') {
+        applyTheme(getSystemTheme())
+    } else {
+        applyTheme(preference)
+    }
+}
+
+/**
+ * 初始化主题系统：读偏好、应用主题、注册系统主题变化监听。
+ * 在 App.uvue onLaunch 或 main.uts 中调用一次。
+ */
+export function initThemeSystem(): void {
+    let stored = 'system'
+    try {
+        const value = uni.getStorageSync(THEME_MODE_STORAGE_KEY)
+        if (typeof value === 'string') stored = normalizeThemePreference(value as string)
+    } catch (e) {}
+    upThemePreference.value = stored
+    if (stored === 'system') {
+        applyTheme(getSystemTheme())
+    } else {
+        applyTheme(stored)
+    }
+    if (!hasRegisterThemeListener) {
+        hasRegisterThemeListener = true
+        uni.onThemeChange((res) => {
+            if (upThemePreference.value === 'system') {
+                applyTheme(res.theme)
+            }
+        })
+    }
+}
