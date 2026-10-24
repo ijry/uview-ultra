@@ -1,3 +1,8 @@
+## 4.5.51
+fix: 蒸汽模式运行时主题的原生 UI 同步仅在 App 端执行
+
+- libs/theme/theme.uts：applyNativeThemeUI 的 setNavigationBarColor / setBackgroundColor / setTabBarStyle 调用结果统一 catch 吞掉（web 端 VDOM 无原生导航语义，未挂载页面时这些 API 会 reject），消除「page not found / not TabBar page」的 unhandledrejection 刷屏
+
 ## 4.5.50
 feat: 新增蒸汽模式运行时主题系统与 up-root 页面级根组件，支持运行时暗黑切换
 

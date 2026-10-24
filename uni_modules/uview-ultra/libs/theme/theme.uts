@@ -319,35 +319,41 @@ export function getThemePreference(): string {
 
 // ---------------- 原生 UI 同步 ----------------
 
+function swallowRejection(p: any): void {
+    if (p != null && typeof p.catch === 'function') p.catch(() => {})
+}
+
 export function applyNativeThemeUI(mode: string | null = null): void {
     const syncEnabled = config['nativeThemeSync']
     if (syncEnabled !== true) return
+    // 页面未挂载/非 tabBar 页时这些 API 会 reject（page not found / not TabBar page），
+    // 统一吞掉，避免 unhandledrejection 刷屏。
     const themeMode = normalizeThemeMode(mode == null ? upThemeMode.value : (mode as string))
     const isDark = themeMode === 'dark'
     const pageBg = upThemeVar('--up-page-bg-color', isDark ? '#1f1f1f' : '#f3f4f6')
     const navBg = upThemeVar('--up-navbar-bg-color', isDark ? '#1c1c1e' : '#ffffff')
     try {
-        uni.setNavigationBarColor({
+        swallowRejection(uni.setNavigationBarColor({
             frontColor: isDark ? '#ffffff' : '#000000',
             backgroundColor: navBg,
             animation: { duration: 0, timingFunc: 'linear' }
-        })
+        }))
     } catch (e) {}
     try {
-        uni.setBackgroundColor({
+        swallowRejection(uni.setBackgroundColor({
             backgroundColor: pageBg,
             backgroundColorTop: pageBg,
             backgroundColorBottom: pageBg
-        })
+        }))
     } catch (e) {}
     const tabBarStyle = getThemeTabBarStyle()
     try {
-        uni.setTabBarStyle({
+        swallowRejection(uni.setTabBarStyle({
             color: tabBarStyle['color'] as string,
             selectedColor: tabBarStyle['selectedColor'] as string,
             backgroundColor: tabBarStyle['backgroundColor'] as string,
             borderStyle: tabBarStyle['borderStyle'] as 'white' | 'black'
-        })
+        }))
     } catch (e) {}
 }
 
