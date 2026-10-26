@@ -25,13 +25,18 @@ $up-zoom-scale: scale(0.95);
 	opacity: 0
 }
 
-.up-fade-zoom-enter,
+.up-fade-enter-to {
+	opacity: 1;
+}.up-fade-zoom-enter,
 .up-fade-zoom-leave-to {
 	transform: $up-zoom-scale;
 	opacity: 0;
 }
 
-.up-fade-zoom-enter-active,
+.up-fade-zoom-enter-to {
+	transform: scale(1);
+	opacity: 1;
+}.up-fade-zoom-enter-active,
 .up-fade-zoom-leave-active {
 	transition-property: transform, opacity;
 }
@@ -53,25 +58,37 @@ $up-zoom-scale: scale(0.95);
 	opacity: 0
 }
 
-.up-fade-down-enter,
+.up-fade-up-enter-to {
+	transform: translateY(0);
+	opacity: 1;
+}.up-fade-down-enter,
 .up-fade-down-leave-to {
 	transform: translateY(-100%);
 	opacity: 0
 }
 
-.up-fade-left-enter,
+.up-fade-down-enter-to {
+	transform: translateY(0);
+	opacity: 1;
+}.up-fade-left-enter,
 .up-fade-left-leave-to {
 	transform: translateX(-100%);
 	opacity: 0
 }
 
-.up-fade-right-enter,
+.up-fade-left-enter-to {
+	transform: translateX(0);
+	opacity: 1;
+}.up-fade-right-enter,
 .up-fade-right-leave-to {
 	transform: translateX(100%);
 	opacity: 0
 }
 
-.up-slide-down-enter-active,
+.up-fade-right-enter-to {
+	transform: translateX(0);
+	opacity: 1;
+}.up-slide-down-enter-active,
 .up-slide-down-leave-active,
 .up-slide-left-enter-active,
 .up-slide-left-leave-active,
@@ -87,22 +104,34 @@ $up-zoom-scale: scale(0.95);
 	transform: translateY(100%)
 }
 
-.up-slide-down-enter,
+.up-slide-up-enter-to {
+	transform: translateY(0);
+	opacity: 1;
+}.up-slide-down-enter,
 .up-slide-down-leave-to {
 	transform: translateY(-100%)
 }
 
-.up-slide-left-enter,
+.up-slide-down-enter-to {
+	transform: translateY(0);
+	opacity: 1;
+}.up-slide-left-enter,
 .up-slide-left-leave-to {
 	transform: translateX(-100%)
 }
 
-.up-slide-right-enter,
+.up-slide-left-enter-to {
+	transform: translateX(0);
+	opacity: 1;
+}.up-slide-right-enter,
 .up-slide-right-leave-to {
 	transform: translateX(100%)
 }
 
-.up-zoom-enter-active,
+.up-slide-right-enter-to {
+	transform: translateX(0);
+	opacity: 1;
+}.up-zoom-enter-active,
 .up-zoom-leave-active {
 	transition-property: transform
 }

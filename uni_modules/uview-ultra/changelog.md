@@ -1,3 +1,14 @@
+## 4.5.56
+fix: up-transition 补齐各模式 enter-to 显式终态，修复蒸汽 web 端弹层卡在起点
+
+- vue.ani-style.scss：fade / zoom / fade-up / fade-down / fade-left / fade-right /
+  slide-up / slide-down / slide-left / slide-right 十组动画此前只定义了 enter（起点）
+  规则，「归位」依赖 enter 类被移除后无 transform 的隐式状态。uni-app x 蒸汽模式的
+  web 渲染器对类名做包含式匹配（enter-to 含 enter 子串），起点规则持续命中，bottom
+  弹层被钉在 translateY(100%)（屏幕之外），表现为「弹层弹不出来」
+- 为十组模式补显式 `*-enter-to` 终态规则（transform: 0 / opacity: 1），规则顺序在
+  起点规则之后，显式覆盖；同时保留 4.5.55 的动画类清理
+
 ## 4.5.55
 fix: up-transition 进场动画结束后清理动画类，修复 bottom 弹层偶发卡在屏幕外
 
