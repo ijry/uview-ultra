@@ -1,7 +1,15 @@
 ## 4.5.53
-feat: up-empty 补齐 uview-plus 3.x 的 bottom 具名插槽
+feat: up-navbar 支持滚动磨砂与状态栏占位覆盖，磨砂底色改用主题变量；up-empty 补齐 bottom 具名插槽
 
-- up-empty（.uvue / .vue）：新增 bottom 具名插槽（按钮等操作区），对齐 uview-plus 3.x 接口——此前业务侧 template #bottom 静默不渲染（default 插槽不受影响）
+up-empty（.uvue / .vue）：新增 bottom 具名插槽（按钮等操作区），对齐 uview-plus 3.x 接口——此前业务侧 template #bottom 静默不渲染（default 插槽不受影响）。
+
+- up-navbar（uni-app x / .uvue）新增 frosted：滚过阈值后淡入一层半透明磨砂（高仿 iOS 材质），供 H5 / Android 等无系统玻璃带的端使用；ios 模式自带磨砂层，二者共用同一套淡入曲线（2px 起、28px 走满）
+- up-navbar 新增 statusBarInsetTop：状态栏占位高度覆盖（-1 用系统值、0 不占位），iOS standalone（PWA）下需传 0，避免导航行被推出系统的 Liquid Glass 滚动边缘带
+- up-navbar 占位高度同时落到根节点并加 flex-shrink: 0，修复 App 端（uvue 原生渲染）「开了 placeholder 但内容仍顶到导航行下」的问题（fixed 层不占流、子节点高度传不到父级 flex 容器）
+- up-navbar 磨砂底色改用主题变量 --up-navbar-glass-bg / --up-navbar-glass-border（light 0.75 / dark 0.78），修复 uvue App 端 color-mix 不生效导致磨砂「看似没开」；状态栏占位由 up-status-bar 改为普通 view，高度可被 statusBarInsetTop 覆盖；bgColor 兜底 #ffffff、修复内容区调试遗留蓝底
+- up-navbar 修复 defineExpose 暴露已重命名变量（statusBarHeight → systemStatusBarHeight）导致整段 setup 编译不过
+- theme.uts 新增 --up-navbar-glass-bg / --up-navbar-glass-border 两个主题变量（明/暗各一套），与 up-root 运行时主题系统联动
+- up-cell（.uvue）默认内距 10px 15px → 14px（large 13px → 16px），left-icon-wrap margin-right 4px → 10px
 
 ## 4.5.52
 fix: 修复 up-icon 的 folder 图标在 uni-app x（.uvue）下不显示
