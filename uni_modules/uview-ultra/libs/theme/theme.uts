@@ -84,7 +84,15 @@ const EXTRA_LIGHT_VARS: UTSJSONObject = {
     '--up-skeleton-shimmer-color': '#e6e6e6',
     '--up-swipe-action-button-bg-color': '#c7c6cd',
     '--up-index-list-indicator-bg-color': '#c9c9c9',
-    '--up-calendar-month-mark-color': 'rgba(231, 232, 234, 0.83)'
+    '--up-calendar-month-mark-color': 'rgba(231, 232, 234, 0.83)',
+    // 顶栏滚动磨砂的底色 / 底部分割线。
+    //
+    // 必须是**算好的 rgba**，不能在 CSS 里写 `color-mix(in srgb, var(--up-card-bg-color)
+    // 72%, transparent)`：uvue App 端不支持 `color-mix`，那条声明会被整条丢掉，磨砂层
+    // 于是没有底色 —— 而 App 端也不支持 `backdrop-filter`，两层一没，滚动时顶栏看起来
+    // 跟全透明没区别（这正是「开了 frosted 却没效果」的原因）。
+    '--up-navbar-glass-bg': 'rgba(255, 255, 255, 0.75)',
+    '--up-navbar-glass-border': 'rgba(0, 0, 0, 0.08)'
 }
 
 const EXTRA_DARK_VARS: UTSJSONObject = {
@@ -96,7 +104,10 @@ const EXTRA_DARK_VARS: UTSJSONObject = {
     '--up-skeleton-shimmer-color': 'rgba(255, 255, 255, 0.12)',
     '--up-swipe-action-button-bg-color': '#4b5563',
     '--up-index-list-indicator-bg-color': '#4b5563',
-    '--up-calendar-month-mark-color': 'rgba(255, 255, 255, 0.04)'
+    '--up-calendar-month-mark-color': 'rgba(255, 255, 255, 0.04)',
+    // 暗色下不透明度要更高：暗底上叠亮内容，72% 会糊成一片读不清。
+    '--up-navbar-glass-bg': 'rgba(28, 28, 30, 0.78)',
+    '--up-navbar-glass-border': 'rgba(255, 255, 255, 0.12)'
 }
 
 // 主题色字段 -> CSS 变量 token（不含 --up-/--u- 前缀）

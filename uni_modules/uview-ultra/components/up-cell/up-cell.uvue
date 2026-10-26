@@ -200,7 +200,7 @@
 <style lang="scss" scoped>
 	@import "../../libs/css/components.scss";
 
-	$up-cell-padding: 10px 15px !important;
+	$up-cell-padding: 14px !important;
 	$up-cell-font-size: 15px !important;
 	$up-cell-line-height: 24px !important;
 	$up-cell-color: $up-main-color !important;
@@ -217,12 +217,12 @@
 	$up-cell-value-color: $up-content-color !important;
 	$up-cell-clickable-color: $up-bg-color !important;
 	$up-cell-disabled-color: #c8c9cc !important;
-	$up-cell-padding-top-large: 13px !important;
-	$up-cell-padding-bottom-large: 13px !important;
+	$up-cell-padding-top-large: 16px !important;
+	$up-cell-padding-bottom-large: 16px !important;
 	$up-cell-value-font-size-large: 15px !important;
 	$up-cell-label-font-size-large: 14px !important;
 	$up-cell-title-font-size-large: 16px !important;
-	$up-cell-left-icon-wrap-margin-right: 4px !important;
+	$up-cell-left-icon-wrap-margin-right: 10px !important;
 	$up-cell-right-icon-wrap-margin-left: 4px !important;
 	$up-cell-title-flex:1 !important;
 	$up-cell-label-margin-top:5px !important;

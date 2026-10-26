@@ -1,5 +1,5 @@
 <template>
-	<view class="up-navbar" :class="[customClass]">
+	<view class="up-navbar" :class="[customClass]" :style="rootStyle">
 		<!-- ios 模式：in-flow 层，恒定渲染，随页面原生滚动被带走 -->
 		<view v-if="isIosMode" class="up-navbar__flow">
 			<view :style="flowSpacerStyle"></view>
@@ -14,26 +14,33 @@
 				>{{ title }}</text>
 			</view>
 		</view>
-		<!-- default 模式：原有占位块，行为保持不变 -->
+		<!--
+			default 模式：占位块。
+			注意高度是「根节点 + 这里」两份同一个值（见 rootStyle 的注释）：H5 / 小程序
+			靠这一块撑开，App 端靠根节点那一份，两边都不会塌。
+		-->
 		<view
 			class="up-navbar__placeholder"
-			v-if="!isIosMode && fixed && placeholder"
+			v-if="placeholderActive"
 			:style="placeholderStyle"
 		></view>
 		<view :class="[(isIosMode || fixed) ? 'up-navbar--fixed' : '']">
-			<!-- ios 模式的磨砂层：随滚动淡入，位于内容之下 -->
+			<!-- 磨砂层：随滚动淡入，位于内容之下。ios 模式与 frosted 模式共用 -->
 			<view
-				v-if="isIosMode"
+				v-if="showGlass"
 				class="up-navbar__glass"
+				:class="[frostedGlass ? 'up-navbar__glass--frosted' : '']"
 				:style="glassStyle"
 			></view>
-			<up-status-bar
+			<!-- 状态栏占位：高度可被 statusBarInsetTop 覆盖（iOS standalone 传 0） -->
+			<view
 				v-if="safeAreaInsetTop"
-				:bgColor="statusBarBgColor"
-			></up-status-bar>
+				class="up-navbar__statusbar"
+				:style="statusBarSpacerStyle"
+			></view>
 			<view
 				class="up-navbar__content"
-				:class="[(border && !isIosMode) ? 'up-border-bottom' : '']"
+				:class="[(border && !showGlass) ? 'up-border-bottom' : '']"
 				:style="contentStyle"
 			>
 				<view
@@ -111,6 +118,8 @@
 	 * @property {String}			bgColor				导航栏背景设置 （默认 '#ffffff' ）
 	 * @property {String | Number}	titleWidth			导航栏标题的最大宽度，内容超出会以省略号隐藏 （默认 '400rpx' ）
 	 * @property {String | Number}	height				导航栏高度(不包括状态栏高度在内，内部自动加上)（默认 '44px' ）
+	 * @property {Boolean}			frosted				滚动时自动磨砂（高仿 iOS 材质；ios 模式自带，这个是给 H5 / Android 用的）（默认 false ）
+	 * @property {String | Number}	statusBarInsetTop	状态栏占位高度覆盖(px)：-1 用系统值、0 不占位（iOS standalone 传 0）（默认 -1 ）
 	 * @property {String | Number}	leftIconSize		左侧返回图标的大小（默认 20px ）
 	 * @property {String | Number}	leftIconColor		左侧返回图标的颜色（默认 #303133 ）
 	 * @property {Boolean}	        autoBack			点击左侧区域(返回图标)，是否自动返回上一页（默认 false ）
@@ -171,10 +180,11 @@
 			type: [String, Number],
 			default: defProps.getAny('navbar.title')
 		},
-		// 背景颜色
+		// 背景颜色。`|| '#ffffff'` 是兜底：`defProps` 在某些构建下取不到该键会返回空值，
+		// 内联背景一旦为空，`.up-navbar__content` 的调试遗留色就会露出来（曾表现为顶栏变蓝）。
 		bgColor: {
 			type: String,
-			default: defProps.getString('navbar.bgColor')
+			default: defProps.getString('navbar.bgColor') || '#ffffff'
 		},
 		// 标题的宽度
 		titleWidth: {
@@ -211,10 +221,23 @@
 			type: String,
 			default: defProps.getString('navbar.mode')
 		},
-		// 页面滚动距离，仅 ios 模式使用，由页面 onPageScroll 传入
+		// 页面滚动距离，由页面 onPageScroll 传入；ios 模式与 frosted 模式都用它
 		scrollTop: {
 			type: [String, Number],
 			default: defProps.getAny('navbar.scrollTop')
+		},
+		// 滚动时自动磨砂：滚过阈值后淡入一层半透明模糊（高仿 iOS 材质）。
+		// ios 模式本来就有磨砂层，这个开关是给 H5 / Android 这些没有系统玻璃带的端用的。
+		frosted: {
+			type: Boolean,
+			default: defProps.getBoolean('navbar.frosted')
+		},
+		// 状态栏占位高度覆盖（px）。-1 = 用系统值；0 = 不占位。
+		// iOS standalone（PWA，meta=black）下 webview 本就从状态栏下方开始，必须传 0，
+		// 否则导航行被推出系统的 Liquid Glass 滚动边缘带。
+		statusBarInsetTop: {
+			type: [String, Number],
+			default: defProps.getAny('navbar.statusBarInsetTop')
 		},
 		// 微信小程序右侧区域是否避让原生胶囊
 		avoidCapsule: {
@@ -228,8 +251,29 @@
 	})
 
 	const emit = defineEmits(['leftClick', 'rightClick'])
-	const statusBarHeight = ref(uni.getSystemInfoSync().statusBarHeight ?? 0)
-	const placeholderHeight = ref(addUnit(parseInt(getPx(props.height)) + statusBarHeight.value, 'px'))
+	const systemStatusBarHeight = ref(uni.getSystemInfoSync().statusBarHeight ?? 0)
+
+	/**
+	 * 实际使用的状态栏占位高度。
+	 *
+	 * `statusBarInsetTop >= 0` 时以它为准，否则用系统值。iOS standalone（PWA，meta=black）
+	 * 下 webview 本就从系统状态栏下方开始，占位必须传 0 —— 再填一段会把导航行推出
+	 * iOS 26/27 在页面顶部画的 Liquid Glass 滚动边缘带（约 75pt）。
+	 */
+	const effectiveStatusBarHeight = computed((): number => {
+		// 非数字 / undefined 会得到 NaN，`NaN >= 0` 为 false，自然回落到系统值。
+		const override = Number(props.statusBarInsetTop)
+		if (override >= 0) return override
+		return systemStatusBarHeight.value
+	})
+
+	const placeholderHeight = computed((): string => {
+		// `height` 取不到时 `parseInt` 会得到 NaN，占位高度就是无效值 → 塌成 0 →
+		// fixed 层不占流，内容直接顶到导航栏上。兜 uview 的默认 44。
+		const raw = parseInt(getPx(props.height))
+		const height = raw > 0 ? raw : 44
+		return addUnit(height + effectiveStatusBarHeight.value, 'px')
+	})
 
 	// iOS 大标题行高，同时是压缩进度的分母
 	const LARGE_TITLE_HEIGHT = 52
@@ -254,6 +298,31 @@
 		return props.mode == 'ios'
 	})
 
+	/** 是否处于「fixed + 等高占位」档。 */
+	const placeholderActive = computed((): boolean => {
+		return !isIosMode.value && props.fixed && props.placeholder
+	})
+
+	/**
+	 * 根节点样式：占位高度**同时**落在根节点上。
+	 *
+	 * 只把高度给内部的 `.up-navbar__placeholder` 是不够的 —— `<up-navbar>` 的根节点
+	 * 才是父容器的 flex item（会话列表页是 `display: flex; flex-direction: column` 的
+	 * `.conversations-shell`）。App 端（uvue 原生渲染）下，自定义组件的根节点不会被子
+	 * 节点的显式高度撑开：占位块在，但它贡献的高度传不到父级；而 fixed 层又不占流，
+	 * 于是列表第一行直接压在导航行下面 —— 这正是「开了 placeholder 也没用」的实况。
+	 *
+	 * 高度值只有一份（`placeholderHeight`），根节点与内部占位块共用，不会叠成两份。
+	 */
+	const rootStyle = computed((): UTSJSONObject => {
+		const style = {} as UTSJSONObject
+		if (!placeholderActive.value) {
+			return style
+		}
+		style['height'] = placeholderHeight.value
+		return style
+	})
+
 	// 有效大标题行高：title 为空时不渲染大标题行，行高塌陷为 0
 	const largeTitleHeight = computed((): number => {
 		return props.title != '' ? LARGE_TITLE_HEIGHT : 0
@@ -272,12 +341,37 @@
 		return Math.min(Math.max(offset / distance, 0), 1)
 	})
 
-	// 磨砂在前半段走完，为居中标题的出现铺好不透明底
+	// 非 iOS 模式的磨砂参数：滚过 2px 开始淡入，28px 走满。
+	// 「半透明」由 `.up-navbar__glass--frosted` 的底色（主题里的 75%/78% rgba）保证，
+	// 这里只负责淡入，不再额外压 opacity —— 否则两层衰减叠起来会淡得看不见。
+	//
+	// 行程刻意短：iOS 的导航栏在内容压到栏下时是**立刻**出背景（scrollEdge → standard），
+	// 过渡只是让离散的滚动事件看起来连续。40px 那种长行程在「列表只滚了一点点」的场景
+	// 下永远走不满，看上去就像磨砂没开。
+	const FROSTED_START = 2
+	const FROSTED_FADE = 28
+
+	/** 磨砂层要不要渲染。 */
+	const showGlass = computed((): boolean => {
+		return isIosMode.value || props.frosted
+	})
+
+	/** 是否「非 iOS 模式的滚动磨砂」（决定要不要额外画底部细线）。 */
+	const frostedGlass = computed((): boolean => {
+		return props.frosted && !isIosMode.value
+	})
+
+	// iOS 模式：磨砂在前半段走完，为居中标题的出现铺好不透明底。
+	// frosted 模式：按滚动距离从 0 淡入到 1（「半透明」由底色负责，不是靠 opacity）。
 	const glassOpacity = computed((): number => {
-		if (!isIosMode.value) {
+		if (isIosMode.value) {
+			return Math.min(Math.max(iosProgress.value / 0.5, 0), 1)
+		}
+		if (!props.frosted) {
 			return 0
 		}
-		return Math.min(Math.max(iosProgress.value / 0.5, 0), 1)
+		const offset = parseInt(getPx(props.scrollTop))
+		return Math.min(Math.max((offset - FROSTED_START) / FROSTED_FADE, 0), 1)
 	})
 
 	// 居中标题在后段才启动，此时磨砂层已满不透明，不会与大标题互相透出
@@ -288,16 +382,25 @@
 		return Math.min(Math.max((iosProgress.value - 0.75) / 0.25, 0), 1)
 	})
 
-	// ios 模式下状态栏占位透明，背景由磨砂层统一承担
+	// 磨砂层显示时状态栏占位透明，背景由磨砂层统一承担
 	const statusBarBgColor = computed((): string => {
-		return isIosMode.value ? 'transparent' : props.bgColor
+		return showGlass.value ? 'transparent' : props.bgColor
+	})
+
+	/** 状态栏占位块的样式（高度可被 `statusBarInsetTop` 覆盖）。 */
+	const statusBarSpacerStyle = computed((): UTSJSONObject => {
+		const style = {} as UTSJSONObject
+		style['height'] = addUnit(effectiveStatusBarHeight.value, 'px')
+		style['backgroundColor'] = statusBarBgColor.value
+		return style
 	})
 
 	const flowSpacerStyle = computed((): UTSJSONObject => {
 		const style = {} as UTSJSONObject
-		let top = parseInt(getPx(props.height))
+		const rawTop = parseInt(getPx(props.height))
+		let top = rawTop > 0 ? rawTop : 44
 		if (props.safeAreaInsetTop) {
-			top += statusBarHeight.value
+			top += effectiveStatusBarHeight.value
 		}
 		style['height'] = addUnit(top, 'px')
 		return style
@@ -314,12 +417,18 @@
 		return UTSJSONObject.assign(style, addStyle(props.titleStyle) as UTSJSONObject)
 	})
 
-	// 磨砂层。App 原生端不支持 backdrop-filter，0.82 不透明底色即为可读性下限；
+	// 磨砂层。App 原生端不支持 backdrop-filter 时，底色本身就是可读性下限；
 	// backdrop-filter 仍然写入，在 WebView 类端上会自动生效。
+	//
+	// frosted 模式**不写** backgroundColor：调用方为了透明顶栏会把 bgColor 传成
+	// `transparent`，那样磨砂层就没有底色了。底色交给 `.up-navbar__glass--frosted`
+	// 的 CSS（卡片色 72%），与主题变量联动。
 	const glassStyle = computed((): UTSJSONObject => {
 		const style = {} as UTSJSONObject
 		style['opacity'] = glassOpacity.value
-		style['backgroundColor'] = props.bgColor
+		if (!frostedGlass.value) {
+			style['backgroundColor'] = props.bgColor
+		}
 		return style
 	})
 
@@ -344,8 +453,8 @@
 	const contentStyle = computed((): UTSJSONObject => {
 		const style = {} as UTSJSONObject
 		style['height'] = addUnit(props.height)
-		// ios 模式下内容区透明，背景交给磨砂层，避免遮住其淡入效果
-		style['backgroundColor'] = isIosMode.value ? 'transparent' : props.bgColor
+		// 磨砂层显示时内容区透明，背景交给磨砂层，避免遮住其淡入效果
+		style['backgroundColor'] = showGlass.value ? 'transparent' : props.bgColor
 		return style
 	})
 
@@ -376,7 +485,9 @@
 	}
 
 	defineExpose({
-		statusBarHeight,
+		// 名字跟着内部的 `systemStatusBarHeight` 走。早先这里还叫 `statusBarHeight`，
+		// 重命名后忘了同步 —— uts 里引用不存在的标识符，整段 setup 直接编译不过。
+		systemStatusBarHeight,
 		placeholderHeight,
 		isIosMode,
 		iosProgress,
@@ -389,6 +500,9 @@
 	@import "../../libs/css/components.scss";
 
 	.up-navbar {
+		// 占位模式下根节点自己带高度；作为 flex 列容器的子项时不能被压缩，
+		// 否则内容一多，占位段先被挤掉，列表又顶回导航行下面。
+		flex-shrink: 0;
 
 		&--fixed {
 			position: fixed;
@@ -426,11 +540,29 @@
 			        backdrop-filter: saturate(180%) blur(var(--up-navbar-glass-blur, 20px));
 		}
 
+		// 滚动磨砂（非 iOS 模式）：底色是半透明的卡片色，配合 backdrop-filter 才是
+		// 「高仿 iOS」的材质 —— 不透明底会把背后的模糊完全盖掉。底部细线在内容压到
+		// 导航栏下时给出分隔，随磨砂层一起淡入。
+		//
+		// 底色走**主题变量**（`theme.uts` 里算好的 rgba），不写 `color-mix`：
+		// uvue App 端不支持 `color-mix`，整条声明会被丢掉；而 App 端也不支持
+		// `backdrop-filter` —— 两层同时失效，滚动时顶栏就跟全透明一样，磨砂等于没开。
+		&__glass--frosted {
+			background-color: var(--up-navbar-glass-bg, rgba(255, 255, 255, 0.75));
+			border-bottom: 1px solid var(--up-navbar-glass-border, rgba(0, 0, 0, 0.08));
+		}
+
+		&__statusbar {
+			width: 100%;
+		}
+
 		&__content {
 			@include flex(row);
 			align-items: center;
 			height: 44px;
-			background-color: #9acafc;
+			// 底色一律由 `contentStyle` 内联给出；这里必须是透明 —— 早先这里是
+			// `#9acafc`（primaryDisabled 的调试遗留色），内联背景一旦失效顶栏就整条变蓝。
+			background-color: transparent;
 			// 磨砂层是绝对定位的，会盖住同级非定位元素，故内容区显式提升层级
 			position: relative;
 			z-index: 1;

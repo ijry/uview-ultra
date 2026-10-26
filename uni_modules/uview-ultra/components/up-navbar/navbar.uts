@@ -30,6 +30,8 @@ export default {
 		titleStyle: {},
 		mode: 'default',
 		scrollTop: 0,
+		frosted: false,
+		statusBarInsetTop: -1,
 		avoidCapsule: true
     }
 } as UTSJSONObject
