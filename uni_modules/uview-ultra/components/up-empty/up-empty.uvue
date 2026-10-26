@@ -27,6 +27,10 @@
 		<view class="up-empty__wrap" v-if="$slots['default'] != null || $slots['$default'] != null">
 			<slot />
 		</view>
+		<!-- 兼容 uview-plus 3.x 的 bottom 具名插槽（按钮等操作区） -->
+		<view class="up-empty__wrap" v-if="$slots['bottom'] != null || $slots['$bottom'] != null">
+			<slot name="bottom" />
+		</view>
 	</view>
 </template>
 

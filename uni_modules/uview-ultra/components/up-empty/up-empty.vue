@@ -27,6 +27,9 @@
 		<view class="up-empty__wrap" v-if="$slots.default || $slots.$default">
 			<slot />
 		</view>
+		<view class="up-empty__wrap" v-if="$slots.bottom || $slots.$bottom">
+			<slot name="bottom" />
+		</view>
 	</view>
 </template>
 

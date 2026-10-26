@@ -1,3 +1,8 @@
+## 4.5.53
+feat: up-empty 补齐 uview-plus 3.x 的 bottom 具名插槽
+
+- up-empty（.uvue / .vue）：新增 bottom 具名插槽（按钮等操作区），对齐 uview-plus 3.x 接口——此前业务侧 template #bottom 静默不渲染（default 插槽不受影响）
+
 ## 4.5.52
 fix: 修复 up-icon 的 folder 图标在 uni-app x（.uvue）下不显示
 
