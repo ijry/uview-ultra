@@ -20,7 +20,11 @@
 		>
 			<view
 				class="up-popup__content"
-				:style="[contentStyle]"
+				:style="[contentStyle, dragStyle]"
+				@touchstart="onDragTouchStart"
+				@touchmove="onDragTouchMove"
+				@touchend="onDragTouchEnd"
+				@touchcancel="onDragTouchEnd"
 				@tap.stop="stopContentTap"
 			>
 				<up-status-bar v-if="safeAreaInsetTop"></up-status-bar>
@@ -69,6 +73,8 @@
 	 * @property {String}			closeIconPos		自定义关闭图标位置（默认 'top-right' ）
 	 * @property {String | Number}	round				圆角值（默认 0）
 	 * @property {Boolean}			zoom				当mode=center时 是否开启缩放（默认 true ）
+	 * @property {Boolean}			dragClose			bottom 弹层是否支持拖动下滑关闭（默认 false；配合弹层顶部的拖拽手柄使用）
+	 * @property {String | Number}	dragCloseThreshold	拖动下滑关闭的位移阈值，单位px（默认 80）
 	 * @property {Object}			customStyle			组件的样式，对象形式
 	 * @event {Function} open 弹出层打开（进场动画结束后）
 	 * @event {Function} close 弹出层收起（关闭动作发生时，离场动画开始前；外部直接将show置为false时也会触发）
@@ -160,6 +166,16 @@
 		pageInline: {
 			type: Boolean,
 			default: defProps.getBoolean('popup.pageInline')
+		},
+		// bottom 弹层是否支持拖动下滑关闭
+		dragClose: {
+			type: Boolean,
+			default: false
+		},
+		// 拖动下滑关闭的位移阈值，单位px
+		dragCloseThreshold: {
+			type: [String, Number],
+			default: 80
 		},
 		customStyle: {
 			type: [Object, String],
@@ -288,6 +304,78 @@
 		}
 		return ''
 	})
+
+	/*
+	 * 拖动下滑关闭（dragClose）。
+	 *
+	 * 仅 bottom 弹层生效：手指按下后向下拖，content 跟手位移；松手时超过阈值
+	 * 走既有 close 流程（update:show=false + close 事件），否则带回弹动画归位。
+	 * 向上拖不拦截，弹层内部滚动不受影响。
+	 */
+	const dragOffset = ref(0)
+	const dragActive = ref(false)
+	let dragStartY = 0
+	let dragTracking = false
+	let dragReleaseTimer = -1
+
+	const dragStyle = computed((): UTSJSONObject => {
+		if (!dragActive.value || dragOffset.value <= 0) {
+			return {} as UTSJSONObject
+		}
+		const style = {
+			transform: `translateY(${dragOffset.value}px)`,
+		} as UTSJSONObject
+		// 跟手阶段不做过渡；松手回弹时加过渡（dragActive 在回弹结束后复位）
+		style["transition"] = dragTracking ? "none" : "transform 0.25s ease-out"
+		return style
+	})
+
+	const dragCloseEnabled = computed((): boolean => {
+		return props.dragClose && props.mode === "bottom" && !props.pageInline
+	})
+
+	const onDragTouchStart = (e: TouchEvent): void => {
+		if (!dragCloseEnabled.value) return
+		if (e.touches.length == 0) return
+		dragStartY = e.touches[0].clientY
+		dragTracking = true
+	}
+
+	const onDragTouchMove = (e: TouchEvent): void => {
+		if (!dragTracking) return
+		if (e.touches.length == 0) return
+		const delta = e.touches[0].clientY - dragStartY
+		if (delta <= 0) {
+			// 向上拖：不进入拖动态，交给内部滚动
+			if (!dragActive.value) return
+			dragOffset.value = 0
+			return
+		}
+		dragActive.value = true
+		dragOffset.value = delta
+	}
+
+	const onDragTouchEnd = (_e: UniEvent): void => {
+		if (!dragTracking) return
+		dragTracking = false
+		const offset = dragOffset.value
+		const thresholdValue = parseInt(props.dragCloseThreshold.toString())
+		const threshold = isNaN(thresholdValue) ? 80 : thresholdValue
+		if (offset >= threshold) {
+			dragActive.value = false
+			dragOffset.value = 0
+			close(_e)
+			return
+		}
+		// 回弹：dragStyle 保留到过渡结束后再卸下，否则回弹动画会被瞬时移除样式截断
+		if (dragReleaseTimer >= 0) {
+			clearTimeout(dragReleaseTimer)
+		}
+		dragReleaseTimer = setTimeout(() => {
+			dragActive.value = false
+			dragOffset.value = 0
+		}, 260) as any
+	}
 
 	const stopContentTap = (e: UniEvent): void => {
 		e.stopPropagation()

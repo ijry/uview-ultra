@@ -20,7 +20,11 @@
 		>
 			<view
 				class="up-popup__content"
-				:style="[contentStyle]"
+				:style="[contentStyle, dragStyle]"
+				@touchstart="onDragTouchStart"
+				@touchmove="onDragTouchMove"
+				@touchend="onDragTouchEnd"
+				@touchcancel="onDragTouchEnd"
 				@tap.stop="noop"
 			>
 				<up-status-bar v-if="safeAreaInsetTop"></up-status-bar>
@@ -92,6 +96,70 @@
 	const emit = defineEmits(['open', 'close', 'closed', 'click', 'update:show'])
 	const instance = getCurrentInstance()
 	const { noop } = useUltraUI(props)
+
+	/*
+	 * 拖动下滑关闭（dragClose）。
+	 *
+	 * 仅 bottom 弹层生效：手指按下后向下拖，content 跟手位移；松手时超过阈值
+	 * 走既有 close 流程（update:show=false + close 事件），否则带回弹动画归位。
+	 * 向上拖不拦截，弹层内部滚动不受影响。
+	 */
+	const dragOffset = ref(0)
+	const dragActive = ref(false)
+	let dragStartY = 0
+	let dragTracking = false
+	let dragReleaseTimer = -1
+
+	const dragStyle = computed(() => {
+		if (!dragActive.value || dragOffset.value <= 0) return {}
+		return {
+			transform: `translateY(${dragOffset.value}px)`,
+			transition: dragTracking ? 'none' : 'transform 0.25s ease-out',
+		}
+	})
+
+	const dragCloseEnabled = computed(() => props.dragClose && props.mode === 'bottom' && !props.pageInline)
+
+	const onDragTouchStart = (e) => {
+		if (!dragCloseEnabled.value) return
+		if (!e.touches || e.touches.length === 0) return
+		dragStartY = e.touches[0].clientY
+		dragTracking = true
+	}
+
+	const onDragTouchMove = (e) => {
+		if (!dragTracking) return
+		if (!e.touches || e.touches.length === 0) return
+		const delta = e.touches[0].clientY - dragStartY
+		if (delta <= 0) {
+			// 向上拖：不进入拖动态，交给内部滚动
+			if (!dragActive.value) return
+			dragOffset.value = 0
+			return
+		}
+		dragActive.value = true
+		dragOffset.value = delta
+	}
+
+	const onDragTouchEnd = (_e) => {
+		if (!dragTracking) return
+		dragTracking = false
+		const offset = dragOffset.value
+		const thresholdValue = parseInt(props.dragCloseThreshold)
+		const threshold = isNaN(thresholdValue) ? 80 : thresholdValue
+		if (offset >= threshold) {
+			dragActive.value = false
+			dragOffset.value = 0
+			close(_e)
+			return
+		}
+		// 回弹：dragStyle 保留到过渡结束后再卸下，否则回弹动画会被瞬时移除样式截断
+		if (dragReleaseTimer >= 0) clearTimeout(dragReleaseTimer)
+		dragReleaseTimer = setTimeout(() => {
+			dragActive.value = false
+			dragOffset.value = 0
+		}, 260)
+	}
 	const overlayDuration = ref(props.duration + 50)
 	// close事件是否已由组件内部的关闭动作发出，避免show变化时重复发出
 	const closeEmitted = ref(false)

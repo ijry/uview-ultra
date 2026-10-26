@@ -81,6 +81,16 @@ export const props = defineMixin({
         pageInline: {
             type: Boolean,
             default: () => defProps.popup.pageInline
+        },
+        // bottom 弹层是否支持拖动下滑关闭
+        dragClose: {
+            type: Boolean,
+            default: false
+        },
+        // 拖动下滑关闭的位移阈值，单位px
+        dragCloseThreshold: {
+            type: [String, Number],
+            default: 80
         }
     }
 })

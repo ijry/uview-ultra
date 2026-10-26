@@ -1,3 +1,13 @@
+## 4.5.54
+feat: up-popup 新增 dragClose，bottom 弹层支持拖动下滑关闭
+
+- up-popup（.uvue / .vue 双实现 + props.js）新增 `dragClose`（默认 false，不改变既有行为）
+  与 `dragCloseThreshold`（默认 80px）：bottom 弹层按住内容向下拖时跟手位移，松手超过
+  阈值走既有 close 流程（update:show=false + close 事件），否则带回弹动画归位
+- 仅 bottom 模式且非 pageInline 生效；向上拖不拦截，弹层内部滚动不受影响
+- 动机：业务侧底部弹层（连接表单 / 主机选择器）顶部画了拖拽手柄，但组件一直没有
+  拖动关闭能力，用户按手柄下拉毫无反应（「拖动失效」）
+
 ## 4.5.53
 feat: up-navbar 支持滚动磨砂与状态栏占位覆盖，磨砂底色改用主题变量；up-empty 补齐 bottom 具名插槽
 

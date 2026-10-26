@@ -35,8 +35,8 @@
     "verify:button-throttle": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/verify-button-throttle.mjs",
     "verify:row-notice-space": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/verify-row-notice-space.mjs",
     "verify:types-barrel-exports": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/verify-types-barrel-exports.mjs",
-    "verify:app-local-icon-font": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/verify-app-local-icon-font.mjs"
+    "verify:app-local-icon-font": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/verify-app-local-icon-font.mjs",
+    "verify:popup-drag-close": "node scripts/verify-popup-drag-close.mjs"
   },
-  "dependencies": {
-  }
+  "dependencies": {}
 }
