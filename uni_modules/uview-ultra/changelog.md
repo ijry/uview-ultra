@@ -1,3 +1,14 @@
+## 4.5.55
+fix: up-transition 进场动画结束后清理动画类，修复 bottom 弹层偶发卡在屏幕外
+
+- up-transition（.uvue / .vue 双实现）：`vueEnter` 完成（duration + 50ms）后清掉
+  `enter-active` / `enter-to`。此前这两个类常驻，`transition-property: transform`
+  一直在场——进场的 CSS 过渡一旦被页面上任何一次重渲染打断（字体/lottie/列表刷新
+  都可能触发），computed transform 就冻结在起点：bottom 弹层停在 `translateY(100%)`
+  即屏幕之外，且之后再无样式变化能触发新过渡把它拉回来，表现为「弹层弹不出来」
+- 清掉 active 类后 transition-property 消失，被冻结的值直接跳到最终态归位；
+  对 fade/zoom 等其它模式同样免疫打断
+
 ## 4.5.54
 feat: up-popup 新增 dragClose，bottom 弹层支持拖动下滑关闭
 

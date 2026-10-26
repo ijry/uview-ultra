@@ -142,6 +142,16 @@ const vueEnter = async (): Promise<void> => {
 	emit('afterEnter')
 	// 赋予组件enter-to类名
 	classes.value = classNames['enter-to']!!.toString()
+	// 动画结束后清理 enter-active / enter-to。
+	// 不清理的话 transition-property 会常驻：进场的 CSS 过渡一旦被页面上任何一次
+	// 重渲染打断，computed transform 就冻结在起点（bottom 弹层 = translateY(100%)，
+	// 整个弹层停在屏幕外），且之后再没有任何样式变化能触发新过渡把它拉回来。
+	// 清掉 active 类后 transition-property 消失，冻结值直接跳到最终态（归位）。
+	setTimeout(() => {
+		if (status.value === 'enter') {
+			classes.value = ''
+		}
+	}, durationValue.value + 50)
 }
 
 // 动画离场处理

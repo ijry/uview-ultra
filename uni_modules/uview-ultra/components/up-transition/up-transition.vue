@@ -134,6 +134,13 @@ async function vueEnter() {
 		emit('afterEnter')
 		// 赋予组件enter-to类名
 		classes.value = classNames['enter-to']
+		// 动画结束后清理 enter-active / enter-to（避免过渡被打断后 computed transform
+		// 冻结在起点，bottom 弹层停在屏幕外）
+		setTimeout(() => {
+			if (status.value === 'enter') {
+				classes.value = ''
+			}
+		}, parseInt(String(props.duration)) + 50)
 	}
 }
 
