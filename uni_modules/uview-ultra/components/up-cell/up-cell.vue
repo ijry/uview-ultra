@@ -44,7 +44,14 @@
 				</slot>
 			</view>
 		</view>
-		<up-line v-if="border"></up-line>
+		<!--
+			iOS 标准分隔线：默认通栏；borderInsetLeft 传值后线条从该偏移处开始，
+			对齐「图标右侧内容」的起始位置（= 左 padding + 图标宽 + 图标右距）。
+		-->
+		<view v-if="border" class="up-cell__line-wrap"
+			:style="{ paddingLeft: addUnit(borderInsetLeft) }">
+			<up-line></up-line>
+		</view>
 	</view>
 </template>
 
@@ -52,7 +59,7 @@
 	import { computed, inject } from 'vue'
 	import { propsCell } from './props.js'
 	import { commonProps, useUltraUI } from '../../libs/composable/useUltraUI.js'
-	import { addStyle } from '../../libs/function/index.js'
+	import { addStyle, addUnit } from '../../libs/function/index.js'
 	import test from '../../libs/function/test.js'
 	/**
 	 * cell  单元格

@@ -51,14 +51,21 @@
 				</slot>
 			</view>
 		</view>
-		<up-line v-if="border"></up-line>
+		<!--
+			iOS 标准分隔线：默认通栏；borderInsetLeft 传值后线条从该偏移处开始，
+			对齐「图标右侧内容」的起始位置（= 左 padding + 图标宽 + 图标右距）。
+		-->
+		<view v-if="border" class="up-cell__line-wrap"
+			:style="{ paddingLeft: addUnit(borderInsetLeft) }">
+			<up-line></up-line>
+		</view>
 	</view>
 </template>
 
 <script setup lang="ts">
 	import { computed } from 'vue'
 	import defProps from './cell'
-	import { addStyle } from '../../libs/function/index'
+	import { addStyle, addUnit } from '../../libs/function/index'
 	import { empty as _testEmpty } from '../../libs/function/test'
 	// props
 	const props = defineProps({
@@ -138,6 +145,12 @@
 		border: {
 			type: Boolean,
 			default: defProps.getBoolean('cell.border')
+		},
+		// 分隔线左侧偏移（px 或带单位字符串）。iOS 标准是线条不顶到图标，
+		// 而是从图标右侧的内容起始处开始；传 0 或不传保持通栏。
+		borderInsetLeft: {
+			type: [String, Number],
+			default: 0
 		},
 		disabled: {
 			type: Boolean,

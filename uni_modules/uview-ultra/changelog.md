@@ -1,3 +1,14 @@
+## 4.5.58
+feat: up-cell-group 默认圆角 + up-cell 分隔线支持 iOS 标准左缩进
+
+- up-cell-group（.uvue / .vue）：默认 iOS grouped-inset 卡片形制——根节点
+  `border-radius: 12px; overflow: hidden`，子 cell 的直角背景与分隔线被裁进
+  圆角；不需要圆角的场合用 customStyle 传 `borderRadius: 0` 覆盖
+- up-cell（.uvue / .vue / props.js）新增 `borderInsetLeft`（默认 0，保持通栏）：
+  分隔线包进 `up-cell__line-wrap` 并按值加 `padding-left`，用于 iOS 标准的
+  「线条不顶到图标、从图标右侧内容起始处开始」形制；业务侧按
+  「左 padding + 图标宽 + 图标右距」取值
+
 ## 4.5.57
 fix: 修复 4.5.55 引入的 durationValue 未定义（up-transition 进场清理报 ReferenceError）
 

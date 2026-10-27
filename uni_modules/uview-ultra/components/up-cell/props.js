@@ -33,6 +33,12 @@ export const propsCell = defineMixin({
             type: Boolean,
             default: () => defProps.cell.border
         },
+        // 分隔线左侧偏移（px 或带单位字符串）。iOS 标准是线条不顶到图标，
+        // 而是从图标右侧的内容起始处开始；传 0 或不传保持通栏。
+        borderInsetLeft: {
+            type: [String, Number],
+            default: 0
+        },
         // 内容是否垂直居中(主要是针对右侧的value部分)
         center: {
             type: Boolean,

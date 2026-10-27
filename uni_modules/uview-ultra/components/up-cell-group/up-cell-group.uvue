@@ -51,7 +51,14 @@
 	$up-cell-group-title-line-height: 16px !default;
 	$up-cell-group-title-color: $up-main-color !default;
 
+    /*
+     * 默认 iOS grouped-inset 卡片形制：大圆角 + 裁剪。
+     * 分隔线/子 cell 的直角背景被裁进圆角里；不需要圆角的场合用 customStyle
+     * 传 borderRadius: 0 覆盖（内联样式优先级高于此处类规则）。
+     */
     .up-cell-group {
+        border-radius: 12px;
+        overflow: hidden;
 		
         &__title {
             padding: $up-cell-group-title-padding;
