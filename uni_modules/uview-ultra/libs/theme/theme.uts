@@ -425,10 +425,19 @@ export function initThemeSystem(): void {
     }
     if (!hasRegisterThemeListener) {
         hasRegisterThemeListener = true
+        /*
+         * `uni.onThemeChange` 只有 web / 小程序端有，uni-app x 的 App 端没有这个 API ——
+         * 直接调用会让 App 启动即抛 `TypeError: uni.onThemeChange is not a function`。
+         *
+         * App 端不注册监听：系统主题在每次启动时由 `getSystemTheme()` 重新读一次，
+         * 运行期切系统深浅色需要用户重新进设置页触发（或下次冷启动生效）。
+         */
+        // #ifdef WEB
         uni.onThemeChange((res) => {
             if (upThemePreference.value === 'system') {
                 applyTheme(res.theme)
             }
         })
+        // #endif
     }
 }

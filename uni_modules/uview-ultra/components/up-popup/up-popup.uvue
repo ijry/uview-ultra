@@ -374,7 +374,7 @@
 		dragReleaseTimer = setTimeout(() => {
 			dragActive.value = false
 			dragOffset.value = 0
-		}, 260) as any
+	}, 260)
 	}
 
 	const stopContentTap = (e: UniEvent): void => {

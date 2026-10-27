@@ -29,7 +29,7 @@
 			<view
 				v-if="showGlass"
 				class="up-navbar__glass"
-				:class="[frostedGlass ? 'up-navbar__glass--frosted' : '']"
+				:class="[frostedGlass ? 'up-navbar__glass--frosted' : '', frostedBorder ? 'up-navbar__glass--border' : '']"
 				:style="glassStyle"
 			></view>
 			<!-- 状态栏占位：高度可被 statusBarInsetTop 覆盖（iOS standalone 传 0） -->
@@ -109,7 +109,7 @@
 	 * @property {Boolean}			safeAreaInsetTop	是否开启顶部安全区适配  （默认 true ）
 	 * @property {Boolean}			placeholder			固定在顶部时，是否生成一个等高元素，以防止塌陷 （默认 false ）
 	 * @property {Boolean}			fixed				导航栏是否固定在顶部 （默认 false ）
-	 * @property {Boolean}			border				导航栏底部是否显示下边框 （默认 false ）
+	 * @property {Boolean}			border				导航栏底部是否显示下边框（磨砂层的分隔线也服从它）（默认 false ）
 	 * @property {String}			leftIcon			左边返回图标的名称，只能为uView自带的图标 （默认 'arrow-left' ）
 	 * @property {String}			leftText			左边的提示文字
 	 * @property {String}			rightText			右边的提示文字
@@ -361,6 +361,17 @@
 		return props.frosted && !isIosMode.value
 	})
 
+	/**
+	 * 磨砂层要不要画底部分隔线。
+	 *
+	 * 与 `border` 同一语义 —— `border` 的描述就是「导航栏底部是否显示下边框」，
+	 * 磨砂层那条线就是下边框，必须服从它。早先这条线写死在磨砂层样式里，
+	 * 调用方明明传了 `:border="false"`，滚动时照样会冒出一条，等于这个开关半失效。
+	 */
+	const frostedBorder = computed((): boolean => {
+		return frostedGlass.value && props.border
+	})
+
 	// iOS 模式：磨砂在前半段走完，为居中标题的出现铺好不透明底。
 	// frosted 模式：按滚动距离从 0 淡入到 1（「半透明」由底色负责，不是靠 opacity）。
 	const glassOpacity = computed((): number => {
@@ -541,14 +552,18 @@
 		}
 
 		// 滚动磨砂（非 iOS 模式）：底色是半透明的卡片色，配合 backdrop-filter 才是
-		// 「高仿 iOS」的材质 —— 不透明底会把背后的模糊完全盖掉。底部细线在内容压到
-		// 导航栏下时给出分隔，随磨砂层一起淡入。
+		// 「高仿 iOS」的材质 —— 不透明底会把背后的模糊完全盖掉。
 		//
 		// 底色走**主题变量**（`theme.uts` 里算好的 rgba），不写 `color-mix`：
 		// uvue App 端不支持 `color-mix`，整条声明会被丢掉；而 App 端也不支持
 		// `backdrop-filter` —— 两层同时失效，滚动时顶栏就跟全透明一样，磨砂等于没开。
 		&__glass--frosted {
 			background-color: var(--up-navbar-glass-bg, rgba(255, 255, 255, 0.75));
+		}
+
+		// 底部分隔线单独一个类，**只在 `border` 为真时**才挂上来。
+		// 早先它写死在 `--frosted` 里，页面传 `:border="false"` 也照样出线。
+		&__glass--border {
 			border-bottom: 1px solid var(--up-navbar-glass-border, rgba(0, 0, 0, 0.08));
 		}
 

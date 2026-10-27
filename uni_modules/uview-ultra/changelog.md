@@ -1,3 +1,10 @@
+## 4.5.57
+fix: 修复 4.5.55 引入的 durationValue 未定义（up-transition 进场清理报 ReferenceError）
+
+- vueEnter 的 setTimeout 清理误引用了不存在的 `durationValue` computed，弹层每次
+  进场即抛 `ReferenceError: durationValue is not defined`；改为与 vueLeave 同款的
+  `parseInt(props.duration)` 解析
+
 ## 4.5.56
 fix: up-transition 补齐各模式 enter-to 显式终态，修复蒸汽 web 端弹层卡在起点
 

@@ -151,7 +151,7 @@ const vueEnter = async (): Promise<void> => {
 		if (status.value === 'enter') {
 			classes.value = ''
 		}
-	}, durationValue.value + 50)
+	}, parseInt(props.duration != null ? props.duration.toString() : "0") + 50)
 }
 
 // 动画离场处理
