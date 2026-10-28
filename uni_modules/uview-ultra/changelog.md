@@ -1,3 +1,12 @@
+## 4.5.60
+feat: config.uts color 支持 up-primary-light / up-primary-dark 按主题模式覆盖主色
+
+- `configColorOverride` 支持模式后缀键（`up-<token>-light` / `up-<token>-dark`，
+  优先于单值键）：应用要「浅色主色换黑系、深色保持原主色」时在 config.color 写两个键即可，
+  无需写 JS
+- 修正 4.5.59 的 `--up-tabbar-active-bg` 浅色默认：#000000 → #1c1c1f（应用原意是
+  「把主色覆盖为原底栏激活色」，激活块本身不该被改动）
+
 ## 4.5.59
 feat: 主题变量新增 --up-tabbar-active-bg（底栏激活块底色）
 

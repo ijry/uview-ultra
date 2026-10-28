@@ -93,9 +93,9 @@ const EXTRA_LIGHT_VARS: UTSJSONObject = {
     // 跟全透明没区别（这正是「开了 frosted 却没效果」的原因）。
     '--up-navbar-glass-bg': 'rgba(255, 255, 255, 0.75)',
     '--up-navbar-glass-border': 'rgba(0, 0, 0, 0.08)',
-    // 底栏激活项的实心块底色：默认纯黑（用户 2026-10-27 要求可配置为黑色）。
+    // 底栏激活项的实心块底色：默认 #1c1c1f（原硬编码值）。
     // 与主色无关——激活块要衬托彩色填充图标，跟主色联动反而会撞色。
-    '--up-tabbar-active-bg': '#000000'
+    '--up-tabbar-active-bg': '#1c1c1f'
 }
 
 const EXTRA_DARK_VARS: UTSJSONObject = {
@@ -183,11 +183,23 @@ function pickColor(colors: UTSJSONObject, field: string, fallback: string): stri
     return fallback
 }
 
-/** 读取 config.uts color 中显式配置的 token（支持 up-/u- 双前缀 key） */
-function configColorOverride(token: string): string {
+/**
+ * 读取 config.uts color 中显式配置的 token（支持 up-/u- 双前缀 key）。
+ *
+ * 支持**按主题模式**覆盖：`up-primary-light` / `up-primary-dark` 后缀键优先于单值键
+ * `up-primary`——应用要「浅色主色换黑系、深色保持原主色」这类需求时不用写 JS。
+ */
+function configColorOverride(token: string, isDark: boolean): string {
     const colorMap = config['color']
     if (!(colorMap instanceof UTSJSONObject)) return ''
     const conf = colorMap as UTSJSONObject
+    const modeSuffix = isDark ? 'dark' : 'light'
+    const modeUpKey = `up-${token}-${modeSuffix}`
+    const modeUKey = `u-${token}-${modeSuffix}`
+    const modeUpValue = conf[modeUpKey]
+    if (typeof modeUpValue === 'string' && (modeUpValue as string).length > 0) return modeUpValue as string
+    const modeUValue = conf[modeUKey]
+    if (typeof modeUValue === 'string' && (modeUValue as string).length > 0) return modeUValue as string
     const upKey = `up-${token}`
     const uKey = `u-${token}`
     const upValue = conf[upKey]
@@ -229,7 +241,7 @@ export function getThemeVars(mode: string | null = null): UTSJSONObject {
     UTSJSONObject.keys(FIELD_TOKENS).forEach((field: string) => {
         const token = FIELD_TOKENS[field] as string
         const fallback = pickColor(base, field, isDark ? '#1f1f1f' : '#303133')
-        const override = configColorOverride(token)
+        const override = configColorOverride(token, isDark)
         const value = override.length > 0 ? override : fallback
         vars[`--up-${token}`] = value
         vars[`--u-${token}`] = value
