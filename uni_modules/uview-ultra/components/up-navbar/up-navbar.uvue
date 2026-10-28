@@ -253,6 +253,30 @@
 	const emit = defineEmits(['leftClick', 'rightClick'])
 	const systemStatusBarHeight = ref(uni.getSystemInfoSync().statusBarHeight ?? 0)
 
+	// #ifdef H5 || WEB
+	// web 端 `statusBarHeight` 恒 0（浏览器视口不含系统状态栏），但 iOS Safari
+	// （viewport-fit=cover，地址栏收起）的页面视口顶部包含状态栏区域——真实占位
+	// 高度是 CSS `env(safe-area-inset-top)` 的像素值。探针元素读一次实际值：
+	// iPhone Safari ≈ 59，桌面 / Android 浏览器 env 为 0、行为不变。App 端原生
+	// statusBarHeight 是准的，不进这段。
+	try {
+		const doc: any = (globalThis as any).document
+		const probe = doc.createElement('div')
+		probe.setAttribute(
+			'style',
+			'position:absolute;visibility:hidden;pointer-events:none;height:env(safe-area-inset-top);padding:0;border:0;'
+		)
+		doc.body.appendChild(probe)
+		const measured = probe.getBoundingClientRect().height
+		doc.body.removeChild(probe)
+		if (typeof measured === 'number' && measured > 0) {
+			systemStatusBarHeight.value = measured
+		}
+	} catch (e) {
+		// 探测失败保持 0：与既有行为一致
+	}
+	// #endif
+
 	/**
 	 * 实际使用的状态栏占位高度。
 	 *

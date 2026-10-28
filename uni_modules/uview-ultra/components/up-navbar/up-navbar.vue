@@ -171,9 +171,22 @@ const isIosMode = computed(() => props.mode === 'ios')
 // 有效大标题行高：title 为空时不渲染大标题行，行高塌陷为 0
 const largeTitleHeight = computed(() => (props.title ? LARGE_TITLE_HEIGHT : 0))
 
+// web 端 `statusBarHeight` 恒 0，但 iOS Safari（viewport-fit=cover，地址栏收起）的
+// 页面视口顶部包含状态栏区域——真实高度是 env(safe-area-inset-top)。探针读一次。
+let envSafeAreaTop = 0
+// #ifdef H5
+try {
+	const probe = document.createElement('div')
+	probe.setAttribute('style', 'position:absolute;visibility:hidden;height:env(safe-area-inset-top);padding:0;border:0;')
+	document.body.appendChild(probe)
+	envSafeAreaTop = probe.getBoundingClientRect().height
+	document.body.removeChild(probe)
+} catch (e) {}
+// #endif
+
 // in-flow 层顶部让位块高度，为固定层腾出空间
 const flowSpacerHeight = computed(() => {
-	const statusBarHeight = props.safeAreaInsetTop ? sys().statusBarHeight : 0
+	const statusBarHeight = props.safeAreaInsetTop ? (sys().statusBarHeight || envSafeAreaTop) : 0
 	return addUnit(getPx(props.height) + statusBarHeight, 'px')
 })
 

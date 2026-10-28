@@ -1,3 +1,15 @@
+## 4.5.61
+fix: up-navbar web 端状态栏高度改用 env(safe-area-inset-top) 探测，修复 Safari 网页模式顶栏割裂
+
+- H5 端 `uni.getSystemInfoSync().statusBarHeight` 恒 0，而 iOS Safari
+  （viewport-fit=cover，地址栏收起）的页面视口顶部包含状态栏区域：navbar 只有
+  46px 钉在视口顶，状态栏段（约 59px）无导航、无磨砂，滚动内容直接穿过——
+  「状态栏与导航割裂成两块、导航有磨砂状态栏没有」
+- up-navbar（.uvue / .vue）在 web 端用探针元素读 `env(safe-area-inset-top)`
+  实际像素作为状态栏占位（iPhone ≈ 59；桌面 / Android 浏览器 env 为 0、行为
+  不变；App 端原生 statusBarHeight 准确，不进探测）
+- standalone（PWA）分档不受影响：应用传 `statusBarInsetTop=0` 并由系统画带
+
 ## 4.5.60
 feat: config.uts color 支持 up-primary-light / up-primary-dark 按主题模式覆盖主色
 
