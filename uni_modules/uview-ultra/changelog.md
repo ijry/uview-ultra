@@ -1,3 +1,11 @@
+## 4.5.59
+feat: 主题变量新增 --up-tabbar-active-bg（底栏激活块底色）
+
+- theme.uts 的 light / dark 扩展变量表各加一项 `--up-tabbar-active-bg`
+  （浅色默认 #000000——应用方要求底栏激活块为黑色；深色 #3a3a3c，纯黑会融进
+  深色底栏）。此前该色硬编码在应用侧底栏组件里，无法随主题配置
+- 底栏组件以 `var(--up-tabbar-active-bg, ...)` 消费（应用侧自行接线）
+
 ## 4.5.58
 feat: up-cell-group 默认圆角 + up-cell 分隔线支持 iOS 标准左缩进
 

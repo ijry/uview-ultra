@@ -92,7 +92,10 @@ const EXTRA_LIGHT_VARS: UTSJSONObject = {
     // 于是没有底色 —— 而 App 端也不支持 `backdrop-filter`，两层一没，滚动时顶栏看起来
     // 跟全透明没区别（这正是「开了 frosted 却没效果」的原因）。
     '--up-navbar-glass-bg': 'rgba(255, 255, 255, 0.75)',
-    '--up-navbar-glass-border': 'rgba(0, 0, 0, 0.08)'
+    '--up-navbar-glass-border': 'rgba(0, 0, 0, 0.08)',
+    // 底栏激活项的实心块底色：默认纯黑（用户 2026-10-27 要求可配置为黑色）。
+    // 与主色无关——激活块要衬托彩色填充图标，跟主色联动反而会撞色。
+    '--up-tabbar-active-bg': '#000000'
 }
 
 const EXTRA_DARK_VARS: UTSJSONObject = {
@@ -107,7 +110,9 @@ const EXTRA_DARK_VARS: UTSJSONObject = {
     '--up-calendar-month-mark-color': 'rgba(255, 255, 255, 0.04)',
     // 暗色下不透明度要更高：暗底上叠亮内容，72% 会糊成一片读不清。
     '--up-navbar-glass-bg': 'rgba(28, 28, 30, 0.78)',
-    '--up-navbar-glass-border': 'rgba(255, 255, 255, 0.12)'
+    '--up-navbar-glass-border': 'rgba(255, 255, 255, 0.12)',
+    // 深色下保持 #3a3a3c：纯黑会融进深色底栏，激活块消失。
+    '--up-tabbar-active-bg': '#3a3a3c'
 }
 
 // 主题色字段 -> CSS 变量 token（不含 --up-/--u- 前缀）
