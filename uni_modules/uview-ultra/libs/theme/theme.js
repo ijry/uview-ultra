@@ -95,7 +95,8 @@ export const themeState = {
     vars: {}
 }
 
-const THEME_MODE_STORAGE_KEY = 'u-theme-mode'
+const THEME_MODE_STORAGE_KEY = 'up-theme-mode'
+const LEGACY_THEME_MODE_STORAGE_KEY = 'u-theme-mode'
 const THEME_MODE_SYSTEM = 'system'
 const THEME_MODE_MANUAL = ['light', 'dark']
 const LIGHT_THEME_TOKEN_FIELD_MAP = Object.freeze({
@@ -229,7 +230,16 @@ function getExplicitRuntimeColorValue(token, runtimeColorMap = {}) {
 function readThemePreferenceFromStorage() {
     try {
         if (typeof uni !== 'undefined' && typeof uni.getStorageSync === 'function') {
-            const mode = uni.getStorageSync(THEME_MODE_STORAGE_KEY)
+            let mode = uni.getStorageSync(THEME_MODE_STORAGE_KEY)
+            // 旧 `u-theme-mode` 迁移（fork 时代 key）。
+            if (typeof mode !== 'string' || mode.length === 0) {
+                const legacy = uni.getStorageSync(LEGACY_THEME_MODE_STORAGE_KEY)
+                if (typeof legacy === 'string' && legacy.length > 0) {
+                    mode = legacy
+                    uni.setStorageSync(THEME_MODE_STORAGE_KEY, legacy)
+                    uni.removeStorageSync(LEGACY_THEME_MODE_STORAGE_KEY)
+                }
+            }
             return normalizeThemePreference(mode)
         }
     } catch (e) {}

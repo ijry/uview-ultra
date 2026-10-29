@@ -1,3 +1,11 @@
+## 4.5.67
+fix: 主题存储 key 统一 `up-` 前缀，并迁移旧 key
+
+- `u-theme-primary`（4.5.66 首版）→ **`up-theme-primary`**；顺带把 fork 时代遗留的
+  `u-theme-mode` → **`up-theme-mode`**（`.uts` / `.js` 双实现）
+- 首次读取时自动迁移旧 key（读到旧值写入新 key 并删除旧 key），已有用户的
+  主题模式与品牌色偏好不会丢
+
 ## 4.5.66
 feat: 运行时主色（品牌色）切换 API
 

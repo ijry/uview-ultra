@@ -146,7 +146,9 @@ const FIELD_TOKENS: UTSJSONObject = {
     'disabledColor': 'disabled-color'
 }
 
-const THEME_MODE_STORAGE_KEY = 'u-theme-mode'
+const THEME_MODE_STORAGE_KEY = 'up-theme-mode'
+/** 旧存储 key（fork 时代 `u-` 前缀）。首次读取时迁移到 `up-theme-mode` 后即可弃用。 */
+const LEGACY_THEME_MODE_STORAGE_KEY = 'u-theme-mode'
 
 // ---------------- 响应式状态 ----------------
 
@@ -404,7 +406,9 @@ function applyTheme(mode: string): void {
 
 // ---------------- 运行时主色（品牌色）切换 ----------------
 
-const THEME_PRIMARY_STORAGE_KEY = "u-theme-primary"
+const THEME_PRIMARY_STORAGE_KEY = "up-theme-primary"
+/** 旧 key：4.5.66 首版误用了 `u-` 前缀，读取时迁移。 */
+const LEGACY_THEME_PRIMARY_STORAGE_KEY = "u-theme-primary"
 
 /** 当前生效的主色（运行时覆盖值；空串表示未覆盖、走 config/默认）。 */
 export const upThemePrimaryColor = ref<string>("")
@@ -481,14 +485,32 @@ export function initThemeSystem(): void {
     // 运行时主色覆盖值（设置页取色器写入）——必须在首次 getThemeVars 前加载，
     // 否则首屏会用默认色、切主题时才跳变。
     try {
-        const storedPrimary = uni.getStorageSync(THEME_PRIMARY_STORAGE_KEY)
+        let storedPrimary = uni.getStorageSync(THEME_PRIMARY_STORAGE_KEY)
+        // 旧 `u-theme-primary` 迁移：读到了就搬到新 key 并清掉旧的。
+        if (typeof storedPrimary !== "string" || (storedPrimary as string).length == 0) {
+            const legacyPrimary = uni.getStorageSync(LEGACY_THEME_PRIMARY_STORAGE_KEY)
+            if (typeof legacyPrimary === "string" && (legacyPrimary as string).length > 0) {
+                storedPrimary = legacyPrimary
+                uni.setStorageSync(THEME_PRIMARY_STORAGE_KEY, legacyPrimary as string)
+                uni.removeStorageSync(LEGACY_THEME_PRIMARY_STORAGE_KEY)
+            }
+        }
         if (typeof storedPrimary === "string" && (storedPrimary as string).length > 0) {
             upThemePrimaryColor.value = normalizeHexColor(storedPrimary as string)
         }
     } catch (e) {}
     let stored = 'system'
     try {
-        const value = uni.getStorageSync(THEME_MODE_STORAGE_KEY)
+        let value = uni.getStorageSync(THEME_MODE_STORAGE_KEY)
+        // 旧 `u-theme-mode` 迁移（fork 时代的 key）。
+        if (typeof value !== 'string' || (value as string).length == 0) {
+            const legacyMode = uni.getStorageSync(LEGACY_THEME_MODE_STORAGE_KEY)
+            if (typeof legacyMode === 'string' && (legacyMode as string).length > 0) {
+                value = legacyMode
+                uni.setStorageSync(THEME_MODE_STORAGE_KEY, legacyMode as string)
+                uni.removeStorageSync(LEGACY_THEME_MODE_STORAGE_KEY)
+            }
+        }
         if (typeof value === 'string') stored = normalizeThemePreference(value as string)
     } catch (e) {}
     upThemePreference.value = stored
