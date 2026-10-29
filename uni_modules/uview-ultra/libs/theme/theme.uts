@@ -95,7 +95,8 @@ const EXTRA_LIGHT_VARS: UTSJSONObject = {
     '--up-navbar-glass-border': 'rgba(0, 0, 0, 0.08)',
     // 底栏激活项的实心块底色：默认 #1c1c1f（原硬编码值）。
     // 与主色无关——激活块要衬托彩色填充图标，跟主色联动反而会撞色。
-    '--up-tabbar-active-bg': '#1c1c1f'
+    // iOS 27 风格：浅灰选中块（应用方 2026-10-30 指定）
+    '--up-tabbar-active-bg': '#e9e9eb'
 }
 
 const EXTRA_DARK_VARS: UTSJSONObject = {
@@ -112,7 +113,8 @@ const EXTRA_DARK_VARS: UTSJSONObject = {
     '--up-navbar-glass-bg': 'rgba(28, 28, 30, 0.78)',
     '--up-navbar-glass-border': 'rgba(255, 255, 255, 0.12)',
     // 深色下保持 #3a3a3c：纯黑会融进深色底栏，激活块消失。
-    '--up-tabbar-active-bg': '#3a3a3c'
+    // 深色：比底栏底（#1c1c1e 系）微亮一档的选中块
+    '--up-tabbar-active-bg': '#2c2c2e'
 }
 
 // 主题色字段 -> CSS 变量 token（不含 --up-/--u- 前缀）
