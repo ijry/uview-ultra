@@ -1,3 +1,17 @@
+## 4.5.62
+fix: up-button 的 type=primary 接入主题变量，修复主色覆盖后按钮仍为默认蓝
+
+- up-button（.uvue / .vue 双实现）此前 type 色走两条**编译期/静态**路径：
+  scss `$up-button-primary-background-color`（编译期 #2979ff，且带 !important
+  压过内联样式）与 `.uvue` 的 `config.getString('color.up-primary')`（config
+  单值键，light/dark 模式后缀键覆盖不生效）——应用把主色覆盖为黑系后按钮依旧蓝
+- `.uvue`：`typeColor` / plain `textColor` 改 `upThemeVar(--up-<type>)`（响应式、
+  随主题与模式后缀覆盖刷新，回退 config 单值）；scss 背景与边框改
+  `var(--up-primary, 编译期值)`
+- `.vue`：scss 背景/边框同样 var 化
+- 其余 37 个组件的 scss `$up-primary` 消费（alert/badge/calendar/keyboard 等）
+  列入后续清单
+
 ## 4.5.61
 fix: up-navbar web 端状态栏高度改用 env(safe-area-inset-top) 探测，修复 Safari 网页模式顶栏割裂
 
