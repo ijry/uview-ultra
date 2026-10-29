@@ -327,6 +327,43 @@ export function upThemeVar(varName: string, fallbackColor: string = ''): string 
     return fallbackColor
 }
 
+/**
+ * 读取主题色并**附加透明度**，返回 rgba() 字符串。
+ *
+ * 为什么需要它：`--up-primary` 是十六进制串，CSS 里没法直接给它加 alpha —— 业务侧
+ * 想要「主色 12% 的浅底」（图标底衬、选中态背景、发光阴影）时只能硬编码一个
+ * rgba 蓝，主色一换就不同步。这里在脚本侧把当前主色解析成 rgba，随主题与运行时
+ * 品牌色一起变化。
+ *
+ * 注意 `--up-primary-light` 不是这个用途：那是主题表里**独立的浅色档**（浅色
+ * #ecf5ff / 深色 #10243a），不随主色计算，不能当「主色 + alpha」用。
+ *
+ * @param varName 变量名（如 `--up-primary`）
+ * @param alpha 0-1 的透明度
+ * @param fallbackColor 变量取不到时的兜底十六进制色
+ */
+export function upThemeColorAlpha(varName: string, alpha: number, fallbackColor: string = '#2979ff'): string {
+    const base = upThemeVar(varName, fallbackColor)
+    const rgb = parseHexColor(base)
+    if (rgb == null) return base
+    const clamped = alpha < 0 ? 0 : (alpha > 1 ? 1 : alpha)
+    const a = Math.round(clamped * 1000) / 1000
+    return `rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, ${a})`
+}
+
+/** `#RGB` / `#RRGGBB` → [r, g, b]；其它格式（已是 rgba 等）返回 null。 */
+function parseHexColor(value: string): number[] | null {
+    const match = /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.exec(value.trim())
+    if (match == null) return null
+    let body = match[1]
+    if (body.length == 3) {
+        body = `${body[0]}${body[0]}${body[1]}${body[1]}${body[2]}${body[2]}`
+    }
+    const parsed = parseInt(body, 16)
+    if (isNaN(parsed)) return null
+    return [(parsed >> 16) & 0xff, (parsed >> 8) & 0xff, parsed & 0xff]
+}
+
 /** 当前是否暗黑（响应式）。 */
 export function upThemeIsDark(): boolean {
     return upThemeMode.value === 'dark'

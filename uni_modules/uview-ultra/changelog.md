@@ -1,3 +1,13 @@
+## 4.5.68
+feat: 新增 upThemeColorAlpha，把主题色算成带透明度的 rgba
+
+- `upThemeColorAlpha(varName, alpha, fallback)`：读当前主题色 → 解析 → 返回
+  `rgba(r, g, b, a)`。用于「主色 12% 浅底」这类场景（图标底衬、选中态背景、
+  发光阴影），随主题切换与运行时品牌色一起变化
+- 澄清：`--up-primary-light` 是主题表里独立的浅色档（浅 #ecf5ff / 深 #10243a），
+  **不随主色计算**，不能当「主色 + alpha」用——这正是业务侧此前只能硬编码
+  rgba 蓝的原因
+
 ## 4.5.67
 fix: 主题存储 key 统一 `up-` 前缀，并迁移旧 key
 
