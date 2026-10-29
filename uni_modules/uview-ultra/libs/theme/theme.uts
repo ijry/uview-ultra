@@ -241,7 +241,9 @@ export function getThemeVars(mode: string | null = null): UTSJSONObject {
     UTSJSONObject.keys(FIELD_TOKENS).forEach((field: string) => {
         const token = FIELD_TOKENS[field] as string
         const fallback = pickColor(base, field, isDark ? '#1f1f1f' : '#303133')
-        const override = configColorOverride(token, isDark)
+        // 优先级：运行时品牌色（设置页切换）> config 覆盖（编译期/模式后缀）> 主题表默认。
+        const runtimePrimary = token == "primary" ? upThemePrimaryColor.value : ""
+        const override = runtimePrimary.length > 0 ? runtimePrimary : configColorOverride(token, isDark)
         const value = override.length > 0 ? override : fallback
         vars[`--up-${token}`] = value
         vars[`--u-${token}`] = value
@@ -400,6 +402,53 @@ function applyTheme(mode: string): void {
     } catch (e) {}
 }
 
+// ---------------- 运行时主色（品牌色）切换 ----------------
+
+const THEME_PRIMARY_STORAGE_KEY = "u-theme-primary"
+
+/** 当前生效的主色（运行时覆盖值；空串表示未覆盖、走 config/默认）。 */
+export const upThemePrimaryColor = ref<string>("")
+
+/**
+ * 设置运行时主色并立即生效 + 持久化。传空串清除覆盖、回到 config 默认。
+ *
+ * 与 `config.color['up-primary-light']` 的区别：config 是**编译期**配置
+ * （发布不同品牌包时改它），这里是**运行时**用户可切换的品牌色（设置页取色器）。
+ * 二者优先级：运行时值 > config 覆盖 > 主题表默认。
+ *
+ * 只覆盖主色单值（浅/深共用）——浅色用黑系、深色保持默认蓝这类按模式区分的
+ * 场景仍走 config 的 `up-primary-light/-dark` 后缀键。
+ */
+export function setThemePrimaryColor(color: string): void {
+    const normalized = normalizeHexColor(color)
+    upThemePrimaryColor.value = normalized
+    try {
+        if (normalized.length > 0) {
+            uni.setStorageSync(THEME_PRIMARY_STORAGE_KEY, normalized)
+        } else {
+            uni.removeStorageSync(THEME_PRIMARY_STORAGE_KEY)
+        }
+    } catch (e) {}
+    applyTheme(upThemeMode.value)
+}
+
+/** 读取当前运行时主色覆盖值（未覆盖返回空串）。 */
+export function getThemePrimaryColor(): string {
+    return upThemePrimaryColor.value
+}
+
+function normalizeHexColor(value: string): string {
+    const color = value.trim()
+    if (color.length == 0) return ""
+    const match = /^#?([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.exec(color)
+    if (match == null) return ""
+    const body = match[1]
+    if (body.length == 3) {
+        return `#${body[0]}${body[0]}${body[1]}${body[1]}${body[2]}${body[2]}`.toLowerCase()
+    }
+    return `#${body}`.toLowerCase()
+}
+
 /** 设置并持久化主题偏好（'light' | 'dark'）。 */
 export function setTheme(mode: string): void {
     const preference = normalizeThemeMode(mode)
@@ -429,6 +478,14 @@ export function setThemePreference(mode: string): void {
  * 在 App.uvue onLaunch 或 main.uts 中调用一次。
  */
 export function initThemeSystem(): void {
+    // 运行时主色覆盖值（设置页取色器写入）——必须在首次 getThemeVars 前加载，
+    // 否则首屏会用默认色、切主题时才跳变。
+    try {
+        const storedPrimary = uni.getStorageSync(THEME_PRIMARY_STORAGE_KEY)
+        if (typeof storedPrimary === "string" && (storedPrimary as string).length > 0) {
+            upThemePrimaryColor.value = normalizeHexColor(storedPrimary as string)
+        }
+    } catch (e) {}
     let stored = 'system'
     try {
         const value = uni.getStorageSync(THEME_MODE_STORAGE_KEY)

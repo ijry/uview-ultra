@@ -1,3 +1,15 @@
+## 4.5.66
+feat: 运行时主色（品牌色）切换 API
+
+- theme.uts 新增 `setThemePrimaryColor(color)` / `getThemePrimaryColor()` /
+  响应式 `upThemePrimaryColor`：写 storage（key `u-theme-primary`）+ 立即刷新
+  整张变量表（`applyTheme`），所有 `var(--up-primary)` / `upThemeVar` 消费点
+  当前页即时生效
+- 优先级：**运行时品牌色 > `config.color` 覆盖（含 light/dark 后缀）> 主题表默认**；
+  传空串清除覆盖回到 config 默认
+- `initThemeSystem` 启动时先加载持久化值再建首张变量表，避免首屏默认色跳变
+- 只覆盖主色单值；「浅色黑系、深色默认蓝」这类按模式区分的场景仍走 config 后缀键
+
 ## 4.5.65
 feat: up-button / up-tag 默认（square）圆角改为 iOS 风格
 
