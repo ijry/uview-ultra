@@ -1,3 +1,12 @@
+## 4.5.64
+fix: up-radio-group 默认 activeColor 接入主题变量（4.5.63 未覆盖到的一条）
+
+- 4.5.63 改了 up-radio 自身的兜底色，但 **radio-group 的 `activeColor` 默认值本身
+  就是 `#2979ff`**——子 radio 判定「父组件已指定颜色」，永远走不到 upThemeVar 兜底，
+  选中态仍是蓝
+- `radioGroup.uts` / `radioGroup.js` 的默认值改 `var(--up-primary, #2979ff)`
+  （显式传 activeColor 仍覆盖，行为不变）
+
 ## 4.5.63
 fix: up-radio / up-checkbox / up-switch 的选中色接入主题变量
 
