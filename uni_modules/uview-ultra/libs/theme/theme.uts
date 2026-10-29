@@ -260,17 +260,7 @@ export function getThemeVars(mode: string | null = null): UTSJSONObject {
     const navbarBg = isDark ? '#1c1c1e' : '#ffffff'
     vars['--up-navbar-bg-color'] = navbarBg
     const extra = isDark ? EXTRA_DARK_VARS : EXTRA_LIGHT_VARS
-    // 底栏激活块的实心底色 = 主色的配套深色（不是主题表里的固定值）。
-    //
-    // `--up-primary-dark` 是「按下态」的固定色值，换主色不会跟着变；激活块要的是
-    // 「同一品牌色的深一档」，所以从当前主色算：深色模式提亮（深底上压暗会糊成一片），
-    // 浅色模式压暗。算法与 iOS 的色调变体一致：向黑/白按比例混合。
-    const derivedTabbarActiveBg = deriveToneShift(vars["--up-primary"] as string, isDark)
-    vars["--up-tabbar-active-bg"] = derivedTabbarActiveBg
-    vars["--u-tabbar-active-bg"] = derivedTabbarActiveBg
     UTSJSONObject.keys(extra).forEach((key: string) => {
-        // 激活块底色已由主色推导，跳过固定值
-        if (key == "--up-tabbar-active-bg") return
         const value = extra[key]
         if (typeof value !== 'string') return
         vars[key] = value
@@ -359,26 +349,6 @@ export function upThemeColorAlpha(varName: string, alpha: number, fallbackColor:
     const clamped = alpha < 0 ? 0 : (alpha > 1 ? 1 : alpha)
     const a = Math.round(clamped * 1000) / 1000
     return `rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, ${a})`
-}
-
-/**
- * 由主色推导「配套深色」（底栏激活块底色）。
- *
- * 深浅模式统一**向黑混合 55%**：底栏图标是固定的蓝青双色填充，激活块必须与它们
- * 保持 ≥3:1 对比。实测六个预设主色下 55% 压暗的最差对比是橙色 3.02（其余
- * 3.16~6.09）；深色模式若改用「提亮」，蓝/青图标压在提亮后的同色系底上对比只剩
- * 1.04~1.37，图标会糊掉。
- *
- * 主色解析失败（非 hex）时回退到中性深灰，与历史默认值一致。
- */
-function deriveToneShift(primary: string, isDark: boolean): string {
-    const rgb = parseHexColor(primary)
-    if (rgb == null) return isDark ? "#3a3a3c" : "#1c1c1f"
-    // 统一压暗 55%：底栏图标是固定的蓝青双色填充，激活块与它们需 ≥3:1 对比。
-    // 实测六个预设主色下最差 3.02（橙），深色若改「提亮」同色系图标对比只剩 1.04。
-    const mixed = rgb.map((channel) => Math.round(channel * 0.45))
-    const hex = mixed.map((v) => (`0${v.toString(16)}`).slice(-2)).join("")
-    return `#${hex}`
 }
 
 /** `#RGB` / `#RRGGBB` → [r, g, b]；其它格式（已是 rgba 等）返回 null。 */
