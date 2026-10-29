@@ -1,3 +1,12 @@
+## 4.5.65
+feat: up-button / up-tag 默认（square）圆角改为 iOS 风格
+
+- up-button 默认 `shape: 'square'` 的圆角 3px → **10px**（`.uvue` / `.vue`
+  双实现，四个方向变量同步）；`shape: 'circle'` 仍为 100px 胶囊，不受影响
+- up-tag 默认（square）圆角 3px → **8px**（尺寸比按钮小一档，视觉节奏一致）；
+  `shape: 'circle'` 不变
+- 显式传 `customStyle` 圆角仍可覆盖（内联优先级更高）
+
 ## 4.5.64
 fix: up-radio-group 默认 activeColor 接入主题变量（4.5.63 未覆盖到的一条）
 
