@@ -1,3 +1,17 @@
+## 4.5.63
+fix: up-radio / up-checkbox / up-switch 的选中色接入主题变量
+
+单选、复选、开关的选中色此前是**硬编码 #2979ff**（props 兜底 + scss 编译期色 +
+`switch.uts` 默认值），完全不读主题变量——应用把主色覆盖为黑系后它们仍是蓝。
+
+- up-radio：`elActiveColor` 兜底改 `upThemeVar('--up-primary', '#2979ff')`；
+  scss `&--checked` 的 background/border 改 `var(--up-primary, 编译期值)`
+  （显式传 `activeColor` 走内联 style，优先级更高，行为不变）
+- up-checkbox：同款兜底与 scss 处理
+- up-switch：`switch.uts` 的 `activeColor` 默认值与 `switch.js` 对齐为
+  `var(--up-switch-active-color, var(--up-primary, #2979ff))`
+  （蒸汽端走 .uts，此前只有 js 端接入了变量）
+
 ## 4.5.62
 fix: up-button 的 type=primary 接入主题变量，修复主色覆盖后按钮仍为默认蓝
 

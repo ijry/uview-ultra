@@ -39,7 +39,8 @@
 
 <script setup lang="uts">
 	import { computed, getCurrentInstance, nextTick, onMounted, ref } from 'vue';
-	import defProps from './radio.uts';
+	import defProps from './radio.uts'
+	import { upThemeVar } from '../../libs/theme/theme.uts';
 	import { addUnit, addStyle, os, deepMerge, formValidate, error } from '../../libs/function/index.uts';
 	import { useUltraUI } from '../../libs/composable/useUltraUI.uts';
 	/**
@@ -213,7 +214,7 @@
 	const elActiveColor = computed((): string => {
 		return props.activeColor as string != ''
 			? props.activeColor as string
-			: (parentData.value['activeColor'] as string != '' ? parentData.value['activeColor'] as string : '#2979ff')
+			: (parentData.value['activeColor'] as string != '' ? parentData.value['activeColor'] as string : upThemeVar('--up-primary', '#2979ff'))
 	})
 
 	// 组件选未中激活时的颜色
@@ -485,8 +486,9 @@
 
 			&--checked {
 				color: $up-radio-checked-color;
-				background-color: $up-radio-checked-background-color;
-				border-color: $up-radio-checked-border-color;
+				/* 兜底色接主题变量：activeColor 未显式传时（radio-group 默认）随主色走 */
+				background-color: var(--up-primary, $up-radio-checked-background-color);
+				border-color: var(--up-primary, $up-radio-checked-border-color);
 			}
 
 			&--disabled {

@@ -15,7 +15,8 @@ export default {
         loading: false,
         disabled: false,
         size: 25,
-        activeColor: '#2979ff',
+        // 与 switch.js 对齐：走主题变量（uvue 端 background 支持 var()，样式隔离 2.0 下变量可继承）
+        activeColor: 'var(--up-switch-active-color, var(--up-primary, #2979ff))',
         inactiveColor: '#ffffff',
         activeValue: true,
         inactiveValue: false,

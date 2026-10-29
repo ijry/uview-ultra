@@ -38,6 +38,7 @@
 	import { array as testArray } from '../../libs/function/test'
 	import { addStyle, addUnit, deepMerge, formValidate, error } from '../../libs/function/index'
 	import defProps from './checkbox.uts'
+	import { upThemeVar } from '../../libs/theme/theme.uts'
 	import { useUltraUI } from '../../libs/composable/useUltraUI'
 	const { parent, parentData, getParentData } = useUltraUI()
 	const instance = getCurrentInstance()!.proxy!
@@ -193,7 +194,7 @@
 			? props.activeColor
 			: (parentData.value['activeColor'] != null
 				? parentData.value['activeColor'].toString() 
-				: '#2979ff');
+				: upThemeVar('--up-primary', '#2979ff'));
 	})
 	
 	// 组件选未中激活时的颜色
@@ -503,8 +504,8 @@
 
 			&--checked {
 				color: $up-checkbox-icon-wrap-checked-color;
-				background-color: $up-checkbox-icon-wrap-checked-background-color;
-				border-color: $up-checkbox-icon-wrap-checked-border-color;
+				background-color: var(--up-primary, $up-checkbox-icon-wrap-checked-background-color);
+				border-color: var(--up-primary, $up-checkbox-icon-wrap-checked-border-color);
 			}
 
 			&--disabled {
