@@ -685,6 +685,12 @@
 				"style": {
 					"navigationBarTitleText": "Cropper图片裁剪"
 				}
+			},
+			{
+				"path": "lottie/lottie",
+				"style": {
+					"navigationBarTitleText": "Lottie动画"
+				}
 			}
 		]
 	},

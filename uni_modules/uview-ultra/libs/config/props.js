@@ -51,6 +51,7 @@ import ListItem from '../../components/up-list-item/listItem.js'
 import LoadingIcon from '../../components/up-loading-icon/loadingIcon.js'
 import LoadingPage from '../../components/up-loading-page/loadingPage.js'
 import Loadmore from '../../components/up-loadmore/loadmore.js'
+import Lottie from '../../components/up-lottie/lottie.js'
 import Modal from '../../components/up-modal/modal.js'
 import Navbar from '../../components/up-navbar/navbar.js'
 import NoNetwork from '../../components/up-no-network/noNetwork.js'
@@ -148,6 +149,7 @@ const props = {
     ...LoadingIcon,
     ...LoadingPage,
     ...Loadmore,
+    ...Lottie,
     ...Modal,
     ...Navbar,
     ...NoNetwork,

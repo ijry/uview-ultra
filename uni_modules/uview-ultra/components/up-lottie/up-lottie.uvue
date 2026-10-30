@@ -1,0 +1,500 @@
+<template>
+	<view class="up-lottie" :class="customClass" :style="addStyle(customStyle)">
+		<up-canvas
+			v-if="canvasVisible"
+			ref="canvasRef"
+			:canvas-id="canvasId"
+			:width="canvasWidth"
+			:height="canvasHeight"
+			:use-root-height-and-width="false"
+			bg-color="transparent"
+			@ready="onCanvasReady"
+		/>
+	</view>
+</template>
+
+<script setup lang="uts">
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { addStyle, upGetRect } from '../../libs/function/index.uts'
+// uvue 专用副本：文件最前面注入了 wx 桩（lottie-miniprogram 在模块加载期就会调用
+// wx.getSystemInfoSync，uni-app x 没有 wx 全局）。.vue 侧仍用原版 lottie-miniprogram.min.js
+import lottieMiniprogram from './libs/lottie-miniprogram.uvue.js'
+
+/**
+ * lottie 动画（uni-app x / .uvue）
+ * @description 原生 canvas 承载 Lottie canvas 渲染器；uni-app x 无 DOM，故不走 SVG 渲染器。
+ * @property {String} filePath 动画 JSON 路径，支持 http(s)
+ * @property {Object} animationData 直接传入 Lottie JSON 对象，优先级高于 filePath
+ * @property {String} contentModel 填充模式：ScaleToFill / AspectFill / Center
+ * @property {Boolean} loop 是否循环播放
+ * @property {Boolean} autoplay 就绪后是否自动播放
+ * @event {Function} statechange 状态变化，type 为 ready/play/pause/resume/stop/complete/error
+ * @example <up-lottie :animation-data="data" content-model="AspectFill" @statechange="onState" />
+ */
+defineOptions({
+	name: 'up-lottie'
+})
+
+/**
+ * lottie-miniprogram 的 setup() 需要一个小程序 canvas 节点：
+ * 读 width / height、调 getContext('2d')。uni-app x 没有 canvas 节点对象，
+ * 这里用一个桩把 up-canvas 暴露的原生 2D 上下文包装成它期望的形状。
+ */
+class UpLottieCanvasStub {
+	width: number = 0
+	height: number = 0
+	context: CanvasRenderingContext2D
+
+	constructor(context: CanvasRenderingContext2D, width: number, height: number) {
+		this.context = context
+		this.width = width
+		this.height = height
+	}
+
+	getContext(type: string): CanvasRenderingContext2D {
+		return this.context
+	}
+}
+
+const props = defineProps({
+	customStyle: {
+		type: [Object, String],
+		default: () => ({})
+	},
+	customClass: {
+		type: String,
+		default: ''
+	},
+	// 动画 JSON 路径，支持 http(s)
+	filePath: {
+		type: String,
+		default: ''
+	},
+	// 直接传入 Lottie JSON 对象，优先级高于 filePath
+	animationData: {
+		type: [Object, UTSJSONObject],
+		default: null
+	},
+	// 内容填充模式：ScaleToFill / AspectFill / Center
+	contentModel: {
+		type: String,
+		default: 'AspectFill'
+	},
+	// 是否循环播放
+	loop: {
+		type: Boolean,
+		default: false
+	},
+	// 数据与引擎就绪后是否自动播放
+	autoplay: {
+		type: Boolean,
+		default: true
+	}
+})
+
+const emit = defineEmits(['statechange'])
+
+const canvasRef = ref<any>(null)
+const canvasVisible = ref(false)
+const canvasWidth = ref(300)
+const canvasHeight = ref(300)
+const canvasId = ref(`up-lottie-canvas-${Date.now()}${Math.floor(Math.random() * 1000)}`)
+
+const instanceId = `up-lottie-${Date.now()}${Math.floor(Math.random() * 1000)}`
+
+let animation: any = null
+let requestTask: RequestTask | null = null
+let loadToken = 0
+let pendingPlay = false
+let engineReady = false
+let completed = false
+let engineState = 'idle'
+let failedToken = -1
+let sourceData: UTSJSONObject | null = null
+let cancelledBeforeReady = false
+
+const preserveAspectRatio = computed((): string => {
+	if (props.contentModel == 'ScaleToFill') return 'none'
+	if (props.contentModel == 'Center') return 'xMidYMid meet'
+	return 'xMidYMid slice'
+})
+
+async function reload(): Promise<void> {
+	const token = loadToken + 1
+	loadToken = token
+	if (requestTask != null) {
+		requestTask!.abort()
+	}
+	requestTask = null
+	destroyEngine()
+	canvasVisible.value = false
+	sourceData = null
+	engineReady = false
+	completed = false
+	pendingPlay = false
+	cancelledBeforeReady = false
+	failedToken = -1
+	engineState = 'idle'
+
+	try {
+		const source = await resolveSource()
+		if (token != loadToken) return
+		await initCanvasLayout(source, token)
+	} catch (error: any) {
+		if (token != loadToken) return
+		fail(normalizeError(error), token)
+	}
+}
+
+async function resolveSource(): Promise<UTSJSONObject> {
+	const data: any = props.animationData
+	if (data != null) {
+		if (data instanceof UTSJSONObject) {
+			return data as UTSJSONObject
+		}
+		try {
+			return JSON.parseObject(JSON.stringify(data))!
+		} catch (e: any) {
+			// 传入的不是可序列化对象，走下面的 filePath 分支
+		}
+	}
+	const path = props.filePath.trim()
+	if (path == '') {
+		throw new Error('up-lottie: filePath 与 animationData 不能同时为空')
+	}
+	if (path.startsWith('http://') || path.startsWith('https://')) {
+		return await requestJson(path)
+	}
+	throw new Error('up-lottie: uni-app x 端暂不支持读取本地 JSON，请改用 animationData 或 http(s) 地址')
+}
+
+function requestJson(url: string): Promise<UTSJSONObject> {
+	return new Promise((resolve, reject) => {
+		const task = uni.request({
+			url: url,
+			method: 'GET',
+			dataType: 'json',
+			responseType: 'text',
+			success: (response) => {
+				if (requestTask == task) requestTask = null
+				const statusCode = response.statusCode == null ? 0 : response.statusCode!
+				if (statusCode < 200 || statusCode >= 300) {
+					reject(new Error(`up-lottie: 请求失败 (${statusCode})`))
+					return
+				}
+				let raw: any = response.data
+				if (typeof raw == 'string') {
+					try {
+						raw = JSON.parse(raw as string)
+					} catch (e: any) {
+						reject(new Error('up-lottie: JSON 解析失败'))
+						return
+					}
+				}
+				if (raw == null) {
+					reject(new Error('up-lottie: 返回内容不是有效的 Lottie JSON'))
+					return
+				}
+				try {
+					resolve(JSON.parseObject(JSON.stringify(raw))!)
+				} catch (e: any) {
+					reject(new Error('up-lottie: 返回内容不是有效的 Lottie JSON'))
+				}
+			},
+			fail: (error) => {
+				if (requestTask == task) requestTask = null
+				const suffix = error.errMsg == null ? '' : ` - ${error.errMsg}`
+				reject(new Error(`up-lottie: 请求失败${suffix}`))
+			}
+		})
+		requestTask = task
+	})
+}
+
+async function initCanvasLayout(source: UTSJSONObject, token: number): Promise<void> {
+	sourceData = source
+	const rect = await measureRoot()
+	if (token != loadToken) return
+	if (rect == null) {
+		fail('组件宽高为 0，请为 up-lottie 设置明确的宽高', token)
+		return
+	}
+	let width: number = rect.width
+	let height: number = rect.height
+	if (props.contentModel == 'Center') {
+		const naturalWidth = source['w'] == null ? 0 : parseFloat(source['w']!.toString())
+		const naturalHeight = source['h'] == null ? 0 : parseFloat(source['h']!.toString())
+		if (naturalWidth > 0 && naturalHeight > 0) {
+			width = naturalWidth
+			height = naturalHeight
+		}
+	}
+	canvasWidth.value = width
+	canvasHeight.value = height
+	canvasId.value = `up-lottie-canvas-${Date.now()}${Math.floor(Math.random() * 1000)}`
+	canvasVisible.value = true
+}
+
+async function measureRoot(): Promise<NodeInfo | null> {
+	for (let attempt = 0; attempt < 10; attempt++) {
+		try {
+			const rect = await upGetRect('.up-lottie', false, null)
+			if (rect.width > 0 && rect.height > 0) {
+				return rect
+			}
+		} catch (e: any) {
+			// 节点尚未布局完成，继续重试
+		}
+		await new Promise((resolve) => {
+			setTimeout(() => {
+				(resolve as () => void)()
+			}, 30)
+		})
+	}
+	return null
+}
+
+function onCanvasReady(): void {
+	if (!canvasVisible.value) return
+	const token = loadToken
+	setTimeout(() => {
+		if (!canvasVisible.value || token != loadToken) return
+		initCanvasEngine(token)
+	}, 0)
+}
+
+function initCanvasEngine(token: number): void {
+	if (token != loadToken) return
+	if (animation != null) {
+		destroyEngine()
+	}
+	const refValue: any = canvasRef.value
+	if (refValue == null) {
+		fail('画布未就绪', token)
+		return
+	}
+	try {
+		const context: CanvasRenderingContext2D | null = refValue!.$callMethod('getRawContext') as CanvasRenderingContext2D | null
+		if (context == null) {
+			throw new Error('画布上下文初始化失败')
+		}
+		const missing = findMissingCanvasApi(context!)
+		if (missing != '') {
+			throw new Error(`当前端的 canvas 2D 缺少 ${missing}，无法运行 Lottie 渲染器`)
+		}
+		const stub = new UpLottieCanvasStub(context!, canvasWidth.value, canvasHeight.value)
+		lottieMiniprogram.setup(stub)
+		startCanvasAnimation(context!, token)
+	} catch (error: any) {
+		fail(normalizeError(error), token)
+	}
+}
+
+/**
+ * Lottie canvas 渲染器依赖的 2D API 探测。
+ * 不同端的 CanvasRenderingContext2D 覆盖度不一，缺方法时 lottie 会在绘制阶段
+ * 才抛出难以定位的错误（或干脆静默白屏），这里提前检查并给出明确原因。
+ */
+function findMissingCanvasApi(context: CanvasRenderingContext2D): string {
+	const required: string[] = [
+		'save', 'restore', 'beginPath', 'moveTo', 'lineTo', 'bezierCurveTo',
+		'closePath', 'fill', 'stroke', 'clip', 'setTransform', 'transform',
+		'fillRect', 'clearRect', 'measureText', 'fillText'
+	]
+	const missing: string[] = []
+	for (let i = 0; i < required.length; i++) {
+		const name = required[i]
+		const member = (context as any)[name]
+		if (member == null || typeof member != 'function') {
+			missing.push(name)
+		}
+	}
+	return missing.join(', ')
+}
+
+function startCanvasAnimation(context: CanvasRenderingContext2D, token: number): void {
+	const created: any = lottieMiniprogram.loadAnimation({
+		animationData: sourceData,
+		loop: props.loop,
+		autoplay: false,
+		rendererSettings: {
+			context: context,
+			preserveAspectRatio: preserveAspectRatio.value,
+			dpr: 1,
+			clearCanvas: true
+		}
+	})
+	if (token != loadToken) {
+		created.destroy()
+		return
+	}
+	animation = created
+	bindEngineEvents(created, token)
+}
+
+function bindEngineEvents(created: any, token: number): void {
+	created.addEventListener('DOMLoaded', () => {
+		if (token != loadToken) return
+		engineReady = true
+		emitState('ready')
+		if ((props.autoplay && !cancelledBeforeReady) || pendingPlay) {
+			pendingPlay = false
+			startPlayback()
+		}
+	})
+	created.addEventListener('complete', () => {
+		if (token != loadToken || props.loop) return
+		completed = true
+		engineState = 'completed'
+		emitState('complete')
+	})
+	created.addEventListener('data_failed', () => {
+		if (token != loadToken) return
+		fail('动画加载失败', token)
+	})
+	created.addEventListener('error', () => {
+		if (token != loadToken) return
+		fail('动画加载失败', token)
+	})
+}
+
+function startPlayback(): void {
+	if (animation == null) {
+		pendingPlay = true
+		return
+	}
+	if (engineState == 'playing') return
+	if (completed || engineState == 'stopped') {
+		animation!.goToAndStop(0, true)
+		completed = false
+	}
+	animation!.play()
+	engineState = 'playing'
+	emitState('play')
+}
+
+function playAnimation(): void {
+	cancelledBeforeReady = false
+	if (animation == null || !engineReady) {
+		pendingPlay = true
+		return
+	}
+	startPlayback()
+}
+
+function pauseAnimation(): void {
+	if (animation == null || engineState != 'playing') return
+	animation!.pause()
+	engineState = 'paused'
+	emitState('pause')
+}
+
+function resumeAnimation(): void {
+	if (animation == null || engineState != 'paused') return
+	animation!.play()
+	engineState = 'playing'
+	emitState('resume')
+}
+
+function cancelAnimation(): void {
+	cancelledBeforeReady = true
+	pendingPlay = false
+	if (animation == null) return
+	animation!.stop()
+	completed = false
+	engineState = 'stopped'
+	emitState('stop')
+}
+
+function emitState(type: string, message: string = ''): void {
+	const detail = { type: type } as UTSJSONObject
+	if (type == 'error') {
+		detail['message'] = message
+	}
+	emit('statechange', detail)
+}
+
+function fail(message: string, token: number): void {
+	if (token != loadToken) return
+	if (failedToken == loadToken) return
+	failedToken = loadToken
+	engineReady = false
+	pendingPlay = false
+	completed = false
+	destroyEngine()
+	engineState = 'error'
+	emitState('error', message == '' ? '动画初始化失败' : message)
+}
+
+function normalizeError(error: any): string {
+	if (error == null) return '动画初始化失败'
+	if (typeof error == 'string') return error as string
+	const message = (error as Error).message
+	if (message != null) return message
+	return '动画初始化失败'
+}
+
+function destroyEngine(): void {
+	if (animation != null) {
+		try {
+			animation!.destroy()
+		} catch (e: any) {
+			// 引擎可能尚未完成初始化，销毁失败不影响后续重载
+		}
+		animation = null
+	}
+	engineReady = false
+	engineState = 'idle'
+}
+
+watch((): string => props.filePath, () => {
+	reload()
+})
+
+watch((): any => props.animationData, () => {
+	reload()
+})
+
+watch((): string => props.contentModel, () => {
+	reload()
+})
+
+watch((): boolean => props.loop, (value: boolean) => {
+	if (animation != null) {
+		animation!.loop = value
+	}
+})
+
+onMounted(() => {
+	reload()
+})
+
+onBeforeUnmount(() => {
+	loadToken += 1
+	if (requestTask != null) {
+		requestTask!.abort()
+	}
+	requestTask = null
+	destroyEngine()
+})
+
+defineExpose({
+	reload,
+	playAnimation,
+	pauseAnimation,
+	resumeAnimation,
+	cancelAnimation
+})
+</script>
+
+<style lang="scss" scoped>
+	.up-lottie {
+		position: relative;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 100%;
+		height: 100%;
+		overflow: hidden;
+	}
+</style>

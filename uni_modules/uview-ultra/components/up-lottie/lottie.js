@@ -1,0 +1,14 @@
+export default {
+    lottie: {
+        // 动画 JSON 路径，支持 http(s)；H5 / App-Vue 额外支持本地静态路径
+        filePath: '',
+        // 直接传入 Lottie JSON 对象，优先级高于 filePath
+        animationData: null,
+        // 内容填充模式：ScaleToFill / AspectFill / Center
+        contentModel: 'AspectFill',
+        // 是否循环播放
+        loop: false,
+        // 数据与引擎就绪后是否自动播放
+        autoplay: true
+    }
+}
