@@ -64,3 +64,16 @@ uni-app 的 `resolve.extensions` 是 `['.uts', '.mjs', '.js', ...]`，**`.uts` �
 - **3.x 的 `calc.div` 用 xyutil 的崩溃对 ultra 也不适用**：ultra 的 calc.div 引用本地 `mul`。
 - **MuMu 需手动 `adb connect 127.0.0.1:16384`**：实例在跑但 HBuilderX 的 `devices list`
   会返回空，连上 adb 后才显示设备（deviceId 用 `127.0.0.1:16384`）。
+- **MuMu 启动被沙箱拦 `sc.exe`**：`MuMuManager control -v 0 launch` 会因安全策略
+  拒绝 `C:\WINDOWS\SYSTEM32\sc.exe` 而失败（黑名单，不可绕过）。此时 adb 端口能连上
+  但 `pm list packages` 报 `Can't find service: package`，等于没有可用模拟器。
+- **真机 `1569196572001LP`** 常在线（HBuilderX 显示 HUAWEI ABR-AL80），
+  但 `adb exec-out screencap` 可能抓到别的 app 界面，截图验证不可信。
+
+## uni-app x 复用 web 侧 JS 引擎（up-lottie 验证）
+
+- `.uvue` 里 `import` 压缩过的第三方 JS（如 `lottie-miniprogram.min.js`）**能编译**，
+  uni-app x 对 `.js` 走普通 JS 处理，不是 UTS 严格解析。
+- 但这类库常在**模块加载期**就用小程序全局（`wx.getSystemInfoSync()`）。
+  解法：生成一份在文件最前面写 `var wx = {...}` 的副本 —— 模块作用域变量比挂
+  `globalThis` 可靠（UTS 产物不保证有 globalThis）。原文件保留给 `.vue` 侧。
