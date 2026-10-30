@@ -51,6 +51,43 @@
 - `publish app-android --type appResource` 仅是资源导出/补充校验，**不得作为任务提交前或版本发布前的完整编译证明**。
 - 若设备不可用，必须先启动 MuMu 或连接 Android 设备；仍无法编译时应明确报告阻塞原因，不得以 `appResource` 导出结果代替。
 
+### 3.7 真机 / 模拟器运行验证（强制，编译通过 ≠ 校验完成）
+- **`--compile true` 是「只编译不运行」**，它只能证明代码能编译，**不能证明代码能跑**。
+  编译产物里完全可能藏着运行期才炸的东西（见本节末尾的事故记录），
+  所以凡是改了 `.uts` / `.uvue` / 组件逻辑，**必须真正运行到设备上看一眼**。
+- 运行命令（注意**不带** `--compile`，带了就只编译）：
+```powershell
+& "C:\ProgramData\HBuilderX\cli.exe" launch app-android --project "D:\Repos\xyito\ultra-ui\uview-plus4" --deviceId "<实际设备ID>" --pagePath "<要验证的页面>" --native-log true
+```
+- 该命令会**常驻**（不是跑完就退），必须用后台任务方式执行；日志出现 `ready` 之后应用才真正跑起来。
+- 纯 CLI 模式需要 adb 反向端口转发，否则调试基座停在 `Failed to connect to /127.0.0.1:8002`：
+```bash
+adb -s "<设备ID>" reverse tcp:8002 tcp:8002
+adb -s "<设备ID>" reverse --list   # 确认 8002 在列表里
+```
+  正常应能看到 8000/8001/8002/8003 四条，缺 8002 时应用起不来。
+- 验证三件套，缺一不可：
+  1. **运行时日志无异常**：`V8JSException` / `ReferenceError` / `TypeError` 必须为 0。
+     `ReferenceError` 若出现在 app-service 求值阶段，是**整个应用白屏**，不是单页问题。
+  2. **截图确认画面**：`adb exec-out screencap -p`；动画类组件要连拍两帧确认在动。
+  3. **状态事件确认**：组件通过 `statechange` 之类的 error 通道报出的错误也要清零。
+- 截图前先用 `adb shell dumpsys window | grep mCurrentFocus` 确认前台是不是自己的应用。
+  真机被占用时 `screencap` 可能抓到别的 app，**不要拿错图当验证结果**。
+- 改了 `.uts` / `.uvue` 后若日志显示没有重新编译该文件（编译走了缓存），
+  必须加 `--cleanCache true` 全量重编，否则设备上跑的还是旧产物。
+- 产物自查：`unpackage/dist/dev/app-android/app-service.js` 里不应出现孤立的 `as;` 语句
+  （`grep -c "^  as;$"` 必须为 0）。
+- **已知事故（务必避免重犯）**：`.uts` 里把类型断言写成跨行形式
+
+```ts
+}
+ as UTSJSONObject
+```
+
+  会被编译器拆成 `}); as; UTSJSONObject;` 三条语句，`as` 不是变量，
+  真机启动即 `ReferenceError: as is not defined`，**整个应用白屏**。
+  编译期完全正常，只有真跑才会暴露。类型断言必须与表达式同行。
+
 ## 4) Web 编译校验（可选）
 ```powershell
 & "C:\ProgramData\HBuilderX\cli.exe" publish web --project "D:\Repos\xyito\ultra-ui\uview-plus4" --platform Web --webTitle "uview-plus4"
@@ -64,6 +101,7 @@
   2. 若有 `warning`，需说明是否影响当前需求；
   3. 在回复中附上实际执行命令与关键结果（成功/失败 + 关键日志）。
 - 禁止“只改不验”。
+- **只编译不运行不算校验**：改了 `.uts` / `.uvue` 或组件逻辑后，必须按 3.7 真正运行到真机/模拟器，并在回复中附上「运行时日志无异常 + 截图确认」的证据。
 
 ## 6) 发布新版（必须遵守）
 - 发布 `uview-plus` / `uview-ultra` 新版本时，必须先阅读并严格按以下文档执行：

@@ -1,46 +1,42 @@
 ## 4.5.76
-fix: 修复 up-video 默认值文件的换行 as 断言导致 App 启动即白屏
+fix: 修复 up-video 换行 as 断言导致 App 启动白屏（P0），并完成 up-lottie 真机验证
 
-**这是一个 P0 回归，4.5.45 引入 up-video 起就存在，请尽快升级。**
+这是一个 P0 回归，4.5.45 引入 up-video 起就存在，请尽快升级。
 
-`components/up-video/video.uts` 的默认值对象结尾把类型断言写成了换行形式：
+问题：components/up-video/video.uts 的默认值对象结尾把类型断言写成了换行形式：
 
-```
-}
- as UTSJSONObject
-```
+    }
+     as UTSJSONObject
 
-UTS 编译器对「跨行的 `as`」处理有误，把它拆成了三条独立语句输出到 `app-service.js`：
+UTS 编译器对跨行的 as 处理有误，把它拆成三条独立语句输出到 app-service.js：
 
-```js
-});
-as;
-UTSJSONObject;
-```
+    });
+    as;
+    UTSJSONObject;
 
-`as` 是 TS 保留字、不是变量，App 启动求值 app-service 时直接抛
-`ReferenceError: as is not defined`，**整个应用白屏**——不是 up-video 单页失效，而是所有页面都起不来。
+as 是 TS 保留字、不是变量，App 启动求值 app-service 时直接抛
+ReferenceError: as is not defined，整个应用白屏——不是 up-video 单页失效，
+而是所有页面都起不来。
 
-之所以长期没被发现：此前的校验流程一直用 `launch app-android --compile true`，
-那是**只编译不运行**，产物里多出来的 `as;` 语句在编译期完全合法。
+长期未被发现的原因：此前校验一直用 launch app-android --compile true，
+那是只编译不运行，产物里多出来的 as; 语句在编译期完全合法。
 
-修复：把断言合并回同一行 `} as UTSJSONObject`。已确认修复后
-`unpackage/dist/dev/app-android/app-service.js` 中不再有孤立的 `as;` 语句，
-真机运行日志也不再出现该 ReferenceError。
+修复：把断言合并回同一行 } as UTSJSONObject。已确认修复后
+unpackage/dist/dev/app-android/app-service.js 中不再有孤立的 as; 语句，
+真机运行日志也不再出现该 ReferenceError。全库已扫描，仅此一处换行写法。
 
-排查范围：全库已扫描，仅此一处是换行写法，其余组件均为 `} as UTSJSONObject` 同行。
+up-lottie 的 .uvue 侧完成真机运行时验证（关闭 4.5.75 的遗留项）：
+- canvas 桩补 requestAnimationFrame / cancelAnimationFrame。lottie-miniprogram 的
+  setup() 会执行 canvas.cancelAnimationFrame.bind(canvas)，缺这两个方法时抛
+  Cannot read properties of undefined (reading 'bind')，画面空白
+- 示例页 stageStyle 由「传函数引用给 :style」改为 computed 返回样式对象。
+  uni-app x 的 :style 不解析函数引用，会触发框架内 normalizeSharedDataStyle 的
+  Cannot convert undefined or null to object
+- 验证结果：真机（HUAWEI ABR-AL80 / Android）上示例页正常渲染，
+  loading.json 循环播放且连续两帧画面位置不同，2D API 探测全过，
+  无 statechange error、无 JS 异常。up-lottie 在 uni-app x 端可用
 
-【顺带】
-- 示例页 `pages/componentsD/lottie` 的舞台尺寸样式由「传函数引用给 `:style`」改为 `computed` 返回样式对象。uni-app x 的 `:style` 不解析函数引用，会触发框架内 `normalizeSharedDataStyle` 的 `Cannot convert undefined or null to object`
-- up-lottie 的 `.uvue` 侧给 canvas 桩补上 `requestAnimationFrame` / `cancelAnimationFrame`。lottie-miniprogram 的 `setup()` 会执行 `canvas.cancelAnimationFrame.bind(canvas)`，缺这两个方法时抛 `Cannot read properties of undefined (reading 'bind')`，画面空白
-
-【up-lottie 的 .uvue 运行时验证结果（关闭 4.5.75 的遗留项）】
-4.5.75 发布说明中标注「.uvue 侧仅完成编译级验证」，本次已在真机
-（HUAWEI ABR-AL80 / Android）完成运行时验证：
-- 示例页正常渲染，Lottie 动画正常播放（loading.json 循环播放，连续两帧画面位置不同）
-- canvas 2D 覆盖度探测全部通过，无 statechange error
-- 全项目 app-service 求值无 JS 异常
-结论：up-lottie 在 uni-app x（.uvue）端可用，与 .vue 侧行为一致。
+另：README / displayName 文案调整为「uniapp-x 蒸汽模式」「120+ 精选组件」。
 
 ## 4.5.75
 feat: 新增 up-lottie 动画组件（对齐 uview-plus 3.8.135）

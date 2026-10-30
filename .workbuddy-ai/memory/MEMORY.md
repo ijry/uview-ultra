@@ -55,6 +55,12 @@ uni-app 的 `resolve.extensions` 是 `['.uts', '.mjs', '.js', ...]`，**`.uts` �
   否则 esbuild 二进制装不上（postinstall 会 EBUSY）。
 - `git` 不认 MSYS 的 `/tmp/...` 路径，传路径要用 `C:/...` 或 `D:/...`。
 
+## 发布渠道
+
+- **npm 渠道自 2026-10-30 起暂停发布**（用户指示）。插件市场照常发，
+  不再执行 `npm publish`，除非用户明确要求恢复。npm 上 `uview-ultra`
+  最新停在 4.5.75。
+
 ## 与 uview-plus 3.x 的对齐基线
 
 - **ultra 4.5.50 对齐的是 uview-plus 3.8.127 / 3.8.128**（changelog 有记录）。
