@@ -12,13 +12,9 @@
 [![license](https://img.shields.io/github/license/ijry/uview-ultra?style=flat-square)](https://en.wikipedia.org/wiki/MIT_License)
 <!-- [![release](https://img.shields.io/github/v/release/ijry/uview-ultra?style=flat-square)](https://github.com/ijry/uview-ultra/releases) -->
 
-## 说明
-
-刚适配的uni-app-x，已经尽可能的继续跟uview-plus一样保持原始uview的接口兼容性，新版发布仍然存在细节问题需要完善与修复，后续会继续更新完善。
-
 ## 介绍
 
-全面兼容uni-app/uni-app-x/nvue/鸿蒙的uni-app生态框架，丰富的组件和便捷的工具以及兼容的API会让您轻松升级，事半功倍。
+全面兼容uni-app/uni-app-x蒸汽模式/nvue/鸿蒙的uni-app生态框架，丰富的组件和便捷的工具以及兼容的API会让您轻松升级，事半功倍。
 
 ## [官方文档：https://uview-ultra.lingyun.com/](https://uview-ultra.lingyun.com/)
 
@@ -26,7 +22,7 @@
 
 - 全面兼容uni-app/uni-app-x/nvue/鸿蒙，原生渲染，高性能
 - 兼容安卓，iOS，微信小程序，H5，QQ小程序，百度小程序，支付宝小程序，头条小程序
-- 60+精选组件，功能丰富，多端兼容，让您快速集成，开箱即用
+- 120+精选组件，功能丰富，多端兼容，让您快速集成，开箱即用
 - 众多贴心的JS利器，让您飞镖在手，召之即来，百步穿杨
 - 众多的常用页面和布局，让您专注逻辑，事半功倍
 - 详尽的文档支持，现代化的演示效果

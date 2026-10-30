@@ -37,8 +37,11 @@ defineOptions({
 
 /**
  * lottie-miniprogram 的 setup() 需要一个小程序 canvas 节点：
- * 读 width / height、调 getContext('2d')。uni-app x 没有 canvas 节点对象，
- * 这里用一个桩把 up-canvas 暴露的原生 2D 上下文包装成它期望的形状。
+ * 读 width / height、调 getContext('2d')，并在初始化时接管 requestAnimationFrame /
+ * cancelAnimationFrame（内部会执行 `canvas.cancelAnimationFrame.bind(canvas)`，
+ * 缺这两个方法会抛 "Cannot read properties of undefined (reading 'bind')"）。
+ * uni-app x 没有 canvas 节点对象，这里用一个桩把 up-canvas 暴露的原生 2D 上下文
+ * 包装成它期望的形状。
  */
 class UpLottieCanvasStub {
 	width: number = 0
@@ -53,6 +56,17 @@ class UpLottieCanvasStub {
 
 	getContext(type: string): CanvasRenderingContext2D {
 		return this.context
+	}
+
+	// 用 setTimeout 模拟 16ms 一帧；uni-app x 没有 canvas 节点级的 rAF
+	requestAnimationFrame(callback: (time: number) => void): number {
+		return setTimeout(() => {
+			callback(Date.now())
+		}, 16)
+	}
+
+	cancelAnimationFrame(handle: number): void {
+		clearTimeout(handle)
 	}
 }
 

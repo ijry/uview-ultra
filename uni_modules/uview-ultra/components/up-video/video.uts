@@ -74,5 +74,4 @@ export default {
         // 进度条与选中态颜色
         activeColor: '#2979ff'
     }
-}
- as UTSJSONObject
+} as UTSJSONObject

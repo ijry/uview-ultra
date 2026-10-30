@@ -69,7 +69,7 @@
 </template>
 
 <script setup lang="uts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import loadingData from '@/static/lottie/loading.json'
 
 const lottieRef = ref<any>(null)
@@ -80,9 +80,13 @@ const stageSize = ref(300)
 const loop = ref(true)
 const stateLog = ref<string[]>([])
 
-const stageStyle = (): string => {
-	return `width: ${stageSize.value}px; height: ${stageSize.value}px;`
-}
+// 舞台尺寸样式。uni-app x 的 :style 不接受函数引用，必须给出对象或字符串结果
+const stageStyle = computed((): UTSJSONObject => {
+	const style = {} as UTSJSONObject
+	style['width'] = stageSize.value.toString() + 'px'
+	style['height'] = stageSize.value.toString() + 'px'
+	return style
+})
 
 function onStateChange(event: any) {
 	const detail: any = event != null && event.detail != null ? event.detail : event
