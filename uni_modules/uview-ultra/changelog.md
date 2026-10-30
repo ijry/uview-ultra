@@ -1,32 +1,27 @@
 ## 4.5.75
-feat: 新增 up-lottie 动画组件（对齐 uview-plus 3.8.135 的 u-lottie）
+feat: 新增 up-lottie 动画组件（对齐 uview-plus 3.8.135）
 
-加载 AE 导出的 Lottie JSON 并播放。API 与 uview-plus 3.x 的 u-lottie 完全一致，两套实现（.vue / .uvue）同步提供。
+加载 AE 导出的 Lottie JSON 并播放。API 与 uview-plus 3.x 的 u-lottie 完全一致，.vue / .uvue 两套实现同步提供。
 
-【新增】
-- `up-lottie` 组件，props：`filePath`（http(s) 地址；H5 / App-Vue 额外支持本地静态路径）、`animationData`（直接传 JSON 对象，优先级高于 filePath）、`contentModel`（`ScaleToFill` / `AspectFill` / `Center`，默认 `AspectFill`）、`loop`（默认 false）、`autoplay`（默认 true）
-- 实例方法：`reload()` / `playAnimation()` / `pauseAnimation()` / `resumeAnimation()` / `cancelAnimation()`
-- 事件 `statechange`：`ready` / `play` / `pause` / `resume` / `stop` / `complete` / `error`；`error` 附带 `message`。微信小程序从 `event.detail` 读取，统一按 `event.detail || event` 兼容
-- 新增示例页 `pages/componentsD/lottie`，含填充模式切换、播放控制、状态日志
+新增：
+- up-lottie 组件，props：filePath（http(s) 地址；H5 / App-Vue 额外支持本地静态路径）、animationData（直接传 JSON 对象，优先级高于 filePath）、contentModel（ScaleToFill / AspectFill / Center，默认 AspectFill）、loop（默认 false）、autoplay（默认 true）
+- 实例方法：reload / playAnimation / pauseAnimation / resumeAnimation / cancelAnimation
+- 事件 statechange：ready / play / pause / resume / stop / complete / error（error 附 message）；微信小程序从 event.detail 读取，统一按 event.detail || event 兼容
+- 新增示例页 pages/componentsD/lottie，含填充模式切换、播放控制与状态日志
 
-【平台实现】
-- `.vue`（uni-app Vue3）：
-  - H5 / App-Vue 走 lottie-web 5.13.0 的 SVG 渲染器。H5 端引擎按需 `import()` 拆成独立异步 chunk，不进共享入口包；加载失败会重置缓存以便重试
-  - 微信小程序 / 鸿蒙走 lottie-miniprogram 1.0.12 + `up-canvas` 的 canvas 渲染器。鸿蒙无 DOM canvas 节点，由 `libs/harmony-canvas-adapter.js` 把旧版 CanvasContext 适配成标准 2D 上下文
-  - 不支持 nvue 与其他小程序，统一通过 `statechange` 的 `error` 类型暴露，不发散报错
-- `.uvue`（uni-app x）：无 DOM，不走 SVG 渲染器，直接用 `up-canvas` 暴露的原生 `CanvasRenderingContext2D` 承载 lottie-miniprogram 的 canvas 渲染器。lottie-miniprogram 在**模块加载期**就会调用 `wx.getSystemInfoSync()`，而 uni-app x 没有 `wx` 全局，因此单独提供一份注入了 `wx` 桩的副本 `libs/lottie-miniprogram.uvue.js`（原文件保持不动，供 .vue 侧使用）
-- `.uvue` 侧初始化前会探测 2D API 覆盖度（save / restore / bezierCurveTo / setTransform / fillText 等 16 项），缺失时通过 `error` 事件报出具体缺哪个方法，不会静默白屏
+平台实现分两条轨：
+- .vue（uni-app Vue3）：H5 / App-Vue 走 lottie-web 5.13.0 的 SVG 渲染器，H5 端引擎按需 import() 拆成独立异步 chunk、不进共享入口包，加载失败会重置缓存以便重试；微信小程序 / 鸿蒙走 lottie-miniprogram 1.0.12 + up-canvas 的 canvas 渲染器，鸿蒙无 DOM canvas 节点，由 harmony-canvas-adapter 把旧版 CanvasContext 适配成标准 2D 上下文；nvue 与其他小程序统一通过 statechange 的 error 类型暴露，不发散报错
+- .uvue（uni-app x）：无 DOM，不走 SVG 渲染器，直接用 up-canvas 暴露的原生 CanvasRenderingContext2D 承载 lottie-miniprogram 的 canvas 渲染器。lottie-miniprogram 在模块加载期就会调用 wx.getSystemInfoSync()，而 uni-app x 没有 wx 全局，因此单独提供一份注入了 wx 桩的副本 libs/lottie-miniprogram.uvue.js（原文件保持不动，供 .vue 侧使用）
+- .uvue 侧初始化前会探测 2D API 覆盖度（save / restore / bezierCurveTo / setTransform / fillText 等 16 项），缺失时通过 error 事件报出具体缺哪个方法，不会静默白屏
 
-【已知限制】
+已知限制：
 - 同一页面仅支持一个并行的 canvas 轨实例（lottie-miniprogram 持有全局 canvas 引用，组件内已加互斥守卫）
-- 微信小程序 / 鸿蒙 / uni-app x 无法读取本地 JSON 文件，请改用 `animationData` 或 http(s) 地址
+- 微信小程序 / 鸿蒙 / uni-app x 无法读取本地 JSON 文件，请改用 animationData 或 http(s) 地址
 - 图片类资源在 canvas 轨下受平台限制（小程序不支持动态创建 canvas），建议保持图片原始宽高与 JSON 描述一致
 - 远程 JSON 可包含可执行表达式（lottie 的 expressions 特性），请仅加载可信来源
-- `.uvue` 侧本次仅完成编译级验证（全项目 108+ 页面编译通过），**未做真机运行时验证**；`.vue` 侧与 3.x 实现一致
+- .uvue 侧本次仅完成编译级验证（全项目 109 页面编译通过），未做真机运行时验证；.vue 侧与 3.x 实现一致
 
-【体量】
-- 引擎资源约 451 KB：`lottie_svg.min.js` 242 KB、`lottie-miniprogram.min.js` 209 KB、`lottie-miniprogram.uvue.js` 210 KB（含 wx 桩）
-- H5 端 lottie-web 为异步 chunk，不影响首屏；App-Vue / 小程序 / uni-app x 为静态引入
+体量：引擎资源约 451 KB（lottie_svg.min.js 242 KB、lottie-miniprogram.min.js 209 KB、lottie-miniprogram.uvue.js 210 KB 含 wx 桩）。H5 端 lottie-web 为异步 chunk 不影响首屏；仅使用 up-lottie 的项目才会引入对应引擎，不影响其他组件。
 
 ## 4.5.74
 fix: 对齐 uview-plus 3.8.129 ~ 3.8.137 的上游修复
