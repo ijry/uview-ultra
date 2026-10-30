@@ -1,3 +1,22 @@
+## 4.5.77
+feat: 新增 up-audio 音频播放器组件，up-parse 音频节点改用 up-audio 渲染（对齐 uview-plus 3.8.138）
+
+uni-app 在 Vue3 中已废弃 <audio> 组件。本版新增基于 uni.createInnerAudioContext 的公共组件 up-audio，并替换 up-parse 内部已废弃的 <audio> 渲染，富文本里的音频在 H5 / App-Vue / 各小程序端可正常播放。
+
+新增 up-audio 组件：
+- props：src（支持单个地址或地址数组，多源加载失败自动切换下一个源）、title、loop（默认 false）、showRate（默认 true）、rateList（默认 [0.5, 0.75, 1, 1.25, 1.5, 2]）、activeColor（默认 '#2979ff'）、showTitle（默认 true）
+- 进度条拖动 seek、倍速切换、播放/暂停；事件 play（参数 { source, src }）、error（参数 { source, errMsg }，全部源失败才抛出）
+- 多实例互斥：播放其中一个自动暂停其它 up-audio 实例
+- 实例方法：toggle / reset / changeRate
+- .vue / .uvue 两套实现同步提供；uvue 侧基于 uni-app x 的 uni.createInnerAudioContext（App-Android 4.33+ / Web 4.0+）
+- 新增示例页 pages/componentsD/audio
+
+up-parse 修复：
+- 音频节点原用已废弃的原生 <audio> 标签，uni-app Vue3 下（H5 / App-Vue）该分支被编译条件直接排除，富文本里的音频节点静默不渲染；现统一改由 up-audio 渲染，play / error 事件经 node 转发给 up-parse
+- up-parse 的 .uvue 侧走 rich-text，本就不渲染音频节点，本次不变
+
+验证：Android 全项目编译通过（110 页面，0 error）；.uvue 侧已在 MuMu 模拟器（Android）完成真机运行验证：多源回退自动切换、播放/暂停切换、时长与进度更新正常，无 JS 异常。
+
 ## 4.5.76
 fix: 修复 up-video 换行 as 断言导致 App 启动白屏（P0），并完成 up-lottie 真机验证
 
