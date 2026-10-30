@@ -89,3 +89,6 @@ uni-app 的 `resolve.extensions` 是 `['.uts', '.mjs', '.js', ...]`，**`.uts` �
 - 但这类库常在**模块加载期**就用小程序全局（`wx.getSystemInfoSync()`）。
   解法：生成一份在文件最前面写 `var wx = {...}` 的副本 —— 模块作用域变量比挂
   `globalThis` 可靠（UTS 产物不保证有 globalThis）。原文件保留给 `.vue` 侧。
+
+## 2026-10-31
+- up-audio 移植与 4.5.77 发布安排见 2026-10-31.md：蒸汽模式 .uvue 禁止普通 <script> 块（实例池须抽独立模块）；改价锁 23:07 过期后 23:20 定时发布 4.5.77（--version 4.5.77）。
