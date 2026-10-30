@@ -222,6 +222,7 @@ declare module 'uview-ultra' {
 	export type ActionSheetProps = import('./comps/actionSheet')['ActionSheetProps']
 	export type AlbumProps = import('./comps/album')['AlbumProps']
 	export type AlertProps = import('./comps/alert')['AlertProps']
+	export type AudioProps = import('./comps/audio')['AudioProps']
 	export type AvatarProps = import('./comps/avatar')['AvatarProps']
 	export type AvatarGroupProps = import('./comps/avatarGroup')['AvatarGroupProps']
 	export type BackTopProps = import('./comps/backTop')['BackTopProps']

@@ -1,0 +1,136 @@
+<template>
+	<view class="page">
+		<view class="u-page__item">
+			<text class="u-page__item__title">音频播放</text>
+			<view class="u-page__item__content">
+				<up-audio
+					:src="audioSrc"
+					title="SoundHelix 示例音频"
+					:loop="loop"
+					@play="onPlay"
+					@error="onError"
+				/>
+
+				<view class="audio-group">
+					<text class="audio-group__title">多源自动切换（首个源 404，自动切到下一个）</text>
+					<up-audio
+						:src="fallbackSrcList"
+						title="多源回退示例"
+						@play="onPlay"
+						@error="onError"
+					/>
+				</view>
+
+				<view class="audio-group">
+					<text class="audio-group__title">播放控制</text>
+					<view class="audio-group__actions">
+						<up-button
+							size="small"
+							:type="loop ? 'success' : 'info'"
+							:text="loop ? '循环：开' : '循环：关'"
+							custom-style="margin: 0 8px 8px 0"
+							@click="toggleLoop"
+						></up-button>
+					</view>
+				</view>
+
+				<view class="audio-group">
+					<text class="audio-group__title">事件日志</text>
+					<view class="audio-log">
+						<text
+							v-for="(item, index) in stateLog"
+							:key="index"
+							class="audio-log__item"
+						>{{ item }}</text>
+						<text v-if="stateLog.length == 0" class="audio-log__empty">暂无事件</text>
+					</view>
+				</view>
+
+				<text class="audio-note">uni-app 在 Vue3 中已废弃原生 audio 组件，up-audio 基于 uni.createInnerAudioContext 实现，up-parse 解析出的音频节点也由本组件渲染。多实例互斥：播放其中一个会自动暂停其它 up-audio。</text>
+			</view>
+		</view>
+	</view>
+</template>
+
+<script setup lang="uts">
+import { ref } from 'vue'
+
+const audioSrc = 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3'
+// 首个源为不存在的地址，触发 onError 后自动切换到第二个源
+const fallbackSrcList = ['https://www.soundhelix.com/examples/mp3/nonexistent.mp3', 'https://www.w3schools.com/html/horse.mp3'] as Array<string>
+const loop = ref(true)
+const stateLog = ref<string[]>([])
+
+function pushLog(message: string) {
+	const time = new Date().toLocaleTimeString()
+	const next: string[] = [`${time}  ${message}`]
+	const current = stateLog.value
+	for (let i = 0; i < current.length && i < 5; i++) {
+		next.push(current[i])
+	}
+	stateLog.value = next
+}
+
+function onPlay(event: any) {
+	let src = ''
+	if (event != null && event.src != null) {
+		src = event.src.toString()
+	}
+	pushLog(`play ${src}`)
+}
+
+function onError(event: any) {
+	let msg = ''
+	if (event != null && event.errMsg != null) {
+		msg = event.errMsg.toString()
+	}
+	pushLog(`error ${msg}`)
+}
+
+function toggleLoop() {
+	loop.value = !loop.value
+}
+</script>
+
+<style lang="scss" scoped>
+	.audio-group {
+		margin-top: 20px;
+	}
+
+	.audio-group__title {
+		margin-bottom: 10px;
+		font-size: 14px;
+		color: #303133;
+	}
+
+	.audio-group__actions {
+		display: flex;
+		flex-direction: row;
+		flex-wrap: wrap;
+	}
+
+	.audio-log {
+		min-height: 60px;
+		padding: 12px;
+		border-radius: 8px;
+		background-color: #f5f6f7;
+	}
+
+	.audio-log__item {
+		padding: 2px 0;
+		font-size: 12px;
+		color: #606266;
+	}
+
+	.audio-log__empty {
+		font-size: 12px;
+		color: #909399;
+	}
+
+	.audio-note {
+		margin-top: 20px;
+		font-size: 12px;
+		line-height: 1.6;
+		color: #909399;
+	}
+</style>

@@ -1,0 +1,2 @@
+// 全局实例池：播放某个音频时自动暂停其它 up-audio 实例，所有实例共享（模块级单例）
+export const audioInstancePool = []

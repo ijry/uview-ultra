@@ -41,9 +41,9 @@
       <iframe v-else-if="n.name==='iframe'" :style="n.attrs.style" :allowfullscreen="n.attrs.allowfullscreen" :frameborder="n.attrs.frameborder" :src="n.attrs.src" />
       <embed v-else-if="n.name==='embed'" :style="n.attrs.style" :src="n.attrs.src" />
       <!-- #endif -->
-      <!-- #ifndef MP-TOUTIAO || ((H5 || APP-PLUS) && VUE3) -->
-      <!-- 音频 -->
-      <audio v-else-if="n.name==='audio'" :id="n.attrs.id" :class="n.attrs.class" :style="n.attrs.style" :author="n.attrs.author" :controls="n.attrs.controls" :loop="n.attrs.loop" :name="n.attrs.name" :poster="n.attrs.poster" :src="n.src[ctrl[i]||0]" :data-i="i" @play="play" @error="mediaError" />
+      <!-- #ifndef APP-PLUS-NVUE -->
+      <!-- 音频：uni-app Vue3 已废弃 <audio> 组件，统一改用 up-audio 播放（基于 uni.createInnerAudioContext） -->
+      <up-audio v-else-if="n.name==='audio'" :src="n.src" :title="n.attrs.title || n.attrs.name" :loop="!!n.attrs.loop" @play="onAudioPlay" @error="onAudioError" />
       <!-- #endif -->
       <view v-else-if="(n.name==='table'&&n.c)||n.name==='li'" :id="n.attrs.id" :class="'_'+n.name+' '+n.attrs.class" :style="n.attrs.style">
         <node v-if="n.name==='li'" :childs="n.children" :opts="opts" />
@@ -110,6 +110,10 @@ import { getCurrentInstance, nextTick, onBeforeUnmount, onMounted, reactive } fr
 
 // #ifndef (H5 || APP-PLUS) && VUE3
 import node from './node'
+// #endif
+
+// #ifndef APP-PLUS-NVUE
+import UpAudio from '../up-audio/up-audio.vue'
 // #endif
 
 defineOptions({
@@ -231,6 +235,20 @@ function play(e) {
 		}
 	}
 	// #endif
+}
+
+/**
+ * @description 音频播放事件（up-audio 触发，转发给 up-parse）
+ */
+function onAudioPlay(payload) {
+	root?.$emit('play', payload)
+}
+
+/**
+ * @description 音频加载/播放错误事件（up-audio 触发，转发给 up-parse）
+ */
+function onAudioError(payload) {
+	root?.$emit('error', payload)
 }
 
 /**

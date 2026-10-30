@@ -1,0 +1,418 @@
+<template>
+	<view class="up-audio">
+		<!-- 播放/暂停按钮 -->
+		<view
+			class="up-audio__btn"
+			:style="btnStyle"
+			@tap.stop="toggle"
+		>
+			<text class="up-audio__btn-icon">{{ playing ? '❚❚' : '▶' }}</text>
+		</view>
+		<!-- 主体：标题 + 时间 + 进度条 -->
+		<view class="up-audio__main">
+			<view class="up-audio__row">
+				<text
+					v-if="hasTitle"
+					class="up-audio__title"
+				>{{ displayTitle }}</text>
+				<text class="up-audio__time">{{ formatTime(currentTime) }} / {{ formatTime(duration) }}</text>
+			</view>
+			<slider
+				class="up-audio__slider"
+				:value="progress"
+				:max="100"
+				:block-size="10"
+				:activeColor="activeColor"
+				backgroundColor="#e4e7ed"
+				@changing="onChanging"
+				@change="onChange"
+			/>
+		</view>
+		<!-- 倍速 -->
+		<view
+			v-if="showRate"
+			class="up-audio__rate"
+			@tap.stop="changeRate"
+		>
+			<text class="up-audio__rate-text">{{ rateText }}</text>
+		</view>
+	</view>
+</template>
+
+<script setup lang="uts">
+	defineOptions({
+		styleIsolation: 'app-and-page',
+		name: 'up-audio'
+		// #ifdef MP-WEIXIN
+		,
+		options: {
+			virtualHost: true
+		}
+		// #endif
+	})
+
+	import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+	import defProps from './audio.uts'
+	import { audioInstancePool } from './audio-pool.uts'
+	/**
+	 * up-audio 音频播放器
+	 * @description uni-app x 端基于 uni.createInnerAudioContext 实现播放，可单独使用
+	 * @property {String | Array}	src			音频地址，支持数组多源，加载失败自动切换
+	 * @property {String}			title		标题，显示在音频条上
+	 * @property {Boolean}			loop		是否循环播放 （默认 false ）
+	 * @property {Boolean}			showRate	是否显示倍速切换 （默认 true ）
+	 * @property {Array}			rateList	可切换的倍速档位 （默认 [0.5, 0.75, 1, 1.25, 1.5, 2] ）
+	 * @property {String}			activeColor	主题色（播放按钮、进度条选中色） （默认 '#2979ff' ）
+	 * @property {Boolean}			showTitle	是否显示标题 （默认 true ）
+	 * @event {Function} play 开始播放时触发，参数 { source, src }
+	 * @event {Function} error 加载/播放出错时触发，参数 { source, errMsg }
+	 * @example <up-audio src="https://cdn.example.com/a.mp3" title="示例音频"></up-audio>
+	 */
+
+	// props
+	const props = defineProps({
+		// 音频地址，支持单个地址或地址数组（多源，加载失败自动切换）
+		src: {
+			type: [String, Array as PropType<Array<string>>],
+			default: ''
+		},
+		// 标题，显示在音频条上
+		title: {
+			type: String,
+			default: defProps.getString('audio.title')
+		},
+		// 是否循环播放
+		loop: {
+			type: Boolean,
+			default: defProps.getBoolean('audio.loop')
+		},
+		// 是否显示倍速切换
+		showRate: {
+			type: Boolean,
+			default: defProps.getBoolean('audio.showRate')
+		},
+		// 可切换的倍速档位
+		rateList: {
+			type: Array as PropType<Array<number>>,
+			default(): Array<number> {
+				return [0.5, 0.75, 1, 1.25, 1.5, 2] as Array<number>
+			}
+		},
+		// 主题色（播放按钮、进度条选中色）
+		activeColor: {
+			type: String,
+			default: defProps.getString('audio.activeColor')
+		},
+		// 是否显示标题
+		showTitle: {
+			type: Boolean,
+			default: defProps.getBoolean('audio.showTitle')
+		},
+		customStyle: {
+			type: [Object, String],
+			default(): UTSJSONObject {
+				return {} as UTSJSONObject
+			}
+		}
+	})
+
+	// 定义事件
+	const emit = defineEmits(['play', 'error'])
+
+	// 响应式数据
+	const playing = ref(false)
+	const currentTime = ref(0)
+	const duration = ref(0)
+	const progress = ref(0)
+	const srcIndex = ref(0)
+	const rate = ref(1.0)
+	const seeking = ref(false)
+	const errorMsg = ref('')
+	let ctx: InnerAudioContext | null = null
+
+	// 归一化源列表：string 或 Array<string> 统一为非空数组
+	const srcList = computed((): Array<string> => {
+		const list: Array<string> = []
+		const srcValue = props.src
+		if (srcValue == null) {
+			return list
+		}
+		if (typeof srcValue == 'string') {
+			const single = srcValue as string
+			if (single.length > 0) {
+				list.push(single)
+			}
+		} else {
+			const arr = srcValue as Array<string>
+			for (let i = 0; i < arr.length; i++) {
+				const item = arr[i]
+				if (item != null && item.length > 0) {
+					list.push(item)
+				}
+			}
+		}
+		return list
+	})
+
+	const displayTitle = computed((): string => props.title)
+	const hasTitle = computed((): boolean => props.showTitle && displayTitle.value.length > 0)
+	const currentSrc = computed((): string => {
+		const list = srcList.value
+		if (srcIndex.value >= 0 && srcIndex.value < list.length) {
+			return list[srcIndex.value]
+		}
+		return ''
+	})
+	const rateText = computed((): string => {
+		const r = rate.value
+		const isInt = r == Math.floor(r)
+		const base = isInt ? Math.floor(r).toString() : r.toString()
+		return base + 'x'
+	})
+	// 播放按钮底色
+	const btnStyle = computed((): string => {
+		return 'background-color: ' + props.activeColor
+	})
+
+	// src 变化时重建播放器
+	watch((): any => props.src, (_n: any | null) => {
+		reset()
+	}, { deep: true })
+
+	onMounted(() => {
+		init()
+	})
+
+	// 组件卸载前释放播放器资源
+	onBeforeUnmount(() => {
+		destroy()
+	})
+
+	// 源变化时重建
+	function reset() {
+		destroy()
+		srcIndex.value = 0
+		currentTime.value = 0
+		duration.value = 0
+		progress.value = 0
+		playing.value = false
+		init()
+	}
+
+	function init() {
+		if (currentSrc.value.length == 0) return
+		const audioCtx = uni.createInnerAudioContext()
+		ctx = audioCtx
+		audioCtx.src = currentSrc.value
+		if (props.loop) {
+			audioCtx.loop = true
+		}
+		audioCtx.onPlay((result: any | null) => {
+			playing.value = true
+			// 暂停实例池中的其它音频，保证多实例互斥
+			for (let i = audioInstancePool.length - 1; i >= 0; i--) {
+				const other = audioInstancePool[i]
+				if (other !== audioCtx) {
+					other.pause()
+				}
+			}
+			emit('play', { source: 'audio', src: currentSrc.value } as UTSJSONObject)
+		})
+		audioCtx.onPause((result: any | null) => {
+			playing.value = false
+		})
+		audioCtx.onStop((result: any | null) => {
+			playing.value = false
+		})
+		audioCtx.onEnded((result: any | null) => {
+			playing.value = false
+			currentTime.value = 0
+			progress.value = 0
+		})
+		audioCtx.onTimeUpdate((result: any | null) => {
+			if (seeking.value) return
+			currentTime.value = audioCtx.currentTime
+			const dur = audioCtx.duration
+			if (dur > 0) {
+				duration.value = dur
+			}
+			progress.value = duration.value > 0 ? currentTime.value / duration.value * 100 : 0
+		})
+		audioCtx.onCanplay((result: any | null) => {
+			const dur = audioCtx.duration
+			if (dur > 0) {
+				duration.value = dur
+			}
+		})
+		audioCtx.onError((err: ICreateInnerAudioContextFail) => {
+			handleError(err)
+		})
+		audioInstancePool.push(audioCtx)
+	}
+
+	function destroy() {
+		const audioCtx = ctx
+		if (audioCtx != null) {
+			const idx = audioInstancePool.indexOf(audioCtx)
+			if (idx != -1) {
+				audioInstancePool.splice(idx, 1)
+			}
+			audioCtx.destroy()
+			ctx = null
+		}
+	}
+
+	const toggle = () => {
+		const audioCtx = ctx
+		if (audioCtx == null) return
+		if (playing.value) {
+			audioCtx.pause()
+		} else {
+			audioCtx.play()
+		}
+	}
+
+	// 拖动进度条中（只更新本地显示）
+	const onChanging = (e: UniSliderChangeEvent) => {
+		seeking.value = true
+		progress.value = e.detail.value
+		currentTime.value = duration.value > 0 ? duration.value * e.detail.value / 100 : 0
+	}
+
+	// 拖动结束，真正 seek
+	const onChange = (e: UniSliderChangeEvent) => {
+		seeking.value = false
+		progress.value = e.detail.value
+		const audioCtx = ctx
+		if (audioCtx != null && duration.value > 0) {
+			audioCtx.seek(duration.value * e.detail.value / 100)
+		}
+	}
+
+	const changeRate = () => {
+		const list = props.rateList
+		let i = list.indexOf(rate.value)
+		if (i == -1) {
+			i = list.indexOf(1)
+		}
+		rate.value = list[(i + 1) % list.length]
+		const audioCtx = ctx
+		if (audioCtx != null) {
+			audioCtx.playbackRate = rate.value
+		}
+	}
+
+	// 加载失败：尝试下一个源；全部失败则抛 error
+	function handleError(err: ICreateInnerAudioContextFail) {
+		if (srcIndex.value < srcList.value.length - 1) {
+			srcIndex.value = srcIndex.value + 1
+			currentTime.value = 0
+			progress.value = 0
+			const audioCtx = ctx
+			if (audioCtx != null) {
+				audioCtx.src = currentSrc.value
+				audioCtx.play()
+			}
+			return
+		}
+		playing.value = false
+		const msg = err.errMsg
+		errorMsg.value = msg == null || msg.length == 0 ? '音频加载失败' : msg
+		emit('error', { source: 'audio', errMsg: errorMsg.value } as UTSJSONObject)
+	}
+
+	function formatTime(sec: number): string {
+		const total = Math.floor(sec)
+		const m = Math.floor(total / 60)
+		const s = total % 60
+		const sStr = s < 10 ? '0' + s.toString() : s.toString()
+		return m.toString() + ':' + sStr
+	}
+
+	// 导出供模板使用的方法
+	defineExpose({
+		toggle,
+		reset,
+		changeRate
+	})
+</script>
+
+<style
+	lang="scss"
+	scoped
+>
+	.up-audio {
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		padding: 12rpx 16rpx;
+		margin: 8rpx 0;
+		border-radius: 8rpx;
+		background-color: #f5f7fa;
+
+		&__btn {
+			flex-shrink: 0;
+			width: 56rpx;
+			height: 56rpx;
+			border-radius: 28rpx;
+			display: flex;
+			flex-direction: row;
+			align-items: center;
+			justify-content: center;
+			margin-right: 16rpx;
+		}
+
+		&__btn-icon {
+			color: #ffffff;
+			font-size: 22rpx;
+			line-height: 24rpx;
+		}
+
+		&__main {
+			flex: 1;
+		}
+
+		&__row {
+			display: flex;
+			flex-direction: row;
+			align-items: center;
+			justify-content: space-between;
+			margin-bottom: 2rpx;
+		}
+
+		&__title {
+			flex: 1;
+			font-size: 26rpx;
+			color: #303133;
+			lines: 1;
+			text-overflow: ellipsis;
+		}
+
+		&__time {
+			flex-shrink: 0;
+			font-size: 22rpx;
+			color: #909399;
+			margin-left: 12rpx;
+		}
+
+		&__slider {
+			margin: 0;
+			padding: 0;
+		}
+
+		&__rate {
+			flex-shrink: 0;
+			margin-left: 16rpx;
+			padding: 4rpx 12rpx;
+			border-radius: 20rpx;
+			border-width: 1px;
+			border-style: solid;
+			border-color: #dcdfe6;
+		}
+
+		&__rate-text {
+			font-size: 22rpx;
+			color: #606266;
+		}
+	}
+</style>

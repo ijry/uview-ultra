@@ -691,6 +691,12 @@
 				"style": {
 					"navigationBarTitleText": "Lottie动画"
 				}
+			},
+			{
+				"path": "audio/audio",
+				"style": {
+					"navigationBarTitleText": "Audio音频"
+				}
 			}
 		]
 	},

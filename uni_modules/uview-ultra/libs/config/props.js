@@ -8,6 +8,7 @@ import config from './config.js'
 import ActionSheet from '../../components/up-action-sheet/actionSheet.js'
 import Album from '../../components/up-album/album.js'
 import Alert from '../../components/up-alert/alert.js'
+import Audio from '../../components/up-audio/audio.js'
 import Avatar from '../../components/up-avatar/avatar.js'
 import AvatarGroup from '../../components/up-avatar-group/avatarGroup.js'
 import Backtop from '../../components/up-back-top/backtop.js'
@@ -106,6 +107,7 @@ const props = {
     ...ActionSheet,
     ...Album,
     ...Alert,
+    ...Audio,
     ...Avatar,
     ...AvatarGroup,
     ...Backtop,
