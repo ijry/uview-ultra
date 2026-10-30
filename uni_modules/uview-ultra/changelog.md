@@ -1,3 +1,47 @@
+## 4.5.74
+fix: 对齐 uview-plus 3.8.129 ~ 3.8.137 的上游修复
+
+逐条核对 3.8.129 起的 16 个提交后，把 ultra 侧缺失的部分移植过来；已在 ultra 具备或架构上不适用的项在末尾说明。
+
+修复：
+- up-form 校验触发（#726）：未配置 trigger 的规则视为任意触发方式执行，不再被静默跳过（此前 `[].concat(undefined)` 得到的数组不含事件名，规则永远不生效）；errorType=toast 的提示统一移入 validateField，输入 / 失焦等自动触发的校验同样能弹提示，validate() 不再重复弹窗
+- up-form-item 跟随 form 的 borderBottom（#614）：新增 resolvedBorderBottom，未在 form-item 上显式设置时跟随 up-form 的同名属性；此前 form 级 borderBottom 完全不生效，分隔线永远不显示。注意升级后未显式设置的表单会开始显示分隔线，不需要时传 :borderBottom="false"
+- up-input 首次程序化赋值不触发校验（#726）：modelValue watcher 的早退分支补 firstChange 复位，修复弹窗选择回填首次赋值时不走 valueChange 与表单验证；doBlur 对原生节点引用补类型判断，避免小程序端 blur undefined
+- up-sticky 吸顶间隙（#1063）：cssSticky 分支的 addUnit 显式钉死 px。stickyTop 由 getPx 换算而来已是 px 数值，省略单位会跟随全局 unit 配置（如 rpx）二次换算，在非 375px 宽度设备上产生偏移
+- up-select 面板位置（#1061）：打开时在同一个更新周期内先复位对齐再挂载面板，避免复位产生的二次 setData 与节点查询竞态；溢出判断改用「触发区左缘 + 面板宽度」推算，与查询瞬间面板所处对齐状态无关，并补 else 分支复位，修复奇偶次打开位置交替、以及一旦溢出就永久贴右。.uvue 侧另补一次面板自身宽度测量，修复选项文字比触发区宽时右侧被裁掉
+- up-number-keyboard 退格键短按无效：去掉退格键 @touchstart 上的 .stop（编译成微信小程序 catchtouchstart 后会吞掉同一节点上的 tap，短按再也删不掉、只剩长按有效）；补 @touchcancel 清理长按定时器
+- up-cropper 导出与安全区：新增 fileType 属性（默认 png，可选 jpg），quality 只在 jpg 下生效——此前 5 处 toTempFilePath 把 fileType 硬编码成 png，PNG 无质量档位导致 quality 形同虚设；quality 归一化由 parseInt 改 parseFloat 并夹取 0~1；safeAreaInsets 取值补兜底；底部操作栏高度改为 50px + 安全区并用 padding-bottom 让出，修复 iOS 上画布与操作栏之间露出一条页面背景、页面浮动元素透出的问题
+- up-upload 选择媒体文件：新增 mediaType 属性（默认 ['image', 'video']），accept="media" 时透传给 chooseMedia 控制可选类型；chooseMedia 不再按平台编译判断，改为运行时检测接口是否存在，不存在时回退 chooseImage，修复部分平台 accept="media" 直接报错
+- up-icon App 本地字体：构建插件原按 uni_modules/uview-ultra/... 绝对路径严格匹配，npm / pnpm 安装到 node_modules 时永远不命中，App 端远程 @font-face 不被剥离、本地图标字体不生效；改为按包内相对路径后缀匹配
+- up-root（Vue3 侧）：root.js 误写了 UTS 类型断言 as UTSJSONObject，导致该文件无法被 JS 解析、up-root 的默认配置在 uni-app Vue3 链路加载失败，已移除
+
+说明：
+- up-navbar 的 avoidCapsule、up-text 移除 v-bind="$attrs"、up-goods-sku 的 defaultSku / safeAreaInsetBottom 与 close() 笔误、up-toast 的 overlay、up-barcode 画布引用时序在 ultra 侧已具备，本次未重复改动
+- calc.div 改用 digit.divide：ultra 的 calc.div 引用的是本地 mul，不存在上游 xyutil is not defined 的崩溃，故未改
+- 父子组件 children 时序守卫（#1065）：ultra 的 children 在 setup 顶部即 ref([]) 初始化，不会出现上游 options API 里「watch 早于 created、children 尚未赋值」的 undefined，架构上已规避
+- u-lottie 为独立新组件，涉及 H5 / 小程序 / 鸿蒙三套渲染引擎，不在本次移植范围
+
+## 4.5.73 (2026-10-30)
+更新示例工程
+## 4.5.72 (2026-10-30)
+累积更新：运行时主题能力增强、弹层交互、iOS 风格打磨、主色覆盖系列修复
+【新增】
+1. up-navbar 新增 frosted：滚过阈值后淡入一层半透明磨砂（高仿 iOS 材质），供 H5 / Android 等无系统玻璃带的端使用，与 ios 模式共用同一套淡入曲线；新增 statusBarInsetTop 状态栏占位覆盖（-1 用系统值、0 不占位，iOS standalone / PWA 下传 0）；同时修复 App 端开 placeholder 后内容仍顶到导航行下、uvue App 端磨砂底色 color-mix 不生效「看似没开」（改用主题变量 --up-navbar-glass-bg / --up-navbar-glass-border）等问题
+2. up-empty 新增 bottom 具名插槽（按钮等操作区），对齐 uview-plus 3.x 接口——此前业务侧 template #bottom 静默不渲染（default 插槽不受影响）
+3. up-popup 新增 dragClose / dragCloseThreshold（默认 80px）：bottom 弹层支持按住内容下拉跟手位移，松手超过阈值走既有 close 流程（update:show=false + close 事件），否则回弹归位；仅 bottom 模式且非 pageInline 生效，向上拖不拦截，弹层内部滚动不受影响
+4. 运行时主色（品牌色）切换 API：setThemePrimaryColor(color) / getThemePrimaryColor() / 响应式 upThemePrimaryColor。写入 storage 并立即刷新整张变量表，所有 var(--up-primary) / upThemeVar 消费点当前页即时生效；优先级：运行时品牌色 > config.color 覆盖（含 light/dark 后缀）> 主题表默认，传空串清除覆盖；启动时先加载持久化值再建首张变量表，避免首屏默认色跳变
+5. 新增 upThemeColorAlpha(varName, alpha, fallback)：把当前主题色解析为 rgba(r, g, b, a)，用于「主色 12% 浅底」（图标底衬、选中态背景、发光阴影）等场景，随主题切换与运行时品牌色联动；注意 --up-primary-light 是主题表独立浅色档（浅 #ecf5ff / 深 #10243a），不随主色计算，不能当「主色 + alpha」用
+6. config.uts 的 color 支持 up-<token>-light / up-<token>-dark 模式后缀键（优先于单值键）：「浅色主色换黑系、深色保持原主色」只需在 config.color 写两个键，无需写 JS
+7. 主题变量新增 --up-tabbar-active-bg（底栏激活块底色），当前默认浅色 #e9e9eb / 深色 #2c2c2e（iOS 27 选中项浅灰风格；期间尝试的「由主色派生」方案因与底栏 Lottie 图标对比不足已撤回）；应用侧激活文字需同步改深色（浅灰底上白字不可读）
+8. up-cell-group 默认改为 iOS grouped-inset 卡片形制（border-radius 12px + overflow hidden，子 cell 直角背景与分隔线裁进圆角；不需要圆角时 customStyle 传 borderRadius: 0）；up-cell 新增 borderInsetLeft（默认 0 保持通栏）：分隔线支持 iOS 标准左缩进（线条不顶到图标、从内容起始处开始）
+9. up-button / up-tag 默认（square）圆角改 iOS 风格：up-button 3px → 10px，up-tag 3px → 8px（circle 胶囊不变；显式 customStyle 圆角仍可覆盖）
+【修复】
+10. up-transition / 弹层「弹不出来」系列修复：进场动画结束后清理 enter-active / enter-to 类，修复 CSS 过渡被页面任意重渲染（字体 / lottie / 列表刷新）打断后弹层冻结在屏幕外；为 fade / zoom / fade-up/down/left/right / slide-up/down/left/right 十组动画补显式 enter-to 终态规则，修复蒸汽模式 web 端弹层被钉在起点；修复进场清理误引用 durationValue 导致的 ReferenceError
+11. up-navbar web 端状态栏高度改用 env(safe-area-inset-top) 探针探测，修复 iOS Safari 网页模式「状态栏与导航割裂成两块、导航有磨砂状态栏没有」；桌面 / Android 浏览器（env 为 0）与 App 端（原生 statusBarHeight）行为不变
+12. 主色覆盖后组件仍为默认蓝的系列修复：up-button type=primary 背景/边框接入 var(--up-primary)（.uvue / .vue 双实现，修复编译期色 + !important 压过内联样式的问题）；up-radio / up-checkbox / up-switch 选中色接入主题变量；up-radio-group 默认 activeColor 改 var(--up-primary, #2979ff)。显式传色仍优先，行为不变
+13. 主题存储 key 统一 up- 前缀：u-theme-primary → up-theme-primary、u-theme-mode → up-theme-mode（.uts / .js 双实现），首次读取自动迁移旧值并删除旧 key，已有用户的主题模式与品牌色偏好不丢
+【变更】
+14. up-cell 默认内距 10px 15px → 14px（large 13px → 16px），left-icon-wrap margin-right 4px → 10px；外部如有依赖旧内距的布局请自查
 ## 4.5.71
 feat: 底栏激活块底色改 iOS 27 浅灰风格
 

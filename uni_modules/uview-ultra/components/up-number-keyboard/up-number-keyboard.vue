@@ -21,13 +21,20 @@
 		<view
 			class="up-keyboard__button-wrapper"
 		>
+			<!--
+				退格键的删除由 @tap 触发（PC 端浏览器只有鼠标事件，不产生 touch）；
+				@touchstart 只负责延时进入长按连删，短按时定时器会在 touchend 前被清除，所以不会删两次。
+				注意：@touchstart 上不能加 .stop（编译成微信小程序的 catchtouchstart 后会吞掉同一个节点上的 tap，
+				短按就再也删不掉、只剩长按有效），up-number-box 的加减键同样只绑 bindtouchstart。
+			-->
 			<view
 				class="up-keyboard__button-wrapper__button up-keyboard__button-wrapper__button--gray"
 				hover-class="up-hover-class"
 				:hover-stay-time="200"
 				@tap="backspaceClick"
-				@touchstart.stop="backspaceTouchStart"
+				@touchstart="backspaceTouchStart"
 				@touchend="clearTimer"
+				@touchcancel="clearTimer"
 			>
 				<up-icon
 					name="backspace"

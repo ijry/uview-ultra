@@ -181,6 +181,19 @@ const getOptionLabel = (item: UTSJSONObject): string => {
 	return valueToString(item[props.labelName])
 }
 
+// 应用面板的水平对齐：溢出判断用「触发区左缘 + 面板宽度」推算，
+// 与查询瞬间面板所处的对齐状态无关，避免只按触发区宽度推算导致右侧被裁掉
+const applyOptionsWrapAlign = (left: number, wrapWidth: number, windowWidth: number): void => {
+	if (left + wrapWidth > windowWidth) {
+		// 如果右侧被遮挡，则调整到左侧
+		optionsWrapLeft.value = 'auto';
+		optionsWrapRight.value = '0px';
+	} else {
+		optionsWrapLeft.value = left.toString() + 'px';
+		optionsWrapRight.value = 'auto';
+	}
+}
+
 const adjustOptionsWrapPosition = (): void => {
 	const wi = getWindowInfo();
 	const windowWidth = wi.windowWidth;
@@ -195,13 +208,14 @@ const adjustOptionsWrapPosition = (): void => {
 		optionsWrapTop.value = dropdownTop.toString() + 'px';
 		optionsWrapMinWidth.value = width.toString() + 'px';
 		optionsWrapMaxHeight.value = availableHeight.toString() + 'px';
-		if (left + width > windowWidth) {
-			optionsWrapLeft.value = 'auto';
-			optionsWrapRight.value = '0px';
-		} else {
-			optionsWrapLeft.value = left.toString() + 'px';
-			optionsWrapRight.value = 'auto';
-		}
+		// 面板宽度由内容决定、可能比触发区更宽，这里再量一次面板自身宽度；
+		// 量不到（如刚打开尚未布局）时回退到触发区宽度
+		upGetRect('.up-select__options__wrap', false, instance).then((wrapRect: NodeInfo) => {
+			const wrapWidth = Math.max(width, normalizeNumber(wrapRect.width, width));
+			applyOptionsWrapAlign(left, wrapWidth, windowWidth);
+		}).catch((e: any) => {
+			applyOptionsWrapAlign(left, width, windowWidth);
+		});
 	});
 }
 

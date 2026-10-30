@@ -360,6 +360,7 @@ function chooseFileHandler(params) {
 	const chooseParams = Object.assign({
 		accept: props.accept,
 		extension: props.extension,
+		mediaType: props.mediaType,
 		multiple: props.multiple,
 		capture: props.capture,
 		compressed: props.compressed,

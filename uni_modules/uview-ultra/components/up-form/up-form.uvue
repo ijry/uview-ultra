@@ -368,6 +368,12 @@
 					if (callback != null) {
 						callback(errorsRes)
 					}
+					// toast提示统一放在validateField里：输入、失焦等自动触发的校验同样能弹出提示
+					// （此前只有validate()会提示）；每次校验只提示第一条错误，避免多字段连续弹toast
+					if (errorsRes.length > 0 && props.errorType == 'toast'
+						&& errorsRes[0] != null && errorsRes[0]['message'] != null) {
+						toast(errorsRes[0]['message'].toString())
+					}
 					resolve(errorsRes)
 				})
 				// .catch((error: any) => {
@@ -400,8 +406,7 @@
 			console.log('formItemProps', formItemProps)
 			let func = function(errors: UTSJSONObject[]): void {
 				if(errors.length > 0) {
-					// 如果错误提示方式为toast，则进行提示
-					if(props.errorType == 'toast' && errors[0] != null && errors[0]['message'] != null) toast(errors[0]['message'].toString())
+					// toast提示已统一在validateField中处理，此处只需拒绝Promise
 					console.log('errors', errors.length)
 					reject(errors)
 				} else {

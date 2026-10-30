@@ -44,6 +44,8 @@ uni-app 的 `resolve.extensions` 是 `['.uts', '.mjs', '.js', ...]`，**`.uts` �
 - **本仓库是「混合行尾」**：同一个文件里既有 CRLF 又有 LF。
   改文件**必须用字符串替换**（除替换片段外一个字节都不动），
   用会统一行尾的编辑器会把 git diff 撑成几百行噪声。
+  **Edit 工具同样会把混合行尾统一成 LF**（2026-10-30 在 `up-upload/utils.uts` 踩过：
+  292 行 diff 里只有 4 行是真实改动）——这类文件要用 Python 读 bytes 做替换再写回。
   判断行尾用 `tr -dc '\r' < file | wc -c`；`grep -c $'\r'` 在 Git Bash 下不可靠。
 - **杀软会拦管道**：Node 里 `spawnSync` 带 pipe 必然 `EBUSY`，重试无效。
   改用 `stdio: ['ignore', fd, fd]`（fd 来自 `fs.openSync(log, 'w')`）。`stdio: 'inherit'` 可以跑通但拿不到输出。
@@ -52,3 +54,13 @@ uni-app 的 `resolve.extensions` 是 `['.uts', '.mjs', '.js', ...]`，**`.uts` �
 - **pnpm 装依赖要放行构建脚本**：`"pnpm": { "onlyBuiltDependencies": ["esbuild", "core-js", "core-js-pure"] }`，
   否则 esbuild 二进制装不上（postinstall 会 EBUSY）。
 - `git` 不认 MSYS 的 `/tmp/...` 路径，传路径要用 `C:/...` 或 `D:/...`。
+
+## 与 uview-plus 3.x 的对齐基线
+
+- **ultra 4.5.50 对齐的是 uview-plus 3.8.127 / 3.8.128**（changelog 有记录）。
+  核对上游是否有漏移植时，从这里往后比。
+- **3.x 的「父子组件 children 时序守卫」对 ultra 不适用**：ultra 的 `children` 在 setup
+  顶部就 `ref([])`，不存在 options API 里「watch 早于 created、children 还没赋值」的 undefined。
+- **3.x 的 `calc.div` 用 xyutil 的崩溃对 ultra 也不适用**：ultra 的 calc.div 引用本地 `mul`。
+- **MuMu 需手动 `adb connect 127.0.0.1:16384`**：实例在跑但 HBuilderX 的 `devices list`
+  会返回空，连上 adb 后才显示设备（deviceId 用 `127.0.0.1:16384`）。

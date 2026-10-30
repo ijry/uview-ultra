@@ -30,6 +30,7 @@ export type UPUploadChooseFileOptions = {
 	multiple :boolean,
 	capture : string[]|string,
 	compressed :boolean,
+	mediaType :string[]|null,
 	maxDuration :number,
 	sizeType :string[],
 	camera :string,

@@ -4,7 +4,7 @@
 		<canvas :canvas-id="'avatar-canvas-' + instanceId" :id="'avatar-canvas-' + instanceId" class="my-canvas" :style="{ top: styleTop, height: cvsStyleHeight }" disable-scroll="false"></canvas>
 		<canvas :canvas-id="'oper-canvas-' + instanceId" :id="'oper-canvas-' + instanceId" class="oper-canvas" :style="{ top: styleTop, height: cvsStyleHeight }" disable-scroll="false" @touchstart="start" @touchmove="move" @touchend="end"></canvas>
 		<canvas :canvas-id="'prv-canvas-' + instanceId" :id="'prv-canvas-' + instanceId" class="prv-canvas" disable-scroll="false" @touchstart="hideImg" :style="{ height: cvsStyleHeight, top: prvTop }"></canvas>
-		<view class="oper-wrapper" :style="{ display: styleDisplay }">
+		<view class="oper-wrapper" :style="operStyle">
 			<view class="oper">
 				<view class="btn-wrapper" v-if="showOper">
 					<view @click="select" hover-class="hover" :style="{ width: btnWidth }">
@@ -40,7 +40,7 @@
 </template>
 
 <script setup>
-import { getCurrentInstance, reactive, toRefs, watch } from 'vue'
+import { computed, getCurrentInstance, reactive, toRefs, watch } from 'vue'
 import { commonProps } from '../../libs/composable/useUltraUI.js'
 import { t } from '../../libs/i18n/index.js'
 
@@ -68,6 +68,8 @@ const props = defineProps({
 	noTab: { type: Boolean, default: true },
 	inner: { type: Boolean, default: false },
 	quality: { type: [String, Number], default: '' },
+	// 导出图片格式：png 为无损压缩（quality 不生效），jpg 才会按 quality 压缩
+	fileType: { type: String, default: 'png' },
 	index: { type: [String, Number], default: '' },
 	canChangeSize: { type: Boolean, default: false },
 	areaWidth: { type: String, default: '300rpx' },
@@ -98,6 +100,8 @@ const proxy = instance?.proxy
 
 const state = reactive({
 	instanceId: Date.now() + '-' + Math.random().toString(36).substr(2, 9),
+	// 导出图片格式，可被 chooseImage 的 params 覆盖
+	fileType: props.fileType,
 	cvsStyleHeight: '0px',
 	styleDisplay: 'none',
 	styleTop: '-10000px',
@@ -195,12 +199,39 @@ const {
 	btnDsp
 } = toRefs(state)
 
+// 导出图片格式：png 无损，quality 不生效；只有 jpg 才会按 quality 压缩
+const expFileType = computed(() => {
+	const type = String(state.fileType || '').toLowerCase()
+	return type === 'jpg' || type === 'jpeg' ? 'jpg' : 'png'
+})
+
+// 图片质量归一化：接受 number 与数字字符串，越界夹到 0-1，无效值回落 0.9。
+// 原来用 parseInt，parseInt(0.5) 是 0，`|| 0.9` 会把所有小数质量悄悄改回 0.9
+function parseQuality(value) {
+	const num = parseFloat(value)
+	if (isNaN(num)) return 0.9
+	return Math.min(1, Math.max(0, num))
+}
+
+// 底部操作栏样式：把底部安全区算进高度并用 padding-bottom 留出。
+// 画布高度已减掉安全区，而操作栏若仍是 50px 贴屏幕最底，两者之间会露出一条
+// 页面背景，页面上浮动的按钮/标签会从这条缝里透出来，和裁剪底部按钮重叠
+const operStyle = computed(() => {
+	const safe = Math.max(0, parseInt(String(state.safeAreaInsetsBottom)) || 0)
+	return {
+		display: state.styleDisplay,
+		height: (tabHeight + safe) + 'px',
+		paddingBottom: safe + 'px'
+	}
+})
+
 function windowResize() {
 				let sysInfo = uni.getSystemInfoSync();
 				state.platform = sysInfo.platform;
 				state.pixelRatio = sysInfo.pixelRatio;
 				state.windowWidth = sysInfo.windowWidth;
-				state.safeAreaInsetsBottom = sysInfo.safeAreaInsets.bottom;
+				// 个别端取不到 safeAreaInsets，兜底为 0，避免算出 NaN 把布局顶飞
+				state.safeAreaInsetsBottom = (sysInfo.safeAreaInsets && sysInfo.safeAreaInsets.bottom) || 0;
 				// #ifdef H5
 				state.drawTop = sysInfo.windowTop;
 				state.windowHeight = sysInfo.windowHeight + sysInfo.windowBottom;
@@ -348,7 +379,7 @@ function windowResize() {
 					destWidth: expWidth,
 					destHeight: expHeight,
 					canvasId: 'avatar-canvas-' + state.instanceId,
-					fileType: 'png',
+					fileType: expFileType.value,
 					quality: state.qlty,
 					success: (r) => {
 						r = r.tempFilePath;
@@ -369,7 +400,7 @@ function windowResize() {
 										destWidth: expWidth,
 										destHeight: expHeight,
 										canvasId: 'avatar-canvas-' + state.instanceId,
-										fileType: 'png',
+										fileType: expFileType.value,
 										quality: state.qlty,
 										success: (r) => {
 											r = r.tempFilePath;
@@ -443,7 +474,7 @@ function windowResize() {
 					destWidth: expWidth,
 					destHeight: expHeight,
 					canvasId: 'prv-canvas-' + state.instanceId,
-					fileType: 'png',
+					fileType: expFileType.value,
 					quality: state.qlty,
 					success: (r) => {
 						r = r.tempFilePath;
@@ -464,7 +495,7 @@ function windowResize() {
 										destWidth: expWidth,
 										destHeight: expHeight,
 										canvasId: 'avatar-canvas-' + state.instanceId,
-										fileType: 'png',
+										fileType: expFileType.value,
 										quality: state.qlty,
 										success: (r) => {
 											r = r.tempFilePath;
@@ -697,7 +728,7 @@ function windowResize() {
 					width: width,
 					height: height,
 					canvasId: 'avatar-canvas-' + state.instanceId,
-					fileType: 'png',
+					fileType: expFileType.value,
 					quality: state.qlty,
 					success: (r) => {
 						// console.log(r)
@@ -765,6 +796,7 @@ function windowResize() {
 						expWidth = params.exportWidth || props.exportWidth,
 						expHeight = params.exportHeight || props.exportHeight,
 						quality = params.quality,
+						fileType = params.fileType,
 						canRotate = params.canRotate,
 						canScale = params.canScale,
 						canChangeSize = params.canChangeSize,
@@ -782,7 +814,9 @@ function windowResize() {
 					state.letScale = canScale === false ? 0 : 1;
 					// 设置是否允许调整裁剪框大小
 					state.letChangeSize = canChangeSize || false;
-					state.qlty = parseInt(quality) || 0.9;
+					state.qlty = parseQuality(quality)
+					// 单次调用可通过 params.fileType 覆盖组件的 fileType
+					if (fileType) state.fileType = fileType;
 					state.mnScale = minScale || 0.3;
 					state.mxScale = maxScale || 4;
 					state.stc = stretch;
@@ -1231,7 +1265,7 @@ state.avatarStyle = props.avatarStyle || ''
 state.ctxCanvas = uni.createCanvasContext('avatar-canvas-' + state.instanceId, proxy)
 state.ctxCanvasOper = uni.createCanvasContext('oper-canvas-' + state.instanceId, proxy)
 state.ctxCanvasPrv = uni.createCanvasContext('prv-canvas-' + state.instanceId, proxy)
-state.qlty = parseInt(props.quality) || 0.9
+state.qlty = parseQuality(props.quality)
 state.imgSrc.imgSrc = state.imageSrc
 state.letRotate = (props.canRotate === false || props.inner === true) ? 0 : 1
 state.letScale = props.canScale === false ? 0 : 1

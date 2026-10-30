@@ -67,7 +67,7 @@
 			>{{ message }}</text>
 		</slot>
 		<u-line
-			v-if="borderBottom"
+			v-if="resolvedBorderBottom"
 			:color="message && parentData['errorType'] === 'border-bottom' ? color['error'] : propsLine['color']"
 			:customStyle="`margin-top: ${message && parentData['errorType'] === 'message' ? '5px' : 0}`"
 		></u-line>
@@ -121,7 +121,9 @@
 		// 提示文本的宽度
 		labelWidth: 45,
 		// 错误提示方式
-		errorType: 'message'
+		errorType: 'message',
+		// 是否显示下划线边框，未在up-form-item上显式设置时跟随up-form的同名属性
+		borderBottom: true
 	})
 	const { parent, getParentData } = useUltraUI(props, parentData)
 	// 错误提示语
@@ -132,6 +134,16 @@
 	// 组件创建完成时，将当前实例保存到up-form中
 	const propsLine = computed(() => {
 		return defProps.line
+	})
+
+	// 是否显示下划线边框：未在up-form-item上显式设置（默认空串）时，跟随up-form的同名属性。
+	// 此前 form-item 只读自己的 borderBottom，导致 up-form 上配的 borderBottom 完全不生效
+	const resolvedBorderBottom = computed(() => {
+		const own = props.borderBottom
+		if (own === '' || own === undefined || own === null) {
+			return parentData.borderBottom
+		}
+		return own
 	})
 
 	function init() {

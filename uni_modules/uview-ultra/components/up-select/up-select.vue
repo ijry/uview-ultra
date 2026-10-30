@@ -138,6 +138,11 @@ const currentLabel = computed(() => {
 
 function openSelect() {
 	if (props.disabled) return
+	// 在打开的同一个更新周期内先复位对齐，让复位与面板挂载合并成同一次渲染提交。
+	// 若先挂载再复位，复位产生的第二次 setData 在 App/小程序端会与节点查询竞态：
+	// 查询可能读到复位前的旧对齐布局，导致奇偶次打开交替漏判溢出、面板位置来回跳
+	optionsWrapLeft.value = 'auto'
+	optionsWrapRight.value = 'auto'
 	isOpen.value = true
 	nextTick(() => {
 		if (isOpen.value) {
@@ -161,12 +166,24 @@ function selectItem(item) {
 }
 
 function adjustOptionsWrapPosition() {
+	if (!isOpen.value) return
 	const wi = getWindowInfo()
 	const windowWidth = wi.windowWidth
-	$uGetRect('.up-select__options__wrap').then((rect) => {
-		if (rect.left + rect.width > windowWidth) {
+	Promise.all([
+		$uGetRect('.up-select__label'),
+		$uGetRect('.up-select__options__wrap')
+	]).then(([labelRect, wrapRect]) => {
+		if (!isOpen.value || !labelRect || !wrapRect) return
+		// 面板宽度由内容决定、与当前对齐方式无关；左对齐时面板左缘即触发区左缘。
+		// 溢出判断用「触发区左缘 + 面板宽度」推算，不依赖查询瞬间面板所处的对齐状态，
+		// 即使查询读到上一次对齐的旧布局快照，判断结果也保持一致
+		if (labelRect.left + wrapRect.width > windowWidth) {
+			// 如果右侧被遮挡，则调整到左侧
 			optionsWrapLeft.value = 'auto'
 			optionsWrapRight.value = '0px'
+		} else {
+			optionsWrapLeft.value = 'auto'
+			optionsWrapRight.value = 'auto'
 		}
 	})
 }

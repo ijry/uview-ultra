@@ -340,6 +340,10 @@ watch((): any => props.modelValue, (newVal: any, oldVal: string|number) => {
     if ((changeFromInner.value && !isBlurFormattedValue) || innerValue.value == newVal) {
         changeFromInner.value = false // 重要否则会出现双向绑定失效问题https://github.com/ijry/uview-plus/issues/419
         blurValue.value = null
+        // immediate 首次执行也会走这里，必须把 firstChange 置为 false，
+        // 否则首次外部赋值（如弹窗选择回填）会因 firstChange 仍为 true
+        // 而跳过 valueChange 与表单验证
+        firstChange.value = false
         return
     }
     innerValue.value = newVal

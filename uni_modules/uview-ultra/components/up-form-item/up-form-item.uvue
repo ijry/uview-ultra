@@ -67,7 +67,7 @@
 			>{{ message }}</text>
 		</slot>
 		<up-line
-			v-if="borderBottom"
+			v-if="resolvedBorderBottom"
 			:color="message != '' && parentData['errorType'] == 'border-bottom' ? color['error'] : propsLine['color']"
 			:customStyle="`margin-top: ${message != '' && parentData['errorType'] == 'message' ? '5px' : 0}`"
 		></up-line>
@@ -93,6 +93,8 @@
 		labelWidth: 45,
 		// 错误提示方式
 		errorType: 'message',
+		// 是否显示下划线边框，未在up-form-item上显式设置时跟随up-form的同名属性
+		borderBottom: true,
 		originalModel: {}
 	})
 	const instance = getCurrentInstance()!.proxy!
@@ -177,6 +179,17 @@
 	// 响应式数据
 	const message = ref('')
 	const itemRules = ref<UTSJSONObject[]|UTSJSONObject>({})
+
+	// 是否显示下划线边框：未在up-form-item上显式设置（默认空串）时，跟随up-form的同名属性。
+	// 此前 form-item 只读自己的 borderBottom，导致 up-form 上配的 borderBottom 完全不生效
+	const resolvedBorderBottom = computed((): boolean => {
+		const own: any = props.borderBottom
+		if (own == null || (typeof own == 'string' && (own as string) == '')) {
+			const fromParent: any = parentData.value['borderBottom']
+			return fromParent == null ? true : fromParent as boolean
+		}
+		return own as boolean
+	})
 
 	// 获取父组件的参数
 	const updateParentData = () => {

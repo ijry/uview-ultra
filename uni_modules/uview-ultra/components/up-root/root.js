@@ -11,4 +11,4 @@ export default {
         toastHost: true,
         customStyle: {}
     }
-} as UTSJSONObject
+}

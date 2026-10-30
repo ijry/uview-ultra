@@ -69,7 +69,10 @@ const style = computed(() => {
 		if (cssSticky.value) {
 			styleObj.position = 'sticky'
 			styleObj.zIndex = uZindex.value
-			styleObj.top = addUnit(stickyTop.value)
+			// stickyTop 由 getPx 换算而来，已是确定的 px 数值；
+			// 这里必须显式指定 px，避免跟随全局 unit 配置（如 rpx）二次换算，
+			// 在非 375px 宽度的设备上产生偏移，导致吸顶元素与导航栏之间出现间隙
+			styleObj.top = addUnit(stickyTop.value, 'px')
 		} else {
 			styleObj.height = fixed.value ? height.value + 'px' : 'auto'
 		}

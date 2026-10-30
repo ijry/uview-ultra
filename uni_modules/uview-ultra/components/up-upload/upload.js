@@ -12,6 +12,8 @@ export default {
 	upload: {
 		accept: 'image',
 		extension: [],
+		// 当 accept 为 media 时，透传给 chooseMedia 控制可选文件类型
+		mediaType: ['image', 'video'],
 		capture: ['album', 'camera'],
 		compressed: true,
 		camera: 'back',
